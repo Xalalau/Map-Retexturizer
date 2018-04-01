@@ -1,20 +1,5 @@
 --[[
-Erro bizarro no backup de materiais de mapas. Ele funciona bem no preview mas não no normal. Pega sempre o ultimo material do preview. wtf?
-Não, é mais confuso do que isso. Timers tb não resolveram.
-
-Matriz em details está ruim?
-Aplicar bumpmap em models Material_Create()
-Entidade do mapa continua rolando por aí e fazendo barulho
-
-Desativar o preview durante Undo (usar um mesmo timer sendo destruído e criado até acabarem os undos)
-
-
-erro depois que dou muitos undos
-
-aplicar delay de preview no duplicator (cumulativo- acho q já escrevi isso)
-
-Tenho que aplicar detail e bumpmap em texturas de mapa
-Tenho que aplicar direito bumpmap em texturas de models
+Refazer sistema de preview
 Sincronia de novos jogadores (Enviar e aplicar modificações em models e no mapa)
 Testar
 
@@ -32,7 +17,7 @@ $surfaceprop = No changes at all
 $detail = I got only missing textures
 
 
-O servidor chama client 2 vezes no Material_SetOnModel. Uma na chamada vinda do server e outra num net. O que fazer??
+O servidor chama client 2 vezes no Material_Model_Set. Uma na chamada vinda do server e outra num net. O que fazer??
 
 --]]
 
@@ -65,7 +50,6 @@ end
 --- CLIENT CVARS
 --------------------------------
 
---TOOL.ClientConVar["bumpmap"] = "1"
 TOOL.ClientConVar["material"] = ""
 TOOL.ClientConVar["detail"] = ""
 TOOL.ClientConVar["alpha"] = "1"
@@ -84,98 +68,37 @@ TOOL.ClientConVar["loadname"] = "Autosave"
 --- GLOBAL VARS
 --------------------------------
 
--- Table with new materials
--- (Used only on clientside)
-local created_materials = {}
---  materialID = IMaterial
+-- The name of our backup map material files. They are file1, file2, file3...
+-- (Shared)
+local map_materials_files = "mapretexturizer/file"
 
--- Detail materials
--- (Used only on clientside)
-local detail_materials = {
-	["None"] = "",
-	["Concrete"] = nil,
-	["Metal"] = nil,
-	["Plaster"] = nil,
-	["Rock"] = nil,
-}
+-- Files. 1024 seemed to be more than enough. Acctually I only use this method because of a bunch of GMod limitations.
+-- (Shared)
+local map_materials_limit = 1024
 
--- Preview mode: material name
-local material_preview_name =  "MatRetModelMaterialPreview"
-
--- Preview mode: preview material
-local material_preview
-
--- Preview mode: error message delay switch
-local material_preview_print_error = false
+-- Workaround to duplicate map materials
+local map_materials_duplicator
+-- (Server)
 
 -- Table to manage map materials
 -- (Shared)
 local map_materials = {}
 -- Gets "DataTables"
 
--- Workaround to duplicate map materials
-local map_materials_duplicator
+-- Table to manage model materials
+-- (Client)
+local model_materials = {}
+--  materialID = String
 
--- "DataTables" structure:
---
---   Normal entries:
---		ent = entity
---		oldMaterial = string
---		newMaterial = string
---		offsetx = string
---		offsety = string
---		scalex = string
---		scaley = string
---		rotation = string
---		alpha = string
---      detail = string
---  Map only entries:
---		backup = material
---  Preview entries:
---      preview = boolean
---		realNewMaterial = string
-
---------------------------------
---- FUNCTION DECLARATIONS
---------------------------------
-
-local MapMatTable_GetFreeIndex
-local MapMatTable_InsertElement
-local MapMatTable_GetElement
-local MapMatTable_RemoveElement
-local MapMatTable_Clean
-
-local DataTable_Create
-local DataTable_CreateDefaults
-local DataTable_Copy
-local DataTable_Get
-
-local CVars_SetToData
-local CVars_SetToDefaults
-
-local Material_IsValid
-local Material_RevertIDName
-local Material_GetID
-local Material_Create
-local Material_GetOriginal
-local Material_GetCurrent
-local Material_GetNew
-local Material_ShouldChange
-local Material_SetOnModel
-local Material_SetOnMap
-local Material_CreateBackup
-local Material_LoadBackup
-local Material_LoadMapDuplicator
-local Material_Restore
-local Material_RestoreAll
-
-local Preview_Toogle
-local Preview_Remove
-
---------------------------------
---- SET SOME MATERIALS
---------------------------------
-
+-- Detail materials
+-- (Client)
+local detail_materials = {
+	["None"] = true,
+	["Concrete"] = false,
+	["Metal"] = false,
+	["Plaster"] = false,
+	["Rock"] = false,
+}
 if CLIENT then
 	local function CreateMaterialAux(path)
 		return CreateMaterial(path, "VertexLitGeneric", {["$basetexture"] = path})
@@ -184,9 +107,71 @@ if CLIENT then
 	detail_materials["Metal"] = CreateMaterialAux("detail/metal_detail_01")
 	detail_materials["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
 	detail_materials["Rock"] = CreateMaterialAux("detail/rock_detail_01")
-	
-	material_preview = CreateMaterialAux(material_preview_name)
 end
+
+--------------------------------
+--- HOW IT WORKS? VERY GOOD DOC.
+--------------------------------
+
+--[[
+I use a structure named "DataTables" to control the modifications. These are the entries:
+
+	Normal entries:
+		ent = entity
+		oldMaterial = string
+		newMaterial = string
+		offsetx = string
+		offsety = string
+		scalex = string
+		scaley = string
+		rotation = string
+		alpha = string
+		detail = string
+	Map backup entry:
+		backup = DataTable
+
+Entities DataTables are indexed in each entity in the modifiedmaterial entry with duplicator support.
+
+Map DataTables are stored in the map_materials table and indexed in map_materials_duplicator entity for duplicator support.
+]]
+
+--------------------------------
+--- FUNCTION DECLARATIONS
+--------------------------------
+
+local MapMatTable_GetFreeIndex
+local MapMatTable_InsertElement
+local MapMatTable_GetElement
+local MapMatTable_DisableElement
+local MapMatTable_Clean
+local MapMatTable_Count
+local MapMatTable_Load
+
+local DataTable_Create
+local DataTable_CreateDefaults
+local DataTable_Copy
+local DataTable_Get
+local DataTable_Map_MaterialToData
+
+local CVars_SetToData
+local CVars_SetToDefaults
+
+local Material_IsValid
+local Material_GetOriginal
+local Material_GetCurrent
+local Material_GetNew
+local Material_ShouldChange
+local Material_Model_RevertIDName
+local Material_Model_GetID
+local Material_Model_Create
+local Material_Model_Set
+local Material_Map_Set
+local Material_Map_SetAux
+local Material_Map_LoadDuplicator
+local Material_Restore
+local Material_RestoreAll
+
+local Preview_Toogle
 
 --------------------------------
 --- map_materials TABLE
@@ -196,10 +181,7 @@ end
 function MapMatTable_GetFreeIndex()
 	local i = 1
 	for k,v in pairs(map_materials) do
-		if not v then -- This could happen after a MapMatTable_Clean() call
-			break
-		end
-		if not v.oldMaterial then
+		if v.oldMaterial == nil then
 			break
 		end
 		i = i + 1
@@ -208,31 +190,28 @@ function MapMatTable_GetFreeIndex()
 end
 
 -- Insert an element
-function MapMatTable_InsertElement(i, data)
-	map_materials[i] = data
+function MapMatTable_InsertElement(data, position)
+	map_materials[position or MapMatTable_GetFreeIndex()] = data
 end
 
 -- Get an element and its index
-function MapMatTable_GetElement(oldMaterial, previewMode)
+function MapMatTable_GetElement(oldMaterial)
 	for k,v in pairs(map_materials) do
 		if v.oldMaterial == oldMaterial then
-			if not previewMode and not v.preview or previewMode and v.preview then
-				return v, k
-			end
+			return v, k
 		end
 	end
 	return nil
 end
 
--- Remove an element
-function MapMatTable_RemoveElement(element)
+-- Disable an element
+function MapMatTable_DisableElement(element)
 	for m,n in pairs(element) do
-		element[m] = ""
+		element[m] = nil
 	end
-	element.oldMaterial = nil
 end
 
--- Remove all disabled entries (This is not used and is here just not to lose work)
+-- Remove all disabled entries
 function MapMatTable_Clean()
 	local i = map_materials_limit
 	while i > 0 do
@@ -243,12 +222,34 @@ function MapMatTable_Clean()
 	end
 end
 
+-- Table count
+function MapMatTable_Count()
+	local i = 0
+	for k,v in pairs(map_materials) do
+		if v.oldMaterial ~= nil then
+			i = i + 1
+		end
+	end
+	return i
+end
+
+-- Load a entire table of modifications
+function MapMatTable_Load(MapMatTable)
+	local addDelay = 0.1
+	for k,v in pairs(MapMatTable) do
+		timer.Create("MapRetDuplicatorDelay"..tostring(addDelay), addDelay, 1, function()
+			Material_Map_Set(v)
+		end)
+		addDelay = addDelay + 0.1
+	end
+end
+
 --------------------------------
 --- data TABLES
 --------------------------------
 
 -- Set a data table
-function DataTable_Create(tr, previewMode)
+function DataTable_Create(tr)
 	local data = {
 		ent = tr.Entity,
 		oldMaterial = Material_GetOriginal(tr),
@@ -261,10 +262,6 @@ function DataTable_Create(tr, previewMode)
 		alpha = GetConVar("mapret_alpha"):GetString(),
 		detail = GetConVar("mapret_detail"):GetString(),
 	}
-	if previewMode then
-		data.preview = true
-		data.realNewMaterial = GetConVar("mapret_material"):GetString()
-	end
 	return data
 end
 
@@ -302,13 +299,18 @@ function DataTable_Copy(inData)
 	return data
 end
 
--- Convert a material into a data table
-function DataTable_MaterialToData(materialName)
+-- Get the data table if it exists or return nil
+function DataTable_Get(tr)
+	return IsValid(tr.Entity) and tr.Entity.modifiedmaterial or MapMatTable_GetElement(Material_GetOriginal(tr))
+end
+
+-- Convert a map material into a data table
+function DataTable_Map_MaterialToData(materialName, i)
 	local theMaterial = Material(materialName)
 	local data = {
 		ent = game.GetWorld(),
-		oldMaterial = theMaterial:GetTexture("$basetexture"):GetName(),
-		newMaterial = "",
+		oldMaterial = materialName,
+		newMaterial = map_materials_files..tostring(i),
 		offsetx = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1],
 		offsety = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2],
 		scalex = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1],
@@ -317,12 +319,18 @@ function DataTable_MaterialToData(materialName)
 		alpha = theMaterial:GetString("$alpha"),
 		detail = theMaterial:GetTexture("$detail"):GetName(),
 	}
+	-- Get a valid detail key
+	for k,v in pairs(detail_materials) do
+		if not isbool(v) then
+			if v:GetTexture("$basetexture"):GetName() == data.detail then
+				data.detail = k
+			end
+		end
+	end
+	if not detail_materials[data.detail] then
+		data.detail = nil
+	end
 	return data
-end
-
--- Get the data table if it exists or return nil
-function DataTable_Get(tr, previewMode)
-	return IsValid(tr.Entity) and tr.Entity.modifiedmaterial or MapMatTable_GetElement(Material_GetOriginal(tr), previewMode)
 end
 
 --------------------------------
@@ -331,7 +339,7 @@ end
 
 -- Get a stored data and refresh the cvars
 function CVars_SetToData(ply, data)
-	ply:ConCommand("mapret_detail "..data.detail)		
+	ply:ConCommand("mapret_detail "..data.detail)
 	ply:ConCommand("mapret_offsetx "..data.offsetx)
 	ply:ConCommand("mapret_offsety "..data.offsety)
 	ply:ConCommand("mapret_scalex "..data.scalex)
@@ -361,8 +369,8 @@ function Material_IsValid(material)
 		string.find(material, "../", 1, true) or
 		string.find(material, "pp/", 1, true) or
 		Material(material):IsError() then
-		-- Force to load textures even if they are somehow invalid (so missing textures)
-		for _,v in pairs({ ".vmt", ".png", ".jpg" }) do
+		-- Force to load texture formats because sometimes they work just fine
+		for _,v in pairs({".png", ".jpg" }) do
 			if file.Exists("materials/"..material..v, "GAME") then
 				return true
 			end
@@ -370,106 +378,6 @@ function Material_IsValid(material)
 		return false
 	end
 	return true
-end
-
--- Get the old "newMaterial" from a unique model material name generated by this tool (This is not used and is here just not to lose work)
-function Material_RevertIDName(materialID)
-	local parts = string.Explode( "-=+", materialID )
-	local result
-	if parts then
-		result = parts[2]
-	end
-	return result or nil
-end
-
--- Get or generate the material unique id
-function Material_GetID(data, previewMode)
-	local materialID
-	-- Generate unique id
-	if not previewMode then
-		materialID = ""
-		-- Check if the data has a modified material 
-		if created_materials[data.newMaterial] then
-			return data.newMaterial
-		end
-		-- SortedPairs so the order will be always the same
-		for k,v in SortedPairs(data) do
-			-- Separate the ID Generator
-			if v == data.newMaterial then
-				materialID = materialID.."-=+"..tostring(v).."-=+"
-			-- Remove ent to avoid creating the same material later
-			elseif v != data.ent then
-				materialID = materialID..tostring(v)
-			end
-		end
-	-- Or get the preview material unique name
-	else
-		materialID = material_preview_name
-	end
-	return materialID
-end
-
--- Create a new model material (if it doesn't exist yet) and return its unique new name
-function Material_Create(data, previewMode)
-	local materialID = Material_GetID(data, previewMode)
-	if CLIENT then
-		if not created_materials[materialID] then
-			-- Basic info
-			local material = {
-				["$basetexture"] = data.newMaterial,
-			}
-				-- Model
-			if IsValid(data.ent) then
-				material["$vertexalpha"] = 0
-				material["$vertexcolor"] = 1
-				-- Map
-			elseif tr.Entity:IsWorld() then
-				material["$translucent"] = 0
-				material["$alpha"] =  data.alpha
-			end
-
-			-- Create matrix
-			local matrix = Matrix()
-			matrix:SetAngles(Angle(0, data.rotation, 0)) -- Rotation
-			matrix:Scale(Vector(1/data.scalex, 1/data.scaley, 1)) -- Scale
-			matrix:Translate(Vector(data.offsetx, data.offsety, 0)) -- Offset
-
-			-- Create material
-			local newMaterial	
-			if previewMode then
-				material_preview:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
-				created_materials[materialID] = material_preview
-			else
-				created_materials[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
-			end
-			newMaterial = created_materials[materialID]
-
-			-- Apply detail
-			if data.detail != "None" then
-				newMaterial:SetTexture("$detail", detail_materials[data.detail]:GetTexture("$basetexture"))
-				newMaterial:SetString("$detailblendfactor", "1")
-			else
-				newMaterial:SetString("$detailblendfactor", "0")
-			end
-
-			-- Apply Bumpmap
-			local bumpmapPath = data.newMaterial .. "_normal"
-			if file.Exists("materials/"..bumpmapPath..".vtf", "GAME") then
-				if not created_materials[bumpmapPath] then
-					created_materials[bumpmapPath] = CreateMaterial(bumpmapPath, "VertexLitGeneric", {["$basetexture"] = bumpmapPath})
-				end
-				newMaterial:SetTexture("$bumpmap", created_materials[bumpmapPath]:GetTexture("$basetexture"))
-			else
-				newMaterial:SetUndefined("$bumpmap")
-			end
-
-			-- Apply matrix
-			newMaterial:SetMatrix("$basetexturetransform", matrix)
-			newMaterial:SetMatrix("$detailtexturetransform", matrix)
-			newMaterial:SetMatrix("$bumptransform", matrix)
-		end
-	end
-	return materialID
 end
 
 -- Get the original material full path
@@ -489,8 +397,9 @@ function Material_GetCurrent(tr)
 	-- Model
 	if IsValid(tr.Entity) then
 		path = tr.Entity.modifiedmaterial
+		-- Get a material generated for the model
 		if path then
-			path = Material_RevertIDName(tr.Entity.modifiedmaterial.newMaterial)
+			path = Material_Model_RevertIDName(tr.Entity.modifiedmaterial.newMaterial)
 		else
 			path = tr.Entity:GetMaterials()[1]
 		end
@@ -512,40 +421,33 @@ function Material_GetNew()
 end
 
 -- Check if the material should be replaced
-function Material_ShouldChange(currentData, newData, tr)
-	-- If currentData
+function Material_ShouldChange(currentDataIn, newDataIn, tr)
+	local currentData = table.Copy(currentDataIn)
+	local newData = table.Copy(newDataIn)
+	local backup
+	-- If the material is still untouched, let's modify it
 	if not currentData then
 		return true
+	-- Else we need to hide its internal backup
+	else
+		backup = currentData.backup
+		currentData.backup = nil
 	end
-	-- Use the real newMaterial name in preview mode
-	local previewMode = false
-	if currentData.preview then
-		currentData.newMaterial = currentData.realNewMaterial
-		previewMode = true
+	-- Correct a model newMaterial entry for the comparision
+	if IsValid(tr.Entity) then
+		newData.newMaterial = Material_Model_GetID(newData)
 	end
 	-- Check if some property is different
 	local isDifferent = false
 	for k,v in pairs(currentData) do
-		if v != newData[k] then
-			-- If we are into a preview material the real material path is the "realNewMaterial"
-			if newData[k] == newData.newMaterial then
-				if v != newData.realNewMaterial then
-					-- Yep
-					isDifferent = true
-					break
-				end
-			else
-				-- Yep
-				isDifferent = true
-				break
-			end
+		if v ~= newData[k] then
+			isDifferent = true
+			break
 		end
 	end
-	-- Restore the newMaterial name in preview mode
-	if previewMode then
-		currentData.newMaterial = material_preview_name
-	end
-	-- The material need to be changed if data != data2
+	-- Restore the internal backup
+	currentData.backup = backup
+	-- The material need to be changed if data ~= data2
 	if isDifferent then
 		return true
 	end
@@ -553,33 +455,115 @@ function Material_ShouldChange(currentData, newData, tr)
 	return false
 end
 
+-- Get the old "newMaterial" from a unique model material name generated by this tool (This is not used and is here just not to lose work)
+function Material_Model_RevertIDName(materialID)
+	local parts = string.Explode( "-=+", materialID )
+	local result
+	if parts then
+		result = parts[2]
+	end
+	return result
+end
+
+-- Get or generate the material unique id
+function Material_Model_GetID(data)
+	local materialID
+	-- Generate unique id
+	materialID = ""
+	-- SortedPairs so the order will be always the same
+	for k,v in SortedPairs(data) do
+		-- Remove the ent to avoid creating the same material later
+		if v ~= data.ent then
+			-- Separate the ID Generator inside a "-=+" box
+			if isstring(v) then
+				if v == data.newMaterial then
+					v = "-=+"..v.."-=+"
+				end
+			-- Round if it's a number
+			elseif isnumber(v) then
+				v = math.Round(v)
+			end
+			-- Generating...
+			materialID = materialID..tostring(v)
+		end
+	end
+	-- Remove problematic chats
+	materialID = materialID:gsub(" ", "")
+	materialID = materialID:gsub("%.", "")
+	return materialID
+end
+
+-- Create a new model material (if it doesn't exist yet) and return its unique new name
+function Material_Model_Create(data)
+	local materialID = Material_Model_GetID(data)
+	if CLIENT then
+		-- Create the material if it's necessary
+		if not model_materials[materialID] then
+			-- Basic info
+			local material = {
+				["$basetexture"] = data.newMaterial,
+				["$vertexalpha"] = 0,
+				["$vertexcolor"] = 1,
+			}
+			-- Create matrix
+			local matrix = Matrix()
+			matrix:SetAngles(Angle(0, data.rotation, 0)) -- Rotation
+			matrix:Scale(Vector(1/data.scalex, 1/data.scaley, 1)) -- Scale
+			matrix:Translate(Vector(data.offsetx, data.offsety, 0)) -- Offset
+			-- Create material
+			local newMaterial	
+			model_materials[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
+			model_materials[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
+			newMaterial = model_materials[materialID]
+			-- Apply detail
+			if data.detail and data.detail ~= "None" and data.detail~= "" then
+				if detail_materials[data.detail] then
+					newMaterial:SetTexture("$detail", detail_materials[data.detail]:GetTexture("$basetexture"))
+					newMaterial:SetString("$detailblendfactor", "1")
+				else
+					newMaterial:SetString("$detailblendfactor", "0")
+				end
+			else
+				newMaterial:SetString("$detailblendfactor", "0")
+			end
+			-- Try to apply Bumpmap ()
+			local bumpmapPath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
+			local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap") -- checks for a copied material active bumpmap
+			if file.Exists("materials/"..bumpmapPath..".vtf", "GAME") then
+				if not model_materials[bumpmapPath] then
+					model_materials[bumpmapPath] = CreateMaterial(bumpmapPath, "VertexLitGeneric", {["$basetexture"] = bumpmapPath})
+				end
+				newMaterial:SetTexture("$bumpmap", model_materials[bumpmapPath]:GetTexture("$basetexture"))
+			elseif bumpmap then
+				newMaterial:SetTexture("$bumpmap", bumpmap)
+			end
+			-- Apply matrix
+			newMaterial:SetMatrix("$basetexturetransform", matrix)
+			newMaterial:SetMatrix("$detailtexturetransform", matrix)
+			newMaterial:SetMatrix("$bumptransform", matrix)
+		end
+	end
+	return materialID
+end
+
 -- Set model material:::
 -- It returns true or false only for the cleanup operation
 if SERVER then
-	util.AddNetworkString("Material_SetOnModel")
+	util.AddNetworkString("Material_Model_Set")
 end
-function Material_SetOnModel(data, previewMode)
+function Material_Model_Set(data)
 	if SERVER then
 		-- Send the modification to every player
-		net.Start("Material_SetOnModel")
+		net.Start("Material_Model_Set")
 			net.WriteTable(data)
-			net.WriteBool(previewMode)
 		net.Broadcast()
 		-- Set the duplicator
-		if not previewMode then
-			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
-		end
+		duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
 	end
 	-- Create a material
-	local materialID = Material_Create(data, previewMode)
+	local materialID = Material_Model_Create(data)
 	-- Changes the new material for the real new one
 	data.newMaterial = materialID
-	-- Create a backup for the preview mode
-	if previewMode then
-		if data.ent.modifiedmaterial then
-			data.ent.modifiedmaterialbackup = data.ent.modifiedmaterial
-		end
-	end
 	-- Indicate that the model got modified by this tool
 	data.ent.modifiedmaterial = data
 	if CLIENT then
@@ -590,51 +574,71 @@ function Material_SetOnModel(data, previewMode)
 		data.ent:SetColor(Color(255,255,255,255*data.alpha))
 	end
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Models", Material_SetOnModel)
+duplicator.RegisterEntityModifier("MapRetexturizer_Models", Material_Model_Set)
 if CLIENT then
-	net.Receive("Material_SetOnModel", function()
-		Material_SetOnModel(net.ReadTable(), net.ReadBool())
+	net.Receive("Material_Model_Set", function()
+		Material_Model_Set(net.ReadTable(), net.ReadBool())
 	end)
 end
 
 -- Set map material:::
 -- It returns true or false only for the cleanup operation
 if SERVER then
-	util.AddNetworkString("Material_SetOnMap")
+	util.AddNetworkString("Material_Map_Set")
 end
-function Material_SetOnMap(data, previewMode)
-	-- Search for an unused backup slot
-	local i = MapMatTable_GetFreeIndex()
-	-- Insert the important informations in our table
-	MapMatTable_InsertElement(i, data)
+function Material_Map_Set(data)
+	-- if data has a backup we need to restore it, otherwise let's just do the normal stuff
 	if SERVER then
 		-- Send the modification to every player
-		net.Start("Material_SetOnMap")
+		net.Start("Material_Map_Set")
 			net.WriteTable(data)
-			net.WriteBool(previewMode)
 		net.Broadcast()
 		-- Set the duplicator
-		if not previewMode then
+		if not data.backup then
 			if not IsValid(map_materials_duplicator) then
 				map_materials_duplicator = ents.Create("prop_physics")
 				map_materials_duplicator:SetModel("models/props_phx/cannonball_solid.mdl")
 				map_materials_duplicator:SetPos(Vector(0, 0, 0))
-				map_materials_duplicator:SetNoDraw(true)
-				map_materials_duplicator:SetSolid(0)
+				map_materials_duplicator:SetNoDraw(true)				
 				map_materials_duplicator:Spawn()
+				map_materials_duplicator:SetSolid(0)
+				map_materials_duplicator:PhysicsInitStatic(SOLID_NONE)
 			end
 			duplicator.StoreEntityModifier(map_materials_duplicator, "MapRetexturizer_Maps", map_materials)
 		end
 	end
+	local i
+	-- Set the backup
+	local element = MapMatTable_GetElement(data.oldMaterial)
+	if element then
+		-- Create an entry in the material DataTable poiting to the original backup data
+		data.backup = element.backup
+		-- Cleanup
+		Material_Map_SetAux(element.backup)
+	else
+		-- Get a MapMatTable free index
+		i = MapMatTable_GetFreeIndex()
+		-- Get the current material info
+		local dataBackup = DataTable_Map_MaterialToData(data.oldMaterial, i)
+		-- Save the material texture
+		Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
+		-- Create an entry in the material DataTable poting to the new backup data
+		data.backup = dataBackup
+	end
+	-- Apply the new look to the map material
+	Material_Map_SetAux(data)
+	-- Index the DataTable
+	MapMatTable_InsertElement(data, i)
+end
+if CLIENT then
+	net.Receive("Material_Map_Set", function()
+		Material_Map_Set(net.ReadTable())
+	end)
+end
+
+-- Copy "all" the data from a material to another (auxiliar function, use Material_Map_Set() instead)
+function Material_Map_SetAux(data)
 	if CLIENT then
-		-- Backup the material
-		local backupName = Material_GetID(DataTable_MaterialToData(data.oldMaterial), previewMode)
-		if not created_materials[backupName] then
-			created_materials[backupName] = CreateMaterial(backupName, "VertexLitGeneric", {["$basetexture"] = data.oldMaterial})
-			Material_Copy(data.oldMaterial, backupName)
-		end
-		data.backup = backupName
-		-- Apply the modifications
 		local mapMaterial = Material(data.oldMaterial)
 		if not Material(data.newMaterial):IsError() then -- If the file is a .vmt
 			mapMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
@@ -648,7 +652,7 @@ function Material_SetOnMap(data, previewMode)
 		texture_matrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
 		texture_matrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
 		mapMaterial:SetMatrix("$basetexturetransform", texture_matrix)
-		if data.detail != "None" then
+		if data.detail and data.detail ~= "None" and data.detail ~= "" then
 			mapMaterial:SetTexture("$detail", detail_materials[data.detail]:GetTexture("$basetexture"))
 			mapMaterial:SetString("$detailblendfactor", "1")
 		else
@@ -666,80 +670,54 @@ function Material_SetOnMap(data, previewMode)
 		mapMaterial:SetString("$detailblendfactor", "0.2")
 		mapMaterial:SetString("$detailblendmode", "3")
 		]]--
-	end
-end
-if CLIENT then
-	net.Receive("Material_SetOnMap", function()
-		Material_SetOnMap(net.ReadTable(), net.ReadBool())
-	end)
-end
-
--- Copy "all" the data from a material to another
-function Material_Copy(originName, destinyName)
-	local origin = Material(originName)
-	local destiny = Material(destinyName)
-	destiny:SetTexture("$basetexture", origin:GetTexture("$basetexture"))
-	destiny:SetString("$translucent", "0")
-	destiny:SetString("$alpha", "1")
-	destiny:SetMatrix("$basetexturetransform", origin:GetMatrix("$basetexturetransform"))
-	if not origin:GetTexture("$detail"):IsError() then
-		destiny:SetTexture("$detail", origin:GetTexture("$detail"))
+	else
+		return
 	end
 end
 
 -- Load map materials from saves
-function Material_LoadMapDuplicator(ply, ent, saved_table)
+function Material_Map_LoadDuplicator(ply, ent, saved_table)
 	if CLIENT then return true; end
-
 	-- Just remove the duplicator entity
 	ent:Remove()
 	-- Cleanup any previous mess
 	Material_RestoreAll()
 	-- Reloading...
-	for k,v in pairs(saved_table) do
-		Material_SetOnMap(v)
-	end
+	MapMatTable_Load(saved_table)
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Material_LoadMapDuplicator)
+duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Material_Map_LoadDuplicator)
 
 -- Clean previous modifications:::
 if SERVER then
 	util.AddNetworkString("Material_Restore")
 end
-function Material_Restore(ent, oldMaterial, previewMode)
+function Material_Restore(ent, oldMaterial)
 	local isValid = false
 	-- Model
 	if IsValid(ent) then
-		if ent.modifiedmaterial or previewMode then
-			if ent.modifiedmaterialbackup then -- Used in preview mode
-				if SERVER then
-					Material_SetOnModel(ent.modifiedmaterialbackup, previewMode)
-				end
-				ent.modifiedmaterialbackup = nil
-			else
-				if CLIENT then
-					ent:SetMaterial("")
-					ent:SetRenderMode(RENDERMODE_NORMAL)
-					ent:SetColor(Color(255,255,255,255))
-				end
-				ent.modifiedmaterial = nil
-				if SERVER then
-					duplicator.ClearEntityModifier(ent, "MapRetexturizer_Models")
-				end
+		if ent.modifiedmaterial then
+			if CLIENT then
+				ent:SetMaterial("")
+				ent:SetRenderMode(RENDERMODE_NORMAL)
+				ent:SetColor(Color(255,255,255,255))
+			end
+			ent.modifiedmaterial = nil
+			if SERVER then
+				duplicator.ClearEntityModifier(ent, "MapRetexturizer_Models")
 			end
 			isValid = true
 		end
 	-- Map
 	else
-		if table.Count(map_materials) > 0 then
-			local element, index = MapMatTable_GetElement(oldMaterial, previewMode)
+		if MapMatTable_Count() > 0 then
+			local element = MapMatTable_GetElement(oldMaterial)
 			if element then
 				if CLIENT then
-					Material_Copy(element.backup, oldMaterial)
+					Material_Map_SetAux(element.backup)
 				end
-				MapMatTable_RemoveElement(element)
+				MapMatTable_DisableElement(element)
 				if SERVER then
-					if table.Count(map_materials) == 0 then
+					if MapMatTable_Count() == 0 then
 						if IsValid(map_materials_duplicator) then
 							duplicator.ClearEntityModifier(map_materials_duplicator, "MapRetexturizer_Maps")
 						end
@@ -754,7 +732,6 @@ function Material_Restore(ent, oldMaterial, previewMode)
 			net.Start("Material_Restore")
 				net.WriteEntity(ent)
 				net.WriteString(oldMaterial)
-				net.WriteBool(previewMode)
 			net.Broadcast()
 		end
 		return true
@@ -763,46 +740,27 @@ function Material_Restore(ent, oldMaterial, previewMode)
 end
 if CLIENT then
 	net.Receive("Material_Restore", function()
-		Material_Restore(net.ReadEntity(), net.ReadString(), net.ReadBool())
+		Material_Restore(net.ReadEntity(), net.ReadString())
 	end)
 end
 
 -- Clean up everything
 function Material_RestoreAll()
 	if CLIENT then return true; end
-	
-	-- Disable preview mode
-	local backup = {}
-	for k,v in pairs(player.GetHumans()) do
-		if v.mr_previewstate == true then
-			v.mr_previewstate = false
-			backup[v] = true
+	-- Models
+	for k,v in pairs(ents.GetAll()) do
+		if IsValid(v) then
+			Material_Restore(v, "")
 		end
 	end
-	-- Clean
-	timer.Create("RestoreAll Preview Delay 1", 0.1, 1, function()
-		-- Models
-		for k,v in pairs(ents.GetAll()) do
-			if IsValid(v) then
-				Material_Restore(v, "")
+	-- Map
+	if MapMatTable_Count() > 0 then
+		for k,v in pairs(map_materials) do
+			if v.oldMaterial then
+				Material_Restore(nil, v.oldMaterial)
 			end
 		end
-		-- Map
-		if table.Count(map_materials) > 0 then
-			for k,v in pairs(map_materials) do
-				if v.oldMaterial then
-					Material_Restore(nil, v.oldMaterial)
-				end
-			end
-		end
-	end)
-	-- Restore preview mode
-	timer.Create("RestoreAll Preview Delay 2", 0.4, 1, function()
-		for k,v in pairs(backup) do
-			k.mr_previewstate = true
-		end
-	end)
-	
+	end
 end
 concommand.Add("mapret_cleanall", Material_RestoreAll)
 
@@ -815,9 +773,9 @@ if SERVER then
 	util.AddNetworkString("TooglePreview")
 end
 function Preview_Toogle(ply, cmd, args)
-	ply.mr_previewstate = args[1] == "1" and true or nil
+	ply.mr_previewstate = args[1] == "1" and true or false
 	net.Start("TooglePreview")
-		net.WriteBool(args[1])
+		net.WriteBool(ply.mr_previewstate)
 	net.Send(ply)
 end
 concommand.Add("mapret_preview", Preview_Toogle)
@@ -827,40 +785,11 @@ if CLIENT then
 	end)
 end
 
--- Remove preview
-if SERVER then
-	util.AddNetworkString("RemovePreview")
-end
-function Preview_Remove(ply)
-	if SERVER then
-		if ply.mr_previewdata then
-			-- Restore the map material to its last state or model material to its original state
-			Material_Restore(ply.mr_previewdata.ent, ply.mr_previewdata.oldMaterial, true)
-			-- Free the previewdata to a new usage
-			ply.mr_previewdata = nil
-			-- Send the changes to all clients
-			net.Start("RemovePreview")
-			net.Broadcast()
-		end
-	end
-	if CLIENT then
-		-- Free the preview material for a new usage
-		created_materials[material_preview_name] = nil
-	end
-end
-if CLIENT then
-	net.Receive("RemovePreview", function()
-		Preview_Remove()
-	end)
-end
-
 --------------------------------
 --- TOOL FUNCTIONS
 --------------------------------
 
--- Apply materials
-function TOOL:LeftClick(tr)
-	local ply = self:GetOwner() or LocalPlayer()
+function TOOL_BasicChecks(ply, ent)
 	-- Admin only
 	if not ply:IsAdmin() and not ply:IsSuperAdmin() then
 		if SERVER then
@@ -869,8 +798,31 @@ function TOOL:LeftClick(tr)
 		return false
 	end
 	-- It's not meant to mess with players
-	if tr.Entity:IsPlayer() then
+	if ent:IsPlayer() then
 		return false
+	end
+	return true
+end
+
+-- Apply materials
+function TOOL:LeftClick(tr)
+	local ply = self:GetOwner() or LocalPlayer()
+	local ent = tr.Entity
+	-- Basic checks
+	if not TOOL_BasicChecks(ply, ent) then
+		return false
+	end
+	-- Check upper limit
+	if MapMatTable_Count() == map_materials_limit then
+		-- Limit reached! Try to open new spaces in the map_materials table checking if the player removed something and cleaning the entry for real
+		MapMatTable_Clean()
+		-- Check again
+		if MapMatTable_Count() == map_materials_limit then
+			if SERVER then
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..map_materials_limit..")! Notify the developer for more space.")
+			end
+			return false
+		end
 	end
 	-- Generate the new data
 	local data = DataTable_Create(tr)
@@ -889,58 +841,33 @@ function TOOL:LeftClick(tr)
 	if CLIENT then
 		return true
 	end
-	-- Disable preview mode (adding some delay to the execution)
-	local previewDelay = 0
-	if ply.mr_previewstate then
-		ply.mr_previewstate = false
-		previewDelay = 0.5
+	-- Set model material
+	if IsValid(ent) then
+		Material_Restore(ent, data.oldMaterial) -- Clean previous modifications
+		Material_Model_Set(data)
+	-- Or set map material
+	elseif ent:IsWorld() then
+		Material_Map_Set(data)
 	end
-	timer.Create("mr_previewstateWaitLeftClick", previewDelay, 1, function()
-		-- Clean previous modifications
-		Material_Restore(data.ent, data.oldMaterial)
-		-- Set model material
-		if IsValid(data.ent) then
-			Material_SetOnModel(data)
-		-- Or set map material
-		elseif data.ent:IsWorld() then
-			Material_SetOnMap(data)
-		end
-		-- Remove any preview backup informations
-		if previewDelay > 0 then
-			ply.mr_previewdata = nil
-		end
-		-- Set the Undo
-		undo.Create("Material")
-			undo.SetPlayer(ply)
-			undo.AddFunction(function(tab, data)
-				if data.oldMaterial then
-					Material_Restore(data.ent, data.oldMaterial)
-				end
-			end, data)
-			undo.SetCustomUndoText("Undone a material")
-		undo.Finish("Material ("..tostring(data.newMaterial)..")")
-		-- Reenable preview mode
-		if previewDelay > 0 then
-			timer.Create("mr_previewstateWaitLeftClick2", previewDelay, 1, function()
-				ply.mr_previewstate = true
-			end)
-		end
-	end)
+	-- Set the Undo
+	undo.Create("Material")
+		undo.SetPlayer(ply)
+		undo.AddFunction(function(tab, data)
+			if data.oldMaterial then
+				Material_Restore(ent, data.oldMaterial)
+			end
+		end, data)
+		undo.SetCustomUndoText("Undone a material")
+	undo.Finish("Material ("..tostring(data.newMaterial)..")")
 	return true
 end
 
 -- Copy materials
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	-- Admin only
-	if not ply:IsAdmin() and not ply:IsSuperAdmin() then
-		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is admin only!")
-		end
-		return false
-	end
-	-- It's not meant to mess with players
-	if tr.Entity:IsPlayer() then
+	local ent = tr.Entity
+	-- Basic checks
+	if not TOOL_BasicChecks(ply, ent) then
 		return false
 	end
 	-- We can't get displacement materials
@@ -978,100 +905,31 @@ end
 
 -- Restore materials
 function TOOL:Reload(tr)
-	local oldData = DataTable_Get(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	if SERVER then
-		-- Initial preview check to avoid blinking materials
-		if ply.mr_previewstate then
-			if not oldData then
-				return false
-			end
-		end
-		-- Disable preview mode (adding some delay to the execution)
-		local previewDelay = 0
-		if self:GetOwner().mr_previewstate then
-			self:GetOwner().mr_previewstate = false
-			previewDelay = 0.1
-		end
-		timer.Create("mr_previewstateWaitReload", previewDelay, 1, function()
-			--Reset the material
-			if Material_Restore(ent, Material_GetOriginal(tr)) then
-				if previewDelay > 0 then
-					ply.mr_previewdata = nil
-				end
-			end
-			-- Reenable preview mode
-			if previewDelay > 0 then
-				timer.Create("mr_previewstateWaitReload2", previewDelay, 1, function()
-					self:GetOwner().mr_previewstate = true
-				end)
-			end
-		end)
-	end
-	-- Final check
-	if not oldData then
+	local ent = tr.Entity
+	-- Basic checks
+	if not TOOL_BasicChecks(ply, ent) then
 		return false
 	end
-	return true
+	--Reset the material
+	if DataTable_Get(tr) then
+		if SERVER then
+			Material_Restore(ent, Material_GetOriginal(tr))
+		end
+		return true
+	end
+	return false
 end
 
 -- Set preview
 function TOOL:Think()
-	local ply = self:GetOwner() or LocalPlayer()
-	-- If preview is enabled
-	if ply.mr_previewstate then
-		local tr = ply:GetEyeTrace()
-		local ent = tr.Entity
-		-- Ignore players
-		if ent:IsPlayer() then
-			return false
-		end
-		-- Create a new data table and try to get the current one
-		local newData = DataTable_Create(tr, true)
-		local oldData = DataTable_Get(tr, true)
-		-- Check if changes are needed
-		if not Material_ShouldChange(oldData, newData, tr) then
-			return
-		end
-		-- Don't apply bad materials
-		if not Material_IsValid(newData.newMaterial) then
-			if material_preview_print_error then 
-				return
-			end
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
-			material_preview_print_error = true
-			timer.Create("Material_SetOnModel Delay", 1, 1, function()
-				material_preview_print_error = false
-			end)
-			return
-		end
-		if SERVER then
-			-- Remove the last material previewed
-			Preview_Remove(ply)
-			-- Apply the material change
-			if IsValid(ent) then
-				Material_SetOnModel(newData, true)
-			elseif ent:IsWorld() then
-				Material_SetOnMap(newData, true)
-			end
-			-- Backup the informations that can remove the preview
-			--ply.mr_previewdata = DataTable_Copy(oldData) or DataTable_CreateDefaults(tr)
-			ply.mr_previewdata = { ent = ent, oldMaterial = Material_GetOriginal(tr), newMaterial = Material_GetCurrent(tr) } 
-		end
-	-- If preview is disabled
-	else
-		if SERVER then
-			-- Remove any previous material preview
-			Preview_Remove(ply)
-		end
-	end
+	return
 end
 
 -- Cleanup
 function TOOL:Holster()
 	if CLIENT then return true; end
 
-	Preview_Remove(self:GetOwner())
 end
 
 -- Panels
@@ -1085,6 +943,7 @@ function TOOL.BuildCPanel(CPanel)
 	section1:SetHTML("<h3 style='background: #99ccff; text-align: center;color:#ffffff; padding: 5px 0 5px 0; text-shadow: 1px 1px #000000;''>General</h3>")
 	section1:SetTall(titleSize)
 	CPanel:AddItem(section1)
+	RunConsoleCommand("mapret_material", "dev/dev_blendmeasure")
 	CPanel:TextEntry("Material path", "mapret_material")
 	CPanel:ControlHelp("\nNote: the command \"mat_crosshair\" can get a displacement material path.")
 	CPanel:CheckBox("Preview Modifications", "mapret_preview")
@@ -1097,9 +956,8 @@ function TOOL.BuildCPanel(CPanel)
 	CPanel:AddItem(section2)
 	detail_combobox = CPanel:ComboBox("Select a Detail:", "mapret_detail")
 	for k,v in pairs(detail_materials) do
-		detail_combobox:AddChoice(k, k)
+		detail_combobox:AddChoice(k, k, v)
 	end	
-	detail_combobox:SetValue("None", "None")
 	CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
 	CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
 	CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)

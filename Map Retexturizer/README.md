@@ -1,5 +1,9 @@
 # MAP RETEXTURIZER
 
-W.I.P.
+Working but not ready for use. It needs:
 
-Not ready for use.
+- Decal system;
+- Preview system;
+- Save/Load system.
+
+W.I.P.

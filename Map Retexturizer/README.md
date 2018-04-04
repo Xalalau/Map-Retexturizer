@@ -3,7 +3,7 @@
 Working but not ready for use. In order, it needs:
 
 - ~~Decal system~~;
-- Better menu HTML handling;
+- ~~Better menu HTML handling~~;
 - Fix some known bugs;
 - Duplicator enhancements (loading bar);
 - Check if animated decals are possible through decals;

@@ -73,7 +73,7 @@ local mr = {
 			filename = "mapretexturizer/file",
 			-- Files. 1024 seemed to be more than enough. Acctually I only use this method because of a bunch of GMod limitations.
 			limit = 1024,
-			-- MMML_Data structures
+			-- Data structures
 			list = {}
 		},
 		model = { -- (Client)
@@ -133,7 +133,7 @@ end
 --------------------------------
 
 --[[
-I use a structure named "MMML_Data" to control the modifications. These are the entries:
+I use a structure named "Data" to control the modifications. These are the entries:
 
 	Normal entries:
 		ent = entity
@@ -147,11 +147,11 @@ I use a structure named "MMML_Data" to control the modifications. These are the 
 		alpha = string
 		detail = string
 	Map backup entry:
-		backup = MMML_Data
+		backup = Data
 
-Entities' MMML_Datas are indexed in each entity over the modifiedmaterial entry (+duplicator support).
+Entities' Datas are indexed in each entity over the modifiedmaterial entry (+duplicator support).
 
-Map MMML_Datas are stored in the mr.mat.map.list table and indexed in mr.dup.entity entity for duplicator support.
+Map Datas are stored in the mr.mat.map.list table and indexed in mr.dup.entity entity for duplicator support.
 ]]
 
 --------------------------------
@@ -463,7 +463,7 @@ function Material_ShouldChange(currentDataIn, newDataIn, tr)
 			break
 		end
 	end
-	-- Material_Restore the internal backup
+	-- Restore the internal backup
 	currentData.backup = backup
 	-- The material need to be changed if data ~= data2
 	if isDifferent then
@@ -697,7 +697,7 @@ if SERVER then
 	util.AddNetworkString("Map_Material_Set")
 end
 function Map_Material_Set(data)
-	-- if data has a backup we need to Material_Restore it, otherwise let's just do the normal stuff
+	-- if data has a backup we need to restore it, otherwise let's just do the normal stuff
 	local isNewMaterial = false -- Duplicator check
 	if SERVER then
 		-- Send the modification to every player
@@ -712,7 +712,7 @@ function Map_Material_Set(data)
 	-- Set the backup
 	local element = MMML_GetElement(data.oldMaterial)
 	if element then
-		-- Create an entry in the material MMML_Data poiting to the original backup data
+		-- Create an entry in the material Data poiting to the original backup data
 		data.backup = element.backup
 		-- Cleanup
 		Map_Material_SetAux(element.backup)
@@ -723,12 +723,12 @@ function Map_Material_Set(data)
 		local dataBackup = data.backup or Data_CreateFromMap(data.oldMaterial, i) -- data.backup only appears while loading the duplicator
 		-- Save the material texture
 		Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
-		-- Create an entry in the material MMML_Data poting to the new backup data
+		-- Create an entry in the material Data poting to the new backup data
 		data.backup = dataBackup
 	end
 	-- Apply the new look to the map material
 	Map_Material_SetAux(data)
-	-- Index the MMML_Data
+	-- Index the Data
 	MMML_InsertElement(data, i)
 	-- Set the duplicator
 	if SERVER then
@@ -1064,7 +1064,7 @@ function TOOL:LeftClick(tr)
 	if not TOOL_BasicChecks(ply, ent, tr) then
 		return false
 	end
-	-- Create the duplicator entity used to Material_Restore map materials and decals
+	-- Create the duplicator entity used to restore map materials and decals
 	Duplicator_CreateEnt()
 	-- If we are dealing with decals
 	if ply.mr_decalmode then
@@ -1157,7 +1157,7 @@ function TOOL:RightClick(tr)
 	return true
 end
 
--- Material_Restore materials
+-- Restore materials
 function TOOL:Reload(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 	local ent = tr.Entity
@@ -1165,7 +1165,7 @@ function TOOL:Reload(tr)
 	if not TOOL_BasicChecks(ply, ent, tr) then
 		return false
 	end
-	--Reset the material
+	-- Reset the material
 	if Data_Get(tr) then
 		if SERVER then
 			Material_Restore(ent, Material_GetOriginal(tr))

@@ -3,6 +3,7 @@ duplicator:
 modelos perdem o alpha ao serem movidos
 decals estao sendo duplicados depois de (duplicate com decals) -> (load) -> limpeza -> novo save -> novo load -> decals velhos reaparecem
 Fazer barra de andamento
+Resumir texto das seções de menu em uma função (ao invés de repetir aquela trolha várias vezes)
 
 Decalques com gif animados?
 
@@ -12,6 +13,7 @@ Sincronia de novos jogadores (Enviar e aplicar modificações em models e no map
 Testar mais ainda
 Sistema de saving e loading;(por NOME MAPA ---> LISTA DE SAVES) (Colocar em descrição alerta sobre aonde estão os arquivos)
 Sistema de autoloading;
+Rever todos os comentários e melhorá-los
 
 Propaganda sobre como usar em servidores (outdoor, mapas únicos, ninguém precisa baixar nada extra, autoload)
 Modificar mapa famoso com amigos
@@ -66,66 +68,72 @@ TOOL.ClientConVar["decal"] = "0"
 --- GLOBAL VARS
 --------------------------------
 
-local mr = {
-	mat = {
-		map = { -- (Shared)
-			-- The name of our backup map material files. They are file1, file2, file3...
-			filename = "mapretexturizer/file",
-			-- Files. 1024 seemed to be more than enough. Acctually I only use this method because of a bunch of GMod limitations.
-			limit = 1024,
-			-- Data structures
-			list = {}
-		},
-		model = { -- (Client)
-			-- materialID = String
-			list = {}
-		},
-		decal = { -- (Server)
-			-- ID = String
-			list = {}
-		},
-		detail = { -- (Client)
-			-- Initialized later - Only "None" remains as bool
-			list = {	
-				["None"] = true,
-				["Concrete"] = false,
-				["Metal"] = false,
-				["Plaster"] = false,
-				["Rock"] = false
-			}
-		},
+-- Materials management
+local mat = {
+	-- (Shared)
+	map = {
+		-- The name of our backup map material files. They are file1, file2, file3...
+		filename = "mapretexturizer/file",
+		-- Files. 1024 seemed to be more than enough. Acctually I only use this method because of a bunch of GMod limitations.
+		limit = 1024,
+		-- Data structures
+		list = {}
 	},
-	dup = { -- (Server)
-		-- Workaround to duplicate map materials
-		entity,
-		-- Duplicator starts with models
-		run = "models",
-		-- Register what type of materials the duplicator has
-		has = {
-			map = false,
-			models = false,
-			decals = false
-		},
-		-- Special aditive delay for models
-		models = {
-			delay = 0,
-			max_delay = 0
-		},
-		-- Disable our generic dup entity physics and rendering after the duplicate
-		hidden = false,
-		-- First cleanup
-		clean = false,
-	}
+	-- (Client)
+	model = {
+		-- materialID = String
+		list = {}
+	},
+	-- (Server)
+	decal = {
+		-- ID = String
+		list = {}
+	},
+	-- (Client)
+	detail = {
+		-- Initialized later - Only "None" remains as bool
+		list = {	
+			["None"] = true,
+			["Concrete"] = false,
+			["Metal"] = false,
+			["Plaster"] = false,
+			["Rock"] = false
+		}
+	},
+},
+
+-- Duplicator management
+-- (Server)
+local dup = {
+	-- Workaround to duplicate map materials
+	entity,
+	-- Duplicator starts with models
+	run = "models",
+	-- Register what type of materials the duplicator has
+	has = {
+		map = false,
+		models = false,
+		decals = false
+	},
+	-- Special aditive delay for models
+	models = {
+		delay = 0,
+		max_delay = 0
+	},
+	-- Disable our generic dup entity physics and rendering after the duplicate
+	hidden = false,
+	-- First cleanup
+	clean = false,
 }
 
 if CLIENT then
 	local function CreateMaterialAux(path)
 		return CreateMaterial(path, "VertexLitGeneric", {["$basetexture"] = path})
 	end
-	mr.mat.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
-	mr.mat.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
-	mr.mat.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
-	mr.mat.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
+	mat.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
+	mat.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
+	mat.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
+	mat.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
 end
 
 --------------------------------
@@ -151,7 +159,7 @@ I use a structure named "Data" to control the modifications. These are the entri
 
 Entities' Datas are indexed in each entity over the modifiedmaterial entry (+duplicator support).
 
-Map Datas are stored in the mr.mat.map.list table and indexed in mr.dup.entity entity for duplicator support.
+Map Datas are stored in the mat.map.list table and indexed in dup.entity entity for duplicator support.
 ]]
 
 --------------------------------
@@ -202,13 +210,13 @@ local Duplicator_LoadDecals
 local Duplicator_LoadMapMaterials
 
 -------------------------------------
---- mr.mat.map.list (MMML) management
+--- mat.map.list (MMML) management
 -------------------------------------
 
 -- Get a free index
 function MMML_GetFreeIndex()
 	local i = 1
-	for k,v in pairs(mr.mat.map.list) do
+	for k,v in pairs(mat.map.list) do
 		if v.oldMaterial == nil then
 			break
 		end
@@ -219,12 +227,12 @@ end
 
 -- Insert an element
 function MMML_InsertElement(data, position)
-	mr.mat.map.list[position or MMML_GetFreeIndex()] = data
+	mat.map.list[position or MMML_GetFreeIndex()] = data
 end
 
 -- Get an element and its index
 function MMML_GetElement(oldMaterial)
-	for k,v in pairs(mr.mat.map.list) do
+	for k,v in pairs(mat.map.list) do
 		if v.oldMaterial == oldMaterial then
 			return v, k
 		end
@@ -241,10 +249,10 @@ end
 
 -- Remove all disabled entries
 function MMML_Clean()
-	local i = mr.mat.map.limit
+	local i = mat.map.limit
 	while i > 0 do
-		if not mr.mat.map.list[i].oldMaterial then
-			table.remove(mr.mat.map.list, i)
+		if not mat.map.list[i].oldMaterial then
+			table.remove(mat.map.list, i)
 		end
 		i = i - 1
 	end
@@ -253,7 +261,7 @@ end
 -- Table count
 function MMML_Count()
 	local i = 0
-	for k,v in pairs(mr.mat.map.list) do
+	for k,v in pairs(mat.map.list) do
 		if v.oldMaterial ~= nil then
 			i = i + 1
 		end
@@ -305,7 +313,7 @@ function Data_CreateFromMap(materialName, i)
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
-		newMaterial = mr.mat.map.filename..tostring(i),
+		newMaterial = mat.map.filename..tostring(i),
 		offsetx = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1],
 		offsety = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2],
 		scalex = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1],
@@ -315,14 +323,14 @@ function Data_CreateFromMap(materialName, i)
 		detail = theMaterial:GetTexture("$detail"):GetName(),
 	}
 	-- Get a valid detail key
-	for k,v in pairs(mr.mat.detail.list) do
+	for k,v in pairs(mat.detail.list) do
 		if not isbool(v) then
 			if v:GetTexture("$basetexture"):GetName() == data.detail then
 				data.detail = k
 			end
 		end
 	end
-	if not mr.mat.detail.list[data.detail] then
+	if not mat.detail.list[data.detail] then
 		data.detail = "None"
 	end
 	return data
@@ -465,7 +473,7 @@ function Material_ShouldChange(currentDataIn, newDataIn, tr)
 	end
 	-- Restore the internal backup
 	currentData.backup = backup
-	-- The material need to be changed if data ~= data2
+	-- The material needs to be changed if data ~= data2
 	if isDifferent then
 		return true
 	end
@@ -504,8 +512,8 @@ function Material_Restore(ent, oldMaterial)
 				MMML_DisableElement(element)
 				if SERVER then
 					if MMML_Count() == 0 then
-						if IsValid(mr.dup.entity) then
-							duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Maps")
+						if IsValid(dup.entity) then
+							duplicator.ClearEntityModifier(dup.entity, "MapRetexturizer_Maps")
 						end
 					end
 				end
@@ -541,7 +549,7 @@ function Material_RestoreAll()
 	end
 	-- Map
 	if MMML_Count() > 0 then
-		for k,v in pairs(mr.mat.map.list) do
+		for k,v in pairs(mat.map.list) do
 			if v.oldMaterial then
 				Material_Restore(nil, v.oldMaterial)
 			end
@@ -553,7 +561,7 @@ function Material_RestoreAll()
 			v:ConCommand("r_cleardecals")
 		end
 	end
-	table.Empty(mr.mat.decal.list)
+	table.Empty(mat.decal.list)
 	duplicator.ClearEntityModifier(ent, "MapRetexturizer_Decals")
 end
 concommand.Add("mapret_cleanall", Material_RestoreAll)
@@ -605,7 +613,7 @@ function Model_Material_Create(data)
 	local materialID = Model_Material_GetID(data)
 	if CLIENT then
 		-- Create the material if it's necessary
-		if not mr.mat.model.list[materialID] then
+		if not mat.model.list[materialID] then
 			-- Basic info
 			local material = {
 				["$basetexture"] = data.newMaterial,
@@ -619,13 +627,13 @@ function Model_Material_Create(data)
 			matrix:Translate(Vector(data.offsetx, data.offsety, 0)) -- Offset
 			-- Create material
 			local newMaterial	
-			mr.mat.model.list[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
-			mr.mat.model.list[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
-			newMaterial = mr.mat.model.list[materialID]
+			mat.model.list[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
+			mat.model.list[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
+			newMaterial = mat.model.list[materialID]
 			-- Apply detail
 			if data.detail and data.detail ~= "None" and data.detail~= "" then
-				if mr.mat.detail.list[data.detail] then
-					newMaterial:SetTexture("$detail", mr.mat.detail.list[data.detail]:GetTexture("$basetexture"))
+				if mat.detail.list[data.detail] then
+					newMaterial:SetTexture("$detail", mat.detail.list[data.detail]:GetTexture("$basetexture"))
 					newMaterial:SetString("$detailblendfactor", "1")
 				else
 					newMaterial:SetString("$detailblendfactor", "0")
@@ -637,10 +645,10 @@ function Model_Material_Create(data)
 			local bumpmapPath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
 			local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap") -- checks for a copied material active bumpmap
 			if file.Exists("materials/"..bumpmapPath..".vtf", "GAME") then
-				if not mr.mat.model.list[bumpmapPath] then
-					mr.mat.model.list[bumpmapPath] = CreateMaterial(bumpmapPath, "VertexLitGeneric", {["$basetexture"] = bumpmapPath})
+				if not mat.model.list[bumpmapPath] then
+					mat.model.list[bumpmapPath] = CreateMaterial(bumpmapPath, "VertexLitGeneric", {["$basetexture"] = bumpmapPath})
 				end
-				newMaterial:SetTexture("$bumpmap", mr.mat.model.list[bumpmapPath]:GetTexture("$basetexture"))
+				newMaterial:SetTexture("$bumpmap", mat.model.list[bumpmapPath]:GetTexture("$basetexture"))
 			elseif bumpmap then
 				newMaterial:SetTexture("$bumpmap", bumpmap)
 			end
@@ -717,7 +725,7 @@ function Map_Material_Set(data)
 		-- Cleanup
 		Map_Material_SetAux(element.backup)
 	else
-		-- Get a mr.mat.map.list free index
+		-- Get a mat.map.list free index
 		i = MMML_GetFreeIndex()
 		-- Get the current material info
 		local dataBackup = data.backup or Data_CreateFromMap(data.oldMaterial, i) -- data.backup only appears while loading the duplicator
@@ -733,7 +741,7 @@ function Map_Material_Set(data)
 	-- Set the duplicator
 	if SERVER then
 		if isNewMaterial then
-			duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Maps", mr.mat.map.list)
+			duplicator.StoreEntityModifier(dup.entity, "MapRetexturizer_Maps", mat.map.list)
 		end
 	end
 end
@@ -760,7 +768,7 @@ function Map_Material_SetAux(data)
 		texture_matrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
 		mapMaterial:SetMatrix("$basetexturetransform", texture_matrix)
 		if data.detail and data.detail ~= "None" and data.detail ~= "" then
-			mapMaterial:SetTexture("$detail", mr.mat.detail.list[data.detail]:GetTexture("$basetexture"))
+			mapMaterial:SetTexture("$detail", mat.detail.list[data.detail]:GetTexture("$basetexture"))
 			mapMaterial:SetString("$detailblendfactor", "1")
 		else
 			mapMaterial:SetString("$detailblendfactor", "0")
@@ -788,7 +796,7 @@ end
 
 -- Create decal materials
 function Decal_Create(materialPath)
-	local decalMaterial = mr.mat.decal.list[materialPath.."2"]
+	local decalMaterial = mat.decal.list[materialPath.."2"]
 	if not decalMaterial then
 		decalMaterial = CreateMaterial(materialPath.."2", "LightmappedGeneric", {["$basetexture"] = materialPath})
 			decalMaterial:SetInt( "$decal", 1 )
@@ -808,8 +816,8 @@ function Decal_Apply(tr, duplicatorData)
 	local ent = tr and tr.Entity or duplicatorData.ent
 	local pos = tr and tr.HitPos - Vector(0, 0, 5) or duplicatorData.pos
 	local hit = tr and tr.HitNormal or duplicatorData.hit
-	table.insert(mr.mat.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
-	duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Decals", mr.mat.decal.list)
+	table.insert(mat.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
+	duplicator.StoreEntityModifier(dup.entity, "MapRetexturizer_Decals", mat.decal.list)
 	net.Start("Decal_Apply")
 		net.WriteString(mat)
 		net.WriteEntity(ent)
@@ -856,32 +864,32 @@ end
 -- Set the duplicator
 function Duplicator_CreateEnt(ent)
 	-- Hide/Disable our entity after a duplicator
-	if not mr.dup.hidden and ent then
-		mr.dup.entity = ent
-		mr.dup.entity:SetNoDraw(true)				
-		mr.dup.entity:SetSolid(0)
-		mr.dup.entity:PhysicsInitStatic(SOLID_NONE)
-		mr.dup.hidden = true
+	if not dup.hidden and ent then
+		dup.entity = ent
+		dup.entity:SetNoDraw(true)				
+		dup.entity:SetSolid(0)
+		dup.entity:PhysicsInitStatic(SOLID_NONE)
+		dup.hidden = true
 	-- Create a new entity
-	elseif not IsValid(mr.dup.entity) and not ent then
-		mr.dup.entity = ents.Create("prop_physics")
-		mr.dup.entity:SetModel("models/props_phx/cannonball_solid.mdl")
-		mr.dup.entity:SetPos(Vector(0, 0, 0))
-		mr.dup.entity:SetNoDraw(true)				
-		mr.dup.entity:Spawn()
-		mr.dup.entity:SetSolid(0)
-		mr.dup.entity:PhysicsInitStatic(SOLID_NONE)
+	elseif not IsValid(dup.entity) and not ent then
+		dup.entity = ents.Create("prop_physics")
+		dup.entity:SetModel("models/props_phx/cannonball_solid.mdl")
+		dup.entity:SetPos(Vector(0, 0, 0))
+		dup.entity:SetNoDraw(true)				
+		dup.entity:Spawn()
+		dup.entity:SetSolid(0)
+		dup.entity:PhysicsInitStatic(SOLID_NONE)
 	end
 end
 
 -- Try to reset the duplicator state
 function Duplicator_ResetVariables()
-	if not mr.dup.has.models and not mr.dup.has.decals and not mr.dup.has.map then
-		mr.dup.run = "models"
-		mr.dup.models.max_delay = 0
-		mr.dup.clean = false
-		mr.dup.hidden = false
-		for k,v in SortedPairs(mr.dup.has) do
+	if not dup.has.models and not dup.has.decals and not dup.has.map then
+		dup.run = "models"
+		dup.models.max_delay = 0
+		dup.clean = false
+		dup.hidden = false
+		for k,v in SortedPairs(dup.has) do
 			v = true
 		end
 	end
@@ -892,29 +900,29 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	-- Models spawn almost at the same time, so these timers work
 	if CLIENT then return true; end
 	-- First cleanup
-	if not mr.dup.clean then
-		mr.dup.clean = true
+	if not dup.clean then
+		dup.clean = true
 		Material_RestoreAll()
 	end
 	-- Register that we have model materials to duplicate
-	if not mr.dup.has.models then
-		mr.dup.has.models = true
+	if not dup.has.models then
+		dup.has.models = true
 	end
 	-- Set the aditive delay time
-	mr.dup.models.delay = mr.dup.models.delay + 0.1
+	dup.models.delay = dup.models.delay + 0.1
 	-- Change the stored entity to the actual one
 	savedTable.ent = ent
 	-- Get the max delay time
-	if mr.dup.models.delay > mr.dup.models.max_delay then
-		mr.dup.models.max_delay = mr.dup.models.delay
+	if dup.models.delay > dup.models.max_delay then
+		dup.models.max_delay = dup.models.delay
 	end
-	timer.Create("MapRetDuplicatorMapMatWaiting"..tostring(mr.dup.models.delay), mr.dup.models.delay, 1, function()
+	timer.Create("MapRetDuplicatorMapMatWaiting"..tostring(dup.models.delay), dup.models.delay, 1, function()
 		-- Apply the model material
 		Model_Material_Set(savedTable)
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
-		if mr.dup.models.delay == mr.dup.models.max_delay then
-			mr.dup.run = "decals"
-			mr.dup.has.models = false
+		if dup.models.delay == dup.models.max_delay then
+			dup.run = "decals"
+			dup.has.models = false
 			Duplicator_ResetVariables()
 		end
 	end)
@@ -925,17 +933,17 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Models", Duplicator_LoadModel
 function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return true; end
 	-- Force check
-	if forceCheck and not mr.dup.has.models then
-		mr.dup.run = "decals"
+	if forceCheck and not dup.has.models then
+		dup.run = "decals"
 	end
 	-- Register that we have decals to duplicate
-	if not mr.dup.has.decals then
-		mr.dup.has.decals = true
+	if not dup.has.decals then
+		dup.has.decals = true
 	end
-	if mr.dup.run == "decals" then
+	if dup.run == "decals" then
 		-- First cleanup
-		if not mr.dup.clean then
-			mr.dup.clean = true
+		if not dup.clean then
+			dup.clean = true
 			Material_RestoreAll()
 			timer.Create("MapRetDuplicatorDecalsWaitCleanup", 1, 1, function()
 				Duplicator_LoadDecals(ply, ent, savedTable)
@@ -943,7 +951,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			return
 		end
 		-- Fix the duplicator generic spawn entity
-		if not mr.dup.hidden then
+		if not dup.hidden then
 			Duplicator_CreateEnt(ent)
 		end
 		-- Set the fist position
@@ -960,8 +968,8 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			end)
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
 		else
-			mr.dup.run = "map"
-			mr.dup.has.decals = false
+			dup.run = "map"
+			dup.has.decals = false
 			Duplicator_ResetVariables()
 		end
 	else
@@ -977,17 +985,17 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_LoadDecal
 function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return true; end
 	-- Force check
-	if forceCheck and (not mr.dup.has.models and not mr.dup.has.decals) then
-		mr.dup.run = "map"
+	if forceCheck and (not dup.has.models and not dup.has.decals) then
+		dup.run = "map"
 	end
 	-- Register that we have map materials to duplicate
-	if not mr.dup.has.map then
-		mr.dup.has.map = true
+	if not dup.has.map then
+		dup.has.map = true
 	end
-	if mr.dup.run == "map" then
+	if dup.run == "map" then
 		-- First cleanup
-		if not mr.dup.clean then
-			mr.dup.clean = true
+		if not dup.clean then
+			dup.clean = true
 			Material_RestoreAll()
 			timer.Create("MapRetDuplicatorMapMatWaitCleanup", 1, 1, function()
 				Duplicator_LoadMapMaterials(ply, ent, savedTable)
@@ -995,7 +1003,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			return
 		end
 		-- Fix the duplicator generic spawn entity
-		if not mr.dup.hidden then
+		if not dup.hidden then
 			Duplicator_CreateEnt(ent)
 		end
 		-- Set the first position
@@ -1011,7 +1019,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			end
 		-- No more entries. It's the last duplicator section, so just reset variables
 		else
-			mr.dup.has.map = false
+			dup.has.map = false
 			Duplicator_ResetVariables()
 			return
 		end
@@ -1072,13 +1080,13 @@ function TOOL:LeftClick(tr)
 		return true
 	end
 	-- Check upper limit
-	if MMML_Count() == mr.mat.map.limit then
-		-- Limit reached! Try to open new spaces in the mr.mat.map.list table checking if the player removed something and cleaning the entry for real
+	if MMML_Count() == mat.map.limit then
+		-- Limit reached! Try to open new spaces in the mat.map.list table checking if the player removed something and cleaning the entry for real
 		MMML_Clean()
 		-- Check again
-		if MMML_Count() == mr.mat.map.limit then
+		if MMML_Count() == mat.map.limit then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..mr.mat.map.limit..")! Notify the developer for more space.")
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..mat.map.limit..")! Notify the developer for more space.")
 			end
 			return false
 		end
@@ -1232,7 +1240,7 @@ function TOOL.BuildCPanel(CPanel)
 	section2:SetTall(titleSize)
 	CPanel:AddItem(section2)
 	detail_combobox = CPanel:ComboBox("Select a Detail:", "mapret_detail")
-	for k,v in pairs(mr.mat.detail.list) do
+	for k,v in pairs(mat.detail.list) do
 		detail_combobox:AddChoice(k, k, v)
 	end	
 	CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)

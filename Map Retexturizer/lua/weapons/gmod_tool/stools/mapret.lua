@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. v1.1 - 10/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. v1.2 - 10/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -24,7 +24,7 @@
 
 This tool has some limitations and hacks.
 
-We can't handle with map material bumpmaps, we can't get displacement
+We can't handle map material bumpmaps, we can't get displacement
 texture paths, we can't use decals on the horizontal, we can't remove
 decals individually, we have a physical limit to the map material quantity (set
 by me, can be raised) because the materials created by the GMod's CreateMaterial()

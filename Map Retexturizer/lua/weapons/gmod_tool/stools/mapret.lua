@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local Revision = "MAP. RET. v1.0 - 10/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. v1.1 - 10/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -24,23 +24,24 @@
 
 This tool has some limitations and hacks.
 
-We can't handle with map material bumpmaps, we can't do get displacement
+We can't handle with map material bumpmaps, we can't get displacement
 texture paths, we can't use decals on the horizontal, we can't remove
-decals individually, we have a physical limit to the map material (set
-by me, can be raised) because the materials created by GMod material creating
+decals individually, we have a physical limit to the map material quantity (set
+by me, can be raised) because the materials created by the GMod's CreateMaterial()
 function show missing textures when I decide to use them on the map, we
 can't get precise info from map materials and other things...
 
-I chose to not support model submaterials (because they are not the focus)
+I chose to not support model submaterials because they are not the focus
 and I don't know how the tool behaves with animated vmts.
 
-Also, note that I'm not a programmer. I do this for fun. This file is huge
-because I only feel confortable this way, multiple files give me headaches...
+Also, note that I'm not a programmer. I do this for fun. This file is a huge
+block of code because I only feel confortable this way, multiple files give
+me headaches...
 
-last but not least, English is not my primary language. Sorry for the grammatical
+Last but not least, English is not my primary language. Sorry for the grammatical
 errors etc.
 
-If you want to send me changes or suggestions, feel free to do so.
+If you want to send me changes or suggestions, feel free to do so!
 
 Have fun!
 ]]
@@ -1146,7 +1147,7 @@ function Decal_Start(ply, tr, duplicatorData)
 	-- Bug
 	if tr then
 		if tr.HitNormal == Vector(0, 0, 1) or tr.HitNormal == Vector(0, 0, -1) then
-			if CLIENT then
+			if SERVER then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, I can't place decals on the horizontal.")
 			end
 
@@ -1700,7 +1701,7 @@ if CLIENT then
 		if ply.mr_previewmode then
 			local tr = LocalPlayer():GetEyeTrace()
 			local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil, true)
-			local newData = Data_Create(nil, tr, true)
+			local newData = Data_Create(ply, tr, true)
 				
 			-- Update the material if necessary
 			if Material_ShouldChange(ply, oldData, newData, tr, true) then
@@ -2448,4 +2449,5 @@ function TOOL.BuildCPanel(CPanel)
 	end
 
 	CPanel:Help(" ")
+	CPanel:ControlHelp(mr_revision)
 end

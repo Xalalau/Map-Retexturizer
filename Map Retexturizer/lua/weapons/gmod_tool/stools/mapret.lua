@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. v1.2 - 10/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. v1.3 - 11/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -153,12 +153,18 @@ local mr_dup = {
 	-- Workaround to duplicate map and decal materials
 	-- (Server)
 	entity,
+	-- It simulates a player, so we can apply changes in the server with it empty
+	-- (Shared)
+	fake_ply = {},
 	-- Disable our generic dup entity physics and rendering after the duplicate
 	-- (Server)
 	hidden = false,
 	-- First dup cleanup
 	-- (Server)
 	clean = false,
+	-- Force to stop the current loading to begin a new one
+	-- (Shared)
+	force_stop = false,
 	-- Special aditive delay for models
 	-- (Server)
 	models = {
@@ -198,6 +204,8 @@ local function mr_dup_set(ply)
 	-- (Shared)
 	ply.mr_dup = add
 end
+-- Initialize the fake player
+mr_dup_set(mr_dup.fake_ply)
 
 -- Add a multiplayer delay in TOOL functions to run Material_ShouldChange() with accuracy
 -- (Server)
@@ -376,7 +384,7 @@ local Load_FisrtSpawn_Apply
 
 -- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
 function Ply_IsAdmin(ply)
-	if not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+	if ply ~= mr_dup.fake_ply and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
 		end
@@ -1128,11 +1136,6 @@ end
 
 -- Apply decal materials:::
 function Decal_Start(ply, tr, duplicatorData)
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
-
 	local mat = tr and Material_GetNew(ply) or duplicatorData.mat
 
 	-- Don't apply bad materials
@@ -1483,7 +1486,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 
 		-- Next material
 		position = position + 1 
-		if savedTable[position] then
+		if savedTable[position] and not mr_dup.force_stop then
 			timer.Create("MapRetDuplicatorDecalDelay"..tostring(ply), 0.1, 1, function()
 				Duplicator_LoadDecals(ply, nil, savedTable, position)
 			end)
@@ -1548,7 +1551,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		end
 
 		-- Check if we have a valid entry
-		if savedTable[position] then
+		if savedTable[position] and not mr_dup.force_stop then
 			-- Yes. Is it an INvalid entry?
 			if savedTable[position].oldMaterial == nil then
 				-- Yes. Let's check the next entry
@@ -1624,6 +1627,29 @@ if CLIENT then
 	end)
 end
 
+-- Force to stop the duplicator
+function Duplicator_ForceStop()
+	if SERVER then
+		mr_dup.force_stop = true
+	
+		net.Start("MapRetForceDupToStop")
+		net.Broadcast()
+	else
+		mr_dup.force_stop = true
+
+		timer.Create("MapRetDuplicatorForceStop", 0.2, 1, function()
+			mr_dup.force_stop = false
+		end)
+	end
+end
+if SERVER then
+	util.AddNetworkString("MapRetForceDupToStop")
+else
+	net.Receive("MapRetForceDupToStop", function()
+		Duplicator_ForceStop()
+	end)
+end
+
 -- Reset the duplicator state if it's finished
 function Duplicator_Finish(ply)
 	if CLIENT then return; end
@@ -1646,6 +1672,8 @@ function Duplicator_Finish(ply)
 		if not mr_mat.initialized then
 			mr_mat.initialized = true
 		end
+		
+		print("[Map Retexturizer] Loading finished.")
 	end
 end
 
@@ -1738,7 +1766,7 @@ end
 --------------------------------
 
 -- Save the modifications to a file and reload the menu
-function Save_Start(ply)
+function Save_Start(ply, forceName)
 	if SERVER then return; end
 
 	-- Admin only
@@ -1778,6 +1806,9 @@ function Save_Apply(name, theFile)
 	-- Save it in a file
 	file.Write(theFile, util.TableToJSON(mr_manage.save.list[name]))
 
+	-- Server alert
+	print("[Map Retexturizer] Saved the materials state.")
+
 	-- Associte a name with the saved file
 	mr_manage.load.list[name] = theFile
 
@@ -1792,6 +1823,14 @@ if SERVER then
 
 	net.Receive("MapRetSave", function()
 		local name = net.ReadString()
+
+		Save_Apply(name, mr_manage.map_folder..name..".txt")
+	end)
+	
+	concommand.Add( "mapret_remote_save", function(_1, _2, _3, name)
+		if name == "" then
+			return
+		end
 
 		Save_Apply(name, mr_manage.map_folder..name..".txt")
 	end)
@@ -1847,18 +1886,11 @@ function Load_Start(ply)
 		return false
 	end
 
-	-- Do not load if our duplicator functions are already running
-	if ply.mr_dup.run ~= "" then
-		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the current loading is finished")
-		
-		return false
-	end
-
 	-- Get and check the name
 	local name = mr_manage.load.element:GetSelected()
 	
 	if name == "" then
-		return
+		return false
 	end
 
 	-- Load the file
@@ -1880,32 +1912,47 @@ function Load_Apply(ply, loadTable)
 
 	local outTable1, outTable2
 
-	-- Then decals
-	outTable1 = loadTable and loadTable.decals or mr_mat.decal.list
-	if table.Count(outTable1) > 0 then
-		Duplicator_LoadDecals(ply, nil, outTable1)
-	end
+	-- Server alert
+	print("[Map Retexturizer] Started loading...")
 
-	-- Then map materials
-	outTable2 = loadTable and loadTable.map or mr_mat.map.list
-	if MML_Count(outTable2) > 0 then
-		Duplicator_LoadMapMaterials(ply, nil, outTable2)
-	end
-		
-	-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
-	if ply.mr_firstSpawn and table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 then
-		ply.mr_firstSpawn = false
+	-- Don't start another loading process if we are stopping one yet
+	if not mr_dup.force_stop then
+		-- Force to stop any running loading
+		Duplicator_ForceStop()
+	
+		-- Wait to the last command to be done
+		timer.Create("MapRetFirstJoinStart", 0.4, 1, function()
+			-- Apply decals
+			outTable1 = loadTable and loadTable.decals or mr_mat.decal.list
+			if table.Count(outTable1) > 0 then
+				Duplicator_LoadDecals(ply, nil, outTable1)
+			end
+
+			-- Then map materials
+			outTable2 = loadTable and loadTable.map or mr_mat.map.list
+			if MML_Count(outTable2) > 0 then
+				Duplicator_LoadMapMaterials(ply, nil, outTable2)
+			end
+				
+			-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
+			if ply.mr_firstSpawn and table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 then
+				ply.mr_firstSpawn = false
+			end
+			
+			-- Register that we are not stopping a dup (this was set true in Duplicator_ForceStop())
+			mr_dup.force_stop = false
+		end)
 	end
 end
 if SERVER then
 	util.AddNetworkString("MapRetLoad")
 
-	net.Receive("MapRetLoad", function(_, ply)
+	local function Load_Apply_Start(ply, name)
 		-- Get and check the load file
-		local theFile = mr_manage.load.list[net.ReadString()]
+		local theFile = mr_manage.load.list[name]
 
 		if theFile == nil then
-			return
+			return false
 		end
 
 		-- Get the load file content
@@ -1914,6 +1961,20 @@ if SERVER then
 		-- Load it
 		if loadTable then
 			Load_Apply(ply, loadTable)
+			
+			return true
+		end
+		
+		return false
+	end
+
+	net.Receive("MapRetLoad", function(_, ply)
+		Load_Apply_Start(ply, net.ReadString())
+	end)
+
+	concommand.Add( "mapret_remote_load", function(_1, _2, _3, name)
+		if Load_Apply_Start(mr_dup.fake_ply, name) then
+			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..name.."\"...")
 		end
 	end)
 end
@@ -1932,6 +1993,23 @@ end
 if CLIENT then
 	net.Receive("MapRetLoadFillList", function()
 		mr_manage.load.list = net.ReadTable()
+	end)
+end
+
+-- Prints the load list in the console
+if SERVER then
+	local function Load_ShowList()
+		print("----------------------------")
+		print("[Map Retexturizer] SAVES:")
+		print("----------------------------")
+		for k,v in pairs(mr_manage.load.list) do
+			print(k)
+		end
+		print("----------------------------")
+	end
+
+	concommand.Add( "mapret_remote_list", function(_1, _2, _3, name)
+		Load_ShowList()
 	end)
 end
 
@@ -2024,19 +2102,19 @@ end
 function Load_FisrtSpawn_Start(ply)
 	if CLIENT then return; end
 
-	-- Register that the player is loading the materials for the first time
-	ply.mr_firstSpawn = true
+	-- Wait to run nicelly
+	timer.Create("MapRetFirstJoinStart"..tostring(ply), 4, 1, function()
+		-- Register that the player is loading the materials for the first time
+		ply.mr_firstSpawn = true
 
-	-- Fill up the player load list
-	net.Start("MapRetLoadFillList")
-		net.WriteTable(mr_manage.load.list)
-	net.Send(ply)
+		-- Fill up the player load list
+		net.Start("MapRetLoadFillList")
+			net.WriteTable(mr_manage.load.list)
+		net.Send(ply)
 
-	-- Index duplicator stuff (serverside)
-	mr_dup_set(ply)
+		-- Index duplicator stuff (serverside)
+		mr_dup_set(ply)
 
-	-- Wait mr_dup_set() to run nicelly
-	timer.Create("MapRetFirstJoinStart"..tostring(ply), 1, 1, function()
 		-- Index duplicator stuff in the player
 		net.Start("MapRetPlyFirstSpawn")
 		net.Send(ply)
@@ -2050,7 +2128,7 @@ function Load_FisrtSpawn_Apply(ply)
 	if CLIENT then return; end
 
 	-- Wait Load_FisrtSpawn_Apply() to run nicelly and apply the modifications after a sane time for players
-	timer.Create("MapRetFirstJoinApply"..tostring(ply), 6, 1, function()
+	timer.Create("MapRetFirstJoinApply"..tostring(ply), 5, 1, function()
 		if GetConVar("mapret_autoload"):GetString() == "" or mr_mat.initialized then
 			Load_Apply(ply, nil)
 		-- Or load an autosave
@@ -2107,7 +2185,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	end
 
 	-- We can't mess with displacement materials
-	if Material_GetCurrent(tr) == "**displacement**" then
+	if ent:IsWorld() and Material_GetCurrent(tr) == "**displacement**" then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, we can't mess with displacement materials!")
 		end
@@ -2330,6 +2408,8 @@ function TOOL.BuildCPanel(CPanel)
 	CPanel:TextEntry("Material path", "mapret_material")
 	CPanel:ControlHelp("\nNote: the command \"mat_crosshair\" can get a displacement material path.")
 	local previewBox = CPanel:CheckBox("Preview Modifications", "mapret_preview")
+	previewBox:SetChecked(true)
+	Preview_Toogle(LocalPlayer(), previewBox:GetChecked(), true, true)
 	function previewBox:OnChange(val)
 		-- Don't let the player mess with the option if the toolgun is not selected
 		if LocalPlayer():GetActiveWeapon():GetClass() ~= "gmod_tool" then

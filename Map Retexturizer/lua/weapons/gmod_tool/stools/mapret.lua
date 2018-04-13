@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. v1.3 - 11/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. v1.4 - 13/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -16,6 +16,7 @@
  [*] duck
  [*] XxtiozionhoxX
  [*] le0board
+ [*] Matsilagi
  [*] NickMBR
  
  Valeu, pessoal!!
@@ -76,8 +77,10 @@ CreateConVar("mapret_autosave", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLIC
 CreateConVar("mapret_autoload", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
 TOOL.ClientConVar["savename"] = ""
 
+CreateConVar("mapret_skybox", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
+
 TOOL.ClientConVar["material"] = ""
-TOOL.ClientConVar["detail"] = ""
+TOOL.ClientConVar["detail"] = "None"
 TOOL.ClientConVar["alpha"] = "1"
 TOOL.ClientConVar["offsetx"] = "0"
 TOOL.ClientConVar["offsety"] = "0"
@@ -85,9 +88,9 @@ TOOL.ClientConVar["scalex"] = "1"
 TOOL.ClientConVar["scaley"] = "1"
 TOOL.ClientConVar["rotation"] = "0"
 
-TOOL.ClientConVar["preview"] = "1"
-
-TOOL.ClientConVar["decal"] = "0"
+-- Different declarations for these vars because I can control them better this way (SetChecked() works fine)
+CreateClientConVar("mapret_preview", 1, false, false)
+CreateClientConVar("mapret_decal", 0, false, false)
 
 --------------------------------
 --- GLOBAL VARS / INITIALIZATION
@@ -95,6 +98,9 @@ TOOL.ClientConVar["decal"] = "0"
 
 -- Materials management
 local mr_mat = {
+	-- Tell if material changes were already made since the beggining of the game
+	-- (Server)
+	initialized = false,
 	-- (Shared)
 	map = {
 		-- The name of our backup map material files. They are file1, file2, file3...
@@ -117,7 +123,6 @@ local mr_mat = {
 	-- (Client)
 	detail = {
 		-- Menu element
-		-- (Client)
 		element,
 		-- Initialized later (Note: only "None" remains as bool)
 		list = {
@@ -128,9 +133,41 @@ local mr_mat = {
 			["Rock"] = false
 		}
 	},
-	-- Tell if material changes were already made since the beggining of the game
-	-- (Server)
-	initialized = false
+	-- (Client)
+	skybox = {
+		-- Text elemment
+		element_text,
+		-- Combobox elemment
+		element_combo,
+		-- HL2 sky list
+		hl2_list = {
+			[""] = "",
+			["skybox/sky_borealis01"] = "",
+			["skybox/sky_day01_01"] = "",
+			["skybox/sky_day01_04"] = "",
+			["skybox/sky_day01_05"] = "",
+			["skybox/sky_day01_06"] = "",
+			["skybox/sky_day01_07"] = "",
+			["skybox/sky_day01_08"] = "",
+			["skybox/sky_day01_09"] = "",
+			["skybox/sky_day02_01"] = "",
+			["skybox/sky_day02_02"] = "",
+			["skybox/sky_day02_03"] = "",
+			["skybox/sky_day02_04"] = "",
+			["skybox/sky_day02_05"] = "",
+			["skybox/sky_day02_06"] = "",
+			["skybox/sky_day02_07"] = "",
+			["skybox/sky_day02_09"] = "",
+			["skybox/sky_day02_10"] = "",
+			["skybox/sky_day03_01"] = "",
+			["skybox/sky_day03_02"] = "",
+			["skybox/sky_day03_03"] = "",
+			["skybox/sky_day03_04"] = "",
+			["skybox/sky_day03_05"] = "",
+			["skybox/sky_day03_06"] = "",
+			["skybox/sky_wasteland02"] = "",
+		}
+	}
 }
 
 if CLIENT then
@@ -466,10 +503,10 @@ end
 --------------------------------
 
 -- Set a data table
-function Data_Create(ply, tr, previewMode)
+function Data_Create(ply, tr)
 	local data = {
 		ent = tr.Entity,
-		oldMaterial = previewMode and "MatRetPreviewMaterial" or Material_GetOriginal(tr),
+		oldMaterial = Material_GetOriginal(tr),
 		newMaterial = ply:GetInfo("mapret_material"),
 		offsetx = ply:GetInfo("mapret_offsetx"),
 		offsety = ply:GetInfo("mapret_offsety"),
@@ -484,7 +521,7 @@ function Data_Create(ply, tr, previewMode)
 end
 
 -- Convert a map material into a data table
-function Data_CreateFromMaterial(materialName, i, previewMode)
+function Data_CreateFromMaterial(materialName, i)
 	local theMaterial = Material(materialName)
 	local scalex = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1]
 	local scaley = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2]
@@ -495,7 +532,7 @@ function Data_CreateFromMaterial(materialName, i, previewMode)
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
-		newMaterial = previewMode and preview.newMaterial or i and mr_mat.map.filename..tostring(i),
+		newMaterial = i and mr_mat.map.filename..tostring(i),
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
@@ -503,7 +540,7 @@ function Data_CreateFromMaterial(materialName, i, previewMode)
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user 
 		rotation = theMaterial:GetMatrix("$basetexturetransform"):GetAngles().y,
 		alpha = string.format("%.2f", theMaterial:GetString("$alpha")),
-		detail = theMaterial:GetTexture("$detail"):GetName(),
+		detail = theMaterial:GetString("$detail") and theMaterial:GetTexture("$detail"):GetName() or "None",
 	}
 
 	-- Get a valid detail key
@@ -518,6 +555,24 @@ function Data_CreateFromMaterial(materialName, i, previewMode)
 	if not mr_mat.detail.list[data.detail] then
 		data.detail = "None"
 	end
+
+	return data
+end
+
+-- Set a data table with the default properties
+function DataTable_CreateDefaults(ply, tr)
+	local data = {
+		ent = game.GetWorld(),
+		oldMaterial = Material_GetCurrent(tr),
+		newMaterial = ply:GetInfo("mapret_material"),
+		offsetx = "0.00",
+		offsety = "0.00",
+		scalex = "1.00",
+		scaley = "1.00",
+		rotation = "0",
+		alpha = "1.00",
+		detail = "None",
+	}
 
 	return data
 end
@@ -553,6 +608,8 @@ function CVars_SetToDefaults(ply)
 	ply:ConCommand("mapret_scaley 1")
 	ply:ConCommand("mapret_rotation 0")
 	ply:ConCommand("mapret_alpha 1")
+	
+	mr_mat.detail.element:SetValue("None")
 end
 
 --------------------------------
@@ -636,7 +693,7 @@ function Material_GetNew(ply)
 end
 
 -- Check if the material should be replaced
-function Material_ShouldChange(ply, currentDataIn, newDataIn, tr, previewMode)
+function Material_ShouldChange(ply, currentDataIn, newDataIn, tr)
 	local currentData = table.Copy(currentDataIn)
 	local newData = table.Copy(newDataIn)
 	local backup
@@ -654,13 +711,6 @@ function Material_ShouldChange(ply, currentDataIn, newDataIn, tr, previewMode)
 	-- Correct a model newMaterial entry for the comparision 
 	if IsValid(tr.Entity) then
 		newData.newMaterial = Model_Material_GetID(newData)
-	end
-
-	-- Correct the rotation for preview mode
-	if previewMode then
-		if preview.rotation_hack and preview.rotation_hack ~= -1 then
-			currentData.rotation = preview.rotation_hack
-		end
 	end
 
 	-- Check if some property is different
@@ -764,6 +814,7 @@ function Material_RestoreAll(ply)
 	Model_Material_RemoveAll(ply)
 	Map_Material_RemoveAll(ply)
 	Decal_RemoveAll(ply)
+	Skybox_Remove(ply)
 end
 if SERVER then
 	util.AddNetworkString("Material_RestoreAll")
@@ -1073,6 +1124,8 @@ function Map_Material_SetAux(data)
 		oldMaterial:SetString("$detailblendfactor", "1")
 	else
 		oldMaterial:SetString("$detailblendfactor", "0")
+		oldMaterial:SetString("$detail", "")
+		oldMaterial:Recompute()
 	end
 
 	--[[
@@ -1217,7 +1270,7 @@ function Decal_Apply(materialPath, ent, pos, normal)
 	-- Notes:
 	-- Vertical normals don't work
 	-- Resizing doesn't work (width x height)
-	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), 128, 128)
+	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), decalMaterial:Width(), decalMaterial:Height())
 end
 if SERVER then
 	util.AddNetworkString("Decal_Apply")
@@ -1252,6 +1305,124 @@ if SERVER then
 
 	net.Receive("Decal_RemoveAll", function(_, ply)
 		Decal_RemoveAll(ply)
+	end)
+end
+
+--------------------------------
+--- SKYBOX MATERIAL
+--------------------------------
+
+-- Change the skybox
+function Skybox_Start(ply, value)
+	if SERVER then return; end
+
+	net.Start("MapRetSkybox")
+		net.WriteString(value)
+	net.SendToServer()
+end
+function Skybox_Apply(ply, mat)
+	if CLIENT then return; end
+	
+	-- Admin only
+	if not Ply_IsAdmin(ply) then
+		return false
+	end
+
+	-- Create the duplicator entity if it's necessary
+	Duplicator_CreateEnt()
+
+	-- Set the duplicator
+	duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Skybox", { skybox = mat })
+
+	-- Apply the material to every client
+	RunConsoleCommand("mapret_skybox", mat)	
+end
+if SERVER then
+	util.AddNetworkString("MapRetSkybox")
+
+	net.Receive("MapRetSkybox", function(_, ply)
+		Skybox_Apply(ply, net.ReadString())
+	end)
+end
+
+-- Material rendering
+if CLIENT then
+	local distance = 200
+	local width = distance * 2
+	local height = distance * 2
+
+	-- Skybox extra layer rendering
+	local function Skybox_Render()
+		local mat = GetConVar("mapret_skybox"):GetString()
+
+		-- Check if it's empty
+		if mat ~= "" then
+			local suffixes
+
+			-- Check if we aren't using a HL2 sky
+			if not mr_mat.skybox.hl2_list[mat] then
+				-- Check if the material is valid FOR THE PLAYER
+				if not Material_IsValid(mat) then
+					-- Nope
+					return
+				end
+				if not Material_IsValid(mat.."ft") then
+					local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
+					suffixes = aux
+				else
+					local aux = { "", "", "", "", "", "" }
+					suffixes = aux
+				end
+			else
+				local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
+				suffixes = aux
+			end
+
+			-- Render our sky layer
+			render.OverrideDepthEnable(true, false)
+			render.SetLightingMode(2)
+			cam.Start3D(Vector(0, 0, 0), EyeAngles())
+				render.SetMaterial(Material(mat..suffixes[1]))
+				render.DrawQuadEasy(Vector(-distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
+				render.SetMaterial(Material(mat..suffixes[2]))
+				render.DrawQuadEasy(Vector(distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
+				render.SetMaterial(Material(mat..suffixes[3]))
+				render.DrawQuadEasy(Vector(0,distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
+				render.SetMaterial(Material(mat..suffixes[4]))
+				render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
+				render.SetMaterial(Material(mat..suffixes[5]))
+				render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 90)
+				render.SetMaterial(Material(mat..suffixes[6]))
+				render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,1), width, height, Color(255,255,255,255), 180)
+			cam.End3D()
+			render.OverrideDepthEnable(false, false)
+			render.SetLightingMode(0)
+		end
+	end
+
+	hook.Add("PostDraw2DSkyBox", "MapRetSkyboxLayer", function()
+		Skybox_Render()
+	end)
+end
+
+-- Remove all decals
+function Skybox_Remove(ply)
+	if CLIENT then return; end
+
+	-- Admin only
+	if not Ply_IsAdmin(ply) then
+		return false
+	end
+
+	RunConsoleCommand("mapret_skybox", "")	
+
+	duplicator.ClearEntityModifier(mr_dup.entity, "MapRetexturizer_Skybox")
+end
+if SERVER then
+	util.AddNetworkString("Skybox_Remove")
+
+	net.Receive("Skybox_Remove", function(_, ply)
+		Skybox_Remove(ply)
 	end)
 end
 
@@ -1597,6 +1768,15 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 end
 duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMaterials)
 
+-- Load the skybox
+function Duplicator_LoadSkybox(ply, ent, savedTable)
+	-- This timer is only for good aesthetics on loading
+	timer.Create("MapRetDuplicatorSkyboxWait", 2.5, 1, function()
+		Skybox_Apply(ply, savedTable.skybox)
+	end)
+end
+duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybox)
+
 -- Render duplicator progress bar based on the ply.mr_dup.count numbers
 if CLIENT then
 	function Duplicator_RenderProgress(ply)
@@ -1681,15 +1861,6 @@ end
 --- PREVIEW
 --------------------------------
 
--- Checks if the preview is turned on (SERVER!!)
-function Preview_IsOn(ply)
-	if SERVER then
-		return ply.mr_previewmode
-	end
-	
-	return nil
-end
-
 -- Toogle the preview mode for a player
 function Preview_Toogle(ply, state, setOnClient, setOnServer)
 	if CLIENT then
@@ -1723,41 +1894,102 @@ end)
 
 -- Material rendering
 if CLIENT then
-	function Preview_Render()
-		ply = LocalPlayer()
+	function Preview_Render(ply, mapMatMode)
+		local tr = ply:GetEyeTrace()
+		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil)
+		local newData = mapMatMode and Data_Create(ply, tr) or DataTable_CreateDefaults(ply, tr)
 
-		if ply.mr_previewmode then
-			local tr = LocalPlayer():GetEyeTrace()
-			local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil, true)
-			local newData = Data_Create(ply, tr, true)
-				
-			-- Update the material if necessary
-			if Material_ShouldChange(ply, oldData, newData, tr, true) then
-				Map_Material_SetAux(newData)
-				preview.rotation_hack = newData.rotation
-				preview.newMaterial = newData.newMaterial
-			end
-				
-			-- Get the properties
-			local preview = Material("MatRetPreviewMaterial")
-			local width = preview:Width()
-			local height = preview:Height()
+		-- Don't let empty through
+		if newData.newMaterial == "" then
+			return
+		end
 
+		-- Preview adjustments
+		oldData.newMaterial = preview.newMaterial
+		if preview.rotation_hack and preview.rotation_hack ~= -1 then
+			oldData.rotation = preview.rotation_hack -- "Fix" the rotation
+		end
+		newData.oldMaterial = "MatRetPreviewMaterial"
+
+		-- Update the material if necessary
+		if Material_ShouldChange(ply, oldData, newData, tr, true) then
+			Map_Material_SetAux(newData)
+			preview.rotation_hack = newData.rotation
+			preview.newMaterial = newData.newMaterial
+		end
+				
+		-- Get the properties
+		local preview = Material("MatRetPreviewMaterial")
+		local width = preview:Width()
+		local height = preview:Height()
+		
+		-- Map material
+		if mapMatMode then
 			-- Resize
 			while width > 512 or height > 300 do
 				width = width/1.1
 				height = height/1.1
 			end
 
-			-- Render
+			-- Render map material
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(preview)
 			surface.DrawTexturedRect(25, ScrH()/2 - height/2, width, height)
+		-- Decal
+		else
+			local ang = tr.HitNormal:Angle()
+
+			-- We can't apply Decals on the horizontal, so block these cases
+			if ang.x ~= 0 or ang.z ~= 0 then
+				return
+			end
+
+			-- Render decal (It's imprecise because util.DecalEx() is buggy)
+			render.SetMaterial(preview)
+			render.DrawQuadEasy(tr.HitPos, tr.HitNormal, width, height, Color(255,255,255), 180)
+
+			-- Render imprecision alert
+			local corretion = 51
+			
+			if height <= 32 then
+				corretion = 70
+			elseif height <= 64 then
+				corretion = 60
+			elseif height <= 128 then
+				corretion = 53
+			end
+
+			cam.Start3D2D(Vector(tr.HitPos.x, tr.HitPos.y, tr.HitPos.z + (height*corretion)/100), Angle(ang.x, ang.y + 90, ang.z + 90), 0.09)
+				surface.SetFont("CloseCaption_Normal")
+				surface.SetTextColor(255, 255, 255, 255)
+				surface.SetTextPos(0, 0)
+				surface.DrawText("Decals preview may be inaccurate.")
+			cam.End3D2D()
 		end
 	end
 
+	-- Start map materials preview
+	function Preview_Render_Map_Materials()
+		local ply = LocalPlayer()
+
+		if ply.mr_previewmode and not ply.mr_decalmode then
+			Preview_Render(ply, true)
+		end
+	end
 	hook.Add("HUDPaint", "MapRetPreview", function()
-		Preview_Render()
+		Preview_Render_Map_Materials()
+	end)
+
+	-- Start decals preview
+	function Preview_Render_Decals()
+		local ply = LocalPlayer()
+
+		if ply.mr_previewmode and ply.mr_decalmode then
+			Preview_Render(ply, false)
+		end
+	end
+	hook.Add("PostDrawOpaqueRenderables", "MapRetPreview", function()
+		Preview_Render_Decals()
 	end)
 end
 
@@ -1768,11 +2000,6 @@ end
 -- Save the modifications to a file and reload the menu
 function Save_Start(ply, forceName)
 	if SERVER then return; end
-
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
 
 	local name = GetConVar("mapret_savename"):GetString()
 
@@ -1801,7 +2028,7 @@ function Save_Apply(name, theFile)
 	]]
 	
 	-- Create a save table
-	mr_manage.save.list[name] = { decals = mr_mat.decal.list, map = mr_mat.map.list }
+	mr_manage.save.list[name] = { decals = mr_mat.decal.list, map = mr_mat.map.list, skybox = GetConVar("mapret_skybox"):GetString() }
 	
 	-- Save it in a file
 	file.Write(theFile, util.TableToJSON(mr_manage.save.list[name]))
@@ -1821,13 +2048,18 @@ if SERVER then
 	util.AddNetworkString("MapRetSave")
 	util.AddNetworkString("MapRetSaveAddToLoadList")
 
-	net.Receive("MapRetSave", function()
+	net.Receive("MapRetSave", function(_, ply)
+		-- Admin only
+		if not Ply_IsAdmin(ply) then
+			return false
+		end
+
 		local name = net.ReadString()
 
 		Save_Apply(name, mr_manage.map_folder..name..".txt")
 	end)
 	
-	concommand.Add( "mapret_remote_save", function(_1, _2, _3, name)
+	concommand.Add("mapret_remote_save", function(_1, _2, _3, name)
 		if name == "" then
 			return
 		end
@@ -1851,11 +2083,6 @@ end
 function Save_SetAuto(ply, value)
 	if SERVER then return; end
 
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
-
 	-- Set the autosave option on every client
 	net.Start("MapRetAutoSaveSet")
 		net.WriteBool(value)
@@ -1864,7 +2091,12 @@ end
 if SERVER then
 	util.AddNetworkString("MapRetAutoSaveSet")
 
-	net.Receive("MapRetAutoSaveSet", function()
+	net.Receive("MapRetAutoSaveSet", function(_, ply)
+		-- Admin only
+		if not Ply_IsAdmin(ply) then
+			return false
+		end
+
 		local value = net.ReadBool(value)
 
 		if not value then
@@ -1881,15 +2113,10 @@ end
 function Load_Start(ply)
 	if SERVER then return; end
 
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
-
 	-- Get and check the name
 	local name = mr_manage.load.element:GetSelected()
 	
-	if name == "" then
+	if not name or name == "" then
 		return false
 	end
 
@@ -1910,16 +2137,15 @@ function Load_Apply(ply, loadTable)
 	end
 	]]
 
-	local outTable1, outTable2
-
-	-- Server alert
-	print("[Map Retexturizer] Started loading...")
+	local outTable1, outTable2, outTable3
 
 	-- Don't start another loading process if we are stopping one yet
 	if not mr_dup.force_stop then
 		-- Force to stop any running loading
-		Duplicator_ForceStop()
-	
+		if not ply.mr_firstSpawn then
+			Duplicator_ForceStop()
+		end
+
 		-- Wait to the last command to be done
 		timer.Create("MapRetFirstJoinStart", 0.4, 1, function()
 			-- Apply decals
@@ -1933,14 +2159,28 @@ function Load_Apply(ply, loadTable)
 			if MML_Count(outTable2) > 0 then
 				Duplicator_LoadMapMaterials(ply, nil, outTable2)
 			end
-				
-			-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
-			if ply.mr_firstSpawn and table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 then
-				ply.mr_firstSpawn = false
+
+			-- Then the skybox
+			local currentSkybox = { skybox = GetConVar("mapret_skybox"):GetString() }
+			outTable3 = loadTable and loadTable or currentSkybox
+			if outTable3.skybox ~= "" then
+				Duplicator_LoadSkybox(ply, nil, outTable3)
+			end
+
+			if table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 and outTable3.skybox == "" then
+				-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
+				if ply.mr_firstSpawn then
+					ply.mr_firstSpawn = false
+				end
+			else
+				-- Server alert
+				print("[Map Retexturizer] Started loading...")
 			end
 			
 			-- Register that we are not stopping a dup (this was set true in Duplicator_ForceStop())
-			mr_dup.force_stop = false
+			if not ply.mr_firstSpawn then
+				mr_dup.force_stop = false
+			end
 		end)
 	end
 end
@@ -1948,6 +2188,11 @@ if SERVER then
 	util.AddNetworkString("MapRetLoad")
 
 	local function Load_Apply_Start(ply, name)
+		-- Admin only
+		if not Ply_IsAdmin(ply) then
+			return false
+		end
+
 		-- Get and check the load file
 		local theFile = mr_manage.load.list[name]
 
@@ -1972,7 +2217,7 @@ if SERVER then
 		Load_Apply_Start(ply, net.ReadString())
 	end)
 
-	concommand.Add( "mapret_remote_load", function(_1, _2, _3, name)
+	concommand.Add("mapret_remote_load", function(_1, _2, _3, name)
 		if Load_Apply_Start(mr_dup.fake_ply, name) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..name.."\"...")
 		end
@@ -2008,7 +2253,7 @@ if SERVER then
 		print("----------------------------")
 	end
 
-	concommand.Add( "mapret_remote_list", function(_1, _2, _3, name)
+	concommand.Add("mapret_remote_list", function(_1, _2, _3, name)
 		Load_ShowList()
 	end)
 end
@@ -2016,11 +2261,6 @@ end
 -- Delete a saved file and reload the menu
 function Load_Delete(ply)
 	if SERVER then return; end
-
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
 
 	-- Get the load name and check if it's no empty
 	local theName = mr_manage.load.element:GetSelected()
@@ -2038,7 +2278,12 @@ if SERVER then
 	util.AddNetworkString("MapRetLoadDeleteSV")
 	util.AddNetworkString("MapRetLoadDeleteCL")
 
-	net.Receive("MapRetLoadDeleteSV", function()
+	net.Receive("MapRetLoadDeleteSV", function(_, ply)
+		-- Admin only
+		if not Ply_IsAdmin(ply) then
+			return false
+		end
+
 		local theName = net.ReadString()
 		local theFile = mr_manage.load.list[theName]
 
@@ -2076,11 +2321,6 @@ end
 function Load_SetAuto(ply, text)
 	if SERVER then return; end
 
-	-- Admin only
-	if not Ply_IsAdmin(ply) then
-		return false
-	end
-
 	-- Set the autoload on every client
 	net.Start("MapRetAutoLoadSet")
 		net.WriteString(text or mr_manage.load.element:GetText())
@@ -2089,7 +2329,12 @@ end
 if SERVER then
 	util.AddNetworkString("MapRetAutoLoadSet")
 
-	net.Receive("MapRetAutoLoadSet", function()
+	net.Receive("MapRetAutoLoadSet", function(_, ply)
+		-- Admin only
+		if not Ply_IsAdmin(ply) then
+			return false
+		end
+
 		RunConsoleCommand("mapret_autoload", net.ReadString())
 	
 		timer.Create("MapRetWaitToSave", 0.3, 1, function()
@@ -2102,11 +2347,8 @@ end
 function Load_FisrtSpawn_Start(ply)
 	if CLIENT then return; end
 
-	-- Wait to run nicelly
-	timer.Create("MapRetFirstJoinStart"..tostring(ply), 4, 1, function()
-		-- Register that the player is loading the materials for the first time
-		ply.mr_firstSpawn = true
-
+	-- Initializations
+	timer.Create("MapRetFirstJoinStart1"..tostring(ply), 1.5, 1, function()
 		-- Fill up the player load list
 		net.Start("MapRetLoadFillList")
 			net.WriteTable(mr_manage.load.list)
@@ -2118,6 +2360,25 @@ function Load_FisrtSpawn_Start(ply)
 		-- Index duplicator stuff in the player
 		net.Start("MapRetPlyFirstSpawn")
 		net.Send(ply)
+	end)
+
+	-- Do not go on if it's not needed
+	if GetConVar("mapret_skybox"):GetString() == ""
+		and table.Count(mr_mat.decal.list) == 0
+		and MML_Count(mr_mat.map.list) == 0
+		and GetConVar("mapret_autoload"):GetString() == ""
+		then
+
+		-- Register that the player completed the spawn
+		ply.mr_firstSpawn = false
+
+		return
+	end
+
+	-- Wait to run the loads nicelly
+	timer.Create("MapRetFirstJoinStart2"..tostring(ply), 4, 1, function()
+		-- Register that the player is loading the materials for the first time
+		ply.mr_firstSpawn = true
 
 		-- Load the current modifications
 		Load_FisrtSpawn_Apply(ply)
@@ -2150,6 +2411,7 @@ function Load_FisrtSpawn_Apply(ply)
 			
 			-- Load the save
 			local autol = file.Read(mr_manage.autoload.file, "DATA")
+
 			if autol ~= "" then
 				local loadTable = util.JSONToTable(file.Read(mr_manage.map_folder..autol..".txt"))
 				Load_Apply(ply, loadTable)
@@ -2330,7 +2592,9 @@ function TOOL:RightClick(tr)
 			end
 		end
 
-		mr_mat.detail.element:ChooseOptionID(i)
+		if mr_mat.detail.element then
+			mr_mat.detail.element:ChooseOptionID(i)
+		end
 		
 		return true
 	end
@@ -2379,7 +2643,7 @@ function TOOL:Deploy()
 
 	local ply = self:GetOwner()
 
-	if Preview_IsOn(ply) then
+	if ply.mr_previewmode then
 		Preview_Toogle(ply, true, true, false)
 	end
 end
@@ -2400,19 +2664,41 @@ function TOOL.BuildCPanel(CPanel)
 	CPanel:SetName("#tool.mapret.name")
 	CPanel:Help("#tool.mapret.desc")
 	
+	local ply = LocalPlayer()
+	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
+	
+	local function Properties_Toogle(val)
+		if val then
+			mr_mat.detail.element:Hide()
+		else
+			mr_mat.detail.element:Show()
+		end
+	
+		for k,v in pairs(properties) do
+			if val then
+				v:Hide()
+			else
+				v:Show()
+			end
+		end	
+	end
+	
 	CPanel:Help(" ")
-	local section1 = vgui.Create("DCollapsibleCategory", CPanel)
-	section1:SetLabel("General")
-	CPanel:AddItem(section1)
+	local section_general = vgui.Create("DCollapsibleCategory", CPanel)
+	section_general:SetLabel("General")
+	CPanel:AddItem(section_general)
 	RunConsoleCommand("mapret_material", "dev/dev_blendmeasure")
 	CPanel:TextEntry("Material path", "mapret_material")
 	CPanel:ControlHelp("\nNote: the command \"mat_crosshair\" can get a displacement material path.")
 	local previewBox = CPanel:CheckBox("Preview Modifications", "mapret_preview")
-	previewBox:SetChecked(true)
-	Preview_Toogle(LocalPlayer(), previewBox:GetChecked(), true, true)
+	CPanel:ControlHelp("The preview is not accurate with decals (GMod bugs).")
+	timer.Create("MapRetPreviewCheckDelay", 0.2, 1, function()
+		previewBox:SetChecked(true)
+		Preview_Toogle(ply, previewBox:GetChecked(), true, true)
+	end)
 	function previewBox:OnChange(val)
 		-- Don't let the player mess with the option if the toolgun is not selected
-		if LocalPlayer():GetActiveWeapon():GetClass() ~= "gmod_tool" then
+		if ply:GetActiveWeapon():GetClass() ~= "gmod_tool" then
 			if val then
 				previewBox:SetChecked(false)
 			else
@@ -2422,40 +2708,64 @@ function TOOL.BuildCPanel(CPanel)
 			return false
 		end
 
-		Preview_Toogle(LocalPlayer(), val, true, true)
+		Preview_Toogle(ply, val, true, true)
 	end
 	local decalBox = CPanel:CheckBox("Use as Decal", "mapret_decal")
+	Decal_Toogle(ply, decalBox:GetChecked())
 	function decalBox:OnChange(val)
-		 Decal_Toogle(LocalPlayer(), val)
+		Properties_Toogle(val)
+		Decal_Toogle(ply, val)
 	end
-	CPanel:ControlHelp("Decal limitations:")
-	CPanel:ControlHelp("GMod: can't remove individually!")
-	CPanel:ControlHelp("GMod bugs: can't resize or place horizontally.")
 	CPanel:Button("Open Material Browser","mapret_materialbrowser")
 
 	CPanel:Help(" ")
-	local section2 = vgui.Create("DCollapsibleCategory", CPanel)
-	section2:SetLabel("Material Properties")
-	CPanel:AddItem(section2)
-	mr_mat.detail.element = CPanel:ComboBox("Select a Detail:", "mapret_detail")
+	local section_properties = vgui.Create("DCollapsibleCategory", CPanel)
+	section_properties:SetLabel("Material Properties")
+	CPanel:AddItem(section_properties)
+	mr_mat.detail.element, properties.label = CPanel:ComboBox("Select a Detail:", "mapret_detail")
 	for k,v in SortedPairs(mr_mat.detail.list) do
 		mr_mat.detail.element:AddChoice(k, k, v)
 	end	
-	CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
-	CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
-	CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)
-	CPanel:NumSlider("Width Magnification", "mapret_scalex", 0.01, 6, 2)
-	CPanel:NumSlider("Height Magnification", "mapret_scaley", 0.01, 6, 2)
-	CPanel:NumSlider("Rotation", "mapret_rotation", 0, 179, 0)
-	local baseMaterialReset = CPanel:Button("Reset Properties")
-	function baseMaterialReset:DoClick()
-		CVars_SetToDefaults(LocalPlayer())
+	timer.Create("MapRetDetailDefaultDelay", 0.1, 1, function()
+		mr_mat.detail.element:SetValue("None")
+		RunConsoleCommand("mapret_detail", "None")
+	end)
+	properties.a = CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
+	properties.b = CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
+	properties.c = CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)
+	properties.d = CPanel:NumSlider("Width Magnification", "mapret_scalex", 0.01, 6, 2)
+	properties.e = CPanel:NumSlider("Height Magnification", "mapret_scaley", 0.01, 6, 2)
+	properties.f = CPanel:NumSlider("Rotation", "mapret_rotation", 0, 179, 0)
+	properties.baseMaterialReset = CPanel:Button("Reset Properties")
+	function properties.baseMaterialReset:DoClick()
+		CVars_SetToDefaults(ply)
 	end
 
 	CPanel:Help(" ")
-	local section3 = vgui.Create("DCollapsibleCategory", CPanel)
-	section3:SetLabel("Save")
-	CPanel:AddItem(section3)
+	local section_skybox = vgui.Create("DCollapsibleCategory", CPanel)
+	section_skybox:SetLabel("Skybox")
+	CPanel:AddItem(section_skybox)
+	mr_mat.skybox.element_text = CPanel:TextEntry("In use:", "mapret_skybox")
+	mr_mat.skybox.element_text.OnEnter = function(self)
+		Skybox_Start(ply, self:GetValue())
+	end
+	mr_mat.skybox.element_combo = CPanel:ComboBox("HL2:")
+	function mr_mat.skybox.element_combo:OnSelect(index, value, data)
+		Skybox_Start(ply, value)
+	end
+	for k,v in pairs(mr_mat.skybox.hl2_list) do
+		mr_mat.skybox.element_combo:AddChoice(k, k)
+	end	
+	timer.Create("MapRetSkyboxDelay", 0.1, 1, function()
+		mr_mat.skybox.element_combo:SetValue("")
+	end)
+	CPanel:ControlHelp("\nYou can use whatever you want as a sky now.")
+	CPanel:ControlHelp("https://developer.valvesoftware.com/wiki/Sky_List.")
+
+	CPanel:Help(" ")
+	local section_save = vgui.Create("DCollapsibleCategory", CPanel)
+	section_save:SetLabel("Save")
+	CPanel:AddItem(section_save)
 	mr_manage.save.element = CPanel:TextEntry("Filename:", "mapret_savename")
 	RunConsoleCommand("mapret_savename", mr_manage.save.defaul_name)
 	CPanel:ControlHelp("\nYour files are being saved under \"./data/"..mr_manage.map_folder.."\".")
@@ -2463,7 +2773,7 @@ function TOOL.BuildCPanel(CPanel)
 	local autoSaveBox = CPanel:CheckBox("Autosave", "mapret_autosave")
 	function autoSaveBox:OnChange(val)
 		-- Admin only
-		if not Ply_IsAdmin(LocalPlayer()) then
+		if not Ply_IsAdmin(ply) then
 			if val then
 				autoSaveBox:SetChecked(false)
 			else
@@ -2473,53 +2783,54 @@ function TOOL.BuildCPanel(CPanel)
 			return false
 		end
 
-		Save_SetAuto(LocalPlayer(), val)
+		Save_SetAuto(ply, val)
 	end
 	CPanel:ControlHelp("\nWhen changes are detected it waits 60 seconds to save them automatically in the file \""..mr_manage.autosave.file.."\" under the name of \""..mr_manage.autosave.name.."\" and then repeats this cycle.")
 	local saveChanges = CPanel:Button("Save")
 	function saveChanges:DoClick()
-		Save_Start(LocalPlayer())
+		Save_Start(ply)
 	end
 
 	CPanel:Help(" ")
-	local section4 = vgui.Create("DCollapsibleCategory", CPanel)
-	section4:SetLabel("Load")
-	CPanel:AddItem(section4)
+	local section_load = vgui.Create("DCollapsibleCategory", CPanel)
+	section_load:SetLabel("Load")
+	CPanel:AddItem(section_load)
 	local mapSec = CPanel:TextEntry("Map:")
 	mapSec:SetEnabled(false)
 	mapSec:SetText(game.GetMap())
 	mr_manage.autoload.element = CPanel:TextEntry("Autoload:", "mapret_autoload")
 	mr_manage.autoload.element:SetEnabled(false)
 	mr_manage.load.element = CPanel:ComboBox("Select a File:")
-	Load_FillList(LocalPlayer())
+	Load_FillList(ply)
 	CPanel:Help(" ")
 	CPanel:Help("Apply:")
 	local loadSave = CPanel:Button("Load")
 	function loadSave:DoClick()
-		Load_Start(LocalPlayer())
+		Load_Start(ply)
 	end
 	local setAutoLoad = CPanel:Button("Set Autoload")
 	function setAutoLoad:DoClick()
-		Load_SetAuto(LocalPlayer())
+		Load_SetAuto(ply)
 	end	
 	CPanel:Help("Remove:")
 	local delSave = CPanel:Button("Delete")
 	function delSave:DoClick()
-		Load_Delete(LocalPlayer())
+		Load_Delete(ply)
 	end
 	local delAutoLoad = CPanel:Button("Remove Autoload")
 	function delAutoLoad:DoClick()
-		Load_SetAuto(LocalPlayer(), "")
+		Load_SetAuto(ply, "")
 	end	
 
 	CPanel:Help(" ")
-	local section5 = vgui.Create("DCollapsibleCategory", CPanel)
-	section5:SetLabel("Cleanup")
-	CPanel:AddItem(section5)
+	local section_cleanup = vgui.Create("DCollapsibleCategory", CPanel)
+	section_cleanup:SetLabel("Cleanup")
+	CPanel:AddItem(section_cleanup)
 	local cleanupCombobox = CPanel:ComboBox("Select a section:")
 	cleanupCombobox:AddChoice("Decals","Decal_RemoveAll")
 	cleanupCombobox:AddChoice("Map Materials","Map_Material_RemoveAll")
 	cleanupCombobox:AddChoice("Model Materials","Model_Material_RemoveAll")
+	cleanupCombobox:AddChoice("Skybox","Skybox_Remove")
 	cleanupCombobox:AddChoice("All","Material_RestoreAll", true)
 	local cleanupButton = CPanel:Button("Cleanup","mapret_cleanup_all")
 	function cleanupButton:DoClick()

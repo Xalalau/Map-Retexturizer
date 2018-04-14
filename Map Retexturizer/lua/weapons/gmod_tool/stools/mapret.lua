@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.6 - 14/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.7 - 14/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -1247,17 +1247,6 @@ function Decal_Start(ply, tr, duplicatorData)
 		return false
 	end
 
-	-- Bug
-	if tr then
-		if tr.HitNormal == Vector(0, 0, 1) or tr.HitNormal == Vector(0, 0, -1) then
-			if SERVER then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, I can't place decals on the horizontal.")
-			end
-
-			return false
-		end
-	end
-
 	-- Ok for client
 	if CLIENT then
 		return true
@@ -1265,7 +1254,7 @@ function Decal_Start(ply, tr, duplicatorData)
 
 	-- Get the basic properties
 	local ent = tr and tr.Entity or duplicatorData.ent
-	local pos = tr and tr.HitPos - Vector(0, 0, 5) or duplicatorData.pos
+	local pos = tr and tr.HitPos or duplicatorData.pos
 	local hit = tr and tr.HitNormal or duplicatorData.hit
 
 	-- Register and duplicator:
@@ -2082,11 +2071,6 @@ if CLIENT then
 		-- Decal
 		else
 			local ang = tr.HitNormal:Angle()
-
-			-- We can't apply Decals on the horizontal, so block these cases
-			if ang.x ~= 0 or ang.z ~= 0 then
-				return
-			end
 
 			-- Render decal (It's imprecise because util.DecalEx() is buggy)
 			render.SetMaterial(preview)

@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.8 - 14/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.9 - 14/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -532,23 +532,24 @@ end
 -- Convert a map material into a data table
 function Data_CreateFromMaterial(materialName, i)
 	local theMaterial = Material(materialName)
-	local scalex = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1]
-	local scaley = theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2]
-	local offsetx = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1]
-	local offsety = theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2]
+
+	local scalex = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
+	local scaley = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
+	local offsetx = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1] or "0.00"
+	local offsety = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2] or "0.00"
 	local newMaterial
 
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
-		newMaterial = i and mr_mat.map.filename..tostring(i),
+		newMaterial = i and mr_mat.map.filename..tostring(i) or "",
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
 		scaley = string.format("%.2f", math.ceil((1/scaley)*1000)/1000),
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user 
-		rotation = theMaterial:GetMatrix("$basetexturetransform"):GetAngles().y,
-		alpha = string.format("%.2f", theMaterial:GetString("$alpha")),
+		rotation = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetAngles() and theMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
+		alpha = string.format("%.2f", theMaterial:GetString("$alpha") or "1.00"),
 		detail = theMaterial:GetString("$detail") and theMaterial:GetTexture("$detail"):GetName() or "None",
 	}
 
@@ -1407,23 +1408,30 @@ if CLIENT then
 		-- Check if it's empty
 		if mat ~= "" then
 			local suffixes
+			local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
 
-			-- Check if we aren't using a HL2 sky
+			-- If we aren't using a HL2 sky we need to check what is going on
 			if not mr_mat.skybox.hl2_list[mat] then
-				-- Check if the material is valid FOR THE PLAYER
-				if not Material_IsValid(mat) then
+				-- Check if the material is valid
+				if not Material_IsValid(mat) and not Material_IsValid(mat.."ft") then
 					-- Nope
 					return
-				end
-				if Material_IsValid(mat.."ft") then
-					local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
-					suffixes = aux
 				else
-					local aux = { "", "", "", "", "", "" }
+					-- Check if a valid 6 side skybox
+					for k, v in pairs(aux) do
+						if not Material_IsValid(mat..v) then
+							-- If it's not a full skybox, it's a valid single material
+							suffixes = { "", "", "", "", "", "" }
+							break
+						end
+					end
+				end
+
+				-- It's a valid full skybox
+				if not suffixes then
 					suffixes = aux
 				end
 			else
-				local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
 				suffixes = aux
 			end
 
@@ -1965,8 +1973,6 @@ function Duplicator_Finish(ply)
 		-- Finish for new players
 		if ply.mr_firstSpawn then
 			Load_FisrtSpawn_Set(ply, false)
-			
-			print("[Map Retexturizer]["..ply:GetName().."] Loading finished.")
 		-- Finish for the normal usage
 		else
 			-- Set "running" to nothing
@@ -2053,7 +2059,7 @@ if CLIENT then
 		newData.oldMaterial = "MatRetPreviewMaterial"
 
 		-- Update the material if necessary
-		if Material_ShouldChange(ply, oldData, newData, tr, true) then
+		if Material_ShouldChange(ply, oldData, newData, tr) then
 			Map_Material_SetAux(newData)
 			preview.rotation_hack = newData.rotation
 			preview.newMaterial = newData.newMaterial
@@ -2310,9 +2316,7 @@ function Load_Apply(ply, loadTable)
 				end
 			else
 				-- Server alert
-				if ply.mr_firstSpawn then
-					print("[Map Retexturizer]["..ply:GetName().."] Loading started...")
-				else
+				if not ply.mr_firstSpawn then
 					print("[Map Retexturizer] Loading started...")
 				end
 			end
@@ -2345,7 +2349,7 @@ if SERVER then
 		loadTable = util.JSONToTable(file.Read(theFile, "DATA"))
 		
 		if loadTable then
-			-- Register the name of the loading
+			-- Register the name of the loading (one that is running for all the players)
 			mr_dup.running = name
 			net.Start("MapRetLoad_SetPly")
 				net.WriteString(name)
@@ -2640,7 +2644,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Do not modify anything in the middle of a load
-	if mr_dup.running ~= "" then
+	if mr_dup.running ~= "" or ply.mr_dup.run ~= "" then
 		if SERVER then
 			if not ply.mr_decalmode then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")

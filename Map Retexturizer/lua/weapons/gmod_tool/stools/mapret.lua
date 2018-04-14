@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. v1.4 - 13/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. v1.5 - 13/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -187,6 +187,9 @@ end
 
 -- Duplicator management
 local mr_dup = {
+	-- If a save is being loaded, the name keep stored here until it's done
+	-- (Shared)
+	running = "",
 	-- Workaround to duplicate map and decal materials
 	-- (Server)
 	entity,
@@ -392,6 +395,11 @@ local Decal_Start
 local Decal_Apply
 local Decal_RemoveAll
 
+local Skybox_Apply
+local Skybox_Remove
+local Skybox_Render
+local Skybox_Start
+
 local Duplicator_CreateEnt
 local Duplicator_SendStatusToCl
 local Duplicator_SendErrorCountToCl
@@ -412,6 +420,7 @@ local Load_Apply
 local Load_FillList
 local Load_Delete
 local Load_SetAuto
+local Load_FisrtSpawn_Set
 local Load_FisrtSpawn_Start
 local Load_FisrtSpawn_Apply
 
@@ -619,6 +628,10 @@ end
 -- Check if a given material path is valid
 function Material_IsValid(material)
 	-- Do not try to load nonexistent materials
+	if not material or material == "" then
+		return false
+	end
+
 	local fileExists = false
 
 	for _,v in pairs({".vmf", ".png", ".jpg" }) do
@@ -626,7 +639,7 @@ function Material_IsValid(material)
 			fileExists = true
 		end
 	end
-	
+		
 	if not fileExists then
 		-- For some reason there are map materials loaded and working but not present in the folders.
 		-- I guess they are embbeded. So if the material is not considered an error, go ahead...
@@ -803,7 +816,7 @@ if CLIENT then
 end
 
 -- Clean up everything
-function Material_RestoreAll(ply)
+function Material_RestoreAll(ply, plyLoadingStatus)
 	if CLIENT then return; end
 
 	-- Admin only
@@ -811,16 +824,32 @@ function Material_RestoreAll(ply)
 		return false
 	end
 
-	Model_Material_RemoveAll(ply)
-	Map_Material_RemoveAll(ply)
-	Decal_RemoveAll(ply)
-	Skybox_Remove(ply)
+	-- Don't start a cleaning process if we are stopping a loading
+	if not mr_dup.force_stop then
+		-- Force to stop any loading
+		local delay = 0
+
+		if Duplicator_ForceStop(plyLoadingStatus) then
+			delay = 0.4
+		end
+
+		-- cleanup
+		timer.Create("MapRetMaterialCleanupDelay"..tostring(math.random(999))..tostring(ply), delay, 1, function()
+			Model_Material_RemoveAll(ply)
+			Map_Material_RemoveAll(ply)
+			Decal_RemoveAll(ply)
+			Skybox_Remove(ply)
+
+			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
+			mr_dup.force_stop = false
+		end)
+	end
 end
 if SERVER then
 	util.AddNetworkString("Material_RestoreAll")
 
 	net.Receive("Material_RestoreAll", function(_,ply)
-		Material_RestoreAll(ply)
+		Material_RestoreAll(ply, net.ReadBool())
 	end)
 end
 
@@ -1008,26 +1037,26 @@ end
 function Map_Material_Set(ply, data)
 	-- Note: if data has a backup we need to restore it, otherwise let's just do the normal stuff
 
-	-- HACK Force to skip empty materials (sometimes it happens, so let's avoid the script errors)
+	-- Force to skip bad materials (sometimes it happens, so let's avoid the script errors)
 	if not data.oldMaterial then
-		print("[MAP RETEXTURIZER] Failed to load a material. Reason: It's completely empty. Skipping...")
+		print("[MAP RETEXTURIZER] Map_Material_Set() received a bad material. Skipping it...")
 		
 		return
-	end
-
-	 -- Duplicator check
-	local isNewMaterial = false
-
-	if SERVER then
-		if not data.backup then
-			isNewMaterial = true
-		end
 	end
 
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
 	if CLIENT or SERVER and not ply.mr_firstSpawn or SERVER and ply.mr_firstSpawn and ply.mr_mat_initializing then
+		 -- Duplicator check
+		local isNewMaterial = false
+
+		if SERVER then
+			if not data.backup then
+				isNewMaterial = true
+			end
+		end
+
 		local i
 		local element = MML_GetElement(data.oldMaterial)
 
@@ -1061,33 +1090,46 @@ function Map_Material_Set(ply, data)
 
 		-- Index the Data
 		MML_InsertElement(data, i)
+
+		-- Apply the new state to the map material
+		Map_Material_SetAux(data)
+
+		if SERVER then
+			-- Set the duplicator
+			if isNewMaterial then
+				duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Maps", mr_mat.map.list)
+			end
+		end
 	end
 
-	-- Apply the new state to the map material
-	Map_Material_SetAux(data)
-
 	if SERVER then
-		-- Set the duplicator
-		if isNewMaterial then
-			duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Maps", mr_mat.map.list)
-		end
-
 		-- Send the modification to every player
 		if not ply.mr_firstSpawn then
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
+				net.WriteBool(true)
 			net.Broadcast()
 		-- Or for a single player
 		else
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
+				net.WriteBool(false)
 			net.Send(ply)
 		end
 	end
 end
 if CLIENT then
 	net.Receive("Map_Material_Set", function()
-		Map_Material_Set(LocalPlayer(), net.ReadTable())
+		local ply = LocalPlayer()
+		local theTable = net.ReadTable()
+		local isBroadcasted = net.ReadBool()
+
+		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+		if ply.mr_firstSpawn == nil or ply.mr_firstSpawn == true and isBroadcasted then
+			return
+		end
+	
+		Map_Material_Set(ply, theTable)
 	end)
 end
 
@@ -1237,6 +1279,7 @@ function Decal_Start(ply, tr, duplicatorData)
 			net.WriteEntity(ent)
 			net.WriteVector(pos)
 			net.WriteVector(hit)
+			net.WriteBool(true)
 		net.Broadcast()
 	-- Or for a single player
 	else
@@ -1245,6 +1288,7 @@ function Decal_Start(ply, tr, duplicatorData)
 			net.WriteEntity(ent)
 			net.WriteVector(pos)
 			net.WriteVector(hit)
+			net.WriteBool(false)
 		net.Send(ply)
 	end
 	
@@ -1277,9 +1321,20 @@ if SERVER then
 end
 if CLIENT then
 	net.Receive("Decal_Apply", function()
-		-- Material, entity, position, normal, color, width and height
+		local ply = LocalPlayer()
+		local material = net.ReadString()
+		local entity = net.ReadEntity()
+		local position = net.ReadVector()
+		local normal = net.ReadVector()
+		local isBroadcasted = net.ReadBool()
 
-		Decal_Apply(net.ReadString(), net.ReadEntity(), net.ReadVector(), net.ReadVector())
+		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+		if ply.mr_firstSpawn == nil or ply.mr_firstSpawn == true and isBroadcasted then
+			return
+		end
+
+		-- Material, entity, position, normal, color, width and height
+		Decal_Apply(material, entity, position, normal)
 	end)
 end
 
@@ -1470,6 +1525,7 @@ function Duplicator_SendStatusToCl(ply, current, total, section, resetValues)
 			net.WriteInt(current or -1, 14)
 			net.WriteInt(total or -1, 14)
 			net.WriteString(section or "-1")
+			net.WriteBool(true)
 		net.Broadcast()
 	-- Or a single client
 	else
@@ -1477,6 +1533,7 @@ function Duplicator_SendStatusToCl(ply, current, total, section, resetValues)
 			net.WriteInt(current or -1, 14)
 			net.WriteInt(total or -1, 14)
 			net.WriteString(section or "-1")
+			net.WriteBool(false)
 		net.Send(ply)
 	end
 end
@@ -1486,7 +1543,15 @@ else
 	-- Updates the duplicator progress in the client
 	net.Receive("MapRetUpdateDupProgress", function()
 		local a, b, c = net.ReadInt(14), net.ReadInt(14), net.ReadString()
+		local ply = LocalPlayer()
+		local isBroadcasted = net.ReadBool()
 
+		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+		if ply.mr_firstSpawn == nil or ply.mr_firstSpawn == true and isBroadcasted then
+			return
+		end
+
+		-- Update the dup state
 		if c != "-1" then
 			LocalPlayer().mr_dup.run = c
 		end
@@ -1510,12 +1575,14 @@ function Duplicator_SendErrorCountToCl(ply, count, material)
 		net.Start("MapRetUpdateDupErrorCount")
 			net.WriteInt(count or 0, 14)
 			net.WriteString(material or "")
+			net.WriteBool(true)
 		net.Broadcast()
 	-- Or for a single player
 	else
 		net.Start("MapRetUpdateDupErrorCount")
 			net.WriteInt(count or 0, 14)
 			net.WriteString(material or "")
+			net.WriteBool(false)
 		net.Send(ply)
 	end
 end
@@ -1524,10 +1591,23 @@ if SERVER then
 else
 	-- Error printing in the console
 	net.Receive("MapRetUpdateDupErrorCount", function()
-		ply.mr_dup.count.errors.n = net.ReadInt(14)
+		local ply = LocalPlayer()
+		local count = net.ReadInt(14)
+		local mat = net.ReadString()
+		local isBroadcasted = net.ReadBool()
 
+		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+		if ply.mr_firstSpawn == nil or ply.mr_firstSpawn == true and isBroadcasted then
+			return
+		end
+
+		-- Set the error count
+		ply.mr_dup.count.errors.n = count
+
+		-- Get the missing material name
 		if ply.mr_dup.count.errors.n > 0 then
-			table.insert(ply.mr_dup.count.errors.list, net.ReadString())
+			table.insert(ply.mr_dup.count.errors.list, mat)
+		-- Print the failed materials table
 		else
 			if table.Count(ply.mr_dup.count.errors.list)> 0 then
 				LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the terminal for the errors.")
@@ -1547,6 +1627,11 @@ end
 -- Load model materials from saves (Models spawn almost at the same time, so my strange timers work nicelly)
 function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	if CLIENT then return; end
+
+	-- Check if client is valid
+	if not ply:IsValid() then
+		return
+	end
 
 	-- First cleanup
 	if not mr_dup.clean then
@@ -1607,6 +1692,11 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Models", Duplicator_LoadModel
 function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return; end
 
+	-- Check if client is valid
+	if not ply:IsValid() then
+		return
+	end
+
 	-- Force check
 	if forceCheck and not mr_dup.has.models then
 		ply.mr_dup.run = "decals"
@@ -1620,7 +1710,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 	if ply.mr_dup.run == "decals" then
 		-- First cleanup
 		if not mr_dup.clean then
-				if not ply.mr_firstSpawn then
+			if not ply.mr_firstSpawn then
 				mr_dup.clean = true
 				Material_RestoreAll(ply)
 				timer.Create("MapRetDuplicatorDecalsWaitCleanup", 1, 1, function()
@@ -1669,7 +1759,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 		end
 	else
 		-- Keep waiting
-		timer.Create("MapRetDuplicatorDecalWaitModelsDelay"..tostring(ply), 0.5, 1, function()
+		timer.Create("MapRetDuplicatorDecalWaitModelsDelay"..tostring(ply), 0.3, 1, function()
 			Duplicator_LoadDecals(ply, ent, savedTable, nil, true)
 		end)
 	end
@@ -1679,6 +1769,11 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_LoadDecal
 -- Load map materials from saves
 function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return; end
+
+	-- Check if client is valid
+	if not ply:IsValid() then
+		return
+	end
 
 	-- Force check
 	if forceCheck and (not mr_dup.has.models and not ply.mr_dup.has.decals) then
@@ -1761,7 +1856,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		end)
 	else
 		-- Keep waiting
-		timer.Create("MapRetDuplicatorMapMatWaitDecalsDelay"..tostring(ply), 0.6, 1, function()
+		timer.Create("MapRetDuplicatorMapMatWaitDecalsDelay"..tostring(ply), 0.3, 1, function()
 			Duplicator_LoadMapMaterials(ply, ent, savedTable, nil, true)
 		end)
 	end
@@ -1772,6 +1867,11 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMate
 function Duplicator_LoadSkybox(ply, ent, savedTable)
 	-- This timer is only for good aesthetics on loading
 	timer.Create("MapRetDuplicatorSkyboxWait", 2.5, 1, function()
+		-- Check if client is valid
+		if not ply:IsValid() then
+			return
+		end
+
 		Skybox_Apply(ply, savedTable.skybox)
 	end)
 end
@@ -1808,19 +1908,27 @@ if CLIENT then
 end
 
 -- Force to stop the duplicator
-function Duplicator_ForceStop()
+function Duplicator_ForceStop(plyLoadingStatus)
 	if SERVER then
-		mr_dup.force_stop = true
-	
-		net.Start("MapRetForceDupToStop")
-		net.Broadcast()
+		if mr_dup.running ~= "" or plyLoadingStatus then
+			mr_dup.force_stop = true
+
+			net.Start("MapRetForceDupToStop")
+			net.Broadcast()
+			
+			return true
+		end
+		
+		return false
 	else
 		mr_dup.force_stop = true
 
-		timer.Create("MapRetDuplicatorForceStop", 0.2, 1, function()
+		timer.Create("MapRetDuplicatorForceStop", 0.3, 1, function()
 			mr_dup.force_stop = false
 		end)
 	end
+
+	return
 end
 if SERVER then
 	util.AddNetworkString("MapRetForceDupToStop")
@@ -1835,26 +1943,52 @@ function Duplicator_Finish(ply)
 	if CLIENT then return; end
 
 	if not mr_dup.has.models and not ply.mr_dup.has.decals and not ply.mr_dup.has.map then
+		-- Set the duplicator as initialized
+		if not mr_mat.initialized then
+			mr_mat.initialized = true
+		end
+
+		-- Reset the progress bar
 		ply.mr_dup.run = ""
 		ply.mr_dup.count.total = 0
 		ply.mr_dup.count.current = 0
 		Duplicator_SendStatusToCl(ply, 0, 0, "")
+
+		-- Reset the error counting
 		if ply.mr_dup.count.errors.n > 0 then
 			Duplicator_SendErrorCountToCl(0)
 			ply.mr_dup.count.errors.n = 0
 		end
+
+		-- Finish for new players
 		if ply.mr_firstSpawn then
-			ply.mr_firstSpawn = false
+			Load_FisrtSpawn_Set(ply, false)
+			
+			print("[Map Retexturizer]["..ply:GetName().."] Loading finished.")
+		-- Finish for the normal usage
 		else
+			-- Set "running" to nothing
+			mr_dup.running = ""
+			net.Start("MapRetDupFinish")
+			net.Broadcast()
+
+			-- Reset the first clean state
 			mr_dup.clean = false
+
+			-- Reset model delay adjuster
+			mr_dup.models.delay = 0
 			mr_dup.models.max_delay = 0
+
+			print("[Map Retexturizer] Loading finished.")
 		end
-		if not mr_mat.initialized then
-			mr_mat.initialized = true
-		end
-		
-		print("[Map Retexturizer] Loading finished.")
 	end
+end
+if SERVER then
+	util.AddNetworkString("MapRetDupFinish")
+else
+	net.Receive("MapRetDupFinish", function()
+		mr_dup.running = ""
+	end)
 end
 
 --------------------------------
@@ -1899,8 +2033,13 @@ if CLIENT then
 		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil)
 		local newData = mapMatMode and Data_Create(ply, tr) or DataTable_CreateDefaults(ply, tr)
 
-		-- Don't let empty through
-		if newData.newMaterial == "" then
+		-- Don't apply bad materials
+		if not Material_IsValid(newData.newMaterial) then
+			return
+		end
+
+		-- Don't render decal materials over the skybox
+		if not mapMatMode and Material_GetOriginal(tr) == "tools/toolsskybox" then
 			return
 		end
 
@@ -2170,14 +2309,18 @@ function Load_Apply(ply, loadTable)
 			if table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 and outTable3.skybox == "" then
 				-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
 				if ply.mr_firstSpawn then
-					ply.mr_firstSpawn = false
+					Load_FisrtSpawn_Set(ply, false)
 				end
 			else
 				-- Server alert
-				print("[Map Retexturizer] Started loading...")
+				if ply.mr_firstSpawn then
+					print("[Map Retexturizer]["..ply:GetName().."] Loading started...")
+				else
+					print("[Map Retexturizer] Loading started...")
+				end
 			end
-			
-			-- Register that we are not stopping a dup (this was set true in Duplicator_ForceStop())
+
+			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
 			if not ply.mr_firstSpawn then
 				mr_dup.force_stop = false
 			end
@@ -2186,6 +2329,7 @@ function Load_Apply(ply, loadTable)
 end
 if SERVER then
 	util.AddNetworkString("MapRetLoad")
+	util.AddNetworkString("MapRetLoad_SetPly")
 
 	local function Load_Apply_Start(ply, name)
 		-- Admin only
@@ -2202,9 +2346,15 @@ if SERVER then
 
 		-- Get the load file content
 		loadTable = util.JSONToTable(file.Read(theFile, "DATA"))
-
-		-- Load it
+		
 		if loadTable then
+			-- Register the name of the loading
+			mr_dup.running = name
+			net.Start("MapRetLoad_SetPly")
+				net.WriteString(name)
+			net.Send(ply)
+
+			-- Load it
 			Load_Apply(ply, loadTable)
 			
 			return true
@@ -2221,6 +2371,10 @@ if SERVER then
 		if Load_Apply_Start(mr_dup.fake_ply, name) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..name.."\"...")
 		end
+	end)
+else
+	net.Receive("MapRetLoad_SetPly", function(_, ply)
+		mr_dup.running = net.ReadString()
 	end)
 end
 
@@ -2265,7 +2419,7 @@ function Load_Delete(ply)
 	-- Get the load name and check if it's no empty
 	local theName = mr_manage.load.element:GetSelected()
 
-	if theName == "" then
+	if not theName or theName == "" then
 		return
 	end
 
@@ -2343,6 +2497,24 @@ if SERVER then
 	end)
 end
 
+-- Set the ply.mr_firstSpawn state
+function Load_FisrtSpawn_Set(ply, state)
+	ply.mr_firstSpawn = state
+
+	if SERVER then
+		net.Start("MapRetPlyFirstSpawnSetState")
+			net.WriteBool(state)
+		net.Send(ply)
+	end
+end
+if SERVER then
+	util.AddNetworkString("MapRetPlyFirstSpawnSetState")
+else
+	net.Receive("MapRetPlyFirstSpawnSetState", function()
+		Load_FisrtSpawn_Set(LocalPlayer(), net.ReadBool())
+	end)
+end
+
 -- Load the server modifications on the first spawn (start)
 function Load_FisrtSpawn_Start(ply)
 	if CLIENT then return; end
@@ -2358,7 +2530,7 @@ function Load_FisrtSpawn_Start(ply)
 		mr_dup_set(ply)
 
 		-- Index duplicator stuff in the player
-		net.Start("MapRetPlyFirstSpawn")
+		net.Start("MapRetPlyFirstSpawnSetDup")
 		net.Send(ply)
 	end)
 
@@ -2370,7 +2542,7 @@ function Load_FisrtSpawn_Start(ply)
 		then
 
 		-- Register that the player completed the spawn
-		ply.mr_firstSpawn = false
+		Load_FisrtSpawn_Set(ply, false)
 
 		return
 	end
@@ -2378,7 +2550,7 @@ function Load_FisrtSpawn_Start(ply)
 	-- Wait to run the loads nicelly
 	timer.Create("MapRetFirstJoinStart2"..tostring(ply), 4, 1, function()
 		-- Register that the player is loading the materials for the first time
-		ply.mr_firstSpawn = true
+		Load_FisrtSpawn_Set(ply, true)
 
 		-- Load the current modifications
 		Load_FisrtSpawn_Apply(ply)
@@ -2390,9 +2562,10 @@ function Load_FisrtSpawn_Apply(ply)
 
 	-- Wait Load_FisrtSpawn_Apply() to run nicelly and apply the modifications after a sane time for players
 	timer.Create("MapRetFirstJoinApply"..tostring(ply), 5, 1, function()
-		if GetConVar("mapret_autoload"):GetString() == "" or mr_mat.initialized then
+		-- Send the current modifications
+		if mr_dup.running == "" and (GetConVar("mapret_autoload"):GetString() == "" or mr_mat.initialized) then
 			Load_Apply(ply, nil)
-		-- Or load an autosave
+		-- Or load an saved file
 		else
 			-- Register if the player is also initializing the material table
 			if not mr_mat.initialized then
@@ -2409,9 +2582,10 @@ function Load_FisrtSpawn_Apply(ply)
 				end
 			end
 			
-			-- Load the save
-			local autol = file.Read(mr_manage.autoload.file, "DATA")
+			-- Get the save name
+			local autol = mr_dup.running ~= "" and mr_dup.running or file.Read(mr_manage.autoload.file, "DATA")
 
+			-- Load the materials
 			if autol ~= "" then
 				local loadTable = util.JSONToTable(file.Read(mr_manage.map_folder..autol..".txt"))
 				Load_Apply(ply, loadTable)
@@ -2420,12 +2594,12 @@ function Load_FisrtSpawn_Apply(ply)
 	end)
 end
 if SERVER then
-	util.AddNetworkString("MapRetPlyFirstSpawn")
+	util.AddNetworkString("MapRetPlyFirstSpawnSetDup")
 
 	hook.Add("PlayerInitialSpawn", "MapRetPlyFirstSpawn", Load_FisrtSpawn_Start)
 end
 if CLIENT then
-	net.Receive("MapRetPlyFirstSpawn", function()
+	net.Receive("MapRetPlyFirstSpawnSetDup", function()
 		-- Index duplicator stuff (clientside)
 		mr_dup_set(LocalPlayer())
 	end)
@@ -2465,6 +2639,28 @@ function TOOL:LeftClick(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
+		return false
+	end
+
+	-- Do not modify anything in the middle of a load
+	if mr_dup.running ~= "" then
+		if SERVER then
+			if not ply.mr_decalmode then
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")
+			end
+		end
+
+		return false
+	end
+
+	-- Do not try to modify the skybox
+	if Material_GetOriginal(tr) == "tools/toolsskybox" then
+		if SERVER then
+			if not ply.mr_decalmode then
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+			end
+		end
+
 		return false
 	end
 
@@ -2760,7 +2956,7 @@ function TOOL.BuildCPanel(CPanel)
 		mr_mat.skybox.element_combo:SetValue("")
 	end)
 	CPanel:ControlHelp("\nYou can use whatever you want as a sky now.")
-	CPanel:ControlHelp("https://developer.valvesoftware.com/wiki/Sky_List.")
+	CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List.")
 
 	CPanel:Help(" ")
 	local section_save = vgui.Create("DCollapsibleCategory", CPanel)
@@ -2836,6 +3032,7 @@ function TOOL.BuildCPanel(CPanel)
 	function cleanupButton:DoClick()
 		local _, netName = cleanupCombobox:GetSelected()
 		net.Start(netName)
+			net.WriteBool(ply.mr_dup and ply.mr_dup.run ~= "" and true or false)
 		net.SendToServer()
 	end
 

@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.7 - 14/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.8 - 14/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -1415,7 +1415,7 @@ if CLIENT then
 					-- Nope
 					return
 				end
-				if not Material_IsValid(mat.."ft") then
+				if Material_IsValid(mat.."ft") then
 					local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
 					suffixes = aux
 				else
@@ -1623,8 +1623,10 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	if CLIENT then return; end
 
 	-- Check if client is valid
-	if not ply:IsValid() then
-		return
+	if IsEntity(ply) then
+		if not ply:IsValid() then
+			return
+		end
 	end
 
 	-- First cleanup
@@ -1687,8 +1689,10 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return; end
 
 	-- Check if client is valid
-	if not ply:IsValid() then
-		return
+	if IsEntity(ply) then
+		if not ply:IsValid() then
+			return
+		end
 	end
 
 	-- Force check
@@ -1765,8 +1769,10 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return; end
 
 	-- Check if client is valid
-	if not ply:IsValid() then
-		return
+	if IsEntity(ply) then
+		if not ply:IsValid() then
+			return
+		end
 	end
 
 	-- Force check
@@ -1862,8 +1868,10 @@ function Duplicator_LoadSkybox(ply, ent, savedTable)
 	-- This timer is only for good aesthetics on loading
 	timer.Create("MapRetDuplicatorSkyboxWait", 2.5, 1, function()
 		-- Check if client is valid
-		if not ply:IsValid() then
-			return
+		if IsEntity(ply) then
+			if not ply:IsValid() then
+				return
+			end
 		end
 
 		Skybox_Apply(ply, savedTable.skybox)

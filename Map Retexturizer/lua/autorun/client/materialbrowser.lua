@@ -72,7 +72,8 @@ local function CreateMaterialBrowser()
 
 	local function FillList()
 		local node = List:AddNode("Materials! (click one to select)")
-		ParseDir(node, "materials/", { ".vmt", ".png", ".jpg" })
+		--ParseDir(node, "materials/", { ".vmt", ".png", ".jpg" })
+		ParseDir(node, "materials/", { ".vmt" })
 		node:SetExpanded(true)
 	end
 

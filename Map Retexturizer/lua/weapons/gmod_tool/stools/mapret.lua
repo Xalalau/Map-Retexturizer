@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. v1.5 - 13/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.6 - 14/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -519,8 +519,8 @@ function Data_Create(ply, tr)
 		newMaterial = ply:GetInfo("mapret_material"),
 		offsetx = ply:GetInfo("mapret_offsetx"),
 		offsety = ply:GetInfo("mapret_offsety"),
-		scalex = ply:GetInfo("mapret_scalex"),
-		scaley = ply:GetInfo("mapret_scaley"),
+		scalex = ply:GetInfo("mapret_scalex") ~= "0" and ply:GetInfo("mapret_scalex") or "0.01",
+		scaley = ply:GetInfo("mapret_scaley") ~= "0" and ply:GetInfo("mapret_scaley") or "0.01",
 		rotation = ply:GetInfo("mapret_rotation"),
 		alpha = ply:GetInfo("mapret_alpha"),
 		detail = ply:GetInfo("mapret_detail"),
@@ -634,12 +634,13 @@ function Material_IsValid(material)
 
 	local fileExists = false
 
-	for _,v in pairs({".vmf", ".png", ".jpg" }) do
+	--for _,v in pairs({ ".vmf", ".png", ".jpg" }) do
+	for _,v in pairs({ ".vmf" }) do
 		if file.Exists("materials/"..material..v, "GAME") then
 			fileExists = true
 		end
 	end
-		
+
 	if not fileExists then
 		-- For some reason there are map materials loaded and working but not present in the folders.
 		-- I guess they are embbeded. So if the material is not considered an error, go ahead...
@@ -652,7 +653,7 @@ function Material_IsValid(material)
 	if material == "" or 
 		string.find(material, "../", 1, true) or
 		string.find(material, "pp/", 1, true) or
-		Material(material):IsError() then
+		Material(material):IsError() and not fileExists then
 
 		return false
 	end
@@ -1142,11 +1143,15 @@ function Map_Material_SetAux(data)
 	local newMaterial = Material(data.newMaterial)
 
 	-- Apply the base texture
+	oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
+--[[
+	-- It's better to not support 
 	if not newMaterial:IsError() then -- If the file is a .vmt
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	else
 		oldMaterial:SetTexture("$basetexture", data.newMaterial)
 	end
+]]
 
 	-- Alpha stuff
 	oldMaterial:SetString("$translucent", "1")
@@ -3038,4 +3043,5 @@ function TOOL.BuildCPanel(CPanel)
 
 	CPanel:Help(" ")
 	CPanel:ControlHelp(mr_revision)
+	CPanel:Help(" ")
 end

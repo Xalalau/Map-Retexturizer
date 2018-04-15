@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.9 - 14/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.10 - 15/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -1127,10 +1127,12 @@ if CLIENT then
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+		--print(ply.mr_firstSpawn)
+		--print(isBroadcasted)
 		if ply.mr_firstSpawn == nil or ply.mr_firstSpawn == true and isBroadcasted then
 			return
 		end
-	
+
 		Map_Material_Set(ply, theTable)
 	end)
 end
@@ -2500,12 +2502,22 @@ end
 
 -- Set the ply.mr_firstSpawn state
 function Load_FisrtSpawn_Set(ply, state)
+
 	ply.mr_firstSpawn = state
 
 	if SERVER then
 		net.Start("MapRetPlyFirstSpawnSetState")
 			net.WriteBool(state)
 		net.Send(ply)
+	end
+	
+	if CLIENT then
+		if not ply:IsPlayer() then
+			-- Repeat the funciont until the client is ready
+			timer.Create("MapRetPlyFirstSpawnForceClSetState", 0.1, 1, function()
+				Load_FisrtSpawn_Set(LocalPlayer(), state)
+			end)
+		end
 	end
 end
 if SERVER then
@@ -2548,11 +2560,11 @@ function Load_FisrtSpawn_Start(ply)
 		return
 	end
 
+	-- Register that the player is loading the materials for the first time
+	Load_FisrtSpawn_Set(ply, true)
+
 	-- Wait to run the loads nicelly
 	timer.Create("MapRetFirstJoinStart2"..tostring(ply), 4, 1, function()
-		-- Register that the player is loading the materials for the first time
-		Load_FisrtSpawn_Set(ply, true)
-
 		-- Load the current modifications
 		Load_FisrtSpawn_Apply(ply)
 	end)
@@ -2616,6 +2628,13 @@ function TOOL_BasicChecks(ply, ent, tr)
 		return false
 	end
 
+	-- The player can't use the tool if he's already in the joining process
+	if ply.mr_firstSpawn then
+		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is not ready to use yet.")
+	
+		return false
+	end
+
 	-- It's not meant to mess with players
 	if ent:IsPlayer() then
 		return false
@@ -2624,7 +2643,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	-- We can't mess with displacement materials
 	if ent:IsWorld() and Material_GetCurrent(tr) == "**displacement**" then
 		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, we can't mess with displacement materials!")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, we can't handle displacement materials!")
 		end
 
 		return false
@@ -2879,6 +2898,9 @@ function TOOL.BuildCPanel(CPanel)
 			end
 		end	
 	end
+	
+	CPanel:Help(" ")
+	CPanel:Help("Report bugs and make requests at the tool workshop page.")
 	
 	CPanel:Help(" ")
 	local section_general = vgui.Create("DCollapsibleCategory", CPanel)

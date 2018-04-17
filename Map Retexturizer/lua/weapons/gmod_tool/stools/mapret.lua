@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.11 - 16/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.12 - 16/04/2018 (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -2617,6 +2617,11 @@ function Load_Delete_Apply(ply, theName)
 	-- Remove the load entry
 	mr_manage.load.list[theName] = nil
 
+	-- Remove the load from the autoload if it is there
+	if GetConVar("mapret_autoload"):GetString() == theName then
+		RunConsoleCommand("mapret_autoload", "")
+	end
+
 	-- Delete the file
 	file.Delete(theFile)
 
@@ -2632,7 +2637,7 @@ if SERVER then
 	util.AddNetworkString("MapRetLoadDeleteCL")
 
 	net.Receive("MapRetLoadDeleteSV", function(_, ply)
-		local theName = net.ReadString()
+		Load_Delete_Apply(ply,  net.ReadString())
 	end)
 
 	concommand.Add("mapret_remote_delete", function(_1, _2, _3, name)
@@ -2674,7 +2679,7 @@ function Load_SetAuto_Apply(ply, text)
 		return false
 	end
 
-	if not mr_manage.load.list[text] then
+	if not mr_manage.load.list[text] and text ~= "" then
 		return false
 	end
 

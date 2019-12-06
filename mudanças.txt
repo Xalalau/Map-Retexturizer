@@ -1,0 +1,27 @@
+PQ O GMBR FILES TÁ LIGADO COM LINK MORTO LÁ NO BLOG?!??!
+
+
+
+
+Olhar lista TO-DO do tool
+
+checar onde mudar mr.dup.run para fakehostply
+fakeply funciona??? testar em dedicado vazio.
+
+bug --ply:ConCommand("mapret_detail "..data.detail) -- Server is not getting the right detail, only Client
+bug: preview material está dando render em todas as tools
+pegar materiais (botão direito) que tenham propriedades diferentes das registradas (depois de um reset nas propriedades, não dá mais pra copiar)
+O controle do autoload parece uma bagunça... tem até coisa indexada no ply
+verificações com ply2 e ply3 no leftclick estão péssimas
+mover o undo do LeftClick pra dentro da função de colocar materiais?
+adicionar Type nas propriedades do material
+aumentar os vmts para 2048 pq sim
+
+Discplacements precisam de:
+- Remoção
+- Duplicator
+- Ele suporta a estrutura de Data, posso usar isso!
+- undo
+- Botão para resetar os valores
+- type
+- Testes online

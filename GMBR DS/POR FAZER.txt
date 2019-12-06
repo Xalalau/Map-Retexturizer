@@ -1,8 +1,0 @@
-Proteção contra crash
-Não validar os contents por padrão? https://developer.valvesoftware.com/wiki/SteamCMD
-http://www.fortress-forever.com/wiki/index.php?title=How_to_install_a_SRCDS
-Dar uma revisada na detecção de barras (pasta base, por exemplo)
-Suporte a abrir múltiplos servers
-Comentar as entradas das funções
-Dar uma olhada no suporte a ssh
-Dar uma olhada no suporte ao windows 10 

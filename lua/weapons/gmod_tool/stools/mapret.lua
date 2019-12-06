@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.12 - 16/04/2018 (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. rev.13 - // (dd/mm/yyyy)" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -9,7 +9,7 @@
  =b |   https://github.com/xalalau/GMod/tree/master/Map%20Retexturizer
    /   Enjoy! - Aproveitem!
 
------ Special thanks to the testers:
+----- Special thanks to testers:
 
  [*] Beckman
  [*] BombermanMaldito
@@ -23,7 +23,7 @@
 ]]
 
 --------------------------------
---- TOOL STUFF
+--- TOOL BASE
 --------------------------------
 
 TOOL.Category = "Render"
@@ -39,22 +39,25 @@ if (CLIENT) then
 	language.Add("tool.mapret.left", "Set material")
 	language.Add("tool.mapret.right", "Copy material")
 	language.Add("tool.mapret.reload", "Remove material")
-	language.Add("tool.mapret.desc", "Change many materials on models and maps and also use them as decals.")
+	language.Add("tool.mapret.desc", "Change the look of your map any way you want!")
 end
 
+
+
 --------------------------------
---- CLIENT CVARS
+--- CONSOLE VARIABLES
 --------------------------------
 
 CreateConVar("mapret_admin", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_REPLICATED })
-
 CreateConVar("mapret_autosave", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
 CreateConVar("mapret_autoload", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
-TOOL.ClientConVar["savename"] = ""
-
 CreateConVar("mapret_skybox", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
-
-TOOL.ClientConVar["material"] = ""
+CreateConVar("mapret_skybox_toolgun", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
+CreateConVar("mapret_decal", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
+CreateConVar("mapret_preview", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE })
+TOOL.ClientConVar["displacement"] = ""
+TOOL.ClientConVar["savename"] = ""
+TOOL.ClientConVar["material"] = "dev/dev_blendmeasure"
 TOOL.ClientConVar["detail"] = "None"
 TOOL.ClientConVar["alpha"] = "1"
 TOOL.ClientConVar["offsetx"] = "0"
@@ -63,43 +66,102 @@ TOOL.ClientConVar["scalex"] = "1"
 TOOL.ClientConVar["scaley"] = "1"
 TOOL.ClientConVar["rotation"] = "0"
 
--- Different declarations for these vars because I can control them better this way (SetChecked() works fine)
-CreateClientConVar("mapret_preview", 1, false, false)
-CreateClientConVar("mapret_decal", 0, false, false)
-
 --------------------------------
---- GLOBAL VARS / INITIALIZATION
+--- VARIABLES
 --------------------------------
 
--- Materials management
-local mr_mat = {
-	-- Tell if material changes were already made since the beggining of the game
-	-- (Server)
-	initialized = false,
-	-- (Shared)
-	map = {
+local mr = {}
+
+	-- -------------------------------------------------------------------------------------
+	
+	mr.state = {
+		firstSpawn = true,
+		previewMode = true,
+		decalMode = false,
+		cVarValueHack = true
+	}
+	
+	-- -------------------------------------------------------------------------------------
+
+	if SERVER then
+		-- Tell if material changes were already made since the beggining of the game
+		mr.initialized = false
+	end
+
+	-- -------------------------------------------------------------------------------------
+
+	if CLIENT then
+		-- materialID = String, all the modifications
+		mr.model = {
+			list = {}
+		}
+		
+		-- -------------------------------------------------------------------------------------
+
+		-- HL2 sky list
+		mr.skybox = {
+			list = {
+				[""] = "",
+				["skybox/sky_borealis01"] = "",
+				["skybox/sky_day01_01"] = "",
+				["skybox/sky_day01_04"] = "",
+				["skybox/sky_day01_05"] = "",
+				["skybox/sky_day01_06"] = "",
+				["skybox/sky_day01_07"] = "",
+				["skybox/sky_day01_08"] = "",
+				["skybox/sky_day01_09"] = "",
+				["skybox/sky_day02_01"] = "",
+				["skybox/sky_day02_02"] = "",
+				["skybox/sky_day02_03"] = "",
+				["skybox/sky_day02_04"] = "",
+				["skybox/sky_day02_05"] = "",
+				["skybox/sky_day02_06"] = "",
+				["skybox/sky_day02_07"] = "",
+				["skybox/sky_day02_09"] = "",
+				["skybox/sky_day02_10"] = "",
+				["skybox/sky_day03_01"] = "",
+				["skybox/sky_day03_02"] = "",
+				["skybox/sky_day03_03"] = "",
+				["skybox/sky_day03_04"] = "",
+				["skybox/sky_day03_05"] = "",
+				["skybox/sky_day03_06"] = "",
+				["skybox/sky_wasteland02"] = "",
+			}
+		}
+		
+		-- -------------------------------------------------------------------------------------
+
+		mr.preview = {
+			-- I have to use this extra entry to store the real newMaterial that the preview material is using
+			newMaterial = "",
+			-- For some reason the materials don't set their angles perfectly, so I have troubles comparing the values. This is a workaround
+			rotationHack = -1
+		}
+	end
+
+	-- -------------------------------------------------------------------------------------
+
+	mr.map = {
 		-- The name of our backup map material files. They are file1, file2, file3...
 		filename = "mapretexturizer/file",
 		-- 1024 file limit seemed to be more than enough. I only use this physical method because of GMod limitations
 		limit = 1024,
 		-- Data structures, all the modifications
 		list = {}
-	},
-	-- (Client)
-	model = {
-		-- materialID = String, all the modifications
-		list = {}
-	},
-	-- (Server)
-	decal = {
-		-- ID = String, all the modifications
-		list = {}
-	},
-	-- (Client)
-	detail = {
-		-- Menu element
-		element,
-		-- Initialized later (Note: only "None" remains as bool)
+	}
+	
+	-- -------------------------------------------------------------------------------------
+
+	if CLIENT then
+		mr.displacements = {
+			list = {}
+		}
+	end
+
+	-- -------------------------------------------------------------------------------------
+
+	-- Initialized later (Note: only "None" remains as bool)
+	mr.detail = {
 		list = {
 			["Concrete"] = false,
 			["Metal"] = false,
@@ -107,52 +169,147 @@ local mr_mat = {
 			["Plaster"] = false,
 			["Rock"] = false
 		}
-	},
-	-- (Client)
-	skybox = {
-		-- Text elemment
-		element_text,
-		-- Combobox elemment
-		element_combo,
-		-- HL2 sky list
-		hl2_list = {
-			[""] = "",
-			["skybox/sky_borealis01"] = "",
-			["skybox/sky_day01_01"] = "",
-			["skybox/sky_day01_04"] = "",
-			["skybox/sky_day01_05"] = "",
-			["skybox/sky_day01_06"] = "",
-			["skybox/sky_day01_07"] = "",
-			["skybox/sky_day01_08"] = "",
-			["skybox/sky_day01_09"] = "",
-			["skybox/sky_day02_01"] = "",
-			["skybox/sky_day02_02"] = "",
-			["skybox/sky_day02_03"] = "",
-			["skybox/sky_day02_04"] = "",
-			["skybox/sky_day02_05"] = "",
-			["skybox/sky_day02_06"] = "",
-			["skybox/sky_day02_07"] = "",
-			["skybox/sky_day02_09"] = "",
-			["skybox/sky_day02_10"] = "",
-			["skybox/sky_day03_01"] = "",
-			["skybox/sky_day03_02"] = "",
-			["skybox/sky_day03_03"] = "",
-			["skybox/sky_day03_04"] = "",
-			["skybox/sky_day03_05"] = "",
-			["skybox/sky_day03_06"] = "",
-			["skybox/sky_wasteland02"] = "",
-		}
-	},
-	-- (Client)
-	preview = {
-		-- I have to use this extra entry to store the real newMaterial that the preview material is using
-		newMaterial = "",
-		-- For some reason the materials don't set their angles perfectly, so I have troubles comparing the values. This is a workaround
-		rotation_workaround = -1,
-		-- HACK to avoid running the TOOL:Holster() code when the player selects the tool for the first time
-		holster_workaround = false
 	}
-}
+
+	-- -------------------------------------------------------------------------------------
+
+	-- ID = String, all the modifications
+	mr.decal = {
+		list = {}
+	}
+		
+	-- -------------------------------------------------------------------------------------
+
+	mr.dup = {
+		-- If a save is being loaded, the file name keeps stored here until it's done
+		loadingFile = "",
+		-- It simulates a player so we can apply changes in empty servers
+		-- Note: mr.dup.run is used clientside and anexed to player entities serverside
+		run = {
+			-- Tell what duplicator is processing
+			step = "",
+			-- Number of elements
+			count = {
+				total = 0,
+				current = 0,
+				errors = {
+					n = 0,
+					list = {}
+				}
+				
+			}
+		}
+	}
+	if SERVER then
+		-- Force to stop the current loading to begin a new one
+		mr.dup.forceStop = false
+		-- Workaround to duplicate map and decal materials
+		mr.dup.entity = nil
+		-- Disable our generic dup entity physics and rendering after the duplicate
+		mr.dup.hidden = false
+		-- First dup cleanup
+		mr.dup.firstClean = false
+		-- Special aditive delay for models
+		mr.dup.models = {
+			delay = 0,
+			maxDelay = 0
+		}
+		-- Register what type of materials the duplicator has
+		mr.dup.has = {
+			models = false
+		}
+		-- Register what type of materials the duplicator has
+		mr.dup.run.has = {
+			map = false,
+			decals = false
+		}
+	end
+
+	-- -------------------------------------------------------------------------------------
+	
+	-- Menu elements
+	if CLIENT then
+		mr.gui = {
+			save = "",
+			load = "",
+			autoLoad = "",
+			detail = "",
+			skybox = {
+				text = "",
+				combo = ""
+			},
+			displacements = {
+				text1 = "",
+				text2 = "",
+				combo = ""
+			}
+		}
+	end
+	
+	-- -------------------------------------------------------------------------------------
+
+	-- Saves and loads!
+	mr.manage = {
+		-- Our folder inside data
+		mainFolder = "mapret/",
+		-- mapFolder inside the mainFolder
+		mapFolder = game.GetMap().."/",
+		-- List of save names
+		load = {
+			list = {}
+		},
+		autoSave = {
+			-- Name to be listed in the save list
+			name = "[autosave]",
+			-- The autoSave file for this map
+			file = "[autosave].txt"
+		},
+		autoLoad = {
+			-- autoLoad.folder inside the mapFolder
+			folder = "autoload/",
+			-- The autoLoad file inside autoLoad.folder (unique for each map, will receive a save name)
+			file = "autoload.txt"
+		}
+	}
+	if SERVER then
+		-- A table to join all the information about the modified materials to be saved
+		mr.manage.save = {
+			list = {}
+		}
+	elseif CLIENT then
+		-- Default save name 
+		mr.manage.save = {
+			defaulName = game.GetMap().."_save"
+		}
+	end
+
+	-- -------------------------------------------------------------------------------------
+--[[
+	local fakeHostPly
+
+		if SERVER then
+			fakeHostPly = mr.dup.run 
+		end
+]]
+	
+	local fakeHostPly = {
+		mr = {
+			dup = {
+				run = mr.dup.run
+			}
+		},
+		state = mr.state
+	}
+
+--------------------------------
+--- 3RD PARTY
+--------------------------------
+
+include("3rd/bsp.lua")
+
+--------------------------------
+--- INITIALIZATION OF VARIABLES
+--------------------------------
 
 if CLIENT then
 	-- Detail init
@@ -160,148 +317,47 @@ if CLIENT then
 		return CreateMaterial(path, "VertexLitGeneric", {["$basetexture"] = path})
 	end
 
-	mr_mat.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
-	mr_mat.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
-	mr_mat.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
-	mr_mat.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
+	mr.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
+	mr.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
+	mr.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
+	mr.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
 	
 	-- Preview material
 	CreateMaterial("MatRetPreviewMaterial", "UnlitGeneric", {["$basetexture"] = ""})
-end
 
--- Duplicator management
-local mr_dup = {
-	-- If a save is being loaded, the name keep stored here until it's done
-	-- (Shared)
-	running = "",
-	-- Workaround to duplicate map and decal materials
-	-- (Server)
-	entity,
-	-- It simulates a player so we can apply changes in empty servers
-	-- (Shared)
-	fake_ply = {},
-	-- Disable our generic dup entity physics and rendering after the duplicate
-	-- (Server)
-	hidden = false,
-	-- First dup cleanup
-	-- (Server)
-	clean = false,
-	-- Force to stop the current loading to begin a new one
-	-- (Shared)
-	force_stop = false,
-	-- Special aditive delay for models
-	-- (Server)
-	models = {
-		delay = 0,
-		max_delay = 0
-	},
-	-- Register what type of materials the duplicator has
-	-- (Server)
-	has = {
-		models = false,
-	}
-}
--- Now I have to index the rest of duplicator inside players, so the process can be unique for each one of them
-local function mr_dup_set(ply)
-	local add = {
-		-- Tell if duplicator is running and what it's processing
-		-- (Shared)
-		run = "",
-		-- Register what type of materials the duplicator has
-		-- (Server)
-		has = {
-			map = false,
-			decals = false
-		},
-		-- Number of elements
-		-- (Shared)
-		count = {
-			total = 0,
-			current = 0,
-			errors = {
-				n = 0,
-				list = {}		
-			},
-		}
-	}
-	-- Index into the player
-	-- (Shared)
-	ply.mr_dup = add
-end
--- Initialize the fake player
-mr_dup_set(mr_dup.fake_ply)
-
--- Saves and loads!
-local mr_manage = {
-	-- Our folder inside data
-	-- (Shared)
-	main_folder = "mapret/",
-	-- map_folder inside the main_folder
-	-- (Shared)
-	map_folder = game.GetMap().."/",
-	save = {
-		-- A table to join all the information about the modified materials to be saved
-		-- (Server)
-		list = {},
-		-- Default save name 
-		-- (Client)
-		defaul_name = game.GetMap().."_save",
-		-- Menu element
-		-- (Client)
-		element
-	},
-	load = {
-		-- List of save names
-		-- (Shared)
-		list = {},
-		-- Menu element
-		-- (Client)
-		element
-	},
-	autosave = {
-		-- Name to be listed in the save list
-		-- (Server)
-		name = "[autosave]",
-		-- The autosave file for this map
-		-- (Server)
-		file = "[autosave].txt"
-	},
-	autoload = {
-		-- autoload.folder inside the map_folder
-		-- (Server)
-		folder = "autoload/",
-		-- The autoload file inside autoload.folder (unique for each map, will receive a save name)
-		-- (Server)
-		file = "autoload.txt",
-		-- Menu element
-		-- (Client)
-		element
-	}
-}
--- Initialize paths
--- (Shared)
-mr_manage.map_folder = mr_manage.main_folder..mr_manage.map_folder
-mr_manage.autoload.folder = mr_manage.map_folder..mr_manage.autoload.folder
-mr_manage.autosave.file = mr_manage.map_folder..mr_manage.autosave.file
-mr_manage.autoload.file = mr_manage.autoload.folder..mr_manage.autoload.file
-if SERVER then
-	-- Create the main save folder
-	if !file.Exists(mr_manage.main_folder, "DATA") then
-		file.CreateDir(mr_manage.main_folder)
-	end
+	-- Default save location
+	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
 	
-	-- Create the current map save folder
-	if !file.Exists(mr_manage.map_folder, "DATA") then
-		file.CreateDir(mr_manage.map_folder)
-	end
+	-- Fill the displacements list
+	local map_data = MR_OpenBSP()
+	local found = map_data:ReadLumpTextDataStringData()
 
-	-- Create the autoload folder
-	if !file.Exists(mr_manage.autoload.folder, "DATA") then
-		file.CreateDir(mr_manage.autoload.folder)
+	for k,v in pairs(found) do
+		if Material(v):GetString("$surfaceprop2") then
+			table.insert(mr.displacements.list, v)
+		end
 	end
+end
 
-	-- Set the autoload command
-	local value = file.Read(mr_manage.autoload.file, "DATA")
+-- Initialize paths
+mr.manage.mapFolder = mr.manage.mainFolder..mr.manage.mapFolder
+mr.manage.autoLoad.folder = mr.manage.mapFolder..mr.manage.autoLoad.folder
+mr.manage.autoSave.file = mr.manage.mapFolder..mr.manage.autoSave.file
+mr.manage.autoLoad.file = mr.manage.autoLoad.folder..mr.manage.autoLoad.file
+
+if SERVER then
+	-- Create the folders
+	local function CreateDir(path)
+		if !file.Exists(path, "DATA") then
+			file.CreateDir(path)
+		end
+	end
+	CreateDir(mr.manage.mainFolder)
+	CreateDir(mr.manage.mapFolder)
+	CreateDir(mr.manage.autoLoad.folder)
+	
+	-- Set the autoLoad command
+	local value = file.Read(mr.manage.autoLoad.file, "DATA")
 
 	if value then
 		RunConsoleCommand("mapret_autoload", value)
@@ -310,10 +366,10 @@ if SERVER then
 	end
 
 	-- Fill the load list on the server
-	local files = file.Find(mr_manage.map_folder.."*", "DATA")
+	local files = file.Find(mr.manage.mapFolder.."*", "DATA")
 
 	for k,v in pairs(files) do
-		mr_manage.load.list[v:sub(1, -5)] = mr_manage.map_folder..v
+		mr.manage.load.list[v:sub(1, -5)] = mr.manage.mapFolder..v
 	end
 end
 
@@ -322,23 +378,6 @@ end
 local multiplayer_action_delay = 0
 if not game.SinglePlayer() then
 	multiplayer_action_delay = 0.01
-end
-
--- I used to use the clientside player entity to store some states but it takes an almost random time to initialize and
--- was causing many syncing issues, so now these variables got moved into mr_ply
--- (Client)
-local mr_ply
-if CLIENT then
-	local add = {
-		mr_previewmode = false,
-		mr_decalmode = false,
-		mr_firstspawn = true,
-		-- mr_dup = table (from the command bellow)
-	}
-	
-	mr_ply = add
-	
-	mr_dup_set(mr_ply)
 end
 
 --------------------------------
@@ -357,6 +396,7 @@ local MML_Count
 
 local Data_Create
 local Data_CreateFromMaterial
+local Data_CreateDefaults
 local Data_Get
 
 local CVars_SetToData
@@ -414,7 +454,7 @@ local Load_Delete_Start
 local Load_Delete_Apply
 local Load_SetAuto_Start
 local Load_SetAuto_Apply
-local Load_FirstSpawn
+local Load_firstSpawn
 
 -------------------------------------
 --- GENERAL
@@ -422,7 +462,7 @@ local Load_FirstSpawn
 
 -- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
 function Ply_IsAdmin(ply)
-	if ply ~= mr_dup.fake_ply and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+	if ply ~= fakeHostPly and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
 		end
@@ -434,20 +474,20 @@ function Ply_IsAdmin(ply)
 end
 
 -------------------------------------
---- mr_mat.map.list (MML) management
+--- mr.map.list (MML) management
 -------------------------------------
 
 -- Check if the table is full
 function MML_Check()
 	-- Check upper limit
-	if MML_Count() == mr_mat.map.limit then
-		-- Limit reached! Try to open new spaces in the mr_mat.map.list table checking if the player removed something and cleaning the entry for real
+	if MML_Count() == mr.map.limit then
+		-- Limit reached! Try to open new spaces in the mr.map.list table checking if the player removed something and cleaning the entry for real
 		MML_Clean()
 
 		-- Check again
-		if MML_Count() == mr_mat.map.limit then
+		if MML_Count() == mr.map.limit then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..mr_mat.map.limit..")! Notify the developer for more space.")
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..mr.map.limit..")! Notify the developer for more space.")
 			end
 
 			return false
@@ -461,10 +501,11 @@ end
 function MML_GetFreeIndex()
 	local i = 1
 
-	for k,v in pairs(mr_mat.map.list) do
+	for k,v in pairs(mr.map.list) do
 		if v.oldMaterial == nil then
 			break
 		end
+
 		i = i + 1
 	end
 
@@ -473,12 +514,12 @@ end
 
 -- Insert an element
 function MML_InsertElement(data, position)
-	mr_mat.map.list[position or MML_GetFreeIndex()] = data
+	mr.map.list[position or MML_GetFreeIndex()] = data
 end
 
 -- Get an element and its index
 function MML_GetElement(oldMaterial)
-	for k,v in pairs(mr_mat.map.list) do
+	for k,v in pairs(mr.map.list) do
 		if v.oldMaterial == oldMaterial then
 			return v, k
 		end
@@ -496,12 +537,13 @@ end
 
 -- Remove all disabled elements
 function MML_Clean()
-	local i = mr_mat.map.limit
+	local i = mr.map.limit
 
 	while i > 0 do
-		if mr_mat.map.list[i].oldMaterial == nil then
-			table.remove(mr_mat.map.list, i)
+		if mr.map.list[i].oldMaterial == nil then
+			table.remove(mr.map.list, i)
 		end
+
 		i = i - 1
 	end
 end
@@ -510,7 +552,7 @@ end
 function MML_Count(inTable)
 	local i = 0
 
-	for k,v in pairs(inTable or mr_mat.map.list) do
+	for k,v in pairs(inTable or mr.map.list) do
 		if v.oldMaterial ~= nil then
 			i = i + 1
 		end
@@ -549,12 +591,12 @@ function Data_CreateFromMaterial(materialName, i)
 	local scaley = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
 	local offsetx = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1] or "0.00"
 	local offsety = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2] or "0.00"
-	local newMaterial
 
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
-		newMaterial = i and mr_mat.map.filename..tostring(i) or "",
+		newMaterial = i and mr.map.filename..tostring(i) or "",
+		newMaterial2 = nil,
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
@@ -566,7 +608,7 @@ function Data_CreateFromMaterial(materialName, i)
 	}
 
 	-- Get a valid detail key
-	for k,v in pairs(mr_mat.detail.list) do
+	for k,v in pairs(mr.detail.list) do
 		if not isbool(v) then
 			if v:GetTexture("$basetexture"):GetName() == data.detail then
 				data.detail = k
@@ -574,7 +616,7 @@ function Data_CreateFromMaterial(materialName, i)
 		end
 	end
 
-	if not mr_mat.detail.list[data.detail] then
+	if not mr.detail.list[data.detail] then
 		data.detail = "None"
 	end
 
@@ -582,7 +624,7 @@ function Data_CreateFromMaterial(materialName, i)
 end
 
 -- Set a data table with the default properties
-function DataTable_CreateDefaults(ply, tr)
+function Data_CreateDefaults(ply, tr)
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = Material_GetCurrent(tr),
@@ -601,7 +643,7 @@ end
 
 -- Get the data table if it exists or return nil
 function Data_Get(tr)
-	return IsValid(tr.Entity) and tr.Entity.modifiedmaterial or MML_GetElement(Material_GetOriginal(tr))
+	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML_GetElement(Material_GetOriginal(tr))
 end
 
 --------------------------------
@@ -631,7 +673,7 @@ function CVars_SetToDefaults(ply)
 	ply:ConCommand("mapret_rotation 0")
 	ply:ConCommand("mapret_alpha 1")
 	
-	mr_mat.detail.element:SetValue("None")
+	mr.gui.detail:SetValue("None")
 end
 
 --------------------------------
@@ -647,7 +689,7 @@ function Material_IsValid(material)
 
 	local fileExists = false
 
-		--for _,v in pairs({ ".vmf", ".png", ".jpg" }) do
+	--for _,v in pairs({ ".vmf", ".png", ".jpg" }) do
 	for _,v in pairs({ ".vmf" }) do
 		if file.Exists("materials/"..material..v, "GAME") then
 			fileExists = true
@@ -693,10 +735,10 @@ function Material_GetCurrent(tr)
 
 	-- Model
 	if IsValid(tr.Entity) then
-		path = tr.Entity.modifiedmaterial
+		path = tr.Entity.modifiedMaterial
 		-- Get a material generated for the model
 		if path then
-			path = Model_Material_RevertIDName(tr.Entity.modifiedmaterial.newMaterial)
+			path = Model_Material_RevertIDName(tr.Entity.modifiedMaterial.newMaterial)
 		-- Or the real thing
 		else
 			path = tr.Entity:GetMaterials()[1]
@@ -752,6 +794,7 @@ function Material_ShouldChange(ply, currentDataIn, newDataIn, tr)
 
 	-- Check if some property is different
 	local isDifferent = false
+
 	for k,v in pairs(currentData) do
 		if v ~= newData[k] then
 			isDifferent = true
@@ -780,14 +823,14 @@ function Material_Restore(ent, oldMaterial)
 
 	-- Model
 	if IsValid(ent) then
-		if ent.modifiedmaterial then
+		if ent.modifiedMaterial then
 			if CLIENT then
 				ent:SetMaterial("")
 				ent:SetRenderMode(RENDERMODE_NORMAL)
 				ent:SetColor(Color(255,255,255,255))
 			end
 
-			ent.modifiedmaterial = nil
+			ent.modifiedMaterial = nil
 
 			if SERVER then
 				duplicator.ClearEntityModifier(ent, "MapRetexturizer_Models")
@@ -809,8 +852,8 @@ function Material_Restore(ent, oldMaterial)
 
 				if SERVER then
 					if MML_Count() == 0 then
-						if IsValid(mr_dup.entity) then
-							duplicator.ClearEntityModifier(mr_dup.entity, "MapRetexturizer_Maps")
+						if IsValid(mr.dup.entity) then
+							duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Maps")
 						end
 					end
 				end
@@ -849,11 +892,11 @@ function Material_RestoreAll(ply, plyLoadingStatus)
 	end
 
 	-- Don't start a cleaning process if we are stopping a loading
-	if not mr_dup.force_stop then
+	if not mr.dup.forceStop then
 		-- Force to stop any loading
 		local delay = 0
 
-		if Duplicator_ForceStop(plyLoadingStatus) then
+		if Duplicator_forceStop(plyLoadingStatus) then
 			delay = 0.4
 		end
 
@@ -863,9 +906,10 @@ function Material_RestoreAll(ply, plyLoadingStatus)
 			Map_Material_RemoveAll(ply)
 			Decal_RemoveAll(ply)
 			Skybox_Remove(ply)
+			Displacements_Remove(ply)
 
-			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
-			mr_dup.force_stop = false
+			-- Reset the force stop var (It was set true in Duplicator_forceStop())
+			mr.dup.forceStop = false
 		end)
 	end
 end
@@ -877,10 +921,12 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_cleanup", function()
-		Material_RestoreAll(mr_dup.fake_ply, true)
-	
-		PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: cleaning modifications...")
-		print("[Map Retexturizer] Console: cleaning modifications...")
+		Material_RestoreAll(fakeHostPly, true)
+
+		local message = "[Map Retexturizer] Console: cleaning modifications..."
+		
+		PrintMessage(HUD_PRINTTALK, message)
+		print(message)
 	end)
 end
 
@@ -938,7 +984,7 @@ function Model_Material_Create(data)
 
 	if CLIENT then
 		-- Create the material if it's necessary
-		if not mr_mat.model.list[materialID] then
+		if not mr.model.list[materialID] then
 			-- Basic info
 			local material = {
 				["$basetexture"] = data.newMaterial,
@@ -956,14 +1002,14 @@ function Model_Material_Create(data)
 			-- Create material
 			local newMaterial	
 
-			mr_mat.model.list[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
-			mr_mat.model.list[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
-			newMaterial = mr_mat.model.list[materialID]
+			mr.model.list[materialID] = CreateMaterial(materialID, "VertexLitGeneric", material)
+			mr.model.list[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
+			newMaterial = mr.model.list[materialID]
 
 			-- Apply detail
 			if data.detail ~= "None" then
-				if mr_mat.detail.list[data.detail] then
-					newMaterial:SetTexture("$detail", mr_mat.detail.list[data.detail]:GetTexture("$basetexture"))
+				if mr.detail.list[data.detail] then
+					newMaterial:SetTexture("$detail", mr.detail.list[data.detail]:GetTexture("$basetexture"))
 					newMaterial:SetString("$detailblendfactor", "1")
 				else
 					newMaterial:SetString("$detailblendfactor", "0")
@@ -973,14 +1019,14 @@ function Model_Material_Create(data)
 			end
 
 			-- Try to apply Bumpmap ()
-			local bumpmapPath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
+			local bumpmappath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
 			local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap") -- checks for a copied material active bumpmap
 
-			if file.Exists("materials/"..bumpmapPath..".vtf", "GAME") then
-				if not mr_mat.model.list[bumpmapPath] then
-					mr_mat.model.list[bumpmapPath] = CreateMaterial(bumpmapPath, "VertexLitGeneric", {["$basetexture"] = bumpmapPath})
+			if file.Exists("materials/"..bumpmappath..".vtf", "GAME") then
+				if not mr.model.list[bumpmappath] then
+					mr.model.list[bumpmappath] = CreateMaterial(bumpmappath, "VertexLitGeneric", {["$basetexture"] = bumpmappath})
 				end
-				newMaterial:SetTexture("$bumpmap", mr_mat.model.list[bumpmapPath]:GetTexture("$basetexture"))
+				newMaterial:SetTexture("$bumpmap", mr.model.list[bumpmappath]:GetTexture("$basetexture"))
 			elseif bumpmap then
 				newMaterial:SetTexture("$bumpmap", bumpmap)
 			end
@@ -1017,7 +1063,7 @@ function Model_Material_Set(data)
 	data.newMaterial = materialID
 
 	-- Indicate that the model got modified by this tool
-	data.ent.modifiedmaterial = data
+	data.ent.modifiedMaterial = data
 
 	-- Set the alpha
 	data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
@@ -1078,13 +1124,13 @@ function Map_Material_Set(ply, data)
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if CLIENT or SERVER and not ply.mr_firstSpawn or SERVER and ply.mr_firstSpawn and ply.mr_mat_initializing then
+	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.initializing then
 		 -- Duplicator check
-		local isNewMaterial = false
+		local isnewMaterial = false
 
 		if SERVER then
 			if not data.backup then
-				isNewMaterial = true
+				isnewMaterial = true
 			end
 		end
 
@@ -1100,18 +1146,25 @@ function Map_Material_Set(ply, data)
 			MML_DisableElement(element)
 			Map_Material_SetAux(data.backup)
 
-			-- Get a mr_mat.map.list free index
+			-- Get a mr.map.list free index
 			i = MML_GetFreeIndex()
 		-- If the material is untouched
 		else
-			-- Get a mr_mat.map.list free index
+			-- Get a mr.map.list free index
 			i = MML_GetFreeIndex()
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
 			local dataBackup = data.backup or Data_CreateFromMaterial(data.oldMaterial, i) 
 
 			-- Save the material texture
-			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
+			if dataBackup.newMaterial then
+				Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
+			end
+
+			-- Save the second material texture (if it's a displacement)
+			if dataBackup.newMaterial2 then
+				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
+			end
 
 			-- Create an entry in the material Data poting to the new backup Data (data.backup will shows itself already done only if we are running the duplicator)
 			if not data.backup then
@@ -1127,15 +1180,15 @@ function Map_Material_Set(ply, data)
 
 		if SERVER then
 			-- Set the duplicator
-			if isNewMaterial then
-				duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Maps", mr_mat.map.list)
+			if isnewMaterial then
+				duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Maps", mr.map.list)
 			end
 		end
 	end
 
 	if SERVER then
 		-- Send the modification to every player
-		if not ply.mr_firstSpawn then
+		if not ply.mr.state.firstSpawn then
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
 				net.WriteBool(true)
@@ -1156,7 +1209,7 @@ if CLIENT then
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if mr_ply.mr_firstSpawn and isBroadcasted then
+		if mr.state.firstSpawn and isBroadcasted then
 			return
 		end
 
@@ -1170,34 +1223,34 @@ function Map_Material_SetAux(data)
 
 	-- Get the materials
 	local oldMaterial = Material(data.oldMaterial)
-	local newMaterial = Material(data.newMaterial)
+	local newMaterial = data.newMaterial and Material(data.newMaterial) or nil
+	local newMaterial2 = data.newMaterial2 and Material(data.newMaterial2) or nil
 
 	-- Apply the base texture
-	oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
---[[
-	-- It's better to not support 
-	if not newMaterial:IsError() then -- If the file is a .vmt
+	if newMaterial then
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
-	else
-		oldMaterial:SetTexture("$basetexture", data.newMaterial)
 	end
-]]
 
-	-- Alpha stuff
+	-- Apply the second base texture (if it's a displacement)
+	if newMaterial2 then
+		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture("$basetexture"))
+	end
+
+	-- Apply the alpha channel
 	oldMaterial:SetString("$translucent", "1")
 	oldMaterial:SetString("$alpha", data.alpha)
 
 	-- Apply the matrix
-	local texture_matrix = oldMaterial:GetMatrix("$basetexturetransform")
+	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
 
-	texture_matrix:SetAngles(Angle(0, data.rotation, 0)) 
-	texture_matrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
-	texture_matrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
-	oldMaterial:SetMatrix("$basetexturetransform", texture_matrix)
+	textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
+	textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
+	textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
+	oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
 
 	-- Apply the detail
 	if data.detail ~= "None" then
-		oldMaterial:SetTexture("$detail", mr_mat.detail.list[data.detail]:GetTexture("$basetexture"))
+		oldMaterial:SetTexture("$detail", mr.detail.list[data.detail]:GetTexture("$basetexture"))
 		oldMaterial:SetString("$detailblendfactor", "1")
 	else
 		oldMaterial:SetString("$detailblendfactor", "0")
@@ -1213,10 +1266,17 @@ function Map_Material_SetAux(data)
 	mapMaterial:SetVector("$color", Vector(100,100,0))
 	mapMaterial:SetString("$surfaceprop", "Metal")
 	mapMaterial:SetTexture("$detail", Material(data.oldMaterial):GetTexture("$basetexture"))
-	mapMaterial:SetMatrix("$detailtexturetransform", texture_matrix)
+	mapMaterial:SetMatrix("$detailtexturetransform", textureMatrix)
 	mapMaterial:SetString("$detailblendfactor", "0.2")
 	mapMaterial:SetString("$detailblendmode", "3")
-	]]--
+
+	-- Support for non vmt files
+	if not newMaterial:IsError() then -- If the file is a .vmt
+		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
+	else
+		oldMaterial:SetTexture("$basetexture", data.newMaterial)
+	end
+]]
 end
 
 function Map_Material_SetAll(ply)
@@ -1250,8 +1310,8 @@ function Map_Material_SetAll(ply)
 	end
 
 	-- Register that the map is manually modified
-	if not mr_mat.initialized then
-		mr_mat.initialized = true
+	if not mr.initialized then
+		mr.initialized = true
 	end
 
 	-- Clean the map
@@ -1262,6 +1322,26 @@ function Map_Material_SetAll(ply)
 		local newTable = {}
 		local map = {}
 
+		-- Get all the textures
+		local map_data = MR_OpenBSP()
+		local found = map_data:ReadLumpTextDataStringData()
+
+		-- Fill the fake loading table with the correct structure (ignoring water materials)
+		for k,v in pairs(found) do
+			local data = Data_Create(ply)
+
+			if not v:find("water") then -- Ignore water
+				data.oldMaterial = v
+				data.newMaterial = material
+
+				table.insert(map, data)
+			end
+		end
+
+		--[[
+		-- Fill the fake loading table with the correct structure (ignoring water materials)
+		-- Note: this is my old GMod buggy implementation. In the future I can use it if this is closed:
+		-- https://github.com/Facepunch/garrysmod-issues/issues/3216
 		for k, v in pairs (game.GetWorld():GetMaterials()) do 
 			local data = Data_Create(ply)
 			
@@ -1273,6 +1353,7 @@ function Map_Material_SetAll(ply)
 				table.insert(map, data)
 			end
 		end
+		]]
 
 		newTable.map = map
 		
@@ -1284,36 +1365,38 @@ if CLIENT then
 	-- Set all materials (with confirmation box)
 	concommand.Add("mapret_changeall", function()
 
+	-- Note: this window code is used more than once but I can't put it inside
+	-- a function because the buttons never return true or false on time.
 	local qPanel = vgui.Create( "DFrame" )
-		qPanel:SetTitle( "Loading Confirmation" )
-		qPanel:SetSize( 284, 95 )
-		qPanel:SetPos( 10, 10 )
-		qPanel:SetDeleteOnClose( true )
-		qPanel:SetVisible( true )
-		qPanel:SetDraggable( true )
-		qPanel:ShowCloseButton( true )
-		qPanel:MakePopup( true )
+		qPanel:SetTitle("Loading Confirmation")
+		qPanel:SetSize(284, 95)
+		qPanel:SetPos(10, 10)
+		qPanel:SetDeleteOnClose(true)
+		qPanel:SetVisible(true)
+		qPanel:SetDraggable(true)
+		qPanel:ShowCloseButton(true)
+		qPanel:MakePopup(true)
 		qPanel:Center()
 
-	local text = vgui.Create( "DLabel", qPanel )
-		text:SetPos( 10, 25 )
-		text:SetSize( 300, 25)
-		text:SetText( "Are you sure you want to change all the map materials?" )
+	local text = vgui.Create("DLabel", qPanel)
+		text:SetPos(10, 25)
+		text:SetSize(300, 25)
+		text:SetText("Are you sure you want to change all the map materials?")
 
-	local buttonYes = vgui.Create( "DButton", qPanel )
-		buttonYes:SetPos( 24, 50 )
-		buttonYes:SetText( "Yes" )
-		buttonYes:SetSize( 120, 30 )
+	local buttonYes = vgui.Create("DButton", qPanel)
+		buttonYes:SetPos(24, 50)
+		buttonYes:SetText("Yes")
+		buttonYes:SetSize(120, 30)
 		buttonYes.DoClick = function()
 			net.Start("Map_Material_SetAll")
 			net.SendToServer()
 			qPanel:Close()
 		end
 
-	local buttonNo = vgui.Create( "DButton", qPanel )
-		buttonNo:SetPos( 144, 50 )
-		buttonNo:SetText( "No" )
-		buttonNo:SetSize( 120, 30 )
+	local buttonNo = vgui.Create("DButton", qPanel)
+		buttonNo:SetPos(144, 50)
+		buttonNo:SetText("No")
+		buttonNo:SetSize(120, 30)
 		buttonNo.DoClick = function()
 			qPanel:Close()
 		end
@@ -1336,7 +1419,7 @@ function Map_Material_RemoveAll(ply)
 	end
 
 	if MML_Count() > 0 then
-		for k,v in pairs(mr_mat.map.list) do
+		for k,v in pairs(mr.map.list) do
 			if v.oldMaterial ~=nil then
 				Material_Restore(nil, v.oldMaterial)
 			end
@@ -1359,7 +1442,7 @@ end
 function Decal_Toogle(ply, value)
 	if SERVER then return; end
 
-	mr_ply.mr_decalmode = value
+	mr.state.decalMode = value
 
 	net.Start("MapRetToogleDecal")
 		net.WriteBool(value)
@@ -1369,7 +1452,7 @@ if SERVER then
 	util.AddNetworkString("MapRetToogleDecal")
 
 	net.Receive("MapRetToogleDecal", function(_, ply)
-		ply.mr_decalmode = net.ReadBool()
+		ply.mr.state.decalMode = net.ReadBool()
 	end)
 end
 
@@ -1399,14 +1482,14 @@ function Decal_Start(ply, tr, duplicatorData)
 	-- Register and duplicator:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if not ply.mr_firstSpawn or ply.mr_firstSpawn and ply.mr_mat_initializing then
-		table.insert(mr_mat.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
+	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.initializing then
+		table.insert(mr.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
-		duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Decals", mr_mat.decal.list)
+		duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Decals", mr.decal.list)
 	end
 
 	-- Send to all players
-	if not ply.mr_firstSpawn then
+	if not ply.mr.state.firstSpawn then
 		net.Start("Decal_Apply")
 			net.WriteString(mat)
 			net.WriteEntity(ent)
@@ -1433,7 +1516,7 @@ function Decal_Apply(materialPath, ent, pos, normal)
 	if SERVER then return; end
 
 	-- Create the material
-	local decalMaterial = mr_mat.decal.list[materialPath.."2"]
+	local decalMaterial = mr.decal.list[materialPath.."2"]
 
 	if not decalMaterial then
 		decalMaterial = CreateMaterial(materialPath.."2", "LightmappedGeneric", {["$basetexture"] = materialPath})
@@ -1462,7 +1545,7 @@ if CLIENT then
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if mr_ply.mr_firstSpawn and isBroadcasted then
+		if mr.state.firstSpawn and isBroadcasted then
 			return
 		end
 
@@ -1485,8 +1568,8 @@ function Decal_RemoveAll(ply)
 			v:ConCommand("r_cleardecals")
 		end
 	end
-	table.Empty(mr_mat.decal.list)
-	duplicator.ClearEntityModifier(mr_dup.entity, "MapRetexturizer_Decals")
+	table.Empty(mr.decal.list)
+	duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Decals")
 end
 if SERVER then
 	util.AddNetworkString("Decal_RemoveAll")
@@ -1520,7 +1603,7 @@ function Skybox_Apply(ply, mat)
 	Duplicator_CreateEnt()
 
 	-- Set the duplicator
-	duplicator.StoreEntityModifier(mr_dup.entity, "MapRetexturizer_Skybox", { skybox = mat })
+	duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox", { skybox = mat })
 
 	-- Apply the material to every client
 	RunConsoleCommand("mapret_skybox", mat)	
@@ -1535,12 +1618,11 @@ end
 
 -- Material rendering
 if CLIENT then
-	local distance = 200
-	local width = distance * 2
-	local height = distance * 2
-
 	-- Skybox extra layer rendering
 	local function Skybox_Render()
+		local distance = 200
+		local width = distance * 2.01
+		local height = distance * 2.01
 		local mat = GetConVar("mapret_skybox"):GetString()
 
 		-- Check if it's empty
@@ -1549,7 +1631,7 @@ if CLIENT then
 			local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
 
 			-- If we aren't using a HL2 sky we need to check what is going on
-			if not mr_mat.skybox.hl2_list[mat] then
+			if not mr.skybox.list[mat] then
 				-- Check if the material is valid
 				if not Material_IsValid(mat) and not Material_IsValid(mat.."ft") then
 					-- Nope
@@ -1611,13 +1693,49 @@ function Skybox_Remove(ply)
 
 	RunConsoleCommand("mapret_skybox", "")	
 
-	duplicator.ClearEntityModifier(mr_dup.entity, "MapRetexturizer_Skybox")
+	duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox")
 end
 if SERVER then
 	util.AddNetworkString("Skybox_Remove")
 
 	net.Receive("Skybox_Remove", function(_, ply)
 		Skybox_Remove(ply)
+	end)
+end
+
+--------------------------------
+--- DISPLACEMENTS MATERIALS
+--------------------------------
+
+-- Change the displacements
+function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
+	if SERVER then return; end
+
+	-- Check
+	if not displacement then
+		return
+	end
+
+	-- Apply the changes
+	local data = Data_CreateFromMaterial(displacement, nil)
+
+	data.newMaterial = newMaterial
+	data.newMaterial2 = newMaterial2
+
+	Map_Material_Set(ply, data)
+end
+
+-- Remove all decals
+function Displacements_Remove(ply)
+	if CLIENT then return; end
+
+	duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Displacements")
+end
+if SERVER then
+	util.AddNetworkString("Displacements_Remove")
+
+	net.Receive("Displacements_Remove", function(_, ply)
+		Displacements_Remove(ply)
 	end)
 end
 
@@ -1632,21 +1750,21 @@ function Duplicator_CreateEnt(ent)
 	if CLIENT then return; end
 
 	-- Hide/Disable our entity after a duplicator
-	if not mr_dup.hidden and ent then
-		mr_dup.entity = ent
-		mr_dup.entity:SetNoDraw(true)				
-		mr_dup.entity:SetSolid(0)
-		mr_dup.entity:PhysicsInitStatic(SOLID_NONE)
-		mr_dup.hidden = true
+	if not mr.dup.hidden and ent then
+		mr.dup.entity = ent
+		mr.dup.entity:SetNoDraw(true)				
+		mr.dup.entity:SetSolid(0)
+		mr.dup.entity:PhysicsInitStatic(SOLID_NONE)
+		mr.dup.hidden = true
 	-- Create a new entity if we don't have one yet
-	elseif not IsValid(mr_dup.entity) and not ent then
-		mr_dup.entity = ents.Create("prop_physics")
-		mr_dup.entity:SetModel("models/props_phx/cannonball_solid.mdl")
-		mr_dup.entity:SetPos(Vector(0, 0, 0))
-		mr_dup.entity:SetNoDraw(true)				
-		mr_dup.entity:Spawn()
-		mr_dup.entity:SetSolid(0)
-		mr_dup.entity:PhysicsInitStatic(SOLID_NONE)
+	elseif not IsValid(mr.dup.entity) and not ent then
+		mr.dup.entity = ents.Create("prop_physics")
+		mr.dup.entity:SetModel("models/props_phx/cannonball_solid.mdl")
+		mr.dup.entity:SetPos(Vector(0, 0, 0))
+		mr.dup.entity:SetNoDraw(true)				
+		mr.dup.entity:Spawn()
+		mr.dup.entity:SetSolid(0)
+		mr.dup.entity:PhysicsInitStatic(SOLID_NONE)
 	end
 end
 
@@ -1660,7 +1778,7 @@ function Duplicator_SendStatusToCl(ply, current, total, section, resetValues)
 	end
 
 	-- Update every client
-	if not ply.mr_firstSpawn then
+	if not ply.mr.state.firstSpawn then
 		net.Start("MapRetUpdateDupProgress")
 			net.WriteInt(current or -1, 14)
 			net.WriteInt(total or -1, 14)
@@ -1683,25 +1801,24 @@ else
 	-- Updates the duplicator progress in the client
 	net.Receive("MapRetUpdateDupProgress", function()
 		local a, b, c = net.ReadInt(14), net.ReadInt(14), net.ReadString()
-		local ply = LocalPlayer()
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if mr_ply.mr_firstSpawn and isBroadcasted then
+		if mr.state.firstSpawn and isBroadcasted then
 			return
 		end
 
 		-- Update the dup state
 		if c != "-1" then
-			mr_ply.mr_dup.run = c
+			mr.dup.run.step = c
 		end
 
 		if a ~= -1 then
-			mr_ply.mr_dup.count.current = a
+			mr.dup.run.count.current = a
 		end
 
 		if b ~= -1 then
-			mr_ply.mr_dup.count.total = b
+			mr.dup.run.count.total = b
 		end
 	end)
 end
@@ -1711,7 +1828,7 @@ function Duplicator_SendErrorCountToCl(ply, count, material)
 	if CLIENT then return; end
 
 	-- Send the status all players
-	if not ply.mr_firstSpawn then
+	if not ply.mr.state.firstSpawn then
 		net.Start("MapRetUpdateDupErrorCount")
 			net.WriteInt(count or 0, 14)
 			net.WriteString(material or "")
@@ -1736,28 +1853,28 @@ else
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if mr_ply.mr_firstSpawn and isBroadcasted then
+		if mr.state.firstSpawn and isBroadcasted then
 			return
 		end
 
 		-- Set the error count
-		mr_ply.mr_dup.count.errors.n = count
+		mr.dup.run.count.errors.n = count
 
 		-- Get the missing material name
-		if mr_ply.mr_dup.count.errors.n > 0 then
-			table.insert(mr_ply.mr_dup.count.errors.list, mat)
+		if mr.dup.run.count.errors.n > 0 then
+			table.insert(mr.dup.run.count.errors.list, mat)
 		-- Print the failed materials table
 		else
-			if table.Count(mr_ply.mr_dup.count.errors.list)> 0 then
+			if table.Count(mr.dup.run.count.errors.list)> 0 then
 				LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the terminal for the errors.")
 				print("")
 				print("-------------------------------------------------------------")
-				print("[MAP RETEXTURIZER] - Failed to load these files:")
+				print("[MAP RETEXTURIZER] - Failed to load these materials:")
 				print("-------------------------------------------------------------")
-				print(table.ToString(mr_ply.mr_dup.count.errors.list, "Missing Materials ", true))
+				print(table.ToString(mr.dup.run.count.errors.list, "Missing Materials ", true))
 				print("-------------------------------------------------------------")
 				print("")
-				table.Empty(mr_ply.mr_dup.count.errors.list)
+				table.Empty(mr.dup.run.count.errors.list)
 			end
 		end
 	end)
@@ -1775,37 +1892,37 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	end
 
 	-- First cleanup
-	if not mr_dup.clean then
-		mr_dup.clean = true
+	if not mr.dup.firstClean then
+		mr.dup.firstClean = true
 		Material_RestoreAll(ply)
 	end
 
 	-- Register that we have model materials to duplicate and count elements
-	if not mr_dup.has.models then
-		mr_dup.has.models = true
-		ply.mr_dup.run = "models"
+	if not mr.dup.has.models then
+		mr.dup.has.models = true
+		ply.mr.dup.run.step = "models"
 		Duplicator_SendStatusToCl(ply, nil, nil, "Model Materials")
 	end
 
 	-- Set the aditive delay time
-	mr_dup.models.delay = mr_dup.models.delay + 0.1
+	mr.dup.models.delay = mr.dup.models.delay + 0.1
 
 	-- Change the stored entity to the actual one
 	savedTable.ent = ent
 
 	-- Get the max delay time
-	if mr_dup.models.delay > mr_dup.models.max_delay then
-		mr_dup.models.max_delay = mr_dup.models.delay
+	if mr.dup.models.delay > mr.dup.models.maxDelay then
+		mr.dup.models.maxDelay = mr.dup.models.delay
 	end
 
 	-- Count 1
-	ply.mr_dup.count.total = ply.mr_dup.count.total + 1
-	Duplicator_SendStatusToCl(ply, nil, ply.mr_dup.count.total)
+	ply.mr.dup.run.count.total = ply.mr.dup.run.count.total + 1
+	Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total)
 
-	timer.Create("MapRetDuplicatorMapMatWaiting"..tostring(mr_dup.models.delay)..tostring(ply), mr_dup.models.delay, 1, function()
+	timer.Create("MapRetDuplicatorMapMatWaiting"..tostring(mr.dup.models.delay)..tostring(ply), mr.dup.models.delay, 1, function()
 		-- Count 2
-		ply.mr_dup.count.current = ply.mr_dup.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr_dup.count.current)
+		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
 
 		-- Check if the material is valid
 		local isValid = Material_IsValid(savedTable.newMaterial)
@@ -1815,14 +1932,14 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 			Model_Material_Set(savedTable)
 		-- Or register an error
 		else
-			ply.mr_dup.count.errors.n = ply.mr_dup.count.errors.n + 1
-			Duplicator_SendErrorCountToCl(ply, ply.mr_dup.count.errors.n, savedTable.newMaterial)
+			ply.mr.dup.run.count.errors.n = ply.mr.dup.run.count.errors.n + 1
+			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, savedTable.newMaterial)
 		end
 
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
-		if mr_dup.models.delay == mr_dup.models.max_delay then
-			ply.mr_dup.run = "decals"
-			mr_dup.has.models = false
+		if mr.dup.models.delay == mr.dup.models.maxDelay then
+			ply.mr.dup.run.step = "decals"
+			mr.dup.has.models = false
 			Duplicator_Finish(ply)
 		end
 	end)
@@ -1841,20 +1958,20 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 	end
 
 	-- Force check
-	if forceCheck and not mr_dup.has.models then
-		ply.mr_dup.run = "decals"
+	if forceCheck and not mr.dup.has.models then
+		ply.mr.dup.run.step = "decals"
 	end
 
 	-- Register that we have decals to duplicate
-	if not ply.mr_dup.has.decals then
-		ply.mr_dup.has.decals = true
+	if not ply.mr.dup.run.has.decals then
+		ply.mr.dup.run.has.decals = true
 	end
 
-	if ply.mr_dup.run == "decals" then
+	if ply.mr.dup.run.step == "decals" then
 		-- First cleanup
-		if not mr_dup.clean then
-			if not ply.mr_firstSpawn then
-				mr_dup.clean = true
+		if not mr.dup.firstClean then
+			if not ply.mr.state.firstSpawn then
+				mr.dup.firstClean = true
 				Material_RestoreAll(ply)
 				timer.Create("MapRetDuplicatorDecalsWaitCleanup", 1, 1, function()
 					Duplicator_LoadDecals(ply, ent, savedTable)
@@ -1865,7 +1982,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 		end
 
 		-- Fix the duplicator generic spawn entity
-		if not mr_dup.hidden then
+		if not mr.dup.hidden then
 			Duplicator_CreateEnt(ent)
 		end
 
@@ -1874,30 +1991,30 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			position = 1
 
 			-- Set the counting
-			ply.mr_dup.count.total = table.Count(savedTable)
-			ply.mr_dup.count.current = 0
+			ply.mr.dup.run.count.total = table.Count(savedTable)
+			ply.mr.dup.run.count.current = 0
 
 			-- Update the client
-			Duplicator_SendStatusToCl(ply, nil, ply.mr_dup.count.total, "Decals", true)
+			Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total, "Decals", true)
 		end
 
 		-- Apply decal
 		Decal_Start(ply, nil, savedTable[position])
 
 		-- Count
-		ply.mr_dup.count.current = ply.mr_dup.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr_dup.count.current)
+		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
 
 		-- Next material
 		position = position + 1 
-		if savedTable[position] and not mr_dup.force_stop then
+		if savedTable[position] and not mr.dup.forceStop then
 			timer.Create("MapRetDuplicatorDecalDelay"..tostring(ply), 0.1, 1, function()
 				Duplicator_LoadDecals(ply, nil, savedTable, position)
 			end)
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
 		else
-			ply.mr_dup.run = "map"
-			ply.mr_dup.has.decals = false
+			ply.mr.dup.run.step = "map"
+			ply.mr.dup.run.has.decals = false
 			Duplicator_Finish(ply)
 		end
 	else
@@ -1921,20 +2038,20 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	end
 
 	-- Force check
-	if forceCheck and (not mr_dup.has.models and not ply.mr_dup.has.decals) then
-		ply.mr_dup.run = "map"
+	if forceCheck and (not mr.dup.has.models and not ply.mr.dup.run.has.decals) then
+		ply.mr.dup.run.step = "map"
 	end
 
 	-- Register that we have map materials to duplicate
-	if not ply.mr_dup.has.map then
-		ply.mr_dup.has.map = true
+	if not ply.mr.dup.run.has.map then
+		ply.mr.dup.run.has.map = true
 	end
 
-	if ply.mr_dup.run == "map" then
+	if ply.mr.dup.run.step == "map" then
 		-- First cleanup
-		if not mr_dup.clean then
-			if not ply.mr_firstSpawn then
-				mr_dup.clean = true
+		if not mr.dup.firstClean then
+			if not ply.mr.state.firstSpawn then
+				mr.dup.firstClean = true
 				Material_RestoreAll(ply)
 				timer.Create("MapRetDuplicatorMapMatWaitCleanup", 1, 1, function()
 					Duplicator_LoadMapMaterials(ply, ent, savedTable)
@@ -1945,7 +2062,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		end
 
 		-- Fix the duplicator generic spawn entity
-		if not mr_dup.hidden then
+		if not mr.dup.hidden then
 			Duplicator_CreateEnt(ent)
 		end
 
@@ -1954,15 +2071,15 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			position = 1
 
 			-- Set the counting
-			ply.mr_dup.count.total = MML_Count(savedTable)
-			ply.mr_dup.count.current = 0
+			ply.mr.dup.run.count.total = MML_Count(savedTable)
+			ply.mr.dup.run.count.current = 0
 
 			-- Update the client
-			Duplicator_SendStatusToCl(ply, nil, ply.mr_dup.count.total, "Map Materials", true)
+			Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total, "Map Materials", true)
 		end
 
 		-- Check if we have a valid entry
-		if savedTable[position] and not mr_dup.force_stop then
+		if savedTable[position] and not mr.dup.forceStop then
 			-- Yes. Is it an INvalid entry?
 			if savedTable[position].oldMaterial == nil then
 				-- Yes. Let's check the next entry
@@ -1973,15 +2090,15 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			-- No. Let's apply the changes
 		-- No more entries. And because it's the last duplicator section, just reset the variables
 		else
-			ply.mr_dup.has.map = false
+			ply.mr.dup.run.has.map = false
 			Duplicator_Finish(ply)
 
 			return
 		end
 
 		-- Count
-		ply.mr_dup.count.current = ply.mr_dup.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr_dup.count.current)
+		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
 
 		-- Check if the material is valid
 		local isValid = Material_IsValid(savedTable[position].newMaterial)
@@ -1991,8 +2108,8 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			Map_Material_Set(ply, savedTable[position])
 		-- Or register an error
 		else
-			ply.mr_dup.count.errors.n = ply.mr_dup.count.errors.n + 1
-			Duplicator_SendErrorCountToCl(ply, ply.mr_dup.count.errors.n, savedTable[position].newMaterial)
+			ply.mr.dup.run.count.errors.n = ply.mr.dup.run.count.errors.n + 1
+			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, savedTable[position].newMaterial)
 		end
 
 		-- Next material
@@ -2026,26 +2143,26 @@ function Duplicator_LoadSkybox(ply, ent, savedTable)
 end
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybox)
 
--- Render duplicator progress bar based on the ply.mr_dup.count numbers
+-- Render duplicator progress bar based on the ply.mr.dup.run.count numbers
 if CLIENT then
 	function Duplicator_RenderProgress(ply)
-		if mr_ply.mr_dup then
-			if mr_ply.mr_dup.count.total > 0 and mr_ply.mr_dup.count.current > 0 then
+		if mr.dup.run then
+			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
 				local x, y, w, h = 25, ScrH()/2 + 200, 200, 20 
 
 				surface.SetDrawColor(0, 0, 0, 255)
 				surface.DrawOutlinedRect(x, y, w, h)
 					
 				surface.SetDrawColor(200, 0, 0, 255)
-				surface.DrawRect(x + 1.2, y + 1.2, w * (mr_ply.mr_dup.count.current / mr_ply.mr_dup.count.total) - 2, h - 2)
+				surface.DrawRect(x + 1.2, y + 1.2, w * (mr.dup.run.count.current / mr.dup.run.count.total) - 2, h - 2)
 
 				surface.SetDrawColor(0, 0, 0, 150)
 				surface.DrawRect(x + 1.2, y - 42, w, h * 2)
 
 				draw.DrawText("MAP RETEXTURIZER","HudHintTextLarge",x+w/2,y-40,Color(255,255,255,255),1)
-				draw.DrawText(mr_ply.mr_dup.run..": "..tostring(mr_ply.mr_dup.count.current).."/"..tostring(mr_ply.mr_dup.count.total),"CenterPrintText",x+w/2,y-20,Color(255,255,255,255),1)
-				if mr_ply.mr_dup.count.errors.n > 0 then
-					draw.DrawText("Errors: "..tostring(mr_ply.mr_dup.count.errors.n),"CenterPrintText",x+w/2,y,Color(255,255,255,255),1)
+				draw.DrawText(mr.dup.run.step..": "..tostring(mr.dup.run.count.current).."/"..tostring(mr.dup.run.count.total),"CenterPrintText",x+w/2,y-20,Color(255,255,255,255),1)
+				if mr.dup.run.count.errors.n > 0 then
+					draw.DrawText("Errors: "..tostring(mr.dup.run.count.errors.n),"CenterPrintText",x+w/2,y,Color(255,255,255,255),1)
 				end
 			end
 		end
@@ -2057,10 +2174,10 @@ if CLIENT then
 end
 
 -- Force to stop the duplicator
-function Duplicator_ForceStop(plyLoadingStatus)
+function Duplicator_forceStop(plyLoadingStatus)
 	if SERVER then
-		if mr_dup.running ~= "" or plyLoadingStatus then
-			mr_dup.force_stop = true
+		if mr.dup.loadingFile ~= "" or plyLoadingStatus then
+			mr.dup.forceStop = true
 
 			net.Start("MapRetForceDupToStop")
 			net.Broadcast()
@@ -2070,10 +2187,10 @@ function Duplicator_ForceStop(plyLoadingStatus)
 		
 		return false
 	else
-		mr_dup.force_stop = true
+		mr.dup.forceStop = true
 
-		timer.Create("MapRetDuplicatorForceStop", 0.3, 1, function()
-			mr_dup.force_stop = false
+		timer.Create("MapRetDuplicatorforceStop", 0.3, 1, function()
+			mr.dup.forceStop = false
 		end)
 	end
 
@@ -2083,7 +2200,7 @@ if SERVER then
 	util.AddNetworkString("MapRetForceDupToStop")
 else
 	net.Receive("MapRetForceDupToStop", function()
-		Duplicator_ForceStop()
+		Duplicator_forceStop()
 	end)
 end
 
@@ -2091,42 +2208,42 @@ end
 function Duplicator_Finish(ply)
 	if CLIENT then return; end
 
-	if not mr_dup.has.models and not ply.mr_dup.has.decals and not ply.mr_dup.has.map then
+	if not mr.dup.has.models and not ply.mr.dup.run.has.decals and not ply.mr.dup.run.has.map then
 		-- Set the duplicator as initialized
-		if not mr_mat.initialized then
-			mr_mat.initialized = true
+		if not mr.initialized then
+			mr.initialized = true
 		end
 
 		-- Reset the progress bar
-		ply.mr_dup.run = ""
-		ply.mr_dup.count.total = 0
-		ply.mr_dup.count.current = 0
+		ply.mr.dup.run.step = ""
+		ply.mr.dup.run.count.total = 0
+		ply.mr.dup.run.count.current = 0
 		Duplicator_SendStatusToCl(ply, 0, 0, "")
 
 		-- Reset the error counting
-		if ply.mr_dup.count.errors.n > 0 then
-			Duplicator_SendErrorCountToCl(0)
-			ply.mr_dup.count.errors.n = 0
+		if ply.mr.dup.run.count.errors.n > 0 then
+			Duplicator_SendErrorCountToCl(ply, 0)
+			ply.mr.dup.run.count.errors.n = 0
 		end
 
 		-- Finish for new players
-		if ply.mr_firstSpawn then
-			ply.mr_firstSpawn = false
-			net.Start("MapRetPlyFirstSpawnEnd")
+		if ply.mr.state.firstSpawn then
+			ply.mr.state.firstSpawn = false
+			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 		-- Finish for the normal usage
 		else
 			-- Set "running" to nothing
-			mr_dup.running = ""
+			mr.dup.loadingFile = ""
 			net.Start("MapRetDupFinish")
 			net.Broadcast()
 
 			-- Reset the first clean state
-			mr_dup.clean = false
+			mr.dup.firstClean = false
 
 			-- Reset model delay adjuster
-			mr_dup.models.delay = 0
-			mr_dup.models.max_delay = 0
+			mr.dup.models.delay = 0
+			mr.dup.models.maxDelay = 0
 
 			print("[Map Retexturizer] Loading finished.")
 		end
@@ -2136,7 +2253,7 @@ if SERVER then
 	util.AddNetworkString("MapRetDupFinish")
 else
 	net.Receive("MapRetDupFinish", function()
-		mr_dup.running = ""
+		mr.dup.loadingFile = ""
 	end)
 end
 
@@ -2148,7 +2265,7 @@ end
 function Preview_Toogle(ply, state, setOnClient, setOnServer)
 	if CLIENT then
 		if setOnClient then
-			mr_ply.mr_previewmode = state
+			mr.state.previewMode = state
 		end
 		if setOnServer then
 			net.Start("MapRetTooglePreview")
@@ -2157,7 +2274,7 @@ function Preview_Toogle(ply, state, setOnClient, setOnServer)
 		end
 	else
 		if setOnServer then
-			ply.mr_previewmode = state
+			ply.mr.state.previewMode = state
 		end
 		if setOnClient then
 			net.Start("MapRetTooglePreview")
@@ -2170,9 +2287,9 @@ if SERVER then
 	util.AddNetworkString("MapRetTooglePreview")
 end
 net.Receive("MapRetTooglePreview", function(_, ply)
-	ply = ply or mr_ply
+	ply = ply or fakeHostPly
 
-	ply.mr_previewmode = net.ReadBool()
+	ply.mr.state.previewMode = net.ReadBool()
 end)
 
 -- Material rendering
@@ -2180,7 +2297,7 @@ if CLIENT then
 	function Preview_Render(ply, mapMatMode)
 		local tr = ply:GetEyeTrace()
 		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil)
-		local newData = mapMatMode and Data_Create(ply, tr) or DataTable_CreateDefaults(ply, tr)
+		local newData = mapMatMode and Data_Create(ply, tr) or Data_CreateDefaults(ply, tr)
 
 		-- Don't apply bad materials
 		if not Material_IsValid(newData.newMaterial) then
@@ -2193,24 +2310,24 @@ if CLIENT then
 		end
 
 		-- Preview adjustments
-		oldData.newMaterial = mr_mat.preview.newMaterial
-		if mr_mat.preview.rotation_workaround and mr_mat.preview.rotation_workaround ~= -1 then
-			oldData.rotation = mr_mat.preview.rotation_workaround -- "Fix" the rotation
+		oldData.newMaterial = mr.preview.newMaterial
+		if mr.preview.rotationHack and mr.preview.rotationHack ~= -1 then
+			oldData.rotation = mr.preview.rotationHack -- "Fix" the rotation
 		end
 		newData.oldMaterial = "MatRetPreviewMaterial"
 
 		-- Update the material if necessary
 		if Material_ShouldChange(ply, oldData, newData, tr) then
 			Map_Material_SetAux(newData)
-			mr_mat.preview.rotation_workaround = newData.rotation
-			mr_mat.preview.newMaterial = newData.newMaterial
+			mr.preview.rotationHack = newData.rotation
+			mr.preview.newMaterial = newData.newMaterial
 		end
 				
 		-- Get the properties
 		local preview = Material("MatRetPreviewMaterial")
 		local width = preview:Width()
 		local height = preview:Height()
-		
+
 		-- Map material
 		if mapMatMode then
 			-- Resize
@@ -2252,28 +2369,25 @@ if CLIENT then
 	end
 
 	-- Start map materials preview
-	function Preview_Render_Map_Materials()
-		local ply = LocalPlayer()
-
-		if mr_ply.mr_previewmode and not mr_ply.mr_decalmode then
+	function Preview_Render_Map_Materials(ply)
+		if mr.state.previewMode and not mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			Preview_Render(ply, true)
 		end
 	end
 	hook.Add("HUDPaint", "MapRetPreview", function()
-		Preview_Render_Map_Materials()
+		Preview_Render_Map_Materials(LocalPlayer())
 	end)
 
 	-- Start decals preview
-	function Preview_Render_Decals()
-		local ply = LocalPlayer()
-
-		if mr_ply.mr_previewmode and mr_ply.mr_decalmode then
+	function Preview_Render_Decals(ply)
+		if mr.state.previewMode and mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			Preview_Render(ply, false)
 		end
 	end
 	hook.Add("PostDrawOpaqueRenderables", "MapRetPreview", function()
-		Preview_Render_Decals()
+		Preview_Render_Decals(LocalPlayer())
 	end)
+
 end
 
 --------------------------------
@@ -2302,25 +2416,25 @@ function Save_Apply(name, theFile)
 	local modelList = {}
 	
 	for k,v in pairs(ents.GetAll()) do				
-		if v.modifiedmaterial then
+		if v.modifiedMaterial then
 			table.insert(modelList, v)
 		end
 	end
 		
-	mr_manage.save.list[name] = { models = modelList, decals = mr_mat.decal.list, map = mr_mat.map.list, dupEnt = mr_dup.entity}
+	mr.manage.save.list[name] = { models = modelList, decals = mr.decal.list, map = mr.map.list, dupEnt = mr.dup.entity}
 	]]
 	
 	-- Create a save table
-	mr_manage.save.list[name] = { decals = mr_mat.decal.list, map = mr_mat.map.list, skybox = GetConVar("mapret_skybox"):GetString() }
+	mr.manage.save.list[name] = { decals = mr.decal.list, map = mr.map.list, skybox = GetConVar("mapret_skybox"):GetString() }
 	
 	-- Save it in a file
-	file.Write(theFile, util.TableToJSON(mr_manage.save.list[name]))
+	file.Write(theFile, util.TableToJSON(mr.manage.save.list[name]))
 
 	-- Server alert
-	print("[Map Retexturizer] Saved the materials state.")
+	print("[Map Retexturizer] Saved the current materials.")
 
 	-- Associte a name with the saved file
-	mr_manage.load.list[name] = theFile
+	mr.manage.load.list[name] = theFile
 
 	-- Update the load list on every client
 	net.Start("MapRetSaveAddToLoadList")
@@ -2339,7 +2453,7 @@ if SERVER then
 
 		local name = net.ReadString()
 
-		Save_Apply(name, mr_manage.map_folder..name..".txt")
+		Save_Apply(name, mr.manage.mapFolder..name..".txt")
 	end)
 	
 	concommand.Add("mapret_remote_save", function(_1, _2, _3, name)
@@ -2347,26 +2461,26 @@ if SERVER then
 			return
 		end
 
-		Save_Apply(name, mr_manage.map_folder..name..".txt")
+		Save_Apply(name, mr.manage.mapFolder..name..".txt")
 	end)
 end
 if CLIENT then
 	net.Receive("MapRetSaveAddToLoadList", function()
 		local name = net.ReadString()
-		local theFile = mr_manage.map_folder..name..".txt"
+		local theFile = mr.manage.mapFolder..name..".txt"
 
-		if mr_manage.load.list[name] == nil then
-			mr_manage.load.element:AddChoice(name)
-			mr_manage.load.list[name] = theFile
+		if mr.manage.load.list[name] == nil then
+			mr.gui.load:AddChoice(name)
+			mr.manage.load.list[name] = theFile
 		end
 	end)
 end
 
--- Set autoloading for the map
+-- Set autoLoading for the map
 function Save_SetAuto_Start(ply, value)
 	if SERVER then return; end
 
-	-- Set the autosave option on every client
+	-- Set the autoSave option on every client
 	net.Start("MapRetAutoSaveSet")
 		net.WriteBool(value)
 	net.SendToServer()
@@ -2379,14 +2493,14 @@ function Save_SetAuto_Apply(ply, value)
 		return false
 	end
 
-	-- Remove the autosave timer
+	-- Remove the autoSave timer
 	if not value then
 		if timer.Exists("MapRetAutoSave") then
 			timer.Remove("MapRetAutoSave")
 		end
 	end
 
-	-- Set the autosave
+	-- Set the autoSave
 	RunConsoleCommand("mapret_autosave", value and "1" or "0")
 end
 if SERVER then
@@ -2409,10 +2523,12 @@ if SERVER then
 			return
 		end
 		
-		Save_SetAuto_Apply(mr_dup.fake_ply, value)
+		Save_SetAuto_Apply(fakeHostPly, value)
 		
-		PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled")..".")
-		print("[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled")..".")
+		local message = "[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled").."."
+		
+		PrintMessage(HUD_PRINTTALK, message)
+		print(message)
 	end)
 end
 
@@ -2421,7 +2537,7 @@ function Load_Start(ply)
 	if SERVER then return; end
 
 	-- Get and check the name
-	local name = mr_manage.load.element:GetSelected()
+	local name = mr.gui.load:GetSelected()
 	
 	if not name or name == "" then
 		return false
@@ -2438,8 +2554,8 @@ function Load_Apply(ply, loadTable)
 	--[[
 	-- Send the model materias (Not working, just listed. I think that reloading models here is a bad idea)
 	for k,v in pairs(loadTable and loadTable.models or ents.GetAll()) do
-		if v.modifiedmaterial then
-			Duplicator_LoadModelMaterials(ply, v, v.modifiedmaterial)
+		if v.modifiedMaterial then
+			Duplicator_LoadModelMaterials(ply, v, v.modifiedMaterial)
 		end
 	end
 	]]
@@ -2447,25 +2563,25 @@ function Load_Apply(ply, loadTable)
 	local outTable1, outTable2, outTable3
 
 	-- Don't start another loading process if we are stopping one yet
-	if not mr_dup.force_stop then
+	if not mr.dup.forceStop then
 		local delay = 0
 
 		-- Force to stop any running loading
-		if not ply.mr_firstSpawn then
-			Duplicator_ForceStop()
+		if not ply.mr.state.firstSpawn then
+			Duplicator_forceStop()
 			delay = 0.4
 		end
 
 		-- Wait to the last command to be done
 		timer.Create("MapRetFirstJoinStart", delay, 1, function()
 			-- Apply decals
-			outTable1 = loadTable and loadTable.decals or mr_mat.decal.list
+			outTable1 = loadTable and loadTable.decals or mr.decal.list
 			if table.Count(outTable1) > 0 then
 				Duplicator_LoadDecals(ply, nil, outTable1)
 			end
 
 			-- Then map materials
-			outTable2 = loadTable and loadTable.map or mr_mat.map.list
+			outTable2 = loadTable and loadTable.map or mr.map.list
 			if MML_Count(outTable2) > 0 then
 				Duplicator_LoadMapMaterials(ply, nil, outTable2)
 			end
@@ -2478,22 +2594,22 @@ function Load_Apply(ply, loadTable)
 			end
 
 			if table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 and outTable3.skybox == "" then
-				-- Manually reset the mr_firstSpawn state if it's true and there aren't any modifications
-				if ply.mr_firstSpawn then
-					ply.mr_firstSpawn = false
-					net.Start("MapRetPlyFirstSpawnEnd")
+				-- Manually reset the firstSpawn state if it's true and there aren't any modifications
+				if ply.mr.state.firstSpawn then
+					ply.mr.state.firstSpawn = false
+					net.Start("MapRetPlyfirstSpawnEnd")
 					net.Send(ply)
 				end
 			else
 				-- Server alert
-				if not ply.mr_firstSpawn then
+				if not ply.mr.state.firstSpawn then
 					print("[Map Retexturizer] Loading started...")
 				end
 			end
 
-			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
-			if not ply.mr_firstSpawn then
-				mr_dup.force_stop = false
+			-- Reset the force stop var (It was set true in Duplicator_forceStop())
+			if not ply.mr.state.firstSpawn then
+				mr.dup.forceStop = false
 			end
 		end)
 	end
@@ -2509,7 +2625,7 @@ if SERVER then
 		end
 
 		-- Get and check the load file
-		local theFile = mr_manage.load.list[name]
+		local theFile = mr.manage.load.list[name]
 
 		if theFile == nil then
 			return false
@@ -2520,7 +2636,7 @@ if SERVER then
 		
 		if loadTable then
 			-- Register the name of the loading (one that is running for all the players)
-			mr_dup.running = name
+			mr.dup.loadingFile = name
 			net.Start("MapRetLoad_SetPly")
 				net.WriteString(name)
 			net.Send(ply)
@@ -2539,7 +2655,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_load", function(_1, _2, _3, name)
-		if Load_Apply_Start(mr_dup.fake_ply, name) then
+		if Load_Apply_Start(fakeHostPly, name) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..name.."\"...")
 		else
 			print("[Map Retexturizer] File not found.")
@@ -2547,7 +2663,7 @@ if SERVER then
 	end)
 else
 	net.Receive("MapRetLoad_SetPly", function(_, ply)
-		mr_dup.running = net.ReadString()
+		mr.dup.loadingFile = net.ReadString()
 	end)
 end
 
@@ -2555,8 +2671,10 @@ end
 function Load_FillList()
 	if SERVER then return; end
 
-	for k,v in pairs(mr_manage.load.list) do
-		mr_manage.load.element:AddChoice(k)
+	mr.gui.load:AddChoice("")
+
+	for k,v in pairs(mr.manage.load.list) do
+		mr.gui.load:AddChoice(k)
 	end
 end
 if SERVER then
@@ -2564,7 +2682,7 @@ if SERVER then
 end
 if CLIENT then
 	net.Receive("MapRetLoadFillList", function()
-		mr_manage.load.list = net.ReadTable()
+		mr.manage.load.list = net.ReadTable()
 	end)
 end
 
@@ -2572,9 +2690,9 @@ end
 if SERVER then
 	local function Load_ShowList()
 		print("----------------------------")
-		print("[Map Retexturizer] SAVES:")
+		print("[Map Retexturizer] Saves:")
 		print("----------------------------")
-		for k,v in pairs(mr_manage.load.list) do
+		for k,v in pairs(mr.manage.load.list) do
 			print(k)
 		end
 		print("----------------------------")
@@ -2590,24 +2708,58 @@ function Load_Delete_Start(ply)
 	if SERVER then return; end
 
 	-- Get the load name and check if it's no empty
-	local theName = mr_manage.load.element:GetSelected()
+	local thename = mr.gui.load:GetSelected()
 
-	if not theName or theName == "" then
+	if not thename or thename == "" then
 		return
 	end
 
-	-- Remove the load on every client
-	net.Start("MapRetLoadDeleteSV")
-		net.WriteString(theName)
-	net.SendToServer()
+	-- Ask if the player really wants to delete the file
+	-- Note: this window code is used more than once but I can't put it inside
+	-- a function because the buttons never return true or false on time.
+	local qPanel = vgui.Create("DFrame")
+		qPanel:SetTitle("Deletion Confirmation")
+		qPanel:SetSize(284, 95)
+		qPanel:SetPos(10, 10)
+		qPanel:SetDeleteOnClose(true)
+		qPanel:SetVisible(true)
+		qPanel:SetDraggable(true)
+		qPanel:ShowCloseButton(true)
+		qPanel:MakePopup(true)
+		qPanel:Center()
+
+	local text = vgui.Create("DLabel", qPanel)
+		text:SetPos(10, 25)
+		text:SetSize(300, 25)
+		text:SetText("Are you sure you want to delete "..mr.gui.load:GetSelected().."?")
+
+	local buttonYes = vgui.Create("DButton", qPanel)
+		buttonYes:SetPos(24, 50)
+		buttonYes:SetText("Yes")
+		buttonYes:SetSize(120, 30)
+		buttonYes.DoClick = function()
+			-- Remove the load on every client
+			qPanel:Close()
+			net.Start("MapRetLoadDeleteSV")
+				net.WriteString(thename)
+			net.SendToServer()
+		end
+
+	local buttonNo = vgui.Create("DButton", qPanel)
+		buttonNo:SetPos(144, 50)
+		buttonNo:SetText("No")
+		buttonNo:SetSize(120, 30)
+		buttonNo.DoClick = function()
+			qPanel:Close()
+		end
 end
-function Load_Delete_Apply(ply, theName)
+function Load_Delete_Apply(ply, thename)
 	-- Admin only
 	if not Ply_IsAdmin(ply) then
 		return false
 	end
 
-	local theFile = mr_manage.load.list[theName]
+	local theFile = mr.manage.load.list[thename]
 
 	-- Check if the file exists
 	if theFile == nil then
@@ -2615,10 +2767,10 @@ function Load_Delete_Apply(ply, theName)
 	end
 
 	-- Remove the load entry
-	mr_manage.load.list[theName] = nil
+	mr.manage.load.list[thename] = nil
 
-	-- Remove the load from the autoload if it is there
-	if GetConVar("mapret_autoload"):GetString() == theName then
+	-- Remove the load from the autoLoad if it is there
+	if GetConVar("mapret_autoload"):GetString() == thename then
 		RunConsoleCommand("mapret_autoload", "")
 	end
 
@@ -2627,7 +2779,7 @@ function Load_Delete_Apply(ply, theName)
 
 	-- Updates the load list on every client
 	net.Start("MapRetLoadDeleteCL")
-		net.WriteString(theName)
+		net.WriteString(thename)
 	net.Broadcast()
 	
 	return true
@@ -2641,7 +2793,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_delete", function(_1, _2, _3, name)
-		if Load_Delete_Apply(mr_dup.fake_ply, name) then
+		if Load_Delete_Apply(fakeHostPly, name) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: deleted the save \""..name.."\".")
 			print("[Map Retexturizer] Console: deleted the save \""..name.."\".")
 		else
@@ -2653,11 +2805,11 @@ if CLIENT then
 	net.Receive("MapRetLoadDeleteCL", function()
 		local name = net.ReadString()
 
-		mr_manage.load.list[name] = nil
-		mr_manage.load.element:Clear()
+		mr.manage.load.list[name] = nil
+		mr.gui.load:Clear()
 
-		for k,v in pairs(mr_manage.load.list) do
-			mr_manage.load.element:AddChoice(k)
+		for k,v in pairs(mr.manage.load.list) do
+			mr.gui.load:AddChoice(k)
 		end
 	end)
 end
@@ -2668,7 +2820,7 @@ function Load_SetAuto_Start(ply, text)
 
 	-- Set the autoload on every client
 	net.Start("MapRetAutoLoadSet")
-		net.WriteString(text or mr_manage.load.element:GetText())
+		net.WriteString(text or mr.gui.load:GetText())
 	net.SendToServer()
 end
 function Load_SetAuto_Apply(ply, text)
@@ -2679,14 +2831,14 @@ function Load_SetAuto_Apply(ply, text)
 		return false
 	end
 
-	if not mr_manage.load.list[text] and text ~= "" then
+	if not mr.manage.load.list[text] and text ~= "" then
 		return false
 	end
 
 	RunConsoleCommand("mapret_autoload", text)
 	
 	timer.Create("MapRetWaitToSave", 0.3, 1, function()
-		file.Write(mr_manage.autoload.file, GetConVar("mapret_autoload"):GetString())
+		file.Write(mr.manage.autoLoad.file, GetConVar("mapret_autoload"):GetString())
 	end)
 	
 	return true
@@ -2701,9 +2853,11 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_autoload", function(_1, _2, _3, text)
-		if Load_SetAuto_Apply(mr_dup.fake_ply, text) then
-			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: autoload set to \""..text.."\".")
-			print("[Map Retexturizer] Console: autoload set to \""..text.."\".")
+		if Load_SetAuto_Apply(fakeHostPly, text) then
+			local message = "[Map Retexturizer] Console: autoload set to \""..text.."\"."
+			
+			PrintMessage(HUD_PRINTTALK, message)
+			print(message)
 		else
 			print("[Map Retexturizer] File not found.")
 		end
@@ -2711,76 +2865,78 @@ if SERVER then
 end
 
 -- Load the server modifications on the first spawn (start)
-function Load_FirstSpawn(ply)
+function Load_firstSpawn(ply)
 	if CLIENT then return; end
 
-	-- Set the player status
-	ply.mr_firstSpawn = true
-
 	-- Index duplicator stuff (serverside)
-	mr_dup_set(ply)
+	ply.mr = {
+		dup = {
+			run = mr.dup.run
+		},
+		state = mr.state
+	}
 
 	-- Fill up the player load list
 	net.Start("MapRetLoadFillList")
-		net.WriteTable(mr_manage.load.list)
+		net.WriteTable(mr.manage.load.list)
 	net.Send(ply)
 
 	-- Do not go on if it's not needed
 	if GetConVar("mapret_skybox"):GetString() == ""
-		and table.Count(mr_mat.decal.list) == 0
-		and MML_Count(mr_mat.map.list) == 0
+		and table.Count(mr.decal.list) == 0
+		and MML_Count(mr.map.list) == 0
 		and GetConVar("mapret_autoload"):GetString() == ""
 		then
 
 		-- Register that the player completed the spawn
-		ply.mr_firstSpawn = false
-		net.Start("MapRetPlyFirstSpawnEnd")
+		ply.mr.state.firstSpawn = false
+		net.Start("MapRetPlyfirstSpawnEnd")
 		net.Send(ply)
 
 		return
 	end
 
-	-- Wait a little (decals need this)
-	timer.Create("MapRetFirstSpawnApplyDelay"..tostring(ply), 5, 1, function()
-	-- Send the current modifications
-	if mr_dup.running == "" and (GetConVar("mapret_autoload"):GetString() == "" or mr_mat.initialized) then
-		Load_Apply(ply, nil)
-	-- Or load an saved file
-	else
-		-- Register if the player is also initializing the material table
-		if not mr_mat.initialized then
-			local isLoading = false
+	-- Wait a bit (decals need this)
+	timer.Create("MapRetfirstSpawnApplyDelay"..tostring(ply), 5, 1, function()
+		-- Send the current modifications
+		if mr.dup.loadingFile == "" and (GetConVar("mapret_autoload"):GetString() == "" or mr.initialized) then
+			Load_Apply(ply, nil)
+		-- Or load a saved file
+		else
+			-- Register if the player is also initializing the material table
+			if not mr.initialized then
+				local isloading = false
 
-			for k,v in pairs(player.GetAll()) do
-				if v.mr_mat_initializing then
-					isLoading = true
+				for k,v in pairs(player.GetAll()) do
+					if v.initializing then
+						isloading = true
+					end
+				end
+					
+				if not isloading then
+					ply.initializing = true
 				end
 			end
-				
-			if not isLoading then
-				ply.mr_mat_initializing = true
+
+			-- Get the save name
+			local autol = mr.dup.loadingFile ~= "" and mr.dup.loadingFile or file.Read(mr.manage.autoLoad.file, "DATA")
+
+			-- Load the materials
+			if autol ~= "" then
+				local loadTable = util.JSONToTable(file.Read(mr.manage.mapFolder..autol..".txt"))
+				Load_Apply(ply, loadTable)
 			end
 		end
-
-		-- Get the save name
-		local autol = mr_dup.running ~= "" and mr_dup.running or file.Read(mr_manage.autoload.file, "DATA")
-
-		-- Load the materials
-		if autol ~= "" then
-			local loadTable = util.JSONToTable(file.Read(mr_manage.map_folder..autol..".txt"))
-			Load_Apply(ply, loadTable)
-		end
-	end
 	end)
 end
 if SERVER then
-	util.AddNetworkString("MapRetPlyFirstSpawnEnd")
+	util.AddNetworkString("MapRetPlyfirstSpawnEnd")
 
-	hook.Add("PlayerInitialSpawn", "MapRetPlyFirstSpawn", Load_FirstSpawn)
+	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", Load_firstSpawn)
 end
 if CLIENT then
-	net.Receive("MapRetPlyFirstSpawnEnd", function()
-		mr_ply.mr_firstSpawn = false
+	net.Receive("MapRetPlyfirstSpawnEnd", function()
+		mr.state.firstSpawn = false
 	end)
 end
 
@@ -2794,28 +2950,28 @@ function TOOL_BasicChecks(ply, ent, tr)
 		return false
 	end
 
-	-- The player can't use the tool if he's already in the joining process
+	-- The player can't use the tool if he's joining the game yet
 	local ply2
 	if SERVER then
 		ply2 = ply
 	else
-		ply2 = mr_ply
+		ply2 = mr.dup.run
 	end
-	if ply2.mr_firstSpawn then
-		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is not ready to use yet.")
+	if ply2.firstSpawn then
+		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is still loading, wait a moment.")
 	
 		return false
 	end
 
-	-- It's not meant to mess with players
+	-- The tool isn't meant to change the players
 	if ent:IsPlayer() then
 		return false
 	end
 
-	-- We can't mess with displacement materials
+	-- The tool can't change displacement materials
 	if ent:IsWorld() and Material_GetCurrent(tr) == "**displacement**" then
 		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, we can't handle displacement materials!")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify the displacements using the tool menu.")
 		end
 
 		return false
@@ -2839,11 +2995,11 @@ function TOOL:LeftClick(tr)
 	if SERVER then
 		ply2 = ply
 	else
-		ply2 = mr_ply
+		ply2 = mr.dup.run
 	end
-	if mr_dup.running ~= "" or ply2.mr_dup.run ~= "" then
+	if mr.dup.loadingFile ~= "" or ply2.mr.dup.run.step ~= "" then
 		if SERVER then
-			if not ply.mr_decalmode then
+			if not ply.mr.state.decalMode then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")
 			end
 		end
@@ -2851,15 +3007,34 @@ function TOOL:LeftClick(tr)
 		return false
 	end
 
-	-- Do not try to modify the skybox
+	-- Skybox modification
 	if Material_GetOriginal(tr) == "tools/toolsskybox" then
-		if SERVER then
-			if not ply.mr_decalmode then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+		-- Check if it's allowed
+		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
+			if SERVER then
+				if not ply.mr_decalmode then
+					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+				end
 			end
+
+			return false
 		end
 
-		return false
+		-- Get the materials
+		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or Material_GetOriginal(tr)
+		local selectedMaterial = GetConVar("mapret_material"):GetString()
+
+		-- Check if the copy isn't necessary
+		if skyboxMaterial == selectedMaterial then
+			return false
+		end
+
+		-- Apply the new skybox
+		if SERVER then
+			Skybox_Apply(ply, selectedMaterial)
+		end
+
+		return true
 	end
 
 	-- Create the duplicator entity used to restore map materials, decals and skybox
@@ -2868,8 +3043,13 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- If we are dealing with decals
-	local ply2 = self:GetOwner() or mr_ply
-	if ply2.mr_decalmode then
+	local ply3
+	if SERVER then
+		ply3 = fakeHostPly
+	else
+		ply3 = self:GetOwner()
+	end
+	if ply3.state.decalMode then
 		return Decal_Start(ply, tr)
 	end
 
@@ -2896,11 +3076,11 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Register that the map is manually modified
-	if not mr_mat.initialized then
-		mr_mat.initialized = true
+	if not mr.initialized then
+		mr.initialized = true
 	end
 
-	-- All verifications are done for the client. Let's only check the autosave now
+	-- All verifications are done for the client. Let's only check the autoSave now
 	if CLIENT then
 		return true
 	end
@@ -2908,9 +3088,11 @@ function TOOL:LeftClick(tr)
 	-- Auto save
 	if GetConVar("mapret_autosave"):GetString() == "1" then
 		if not timer.Exists("MapRetAutoSave") then
-			timer.Create("MapRetAutoSave", 60, 1, function()
-				Save_Apply(mr_manage.autosave.name, mr_manage.autosave.file)
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
+			timer.Create("MapRetAutoSave", 2, 1, function()
+				if mr.dup.loadingFile == "" or self:GetOwner().mr.dup.run.step == "" then
+					Save_Apply(mr.manage.autoSave.name, mr.manage.autoSave.file)
+					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
+				end
 			end)
 		end
 	end
@@ -2944,68 +3126,84 @@ end
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 	local ent = tr.Entity
+	local originalMaterial = Material_GetOriginal(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
 		return false
 	end
 
-	-- Create a new data table and try to get the current one
-	local newData = Data_Get(tr) or true
-	local oldData = Data_Get(tr)
+	-- Skybox
+	if originalMaterial == "tools/toolsskybox" then
+		-- Get the materials
+		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
+		local selectedMaterial = GetConVar("mapret_material"):GetString()
 
-	-- If the material is invalid we can't get it
-	if newData == true then
-		local material = Material_GetOriginal(tr)	
-
-		if not material then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The material you are trying to modify has an invalid name.")
-		
+		-- Check if the copy isn't necessary
+		if skyboxMaterial == selectedMaterial then
 			return false
 		end
-		
-		newData = Data_CreateFromMaterial(material)
-	end
 
-	-- Check if the copy isn't necessary
-	if Material_GetCurrent(tr) == Material_GetNew(ply) then
-		if oldData then
-			if not Material_ShouldChange(ply, oldData, newData, tr) then
+		-- Copy the material
+		ply:ConCommand("mapret_material "..skyboxMaterial)
+
+	-- Normal materials
+	else
+		-- Try to get data tables with the future and current materials
+		local newData = Data_Get(tr)
+		local oldData = Data_Get(tr)
+		
+		-- Generate a valid data table with the future material if it's necessary
+		if not newData then
+			if not originalMaterial then -- If the material is invalid we can't get it
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The material you are trying to modify has an invalid name.")
+			
 				return false
 			end
-		else
-			return false
+
+			newData = Data_CreateFromMaterial(originalMaterial)
 		end
-	end
 
-	if CLIENT then
-		-- Set the detail element to the right position
-		local i = 1
-
-		for k,v in SortedPairs(mr_mat.detail.list) do
-			if k == newData.detail then
-				break
+		-- Check if the copy isn't necessary
+		if Material_GetCurrent(tr) == Material_GetNew(ply) then
+			if oldData then
+				if not Material_ShouldChange(ply, oldData, newData, tr) then
+					return false
+				end
 			else
-				i = i + 1
+				return false
 			end
 		end
 
-		if mr_mat.detail.element then
-			mr_mat.detail.element:ChooseOptionID(i)
+		-- Set the detail element to the right position
+		if CLIENT then
+			local i = 1
+
+			for k,v in SortedPairs(mr.detail.list) do
+				if k == newData.detail then
+					break
+				else
+					i = i + 1
+				end
+			end
+
+			if mr.gui.detail then
+				mr.gui.detail:ChooseOptionID(i)
+			end
+			
+			return true
 		end
-		
-		return true
-	end
 
-	-- Copy the material
-	ply:ConCommand("mapret_material "..Material_GetCurrent(tr))
+		-- Copy the material
+		ply:ConCommand("mapret_material "..Material_GetCurrent(tr))
 
-	-- Set the cvars to data values
-	if newData then
-		CVars_SetToData(ply, newData)
-	-- Or set the cvars to default values
-	else
-		CVars_SetToDefaults(ply)
+		-- Set the cvars to data values
+		if newData then
+			CVars_SetToData(ply, newData)
+		-- Or set the cvars to default values
+		else
+			CVars_SetToDefaults(ply)
+		end
 	end
 
 	return true
@@ -3018,6 +3216,31 @@ function TOOL:Reload(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
+		return false
+	end
+
+	-- Skybox cleanup
+	if Material_GetOriginal(tr) == "tools/toolsskybox" then
+		-- Check if it's allowed
+		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
+			if SERVER then
+				if not ply.mr_decalmode then
+					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+				end
+			end
+
+			return false
+		end
+
+		-- Clean
+		if GetConVar("mapret_skybox"):GetString() ~= "" then
+			if SERVER then
+				Skybox_Apply(ply, "")
+			end
+
+			return true
+		end
+
 		return false
 	end
 
@@ -3035,25 +3258,22 @@ function TOOL:Reload(tr)
 	return false
 end
 
--- Preview mode checking
-function TOOL:Deploy()
-	if CLIENT then return; end
-
-	local ply = self:GetOwner()
-
-	if ply.mr_previewmode then
-		Preview_Toogle(ply, true, true, false)
+-- Preview materials and decals when the tool is open
+function TOOL:DrawHUD()
+	-- Map materials preview
+	if mr.state.previewMode and not mr.state.decalMode then
+		Preview_Render(LocalPlayer(), true)
+	-- Decals preview
+	elseif mr.state.previewMode and mr.state.decalMode then
+		Preview_Render(LocalPlayer(), false)
 	end
-end
 
--- Preview mode checking
-function TOOL:Holster()
-	if SERVER then return; end
-
-	if mr_mat.preview.holster_workaround then -- BUG!! For some reason this function is called when the tool is loaded for the first time
-		Preview_Toogle(self:GetOwner(), false, true, false)
-	else
-		mr_mat.preview.holster_workaround = true
+	-- HACK: Needed to force mapret_detail to use the right value
+	if mr.state.cVarValueHack then
+		timer.Create("mapretDetailHack", 0.3, 1, function()
+			CVars_SetToDefaults(LocalPlayer())
+		end)
+		mr.state.cVarValueHack = false
 	end
 end
 
@@ -3061,17 +3281,16 @@ end
 function TOOL.BuildCPanel(CPanel)
 	CPanel:SetName("#tool.mapret.name")
 	CPanel:Help("#tool.mapret.desc")
-	
 	local ply = LocalPlayer()
+
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
-	
 	local function Properties_Toogle(val)
 		if val then
-			mr_mat.detail.element:Hide()
+			mr.gui.detail:Hide()
 		else
-			mr_mat.detail.element:Show()
+			mr.gui.detail:Show()
 		end
-	
+
 		for k,v in pairs(properties) do
 			if val then
 				v:Hide()
@@ -3080,169 +3299,237 @@ function TOOL.BuildCPanel(CPanel)
 			end
 		end	
 	end
-		
+
+	-- General
 	CPanel:Help(" ")
-	local section_general = vgui.Create("DCollapsibleCategory", CPanel)
-	section_general:SetLabel("General")
-	CPanel:AddItem(section_general)
-	RunConsoleCommand("mapret_material", "dev/dev_blendmeasure")
-	CPanel:TextEntry("Material path", "mapret_material")
-	CPanel:ControlHelp("\nNote: the command \"mat_crosshair\" can get a displacement material path.")
-	local previewBox = CPanel:CheckBox("Preview Modifications", "mapret_preview")
-	CPanel:ControlHelp("The preview is not accurate with decals (GMod bugs).")
-	timer.Create("MapRetPreviewCheckDelay", 0.2, 1, function()
-		previewBox:SetChecked(true)
-		Preview_Toogle(ply, previewBox:GetChecked(), true, true)
-	end)
-	function previewBox:OnChange(val)
-		-- Don't let the player mess with the option if the toolgun is not selected
-		if ply:GetActiveWeapon():GetClass() ~= "gmod_tool" then
-			if val then
-				previewBox:SetChecked(false)
-			else
+	local sectionGeneral = vgui.Create("DCollapsibleCategory", CPanel)
+	CPanel:AddItem(sectionGeneral)
+		sectionGeneral:SetLabel("General")
+		CPanel:TextEntry("Material path", "mapret_material")
+		local generalPanel = vgui.Create("DPanel")
+			CPanel:AddItem(generalPanel)
+			generalPanel:SetHeight(20)
+			generalPanel:SetPaintBackground(false)
+			local previewBox = vgui.Create("DCheckBox", generalPanel)
 				previewBox:SetChecked(true)
+			local previewDLabel = vgui.Create("DLabel", generalPanel)
+				previewDLabel:SetPos(25, 0)
+				previewDLabel:SetText("Preview Modifications")
+				previewDLabel:SizeToContents()
+				previewDLabel:SetDark(1)
+				--CPanel:ControlHelp("It's not accurate with decals (GMod bugs).")
+				-- Decals disabled due to GMod bugs
+				function previewBox:OnChange(val)
+					Preview_Toogle(ply, val, true, true)
+				end
+				--[[
+			local decalBox = CPanel:CheckBox("Use as Decal", "mapret_decal")
+				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
+				function decalBox:OnChange(val)
+					Properties_Toogle(val)
+					Decal_Toogle(ply, val)
+				end
+				]]
+		CPanel:Button("Change all map materials","mapret_changeall")
+		CPanel:Button("Open Material Browser","mapret_materialbrowser")
+
+	-- Properties
+	CPanel:Help(" ")
+	local sectionProperties = vgui.Create("DCollapsibleCategory", CPanel)
+	CPanel:AddItem(sectionProperties)
+		sectionProperties:SetLabel("Material Properties")
+		mr.gui.detail, properties.label = CPanel:ComboBox("Detail", "mapret_detail")
+			for k,v in SortedPairs(mr.detail.list) do
+				mr.gui.detail:AddChoice(k, k, v)
+			end	
+			properties.a = CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
+			properties.b = CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
+			properties.c = CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)
+			properties.d = CPanel:NumSlider("Width Magnification", "mapret_scalex", 0.01, 6, 2)
+			properties.e = CPanel:NumSlider("Height Magnification", "mapret_scaley", 0.01, 6, 2)
+			properties.f = CPanel:NumSlider("Rotation", "mapret_rotation", 0, 179, 0)
+			properties.baseMaterialReset = CPanel:Button("Reset")			
+			function properties.baseMaterialReset:DoClick()
+				CVars_SetToDefaults(ply)
 			end
 
-			return false
-		end
-
-		Preview_Toogle(ply, val, true, true)
-	end
-	local decalBox = CPanel:CheckBox("Use as Decal", "mapret_decal")
-	Decal_Toogle(ply, decalBox:GetChecked())
-	function decalBox:OnChange(val)
-		Properties_Toogle(val)
-		Decal_Toogle(ply, val)
-	end
-	CPanel:Button("Change all map materials","mapret_changeall")
-	CPanel:ControlHelp("It doesn't fully work (GMod bugs).")
-	CPanel:Button("Open Material Browser","mapret_materialbrowser")
-
+	-- Skybox
 	CPanel:Help(" ")
-	local section_properties = vgui.Create("DCollapsibleCategory", CPanel)
-	section_properties:SetLabel("Material Properties")
-	CPanel:AddItem(section_properties)
-	mr_mat.detail.element, properties.label = CPanel:ComboBox("Select a Detail:", "mapret_detail")
-	for k,v in SortedPairs(mr_mat.detail.list) do
-		mr_mat.detail.element:AddChoice(k, k, v)
-	end	
-	timer.Create("MapRetDetailDefaultDelay", 0.1, 1, function()
-		mr_mat.detail.element:SetValue("None")
-		RunConsoleCommand("mapret_detail", "None")
-	end)
-	properties.a = CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
-	properties.b = CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
-	properties.c = CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)
-	properties.d = CPanel:NumSlider("Width Magnification", "mapret_scalex", 0.01, 6, 2)
-	properties.e = CPanel:NumSlider("Height Magnification", "mapret_scaley", 0.01, 6, 2)
-	properties.f = CPanel:NumSlider("Rotation", "mapret_rotation", 0, 179, 0)
-	properties.baseMaterialReset = CPanel:Button("Reset Properties")
-	function properties.baseMaterialReset:DoClick()
-		CVars_SetToDefaults(ply)
-	end
-
-	CPanel:Help(" ")
-	local section_skybox = vgui.Create("DCollapsibleCategory", CPanel)
-	section_skybox:SetLabel("Skybox")
-	CPanel:AddItem(section_skybox)
-	mr_mat.skybox.element_text = CPanel:TextEntry("In use:", "mapret_skybox")
-	mr_mat.skybox.element_text.OnEnter = function(self)
-		Skybox_Start(ply, self:GetValue())
-	end
-	mr_mat.skybox.element_combo = CPanel:ComboBox("HL2:")
-	function mr_mat.skybox.element_combo:OnSelect(index, value, data)
-		Skybox_Start(ply, value)
-	end
-	for k,v in pairs(mr_mat.skybox.hl2_list) do
-		mr_mat.skybox.element_combo:AddChoice(k, k)
-	end	
-	timer.Create("MapRetSkyboxDelay", 0.1, 1, function()
-		mr_mat.skybox.element_combo:SetValue("")
-	end)
-	CPanel:ControlHelp("\nYou can use whatever you want as a sky now.")
-	CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List.")
-
-	CPanel:Help(" ")
-	local section_save = vgui.Create("DCollapsibleCategory", CPanel)
-	section_save:SetLabel("Save")
-	CPanel:AddItem(section_save)
-	mr_manage.save.element = CPanel:TextEntry("Filename:", "mapret_savename")
-	RunConsoleCommand("mapret_savename", mr_manage.save.defaul_name)
-	CPanel:ControlHelp("\nYour files are being saved under \"./data/"..mr_manage.map_folder.."\".")
-	CPanel:ControlHelp("\nWARNING! Your modified models will no be saved! If you want to keep them, use the GMod default Save instead.")
-	local autoSaveBox = CPanel:CheckBox("Autosave", "mapret_autosave")
-	function autoSaveBox:OnChange(val)
-		-- Admin only
-		if not Ply_IsAdmin(ply) then
-			if val then
-				autoSaveBox:SetChecked(false)
-			else
-				autoSaveBox:SetChecked(true)
+	local sectionSkybox = vgui.Create("DCollapsibleCategory", CPanel)
+		CPanel:AddItem(sectionSkybox)
+		sectionSkybox:SetLabel("Skybox")
+		mr.gui.skybox.text = CPanel:TextEntry("Skybox path:", "mapret_skybox")
+			mr.gui.skybox.text.OnEnter = function(self)
+				Skybox_Start(ply, self:GetValue())
 			end
-			
-			return false
-		end
+		mr.gui.skybox.combo = CPanel:ComboBox("HL2:")
+			function mr.gui.skybox.combo:OnSelect(index, value, data)
+				Skybox_Start(ply, value)
+			end
+			for k,v in pairs(mr.skybox.list) do
+				mr.gui.skybox.combo:AddChoice(k, k)
+			end	
+			timer.Create("MapRetSkyboxDelay", 0.1, 1, function()
+				mr.gui.skybox.combo:SetValue("")
+			end)
+			local skyboxBox = CPanel:CheckBox("Edit with the toolgun", "mapret_skybox_toolgun")
+				function skyboxBox:OnChange(val)
+					-- Admin only
+					if not Ply_IsAdmin(ply) then
+						if val then
+							skyboxBox:SetChecked(false)
+						else
+							skyboxBox:SetChecked(true)
+						end
+						
+						return false
+					end
 
-		Save_SetAuto_Start(ply, val)
-	end
-	CPanel:ControlHelp("\nWhen changes are detected it waits 60 seconds to save them automatically in the file \""..mr_manage.autosave.file.."\" under the name of \""..mr_manage.autosave.name.."\" and then repeats this cycle.")
-	local saveChanges = CPanel:Button("Save")
-	function saveChanges:DoClick()
-		Save_Start(ply)
+					return true
+				end
+			CPanel:ControlHelp("\nYou can use whatever you want as a sky.")
+			CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List")
+
+	-- Displacements
+	if (#mr.displacements.list > 0) then
+		CPanel:Help(" ")
+		local sectionDisplacements = vgui.Create("DCollapsibleCategory", CPanel)
+			CPanel:AddItem(sectionDisplacements)
+			sectionDisplacements:SetLabel("Displacements")
+			mr.gui.displacements.combo = CPanel:ComboBox("Detected:")
+				function mr.gui.displacements.combo:OnSelect(index, value, data)
+					if value ~= "" then
+						mr.gui.displacements.text1:SetValue(Material(value):GetTexture("$basetexture"):GetName())
+						mr.gui.displacements.text2:SetValue(Material(value):GetTexture("$basetexture2"):GetName())
+					else
+						mr.gui.displacements.text1:SetValue("")
+						mr.gui.displacements.text2:SetValue("")
+					end					
+				end
+				for k,v in pairs(mr.displacements.list) do
+					mr.gui.displacements.combo:AddChoice(v, v)
+				end
+				mr.gui.displacements.combo:AddChoice("", "")
+				timer.Create("MapRetdisplacementsDelay", 0.1, 1, function()
+					mr.gui.displacements.combo:SetValue("")
+				end)
+			mr.gui.displacements.text1 = CPanel:TextEntry("Texture 1:", "")
+				mr.gui.displacements.text1.OnEnter = function(self)
+					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
+					Displacements_Apply(ply, comboBoxValue, mr.gui.displacements.text1:GetValue(), nil)
+				end
+			mr.gui.displacements.text2 = CPanel:TextEntry("Texture 2:", "")
+				mr.gui.displacements.text2.OnEnter = function(self)
+					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
+					local text1Value = mr.gui.displacements.text1:GetValue()
+					
+					-- Ignore the first material if it's the original one
+					local data = MML_GetElement(comboBoxValue)
+					if not data or data and data.backup.newMaterial == text1Value then
+						text1Value = nil
+					end
+
+					Displacements_Apply(ply, comboBoxValue, text1Value, mr.gui.displacements.text2:GetValue())
+				end
 	end
 
+	-- Save
 	CPanel:Help(" ")
-	local section_load = vgui.Create("DCollapsibleCategory", CPanel)
-	section_load:SetLabel("Load")
-	CPanel:AddItem(section_load)
-	local mapSec = CPanel:TextEntry("Map:")
-	mapSec:SetEnabled(false)
-	mapSec:SetText(game.GetMap())
-	mr_manage.autoload.element = CPanel:TextEntry("Autoload:", "mapret_autoload")
-	mr_manage.autoload.element:SetEnabled(false)
-	mr_manage.load.element = CPanel:ComboBox("Select a File:")
-	Load_FillList(ply)
-	CPanel:Help(" ")
-	CPanel:Help("Apply:")
-	local loadSave = CPanel:Button("Load")
-	function loadSave:DoClick()
-		Load_Start(ply)
-	end
-	local setAutoLoad = CPanel:Button("Set Autoload")
-	function setAutoLoad:DoClick()
-		Load_SetAuto_Start(ply)
-	end	
-	CPanel:Help("Remove:")
-	local delSave = CPanel:Button("Delete")
-	function delSave:DoClick()
-		Load_Delete_Start(ply)
-	end
-	local delAutoLoad = CPanel:Button("Remove Autoload")
-	function delAutoLoad:DoClick()
-		Load_SetAuto_Start(ply, "")
-	end	
+	local sectionSave = vgui.Create("DCollapsibleCategory", CPanel)
+	CPanel:AddItem(sectionSave)
+		sectionSave:SetLabel("Save")
+		mr.gui.save = CPanel:TextEntry("Filename:", "mapret_savename")
+			CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..mr.manage.mapFolder.."\"")
+			CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
+		local autoSaveBox = CPanel:CheckBox("Autosave", "mapret_autosave")
+			function autoSaveBox:OnChange(val)
+				-- Admin only
+				if not Ply_IsAdmin(ply) then
+					if val then
+						autoSaveBox:SetChecked(false)
+					else
+						autoSaveBox:SetChecked(true)
+					end
+					
+					return false
+				end
 
-	CPanel:Help(" ")
-	local section_cleanup = vgui.Create("DCollapsibleCategory", CPanel)
-	section_cleanup:SetLabel("Cleanup")
-	CPanel:AddItem(section_cleanup)
-	local cleanupCombobox = CPanel:ComboBox("Select a section:")
-	cleanupCombobox:AddChoice("Decals","Decal_RemoveAll")
-	cleanupCombobox:AddChoice("Map Materials","Map_Material_RemoveAll")
-	cleanupCombobox:AddChoice("Model Materials","Model_Material_RemoveAll")
-	cleanupCombobox:AddChoice("Skybox","Skybox_Remove")
-	cleanupCombobox:AddChoice("All","Material_RestoreAll", true)
-	local cleanupButton = CPanel:Button("Cleanup","mapret_cleanup_all")
-	function cleanupButton:DoClick()
-		local _, netName = cleanupCombobox:GetSelected()
-		net.Start(netName)
-			net.WriteBool(mr_ply.mr_dup and mr_ply.mr_dup.run ~= "" and true or false)
-		net.SendToServer()
-	end
+				Save_SetAuto_Start(ply, val)
+			end
+		local saveChanges = CPanel:Button("Save")
+			function saveChanges:DoClick()
+				Save_Start(ply)
+			end
 
+	-- Load
 	CPanel:Help(" ")
-	CPanel:Help("Report bugs and make requests at the tool workshop page.")
+	local sectionLoad = vgui.Create("DCollapsibleCategory", CPanel)
+	CPanel:AddItem(sectionLoad)
+		sectionLoad:SetLabel("Load")
+		local mapSec = CPanel:TextEntry("Map:")
+			mapSec:SetEnabled(false)
+			mapSec:SetText(game.GetMap())
+		mr.gui.load = CPanel:ComboBox("Saved file:")
+		Load_FillList(ply)
+		local loadSave = CPanel:Button("Load")
+			function loadSave:DoClick()
+				Load_Start(ply)
+			end
+		local delSave = CPanel:Button("Delete")
+			function delSave:DoClick()
+				Load_Delete_Start(ply)
+			end
+		local autoLoadPanel = vgui.Create("DPanel")
+			autoLoadPanel:SetPos(10, 30)
+			autoLoadPanel:SetHeight(70)
+		local autoLoadLabel = vgui.Create("DLabel", autoLoadPanel)
+			autoLoadLabel:SetPos(10, 13)
+			autoLoadLabel:SetText("Autoload:")
+			autoLoadLabel:SizeToContents()
+			autoLoadLabel:SetDark(1)
+		mr.gui.autoLoad = vgui.Create("DTextEntry", autoLoadPanel)
+			mr.gui.autoLoad:SetText(GetConVar("mapret_autoload"):GetString())
+			mr.gui.autoLoad:SetEnabled(false)
+			mr.gui.autoLoad:SetPos(65, 10)
+			mr.gui.autoLoad:SetSize(195, 20)
+		local autoLoadSetButton = vgui.Create("DButton", autoLoadPanel)
+			autoLoadSetButton:SetText("Set")
+			autoLoadSetButton:SetPos(10, 37)
+			autoLoadSetButton:SetSize(120, 25)
+			autoLoadSetButton.DoClick = function()
+				mr.gui.autoLoad:SetText(mr.gui.load:GetText())
+				Load_SetAuto_Start(ply)
+			end
+		local autoLoadUnsetButton = vgui.Create("DButton", autoLoadPanel)
+			autoLoadUnsetButton:SetText("Unset")
+			autoLoadUnsetButton:SetPos(140, 37)
+			autoLoadUnsetButton:SetSize(120, 25)
+			autoLoadUnsetButton.DoClick = function()
+				mr.gui.autoLoad:SetText("")
+				Load_SetAuto_Start(ply, "")
+			end
+		CPanel:AddItem(autoLoadPanel)
 
+	-- Cleanup
+	CPanel:Help(" ")
+	local sectionCleanup = vgui.Create("DCollapsibleCategory", CPanel)
+	CPanel:AddItem(sectionCleanup)
+		sectionCleanup:SetLabel("Cleanup")
+		local cleanupCombobox = CPanel:ComboBox("Select:")
+			cleanupCombobox:AddChoice("Decals","Decal_RemoveAll")
+			cleanupCombobox:AddChoice("Map Materials","Map_Material_RemoveAll")
+			cleanupCombobox:AddChoice("Model Materials","Model_Material_RemoveAll")
+			cleanupCombobox:AddChoice("Skybox","Skybox_Remove")
+			cleanupCombobox:AddChoice("All","Material_RestoreAll", true)
+		local cleanupButton = CPanel:Button("Cleanup","mapret_cleanup_all")
+			function cleanupButton:DoClick()
+				local _, netName = cleanupCombobox:GetSelected()
+				net.Start(netName)
+					net.WriteBool(mr.dup.run and mr.dup.run.step ~= "" and true or false)
+				net.SendToServer()
+			end
+
+	-- Revision number
 	CPanel:Help(" ")
 	CPanel:ControlHelp(mr_revision)
 	CPanel:Help(" ")

@@ -142,8 +142,8 @@ local mr = {}
 	mr.map = {
 		-- The name of our backup map material files. They are file1, file2, file3...
 		filename = "mapretexturizer/file",
-		-- 1024 file limit seemed to be more than enough. I only use this physical method because of GMod limitations
-		limit = 1024,
+		-- 1512 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
+		limit = 1512,
 		-- Data structures, all the modifications
 		list = {}
 	}

@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. rev.13 - // (dd/mm/yyyy)" --[[
+ =3 ]]  local mr_revision = "MAP. RET. Pre.rev.13 - GitHub" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -42,8 +42,6 @@ if (CLIENT) then
 	language.Add("tool.mapret.desc", "Change the look of your map any way you want!")
 end
 
-
-
 --------------------------------
 --- CONSOLE VARIABLES
 --------------------------------
@@ -67,7 +65,7 @@ TOOL.ClientConVar["scaley"] = "1"
 TOOL.ClientConVar["rotation"] = "0"
 
 --------------------------------
---- VARIABLES
+--- INTERNAL VARIABLES
 --------------------------------
 
 local mr = {}
@@ -152,11 +150,10 @@ local mr = {}
 	
 	-- -------------------------------------------------------------------------------------
 
-	if CLIENT then
-		mr.displacements = {
-			list = {}
-		}
-	end
+	-- list: ["diplacement_material"] = { 1 = "backup_material_1", 2 = "backup_material_2" }
+	mr.displacements = {
+		list = {}
+	}
 
 	-- -------------------------------------------------------------------------------------
 
@@ -302,85 +299,6 @@ local mr = {}
 	}
 
 --------------------------------
---- 3RD PARTY
---------------------------------
-
-include("3rd/bsp.lua")
-
---------------------------------
---- INITIALIZATION OF VARIABLES
---------------------------------
-
-if CLIENT then
-	-- Detail init
-	local function CreateMaterialAux(path)
-		return CreateMaterial(path, "VertexLitGeneric", {["$basetexture"] = path})
-	end
-
-	mr.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
-	mr.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
-	mr.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
-	mr.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
-	
-	-- Preview material
-	CreateMaterial("MatRetPreviewMaterial", "UnlitGeneric", {["$basetexture"] = ""})
-
-	-- Default save location
-	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
-	
-	-- Fill the displacements list
-	local map_data = MR_OpenBSP()
-	local found = map_data:ReadLumpTextDataStringData()
-
-	for k,v in pairs(found) do
-		if Material(v):GetString("$surfaceprop2") then
-			table.insert(mr.displacements.list, v)
-		end
-	end
-end
-
--- Initialize paths
-mr.manage.mapFolder = mr.manage.mainFolder..mr.manage.mapFolder
-mr.manage.autoLoad.folder = mr.manage.mapFolder..mr.manage.autoLoad.folder
-mr.manage.autoSave.file = mr.manage.mapFolder..mr.manage.autoSave.file
-mr.manage.autoLoad.file = mr.manage.autoLoad.folder..mr.manage.autoLoad.file
-
-if SERVER then
-	-- Create the folders
-	local function CreateDir(path)
-		if !file.Exists(path, "DATA") then
-			file.CreateDir(path)
-		end
-	end
-	CreateDir(mr.manage.mainFolder)
-	CreateDir(mr.manage.mapFolder)
-	CreateDir(mr.manage.autoLoad.folder)
-	
-	-- Set the autoLoad command
-	local value = file.Read(mr.manage.autoLoad.file, "DATA")
-
-	if value then
-		RunConsoleCommand("mapret_autoload", value)
-	else
-		RunConsoleCommand("mapret_autoload", "")
-	end
-
-	-- Fill the load list on the server
-	local files = file.Find(mr.manage.mapFolder.."*", "DATA")
-
-	for k,v in pairs(files) do
-		mr.manage.load.list[v:sub(1, -5)] = mr.manage.mapFolder..v
-	end
-end
-
--- Add a multiplayer delay in TOOL functions to run Material_ShouldChange() with accuracy
--- (Server)
-local multiplayer_action_delay = 0
-if not game.SinglePlayer() then
-	multiplayer_action_delay = 0.01
-end
-
---------------------------------
 --- FUNCTION DECLARATIONS
 --------------------------------
 
@@ -431,7 +349,10 @@ local Skybox_Remove
 local Skybox_Render
 local Skybox_Start
 
-local Duplicator_CreateEnt
+local Displacements_Start
+local Displacements_Apply
+local Displacements_Remove
+
 local Duplicator_SendStatusToCl
 local Duplicator_SendErrorCountToCl
 local Duplicator_LoadModelMaterials
@@ -455,6 +376,105 @@ local Load_Delete_Apply
 local Load_SetAuto_Start
 local Load_SetAuto_Apply
 local Load_firstSpawn
+
+--------------------------------
+--- 3RD PARTY
+--------------------------------
+
+include("3rd/bsp.lua")
+
+--------------------------------
+--- INITIALIZATION
+--------------------------------
+
+-- Fill the displacements list
+timer.Create("MapRetDiscplamentsList", 0.1, 1, function()
+	local map_data = MR_OpenBSP()
+	local found = map_data:ReadLumpTextDataStringData()
+
+	for k,v in pairs(found) do
+		if Material(v):GetString("$surfaceprop2") then
+			mr.displacements.list[v] = {
+				Material(v):GetTexture("$basetexture"):GetName(),
+				Material(v):GetTexture("$basetexture2"):GetName()
+			}
+		end
+	end
+
+	for k,v in pairs(mr.displacements.list) do
+		print(v[1])
+		print(v[2])
+	end
+end)
+
+-- Initialize paths
+mr.manage.mapFolder = mr.manage.mainFolder..mr.manage.mapFolder
+mr.manage.autoLoad.folder = mr.manage.mapFolder..mr.manage.autoLoad.folder
+mr.manage.autoSave.file = mr.manage.mapFolder..mr.manage.autoSave.file
+mr.manage.autoLoad.file = mr.manage.autoLoad.folder..mr.manage.autoLoad.file
+
+if SERVER then
+	-- Create the folders
+	local function CreateDir(path)
+		if !file.Exists(path, "DATA") then
+			file.CreateDir(path)
+		end
+	end
+	CreateDir(mr.manage.mainFolder)
+	CreateDir(mr.manage.mapFolder)
+	CreateDir(mr.manage.autoLoad.folder)
+	
+	-- Set the autoLoad command
+	local value = file.Read(mr.manage.autoLoad.file, "DATA")
+
+	if value then
+		RunConsoleCommand("mapret_autoload", value)
+	else
+		RunConsoleCommand("mapret_autoload", "")
+	end
+
+	-- Fill the load list on the server
+	local files = file.Find(mr.manage.mapFolder.."*", "DATA")
+
+	for k,v in pairs(files) do
+		mr.manage.load.list[v:sub(1, -5)] = mr.manage.mapFolder..v
+	end
+end
+
+if CLIENT then
+	-- Detail init
+	local function CreateMaterialAux(path)
+		return CreateMaterial(path, "VertexLitGeneric", {["$basetexture"] = path})
+	end
+
+	mr.detail.list["Concrete"] = CreateMaterialAux("detail/noise_detail_01")
+	mr.detail.list["Metal"] = CreateMaterialAux("detail/metal_detail_01")
+	mr.detail.list["Plaster"] = CreateMaterialAux("detail/plaster_detail_01")
+	mr.detail.list["Rock"] = CreateMaterialAux("detail/rock_detail_01")
+	
+	-- Preview material
+	CreateMaterial("MatRetPreviewMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+
+	-- Default save location
+	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
+
+	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
+	timer.Create("MapRetDiscplamentsDirtyHack", 0.4, 1, function()
+		for k,v in pairs(mr.displacements.list) do
+			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
+
+			Displacements_Start(ply, k, "dev/graygrid", "")
+
+			timer.Create("MapRetDiscplamentsDirtyHack2"..k, 0.1, 1, function()
+				Displacements_Start(ply, k, "", "dev/graygrid")
+			end)
+
+			timer.Create("MapRetDiscplamentsDirtyHack3"..k, 0.2, 1, function()
+				Material_Restore(nil, k)
+			end)
+		end
+	end)
+end
 
 -------------------------------------
 --- GENERAL
@@ -562,7 +582,7 @@ function MML_Count(inTable)
 end
 
 --------------------------------
---- DATA TABLES
+--- DATA TABLE
 --------------------------------
 
 -- Set a data table
@@ -596,7 +616,7 @@ function Data_CreateFromMaterial(materialName, i)
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
 		newMaterial = i and mr.map.filename..tostring(i) or "",
-		newMaterial2 = nil,
+		newMaterial2 = i and mr.map.filename..tostring(i) or nil,
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
@@ -1067,7 +1087,7 @@ function Model_Material_Set(data)
 
 	-- Set the alpha
 	data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
-	data.ent:SetColor(Color(255,255,255,255*data.alpha))
+	data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
 
 	if CLIENT then
 		-- Apply the material
@@ -1154,15 +1174,13 @@ function Map_Material_Set(ply, data)
 			i = MML_GetFreeIndex()
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or Data_CreateFromMaterial(data.oldMaterial, i) 
+			local dataBackup = data.backup or Data_CreateFromMaterial(data.oldMaterial, i)
 
 			-- Save the material texture
-			if dataBackup.newMaterial then
-				Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
-			end
+			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
 
 			-- Save the second material texture (if it's a displacement)
-			if dataBackup.newMaterial2 then
+			if data.newMaterial2 then
 				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
 			end
 
@@ -1228,12 +1246,26 @@ function Map_Material_SetAux(data)
 
 	-- Apply the base texture
 	if newMaterial then
+		--print(data.newMaterial)
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	end
 
 	-- Apply the second base texture (if it's a displacement)
 	if newMaterial2 then
-		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture("$basetexture"))
+		--print(data.newMaterial2)
+		local keyValue = "$basetexture"
+	
+		--If it's running a displacement backup the second material is in $basetexture2
+		if data.newMaterial == data.newMaterial2 then 
+			local nameStart, nameEnd = string.find(data.newMaterial, mr.map.filename)
+
+			if nameStart then
+				--print("$basetexture2")
+				keyValue = "$basetexture2"
+			end
+		end
+
+		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture(keyValue))
 	end
 
 	-- Apply the alpha channel
@@ -1580,7 +1612,7 @@ if SERVER then
 end
 
 --------------------------------
---- SKYBOX MATERIAL
+--- MATERIALS (SKYBOX)
 --------------------------------
 
 -- Change the skybox
@@ -1704,32 +1736,71 @@ if SERVER then
 end
 
 --------------------------------
---- DISPLACEMENTS MATERIALS
+--- MATERIALS (DISPLACEMENTS)
 --------------------------------
 
 -- Change the displacements
-function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
+function Displacements_Start(ply, displacement, newMaterial, newMaterial2)
 	if SERVER then return; end
 
-	-- Check
+	net.Start("MapRetDisplacements")
+		net.WriteString(displacement)
+		net.WriteString(newMaterial and newMaterial or "")
+		net.WriteString(newMaterial2 and newMaterial2 or "")
+	net.SendToServer()
+end
+function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
+	if CLIENT then return; end
+
+	-- Check if there is a displacement selected
 	if not displacement then
 		return
 	end
 
-	-- Apply the changes
+	-- Correct the material values
+	for k,v in pairs(mr.displacements.list) do -- Don't apply default  materials directly
+		if k:sub(1, #k - 1) == displacement then -- Note: remove last char (linebreak?)
+			if v[1] == newMaterial then
+				newMaterial = nil
+			end
+			if v[2] == newMaterial2 then
+				newMaterial2 = nil
+			end
+		end
+	end
+
+	-- Check if the materials are valid
+	if newMaterial and newMaterial ~= "" and not Material_IsValid(newMaterial) or 
+		newMaterial2 and newMaterial2 ~= "" and not Material_IsValid(newMaterial2) then
+		return
+	end
+
+	-- Create the data table
 	local data = Data_CreateFromMaterial(displacement, nil)
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2
 
+	-- Apply the changes
 	Map_Material_Set(ply, data)
 end
+if SERVER then
+	util.AddNetworkString("MapRetDisplacements")
 
--- Remove all decals
+	net.Receive("MapRetDisplacements", function(_, ply)
+		Displacements_Apply(ply, net.ReadString(), net.ReadString(), net.ReadString())
+	end)
+end
+
+-- Remove all displacements
 function Displacements_Remove(ply)
 	if CLIENT then return; end
 
-	duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Displacements")
+	--duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Displacements")
+
+	for k,v in pairs(mr.displacements.list) do
+		Material_Restore(nil, k)
+	end
 end
 if SERVER then
 	util.AddNetworkString("Displacements_Remove")
@@ -2371,7 +2442,7 @@ if CLIENT then
 	-- Start map materials preview
 	function Preview_Render_Map_Materials(ply)
 		if mr.state.previewMode and not mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			Preview_Render(ply, true)
+			--Preview_Render(ply, true)
 		end
 	end
 	hook.Add("HUDPaint", "MapRetPreview", function()
@@ -2381,7 +2452,7 @@ if CLIENT then
 	-- Start decals preview
 	function Preview_Render_Decals(ply)
 		if mr.state.previewMode and mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			Preview_Render(ply, false)
+			--Preview_Render(ply, false)
 		end
 	end
 	hook.Add("PostDrawOpaqueRenderables", "MapRetPreview", function()
@@ -2941,7 +3012,7 @@ if CLIENT then
 end
 
 --------------------------------
---- TOOL FUNCTIONS
+--- TOOL
 --------------------------------
 
 function TOOL_BasicChecks(ply, ent, tr)
@@ -3098,7 +3169,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Set
-	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), multiplayer_action_delay, 1, function()
+	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0.1 or 0, 1, function()
 		-- model material
 		if IsValid(ent) then
 			Model_Material_Set(data)
@@ -3247,7 +3318,7 @@ function TOOL:Reload(tr)
 	-- Reset the material
 	if Data_Get(tr) then
 		if SERVER then
-			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), multiplayer_action_delay, 1, function()
+			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0.1 or 0, 1, function()
 				Material_Restore(ent, Material_GetOriginal(tr))
 			end)
 		end
@@ -3262,10 +3333,10 @@ end
 function TOOL:DrawHUD()
 	-- Map materials preview
 	if mr.state.previewMode and not mr.state.decalMode then
-		Preview_Render(LocalPlayer(), true)
+		--Preview_Render(LocalPlayer(), true)
 	-- Decals preview
 	elseif mr.state.previewMode and mr.state.decalMode then
-		Preview_Render(LocalPlayer(), false)
+		--Preview_Render(LocalPlayer(), false)
 	end
 
 	-- HACK: Needed to force mapret_detail to use the right value
@@ -3391,7 +3462,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List")
 
 	-- Displacements
-	if (#mr.displacements.list > 0) then
+	if (table.Count(mr.displacements.list) > 0) then
 		CPanel:Help(" ")
 		local sectionDisplacements = vgui.Create("DCollapsibleCategory", CPanel)
 			CPanel:AddItem(sectionDisplacements)
@@ -3407,29 +3478,47 @@ function TOOL.BuildCPanel(CPanel)
 					end					
 				end
 				for k,v in pairs(mr.displacements.list) do
-					mr.gui.displacements.combo:AddChoice(v, v)
+					mr.gui.displacements.combo:AddChoice(k)
 				end
 				mr.gui.displacements.combo:AddChoice("", "")
 				timer.Create("MapRetdisplacementsDelay", 0.1, 1, function()
 					mr.gui.displacements.combo:SetValue("")
 				end)
 			mr.gui.displacements.text1 = CPanel:TextEntry("Texture 1:", "")
+				local function DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
+					if text1Value == "" then
+						text1Value = mr.displacements.list[comboBoxValue][1]
+						timer.Create("MapRetText1Update", 0.5, 1, function()
+							mr.gui.displacements.text1:SetValue(mr.displacements.list[comboBoxValue][1])
+						end)
+					end
+					if text2Value == "" then
+						text2Value = mr.displacements.list[comboBoxValue][2]
+						timer.Create("MapRetText2Update", 0.5, 1, function()
+							mr.gui.displacements.text2:SetValue(mr.displacements.list[comboBoxValue][2])
+						end)
+					end
+				end
 				mr.gui.displacements.text1.OnEnter = function(self)
 					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
-					Displacements_Apply(ply, comboBoxValue, mr.gui.displacements.text1:GetValue(), nil)
+					local text1Value = mr.gui.displacements.text1:GetValue()
+					local text2Value = mr.gui.displacements.text2:GetValue()
+					if not mr.displacements.list[comboBoxValue] then
+						return
+					end
+					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
+					Displacements_Start(ply, comboBoxValue, text1Value, mr.gui.displacements.text2:GetValue())
 				end
 			mr.gui.displacements.text2 = CPanel:TextEntry("Texture 2:", "")
 				mr.gui.displacements.text2.OnEnter = function(self)
 					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
 					local text1Value = mr.gui.displacements.text1:GetValue()
-					
-					-- Ignore the first material if it's the original one
-					local data = MML_GetElement(comboBoxValue)
-					if not data or data and data.backup.newMaterial == text1Value then
-						text1Value = nil
+					local text2Value = mr.gui.displacements.text2:GetValue()
+					if not mr.displacements.list[comboBoxValue] then
+						return
 					end
-
-					Displacements_Apply(ply, comboBoxValue, text1Value, mr.gui.displacements.text2:GetValue())
+					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
+					Displacements_Start(ply, comboBoxValue, mr.gui.displacements.text1:GetValue(), text2Value)
 				end
 	end
 

@@ -10,5 +10,6 @@ for /l %%x in (1, 1, 1024) do (
 	echo "VertexlitGeneric" > file%%x.vmt
 	echo { >> file%%x.vmt
 	echo 	"$basetexture" "mapretexturizer/file%%x" >> file%%x.vmt
+	echo 	"$basetexture2" "mapretexturizer/file%%x" >> file%%x.vmt
 	echo } >> file%%x.vmt
 )

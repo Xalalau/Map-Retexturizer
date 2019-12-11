@@ -400,11 +400,6 @@ timer.Create("MapRetDiscplamentsList", 0.1, 1, function()
 			}
 		end
 	end
-
-	for k,v in pairs(mr.displacements.list) do
-		print(v[1])
-		print(v[2])
-	end
 end)
 
 -- Initialize paths
@@ -1246,13 +1241,11 @@ function Map_Material_SetAux(data)
 
 	-- Apply the base texture
 	if newMaterial then
-		--print(data.newMaterial)
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	end
 
 	-- Apply the second base texture (if it's a displacement)
 	if newMaterial2 then
-		--print(data.newMaterial2)
 		local keyValue = "$basetexture"
 	
 		--If it's running a displacement backup the second material is in $basetexture2
@@ -1260,7 +1253,6 @@ function Map_Material_SetAux(data)
 			local nameStart, nameEnd = string.find(data.newMaterial, mr.map.filename)
 
 			if nameStart then
-				--print("$basetexture2")
 				keyValue = "$basetexture2"
 			end
 		end
@@ -1783,6 +1775,17 @@ function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 
 	-- Apply the changes
 	Map_Material_Set(ply, data)
+	
+	-- Set the Undo
+	undo.Create("Material")
+		undo.SetPlayer(ply)
+		undo.AddFunction(function(tab, data)
+			if data.oldMaterial then
+				Material_Restore(ent, data.oldMaterial)
+			end
+		end, data)
+		undo.SetCustomUndoText("Undone Material")
+	undo.Finish()
 end
 if SERVER then
 	util.AddNetworkString("MapRetDisplacements")
@@ -3105,6 +3108,17 @@ function TOOL:LeftClick(tr)
 			Skybox_Apply(ply, selectedMaterial)
 		end
 
+		-- Set the Undo
+		undo.Create("Material")
+			undo.SetPlayer(ply)
+			undo.AddFunction(function(tab)
+				if SERVER then
+					Skybox_Apply(ply, "")
+				end
+			end)
+			undo.SetCustomUndoText("Undone Material")
+		undo.Finish()
+
 		return true
 	end
 
@@ -3187,8 +3201,8 @@ function TOOL:LeftClick(tr)
 				Material_Restore(ent, data.oldMaterial)
 			end
 		end, data)
-		undo.SetCustomUndoText("Undone a material")
-	undo.Finish("Material ("..tostring(data.newMaterial)..")")
+		undo.SetCustomUndoText("Undone Material")
+	undo.Finish()
 
 	return true
 end

@@ -3169,7 +3169,7 @@ function TOOL:LeftClick(tr)
 	-- Auto save
 	if GetConVar("mapret_autosave"):GetString() == "1" then
 		if not timer.Exists("MapRetAutoSave") then
-			timer.Create("MapRetAutoSave", 2, 1, function()
+			timer.Create("MapRetAutoSave", 60, 1, function()
 				if mr.dup.loadingFile == "" or self:GetOwner().mr.dup.run.step == "" then
 					Save_Apply(mr.manage.autoSave.name, mr.manage.autoSave.file)
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")

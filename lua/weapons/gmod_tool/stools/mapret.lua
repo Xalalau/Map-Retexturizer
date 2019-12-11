@@ -2813,6 +2813,12 @@ function Load_Delete_Start(ply)
 			net.Start("MapRetLoadDeleteSV")
 				net.WriteString(loadName)
 			net.SendToServer()
+
+			-- Unset autoload if needed
+			if GetConVar("mapret_autoload"):GetString() == loadName then
+				mr.gui.autoLoad:SetText("")
+				Load_SetAuto_Start(ply, "")
+			end
 		end
 
 	local buttonNo = vgui.Create("DButton", qPanel)

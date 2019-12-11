@@ -2478,7 +2478,7 @@ function Save_Start(ply, forceName)
 		net.WriteString(name)
 	net.SendToServer()
 end
-function Save_Apply(name, file)
+function Save_Apply(name, theFile)
 	if CLIENT then return; end
 
 	--[[
@@ -2498,13 +2498,13 @@ function Save_Apply(name, file)
 	mr.manage.save.list[name] = { decals = mr.decal.list, map = mr.map.list, skybox = GetConVar("mapret_skybox"):GetString() }
 	
 	-- Save it in a file
-	file.Write(file, util.TableToJSON(mr.manage.save.list[name]))
+	file.Write(theFile, util.TableToJSON(mr.manage.save.list[name]))
 
 	-- Server alert
 	print("[Map Retexturizer] Saved the current materials.")
 
 	-- Associte a name with the saved file
-	mr.manage.load.list[name] = file
+	mr.manage.load.list[name] = theFile
 
 	-- Update the load list on every client
 	net.Start("MapRetSaveAddToLoadList")
@@ -2537,11 +2537,11 @@ end
 if CLIENT then
 	net.Receive("MapRetSaveAddToLoadList", function()
 		local name = net.ReadString()
-		local file = mr.manage.mapFolder..name..".txt"
+		local theFile = mr.manage.mapFolder..name..".txt"
 
 		if mr.manage.load.list[name] == nil then
 			mr.gui.load:AddChoice(name)
-			mr.manage.load.list[name] = file
+			mr.manage.load.list[name] = theFile
 		end
 	end)
 end
@@ -2695,14 +2695,14 @@ if SERVER then
 		end
 
 		-- Get and check the load file
-		local file = mr.manage.load.list[name]
+		local theFile = mr.manage.load.list[name]
 
-		if file == nil then
+		if theFile == nil then
 			return false
 		end
 
 		-- Get the load file content
-		loadTable = util.JSONToTable(file.Read(file, "DATA"))
+		loadTable = util.JSONToTable(file.Read(theFile, "DATA"))
 		
 		if loadTable then
 			-- Register the name of the loading (one that is running for all the players)
@@ -2778,9 +2778,9 @@ function Load_Delete_Start(ply)
 	if SERVER then return; end
 
 	-- Get the load name and check if it's no empty
-	local name = mr.gui.load:GetSelected()
+	local thename = mr.gui.load:GetSelected()
 
-	if not name or name == "" then
+	if not thename or thename == "" then
 		return
 	end
 
@@ -2811,7 +2811,7 @@ function Load_Delete_Start(ply)
 			-- Remove the load on every client
 			qPanel:Close()
 			net.Start("MapRetLoadDeleteSV")
-				net.WriteString(name)
+				net.WriteString(thename)
 			net.SendToServer()
 		end
 
@@ -2823,33 +2823,33 @@ function Load_Delete_Start(ply)
 			qPanel:Close()
 		end
 end
-function Load_Delete_Apply(ply, name)
+function Load_Delete_Apply(ply, thename)
 	-- Admin only
 	if not Ply_IsAdmin(ply) then
 		return false
 	end
 
-	local file = mr.manage.load.list[name]
+	local theFile = mr.manage.load.list[thename]
 
 	-- Check if the file exists
-	if file == nil then
+	if theFile == nil then
 		return false
 	end
 
 	-- Remove the load entry
-	mr.manage.load.list[name] = nil
+	mr.manage.load.list[thename] = nil
 
 	-- Remove the load from the autoLoad if it is there
-	if GetConVar("mapret_autoload"):GetString() == name then
+	if GetConVar("mapret_autoload"):GetString() == thename then
 		RunConsoleCommand("mapret_autoload", "")
 	end
 
 	-- Delete the file
-	file.Delete(file)
+	file.Delete(theFile)
 
 	-- Updates the load list on every client
 	net.Start("MapRetLoadDeleteCL")
-		net.WriteString(name)
+		net.WriteString(thename)
 	net.Broadcast()
 	
 	return true

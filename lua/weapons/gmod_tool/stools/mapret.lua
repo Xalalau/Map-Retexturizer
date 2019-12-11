@@ -454,15 +454,11 @@ if CLIENT then
 	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
 
 	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
-	timer.Create("MapRetDiscplamentsDirtyHack", 0.4, 1, function()
+	timer.Create("MapRetDiscplamentsDirtyHack", 0.3, 1, function()
 		for k,v in pairs(mr.displacements.list) do
 			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
 
-			Displacements_Start(ply, k, "dev/graygrid", "")
-
-			timer.Create("MapRetDiscplamentsDirtyHack2"..k, 0.1, 1, function()
-				Displacements_Start(ply, k, "", "dev/graygrid")
-			end)
+			Displacements_Start(ply, k, "dev/graygrid", "dev/graygrid")
 
 			timer.Create("MapRetDiscplamentsDirtyHack3"..k, 0.2, 1, function()
 				Material_Restore(nil, k)

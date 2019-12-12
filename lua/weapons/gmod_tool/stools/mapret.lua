@@ -342,32 +342,37 @@ local Model_Material_RemoveAll
 
 local Map_Material_Set
 local Map_Material_SetAux
-local Map_Material_RemoveAll
 local Map_Material_SetAll
+local Map_Material_RemoveAll
 
 local Decal_Toogle
 local Decal_Start
 local Decal_Apply
 local Decal_RemoveAll
 
-local Skybox_Apply
-local Skybox_Remove
-local Skybox_Render
 local Skybox_Start
+local Skybox_Apply
+local Skybox_Render
+local Skybox_Remove
 
 local Displacements_Start
 local Displacements_Apply
 local Displacements_Remove
 
+local Duplicator_CreateEnt
 local Duplicator_SendStatusToCl
 local Duplicator_SendErrorCountToCl
 local Duplicator_LoadModelMaterials
 local Duplicator_LoadDecals
 local Duplicator_LoadMapMaterials
+local Duplicator_LoadSkybox
+local Duplicator_RenderProgress
+local Duplicator_ForceStop
 local Duplicator_Finish
 
-local Preview_IsOn
 local Preview_Toogle
+local Preview_Render
+local Preview_Render_Decals
 
 local Save_Start
 local Save_Apply
@@ -376,12 +381,16 @@ local Save_SetAuto_Apply
 
 local Load_Start
 local Load_Apply
+local Load_Apply_Start
 local Load_FillList
+local Load_ShowList
 local Load_Delete_Start
 local Load_Delete_Apply
 local Load_SetAuto_Start
 local Load_SetAuto_Apply
 local Load_FirstSpawn
+
+local TOOL_BasicChecks
 
 --------------------------------
 --- 3RD PARTY
@@ -916,7 +925,7 @@ function Material_RestoreAll(ply, plyLoadingStatus)
 		-- Force to stop any loading
 		local delay = 0
 
-		if Duplicator_forceStop(plyLoadingStatus) then
+		if Duplicator_ForceStop(plyLoadingStatus) then
 			delay = 0.4
 		end
 
@@ -928,7 +937,7 @@ function Material_RestoreAll(ply, plyLoadingStatus)
 			Skybox_Remove(ply)
 			Displacements_Remove(ply)
 
-			-- Reset the force stop var (It was set true in Duplicator_forceStop())
+			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
 			mr.dup.forceStop = false
 		end)
 	end
@@ -1665,7 +1674,7 @@ end
 -- Material rendering
 if CLIENT then
 	-- Skybox extra layer rendering
-	local function Skybox_Render()
+	function Skybox_Render()
 		local distance = 200
 		local width = distance * 2.01
 		local height = distance * 2.01
@@ -2270,7 +2279,7 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybo
 
 -- Render duplicator progress bar based on the ply.mr.dup.run.count numbers
 if CLIENT then
-	local function Duplicator_RenderProgress(ply)
+	function Duplicator_RenderProgress(ply)
 		if mr.dup.run then
 			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
 				local x, y, w, h = 25, ScrH()/2 + 200, 200, 20 
@@ -2299,7 +2308,7 @@ if CLIENT then
 end
 
 -- Force to stop the duplicator
-function Duplicator_forceStop(plyLoadingStatus)
+function Duplicator_ForceStop(plyLoadingStatus)
 	if SERVER then
 		if mr.dup.loadingFile ~= "" or plyLoadingStatus then
 			mr.dup.forceStop = true
@@ -2325,7 +2334,7 @@ if SERVER then
 	util.AddNetworkString("MapRetForceDupToStop")
 else
 	net.Receive("MapRetForceDupToStop", function()
-		Duplicator_forceStop()
+		Duplicator_ForceStop()
 	end)
 end
 
@@ -2694,7 +2703,7 @@ function Load_Apply(ply, loadTable)
 
 		-- Force to stop any running loading
 		if not ply.mr.state.firstSpawn then
-			Duplicator_forceStop()
+			Duplicator_ForceStop()
 			delay = 0.4
 		end
 
@@ -2737,7 +2746,7 @@ function Load_Apply(ply, loadTable)
 				end
 			end
 
-			-- Reset the force stop var (It was set true in Duplicator_forceStop())
+			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
 			if not ply.mr.state.firstSpawn then
 				mr.dup.forceStop = false
 			end
@@ -2748,7 +2757,7 @@ if SERVER then
 	util.AddNetworkString("MapRetLoad")
 	util.AddNetworkString("MapRetLoad_SetPly")
 
-	local function Load_Apply_Start(ply, loadName)
+	function Load_Apply_Start(ply, loadName)
 		-- Admin only
 		if not Ply_IsAdmin(ply) then
 			return false
@@ -2818,7 +2827,7 @@ end
 
 -- Prints the load list in the console
 if SERVER then
-	local function Load_ShowList()
+	function Load_ShowList()
 		print("----------------------------")
 		print("[Map Retexturizer] Saves:")
 		print("----------------------------")

@@ -681,7 +681,7 @@ end
 function CVars_SetToData(ply, data)
 	if CLIENT then return; end
 
-	--ply:ConCommand("mapret_detail "..data.detail) -- Server is not getting the right detail, only Client
+	ply:ConCommand("mapret_detail "..data.detail)
 	ply:ConCommand("mapret_offsetx "..data.offsetx)
 	ply:ConCommand("mapret_offsety "..data.offsety)
 	ply:ConCommand("mapret_scalex "..data.scalex)
@@ -694,7 +694,7 @@ end
 function CVars_SetToDefaults(ply)
 	if CLIENT then return; end
 
-	--ply:ConCommand("mapret_detail ") -- Server is not getting the right detail, only Client
+	ply:ConCommand("mapret_detail None")
 	ply:ConCommand("mapret_offsetx 0")
 	ply:ConCommand("mapret_offsety 0")
 	ply:ConCommand("mapret_scalex 1")
@@ -790,49 +790,37 @@ function Material_GetNew(ply)
 end
 
 -- Check if the material should be replaced
-function Material_ShouldChange(ply, currentDataIn, newDataIn, tr)
-	local currentData = table.Copy(currentDataIn)
-	local newData = table.Copy(newDataIn)
-	local backup
-
-	-- If the material is still untouched, let's get the data from the map and compare it
-	if not currentData then
-		local material = Material_GetCurrent(tr)
-
-		-- If the material is invalid, we can't modify it
-		if not material then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The material you are trying to modify has an invalid name.")
-		
-			return false
-		end
-	
-		currentData = Data_CreateFromMaterial(material, 0)
-		currentData.newMaterial = currentData.oldMaterial -- Force the newMaterial to be the oldMaterial
-	-- Else we need to hide its internal backup
-	else
-		backup = currentData.backup
-		currentData.backup = nil
-	end
-
+function Material_ShouldChange(ply, currentData, newData, tr)
 	-- Correct a model newMaterial entry for the comparision 
 	if IsValid(tr.Entity) then
 		newData.newMaterial = Model_Material_GetID(newData)
 	end
 
-	-- Check if some property is different
+	-- Check if some property is different 
 	local isDifferent = false
 
 	for k,v in pairs(currentData) do
-		if v ~= newData[k] then
-			isDifferent = true
-			break
+				print(k)
+				print(v)
+				print(newData[k])
+				print("---")
+
+		if k ~= "backup" and v ~= newData[k] then
+			if isnumber(v) then
+				if tonumber(v) ~= tonumber(newData[k]) then
+					isDifferent = true
+
+					break
+				end
+			else
+				isDifferent = true
+
+				break
+			end
 		end
 	end
 
-	-- Restore the internal backup
-	currentData.backup = backup
-
-	-- The material needs to be changed if data ~= data2
+	-- The material needs to be changed
 	if isDifferent then
 		return true
 	end
@@ -3130,6 +3118,7 @@ end
 function TOOL:LeftClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 	local ent = tr.Entity	
+	local originalMaterial = Material_GetOriginal(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
@@ -3154,7 +3143,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Skybox modification
-	if Material_GetOriginal(tr) == "tools/toolsskybox" then
+	if originalMaterial == "tools/toolsskybox" then
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
@@ -3167,7 +3156,7 @@ function TOOL:LeftClick(tr)
 		end
 
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or Material_GetOriginal(tr)
+		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
 		local selectedMaterial = GetConVar("mapret_material"):GetString()
 
 		-- Check if the copy isn't necessary
@@ -3215,11 +3204,19 @@ function TOOL:LeftClick(tr)
 		return false
 	end
 
-	-- Generate the new data
-	local data = Data_Create(ply, tr)
+	-- Get data tables with the future and current materials
+	local newData = Data_Create(ply, tr)
+	local oldData = Data_Get(tr)
+
+	if not oldData then
+		oldData = Data_CreateFromMaterial(originalMaterial)
+		
+		-- Adjust the material name to permit the tool check if changes are needed
+		oldData.newMaterial = oldData.oldMaterial 
+	end	
 
 	-- Don't apply bad materials
-	if not Material_IsValid(data.newMaterial) then
+	if not Material_IsValid(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -3228,7 +3225,8 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Do not apply the material if it's not necessary
-	if not Material_ShouldChange(ply, Data_Get(tr), data, tr) then
+	if not Material_ShouldChange(ply, oldData, newData, tr) then
+
 		return false
 	end
 
@@ -3258,10 +3256,10 @@ function TOOL:LeftClick(tr)
 	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0.1 or 0, 1, function()
 		-- model material
 		if IsValid(ent) then
-			Model_Material_Set(data)
+			Model_Material_Set(newData)
 		-- or map material
 		elseif ent:IsWorld() then
-			Map_Material_Set(ply, data)
+			Map_Material_Set(ply, newData)
 		end
 	end)
 
@@ -3272,7 +3270,7 @@ function TOOL:LeftClick(tr)
 			if data.oldMaterial then
 				Material_Restore(ent, data.oldMaterial)
 			end
-		end, data)
+		end, newData)
 		undo.SetCustomUndoText("Undone Material")
 	undo.Finish()
 
@@ -3306,28 +3304,21 @@ function TOOL:RightClick(tr)
 
 	-- Normal materials
 	else
-		-- Try to get data tables with the future and current materials
+		-- Get data tables with the future and current materials
 		local newData = Data_Create(ply, tr)
 		local oldData = Data_Get(tr)
-		
-		-- Generate a valid data table with the future material if it's necessary
-		if not newData then
-			if not originalMaterial then -- If the material is invalid we can't get it
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The material you are trying to modify has an invalid name.")
-			
-				return false
-			end
 
-			newData = Data_CreateFromMaterial(originalMaterial)
-		end
+		if not oldData then
+			oldData = Data_CreateFromMaterial(originalMaterial)
+			
+			-- Adjust the material name to permit the tool check if changes are needed
+			oldData.newMaterial = oldData.oldMaterial 
+		end	
 
 		-- Check if the copy isn't necessary
 		if Material_GetCurrent(tr) == Material_GetNew(ply) then
-			if oldData then
-				if not Material_ShouldChange(ply, oldData, newData, tr) then
-					return false
-				end
-			else
+			if not Material_ShouldChange(ply, oldData, newData, tr) then
+
 				return false
 			end
 		end

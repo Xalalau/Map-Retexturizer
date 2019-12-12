@@ -2493,20 +2493,16 @@ if CLIENT then
 		end
 	end
 
-	-- Start map materials preview
-	function Preview_Render_Map_Materials(ply)
-		if mr.state.previewMode and not mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			--Preview_Render(ply, true)
-		end
-	end
-	hook.Add("HUDPaint", "MapRetPreview", function()
-		Preview_Render_Map_Materials(LocalPlayer())
-	end)
-
 	-- Start decals preview
 	function Preview_Render_Decals(ply)
-		if mr.state.previewMode and mr.state.decalMode and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			--Preview_Render(ply, false)
+		--self.Mode and self.Mode == "mapret"
+
+		if ply:GetActiveWeapon():GetClass() == "gmod_tool" then
+			local tool = ply:GetTool()
+
+			if tool.Mode and tool.Mode == "mapret" and mr.state.previewMode and mr.state.decalMode then
+				Preview_Render(ply, false)
+			end
 		end
 	end
 	hook.Add("PostDrawOpaqueRenderables", "MapRetPreview", function()
@@ -3412,11 +3408,8 @@ end
 -- Preview materials and decals when the tool is open
 function TOOL:DrawHUD()
 	-- Map materials preview
-	if mr.state.previewMode and not mr.state.decalMode then
-		--Preview_Render(LocalPlayer(), true)
-	-- Decals preview
-	elseif mr.state.previewMode and mr.state.decalMode then
-		--Preview_Render(LocalPlayer(), false)
+	if self.Mode and self.Mode == "mapret" and mr.state.previewMode and not mr.state.decalMode then
+		Preview_Render(LocalPlayer(), true)
 	end
 
 	-- HACK: Needed to force mapret_detail to use the right value

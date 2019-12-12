@@ -3413,6 +3413,7 @@ function TOOL:DrawHUD()
 		timer.Create("mapretDetailHack", 0.3, 1, function()
 			CVars_SetToDefaults(LocalPlayer())
 		end)
+
 		mr.state.cVarValueHack = false
 	end
 end
@@ -3529,6 +3530,7 @@ function TOOL.BuildCPanel(CPanel)
 				end
 			CPanel:ControlHelp("\nYou can use whatever you want as a sky.")
 			CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List")
+			CPanel:ControlHelp("[WARNING] Expect FPS drops using this!")
 
 	-- Displacements
 	if (table.Count(mr.displacements.detected) > 0) then
@@ -3589,6 +3591,7 @@ function TOOL.BuildCPanel(CPanel)
 					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
 					Displacements_Start(ply, comboBoxValue, mr.gui.displacements.text1:GetValue(), text2Value)
 				end
+			CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
 	end
 
 	-- Save

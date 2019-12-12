@@ -692,8 +692,6 @@ end
 
 -- Set the cvars to data defaults
 function CVars_SetToDefaults(ply)
-	if CLIENT then return; end
-
 	ply:ConCommand("mapret_detail None")
 	ply:ConCommand("mapret_offsetx 0")
 	ply:ConCommand("mapret_offsety 0")

@@ -800,11 +800,6 @@ function Material_ShouldChange(ply, currentData, newData, tr)
 	local isDifferent = false
 
 	for k,v in pairs(currentData) do
-				print(k)
-				print(v)
-				print(newData[k])
-				print("---")
-
 		if k ~= "backup" and v ~= newData[k] then
 			if isnumber(v) then
 				if tonumber(v) ~= tonumber(newData[k]) then

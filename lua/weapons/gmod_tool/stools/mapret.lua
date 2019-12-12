@@ -2126,6 +2126,11 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_LoadDecal
 function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	if CLIENT then return; end
 
+	-- Compatibility with the old saving format
+	if not savedTable.map and not savedTable.displacements then
+		savedTable = { map = savedTable, displacements = nil }
+	end
+
 	-- Check if client is valid
 	if IsEntity(ply) then
 		if not ply:IsValid() then
@@ -2236,6 +2241,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 	end
 end
 duplicator.RegisterEntityModifier("MapRetexturizer_Map", Duplicator_LoadMapMaterials)
+duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMaterials) -- Compatibility with the old saving format
 
 -- Load the skybox
 function Duplicator_LoadSkybox(ply, ent, savedTable)

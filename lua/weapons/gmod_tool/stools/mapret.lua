@@ -2123,8 +2123,13 @@ end
 duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_LoadDecals)
 
 -- Load map materials from saves
-function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
+function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck, keepCounting)
 	if CLIENT then return; end
+
+	-- Initialize keepCounting
+	if not keepCounting then
+		keepCounting = 0
+	end
 
 	-- Compatibility with the old saving format
 	if not savedTable.map and not savedTable.displacements then
@@ -2173,8 +2178,10 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			position = 1
 
 			-- Set the counting
-			ply.mr.dup.run.count.total = MML_Count(materialTable)
-			ply.mr.dup.run.count.current = 0
+			local total1 = savedTable.map and MML_Count(savedTable.map) or 0
+			local total2 = savedTable.displacements and MML_Count(savedTable.displacements) or 0
+			ply.mr.dup.run.count.total = keepCounting + total1 + total2
+			ply.mr.dup.run.count.current = keepCounting
 
 			-- Update the client
 			Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total, "Map Materials", true)
@@ -2195,7 +2202,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			-- If we still have a table to apply, go ahead
 			if savedTable.map and savedTable.displacements then
 				savedTable.map = nil
-				Duplicator_LoadMapMaterials(ply, nil, savedTable)
+				Duplicator_LoadMapMaterials(ply, nil, savedTable, nil, false, position - 1)
 				
 				return
 			end

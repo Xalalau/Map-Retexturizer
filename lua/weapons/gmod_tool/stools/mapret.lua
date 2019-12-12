@@ -73,6 +73,7 @@ local mr = {}
 	-- -------------------------------------------------------------------------------------
 	
 	mr.state = {
+		initializing = true,
 		firstSpawn = true,
 		previewMode = true,
 		decalMode = false,
@@ -1153,7 +1154,7 @@ function Map_Material_Set(ply, data, isDisplacement)
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.initializing then
+	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.mr.state.initializing then
 		 -- Duplicator check
 		local isNewMaterial = false
 		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
@@ -1537,7 +1538,7 @@ function Decal_Start(ply, tr, duplicatorData)
 	-- Register and duplicator:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.initializing then
+	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.mr.state.initializing then
 		table.insert(mr.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
 		duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Decals", mr.decal.list)
@@ -3053,13 +3054,13 @@ function Load_FirstSpawn(ply)
 				local isloading = false
 
 				for k,v in pairs(player.GetAll()) do
-					if v.initializing then
+					if v.mr.state.initializing then
 						isloading = true
 					end
 				end
 					
 				if not isloading then
-					ply.initializing = true
+					ply.mr.state.initializing = true
 				end
 			end
 

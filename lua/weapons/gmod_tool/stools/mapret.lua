@@ -692,6 +692,8 @@ end
 
 -- Set the cvars to data defaults
 function CVars_SetToDefaults(ply)
+	if CLIENT then return; end
+
 	--ply:ConCommand("mapret_detail ") -- Server is not getting the right detail, only Client
 	ply:ConCommand("mapret_offsetx 0")
 	ply:ConCommand("mapret_offsety 0")
@@ -699,8 +701,6 @@ function CVars_SetToDefaults(ply)
 	ply:ConCommand("mapret_scaley 1")
 	ply:ConCommand("mapret_rotation 0")
 	ply:ConCommand("mapret_alpha 1")
-	
-	mr.gui.detail:SetValue("None")
 end
 
 --------------------------------
@@ -3307,7 +3307,7 @@ function TOOL:RightClick(tr)
 	-- Normal materials
 	else
 		-- Try to get data tables with the future and current materials
-		local newData = Data_Get(tr)
+		local newData = Data_Create(ply, tr)
 		local oldData = Data_Get(tr)
 		
 		-- Generate a valid data table with the future material if it's necessary
@@ -3355,8 +3355,8 @@ function TOOL:RightClick(tr)
 		ply:ConCommand("mapret_material "..Material_GetCurrent(tr))
 
 		-- Set the cvars to data values
-		if newData then
-			CVars_SetToData(ply, newData)
+		if oldData then
+			CVars_SetToData(ply, oldData)
 		-- Or set the cvars to default values
 		else
 			CVars_SetToDefaults(ply)

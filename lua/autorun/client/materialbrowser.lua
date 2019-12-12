@@ -84,13 +84,21 @@ local function CreateMaterialBrowser()
 	end
 
 	local Reload = vgui.Create("DButton", Window)
-		Reload:SetSize(Window:GetWide(), 0.04 * (Window:GetTall() - 25))
+		Reload:SetSize(Window:GetWide()/2, 0.04 * (Window:GetTall() - 25))
 		Reload:SetPos(0, 0.96 * (Window:GetTall() - 25)  +25)
 		Reload:SetText("Reload List")
 		Reload.DoClick = function()
 			List:Remove()
 			CreateList()
 			FillList()
+		end
+
+	local Copy = vgui.Create("DButton", Window)
+		Copy:SetSize(Window:GetWide()/2, 0.04 * (Window:GetTall() - 25))
+		Copy:SetPos(Window:GetWide()/2, 0.96 * (Window:GetTall() - 25)  +25)
+		Copy:SetText("Copy to Clipboard")
+		Copy.DoClick = function()
+			SetClipboardText(MaterialBox:GetMaterial():GetTexture("$basetexture"):GetName())
 		end
 
 	FillList()

@@ -210,8 +210,6 @@ local mr = {}
 		mr.dup.forceStop = false
 		-- Workaround to duplicate map and decal materials
 		mr.dup.entity = nil
-		-- Disable our generic dup entity physics and rendering after the duplicate
-		mr.dup.hidden = false
 		-- First dup cleanup
 		mr.dup.firstClean = false
 		-- Special aditive delay for models
@@ -1851,12 +1849,11 @@ function Duplicator_CreateEnt(ent)
 	if CLIENT then return; end
 
 	-- Hide/Disable our entity after a duplicator
-	if not mr.dup.hidden and ent then
+	if ent and ent:IsSolid() then
 		mr.dup.entity = ent
 		mr.dup.entity:SetNoDraw(true)				
 		mr.dup.entity:SetSolid(0)
 		mr.dup.entity:PhysicsInitStatic(SOLID_NONE)
-		mr.dup.hidden = true
 	-- Create a new entity if we don't have one yet
 	elseif not IsValid(mr.dup.entity) and not ent then
 		mr.dup.entity = ents.Create("prop_physics")
@@ -2082,10 +2079,8 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			end
 		end
 
-		-- Fix the duplicator generic spawn entity
-		if not mr.dup.hidden then
-			Duplicator_CreateEnt(ent)
-		end
+		-- Adjust the duplicator generic spawn entity
+		Duplicator_CreateEnt(ent)
 
 		if not position then
 			-- Set the first position
@@ -2165,10 +2160,8 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		-- Get the correct materials table
 		materialTable = savedTable.map or savedTable.displacements
 
-		-- Fix the duplicator generic spawn entity
-		if not mr.dup.hidden then
-			Duplicator_CreateEnt(ent)
-		end
+		-- Adjust the duplicator generic spawn entity
+		Duplicator_CreateEnt(ent)
 
 		if not position then
 			-- Set the first position

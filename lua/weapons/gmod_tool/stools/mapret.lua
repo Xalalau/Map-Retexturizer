@@ -152,6 +152,14 @@ local mr = {}
 
 	-- list: ["diplacement_material"] = { 1 = "backup_material_1", 2 = "backup_material_2" }
 	mr.displacements = {
+		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
+		-- Note: same type of list as mr.map.list, but it's separated because these files never get clean for reuse
+		filename = "mapretexturizer/disp_file",
+		-- 24 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
+		limit = 24,
+		-- List of detected displacements on the map
+		detected = {},
+		-- Data structures, all the modifications
 		list = {}
 	}
 
@@ -375,7 +383,7 @@ local Load_Delete_Start
 local Load_Delete_Apply
 local Load_SetAuto_Start
 local Load_SetAuto_Apply
-local Load_firstSpawn
+local Load_FirstSpawn
 
 --------------------------------
 --- 3RD PARTY
@@ -394,7 +402,7 @@ timer.Create("MapRetDiscplamentsList", 0.1, 1, function()
 
 	for k,v in pairs(found) do
 		if Material(v):GetString("$surfaceprop2") then
-			mr.displacements.list[v] = {
+			mr.displacements.detected[v] = {
 				Material(v):GetTexture("$basetexture"):GetName(),
 				Material(v):GetTexture("$basetexture2"):GetName()
 			}
@@ -455,13 +463,13 @@ if CLIENT then
 
 	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
 	timer.Create("MapRetDiscplamentsDirtyHack", 0.3, 1, function()
-		for k,v in pairs(mr.displacements.list) do
+		for k,v in pairs(mr.displacements.detected) do
 			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
 
 			Displacements_Start(ply, k, "dev/graygrid", "dev/graygrid")
 
 			timer.Create("MapRetDiscplamentsDirtyHack3"..k, 0.2, 1, function()
-				Material_Restore(nil, k)
+				Material_Restore(nil, k, true)
 			end)
 		end
 	end)
@@ -485,18 +493,18 @@ function Ply_IsAdmin(ply)
 end
 
 -------------------------------------
---- mr.map.list (MML) management
+--- DATA MATERIAL LISTS MANAGEMENT
 -------------------------------------
 
 -- Check if the table is full
-function MML_Check()
+function MML_Check(list, limit)
 	-- Check upper limit
-	if MML_Count() == mr.map.limit then
+	if MML_Count(list) == limit then
 		-- Limit reached! Try to open new spaces in the mr.map.list table checking if the player removed something and cleaning the entry for real
-		MML_Clean()
+		MML_Clean(list, limit)
 
 		-- Check again
-		if MML_Count() == mr.map.limit then
+		if MML_Count(list) == limit then
 			if SERVER then
 				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..mr.map.limit..")! Notify the developer for more space.")
 			end
@@ -509,10 +517,10 @@ function MML_Check()
 end
 
 -- Get a free index
-function MML_GetFreeIndex()
+function MML_GetFreeIndex(list)
 	local i = 1
 
-	for k,v in pairs(mr.map.list) do
+	for k,v in pairs(list) do
 		if v.oldMaterial == nil then
 			break
 		end
@@ -524,13 +532,13 @@ function MML_GetFreeIndex()
 end
 
 -- Insert an element
-function MML_InsertElement(data, position)
-	mr.map.list[position or MML_GetFreeIndex()] = data
+function MML_InsertElement(list, data, position)
+	list[position or MML_GetFreeIndex(list)] = data
 end
 
 -- Get an element and its index
-function MML_GetElement(oldMaterial)
-	for k,v in pairs(mr.map.list) do
+function MML_GetElement(list, oldMaterial)
+	for k,v in pairs(list) do
 		if v.oldMaterial == oldMaterial then
 			return v, k
 		end
@@ -547,12 +555,12 @@ function MML_DisableElement(element)
 end
 
 -- Remove all disabled elements
-function MML_Clean()
-	local i = mr.map.limit
+function MML_Clean(list, limit)
+	local i = limit
 
 	while i > 0 do
-		if mr.map.list[i].oldMaterial == nil then
-			table.remove(mr.map.list, i)
+		if list[i].oldMaterial == nil then
+			table.remove(list, i)
 		end
 
 		i = i - 1
@@ -560,10 +568,10 @@ function MML_Clean()
 end
 
 -- Table count
-function MML_Count(inTable)
+function MML_Count(list)
 	local i = 0
 
-	for k,v in pairs(inTable or mr.map.list) do
+	for k,v in pairs(list) do
 		if v.oldMaterial ~= nil then
 			i = i + 1
 		end
@@ -595,7 +603,7 @@ function Data_Create(ply, tr)
 end
 
 -- Convert a map material into a data table
-function Data_CreateFromMaterial(materialName, i)
+function Data_CreateFromMaterial(materialName, i, isDisplacement)
 	local theMaterial = Material(materialName)
 
 	local scalex = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
@@ -606,8 +614,8 @@ function Data_CreateFromMaterial(materialName, i)
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = materialName,
-		newMaterial = i and mr.map.filename..tostring(i) or "",
-		newMaterial2 = i and mr.map.filename..tostring(i) or nil,
+		newMaterial = isDisplacement and mr.displacements.filename..tostring(i) or i and mr.map.filename..tostring(i) or "",
+		newMaterial2 = isDisplacement and mr.displacements.filename..tostring(i) or nil,
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
@@ -654,7 +662,7 @@ end
 
 -- Get the data table if it exists or return nil
 function Data_Get(tr)
-	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML_GetElement(Material_GetOriginal(tr))
+	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML_GetElement(mr.map.list, Material_GetOriginal(tr))
 end
 
 --------------------------------
@@ -756,7 +764,7 @@ function Material_GetCurrent(tr)
 		end
 	-- Map
 	elseif tr.Entity:IsWorld() then
-		local element = MML_GetElement(Material_GetOriginal(tr))
+		local element = MML_GetElement(mr.map.list, Material_GetOriginal(tr))
 
 		if element then
 			path = element.newMaterial
@@ -829,7 +837,7 @@ end
 if SERVER then
 	util.AddNetworkString("Material_Restore")
 end
-function Material_Restore(ent, oldMaterial)
+function Material_Restore(ent, oldMaterial, isDisplacement)
 	local isValid = false
 
 	-- Model
@@ -851,8 +859,10 @@ function Material_Restore(ent, oldMaterial)
 		end
 	-- Map
 	else
-		if MML_Count() > 0 then
-			local element = MML_GetElement(oldMaterial)
+		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
+
+		if MML_Count(materialTable) > 0 then
+			local element = MML_GetElement(materialTable, oldMaterial)
 
 			if element then
 				if CLIENT then
@@ -862,9 +872,9 @@ function Material_Restore(ent, oldMaterial)
 				MML_DisableElement(element)
 
 				if SERVER then
-					if MML_Count() == 0 then
+					if MML_Count(mr.map.list) == 0 and MML_Count(mr.displacements.list) == 0 then
 						if IsValid(mr.dup.entity) then
-							duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Maps")
+							duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Map")
 						end
 					end
 				end
@@ -879,6 +889,7 @@ function Material_Restore(ent, oldMaterial)
 			net.Start("Material_Restore")
 				net.WriteEntity(ent)
 				net.WriteString(oldMaterial)
+				net.WriteBool(isDisplacement)
 			net.Broadcast()
 		end
 
@@ -889,7 +900,7 @@ function Material_Restore(ent, oldMaterial)
 end
 if CLIENT then
 	net.Receive("Material_Restore", function()
-		Material_Restore(net.ReadEntity(), net.ReadString())
+		Material_Restore(net.ReadEntity(), net.ReadString(), net.ReadBool())
 	end)
 end
 
@@ -1122,7 +1133,7 @@ end
 if SERVER then
 	util.AddNetworkString("Map_Material_Set")
 end
-function Map_Material_Set(ply, data)
+function Map_Material_Set(ply, data, isDisplacement)
 	-- Note: if data has a backup we need to restore it, otherwise let's just do the normal stuff
 
 	-- Force to skip bad materials (sometimes it happens, so let's just avoid the script errors)
@@ -1137,16 +1148,17 @@ function Map_Material_Set(ply, data)
 	-- a player in the first spawn and initializing the materials on the serverside
 	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.initializing then
 		 -- Duplicator check
-		local isnewMaterial = false
+		local isNewMaterial = false
+		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
 
 		if SERVER then
 			if not data.backup then
-				isnewMaterial = true
+				isNewMaterial = true
 			end
 		end
 
 		local i
-		local element = MML_GetElement(data.oldMaterial)
+		local element = MML_GetElement(materialTable, data.oldMaterial)
 
 		-- If we are modifying an already modified material
 		if element then
@@ -1158,20 +1170,20 @@ function Map_Material_Set(ply, data)
 			Map_Material_SetAux(data.backup)
 
 			-- Get a mr.map.list free index
-			i = MML_GetFreeIndex()
+			i = MML_GetFreeIndex(materialTable)
 		-- If the material is untouched
 		else
 			-- Get a mr.map.list free index
-			i = MML_GetFreeIndex()
+			i = MML_GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or Data_CreateFromMaterial(data.oldMaterial, i)
+			local dataBackup = data.backup or Data_CreateFromMaterial(data.oldMaterial, i, isDisplacement)
 
 			-- Save the material texture
 			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
 
 			-- Save the second material texture (if it's a displacement)
-			if data.newMaterial2 then
+			if isDisplacement then
 				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
 			end
 
@@ -1182,15 +1194,15 @@ function Map_Material_Set(ply, data)
 		end
 
 		-- Index the Data
-		MML_InsertElement(data, i)
+		MML_InsertElement(materialTable, data, i)
 
 		-- Apply the new state to the map material
-		Map_Material_SetAux(data)
+		Map_Material_SetAux(data, isDisplacement)
 
 		if SERVER then
 			-- Set the duplicator
-			if isnewMaterial then
-				duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Maps", mr.map.list)
+			if isNewMaterial then
+				duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Map", { map = mr.map.list, displacements = mr.displacements.list })
 			end
 		end
 	end
@@ -1201,12 +1213,14 @@ function Map_Material_Set(ply, data)
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
 				net.WriteBool(true)
+				net.WriteBool(isDisplacement)
 			net.Broadcast()
 		-- Or for a single player
 		else
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
 				net.WriteBool(false)
+				net.WriteBool(isDisplacement)
 			net.Send(ply)
 		end
 	end
@@ -1216,13 +1230,14 @@ if CLIENT then
 		local ply = LocalPlayer()
 		local theTable = net.ReadTable()
 		local isBroadcasted = net.ReadBool()
+		local isDisplacement = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
 		if mr.state.firstSpawn and isBroadcasted then
 			return
 		end
 
-		Map_Material_Set(ply, theTable)
+		Map_Material_Set(ply, theTable, isDisplacement)
 	end)
 end
 
@@ -1246,7 +1261,7 @@ function Map_Material_SetAux(data)
 	
 		--If it's running a displacement backup the second material is in $basetexture2
 		if data.newMaterial == data.newMaterial2 then 
-			local nameStart, nameEnd = string.find(data.newMaterial, mr.map.filename)
+			local nameStart, nameEnd = string.find(data.newMaterial, mr.displacements.filename)
 
 			if nameStart then
 				keyValue = "$basetexture2"
@@ -1313,7 +1328,7 @@ function Map_Material_SetAll(ply)
 	end
 
 	-- Check upper limit
-	if not MML_Check() then
+	if not MML_Check(mr.map.list, mr.map.limit) then
 		return false
 	end
 
@@ -1438,7 +1453,17 @@ function Map_Material_RemoveAll(ply)
 		return false
 	end
 
-	if MML_Count() > 0 then
+	-- Remove displacements
+	if MML_Count(mr.displacements.list) > 0 then
+		for k,v in pairs(mr.displacements.list) do
+			if v.oldMaterial ~=nil then
+				Material_Restore(nil, v.oldMaterial, true)
+			end
+		end
+	end
+
+	-- Remove general materials
+	if MML_Count(mr.map.list) > 0 then
 		for k,v in pairs(mr.map.list) do
 			if v.oldMaterial ~=nil then
 				Material_Restore(nil, v.oldMaterial)
@@ -1493,6 +1518,9 @@ function Decal_Start(ply, tr, duplicatorData)
 	if CLIENT then
 		return true
 	end
+
+	-- Create the duplicator entity if it's necessary
+	Duplicator_CreateEnt()
 
 	-- Get the basic properties
 	local ent = tr and tr.Entity or duplicatorData.ent
@@ -1746,7 +1774,7 @@ function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 	end
 
 	-- Correct the material values
-	for k,v in pairs(mr.displacements.list) do -- Don't apply default  materials directly
+	for k,v in pairs(mr.displacements.detected) do -- Don't apply default  materials directly
 		if k:sub(1, #k - 1) == displacement then -- Note: remove last char (linebreak?)
 			if v[1] == newMaterial then
 				newMaterial = nil
@@ -1763,21 +1791,24 @@ function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 		return
 	end
 
+	-- Create the duplicator entity if it's necessary
+	Duplicator_CreateEnt()
+
 	-- Create the data table
-	local data = Data_CreateFromMaterial(displacement, nil)
+	local data = Data_CreateFromMaterial(displacement, nil, true)
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2
 
 	-- Apply the changes
-	Map_Material_Set(ply, data)
+	Map_Material_Set(ply, data, true)
 	
 	-- Set the Undo
 	undo.Create("Material")
 		undo.SetPlayer(ply)
 		undo.AddFunction(function(tab, data)
 			if data.oldMaterial then
-				Material_Restore(ent, data.oldMaterial)
+				Material_Restore(ent, data.oldMaterial, true)
 			end
 		end, data)
 		undo.SetCustomUndoText("Undone Material")
@@ -1795,10 +1826,8 @@ end
 function Displacements_Remove(ply)
 	if CLIENT then return; end
 
-	--duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Displacements")
-
 	for k,v in pairs(mr.displacements.list) do
-		Material_Restore(nil, k)
+		Material_Restore(nil, k, true)
 	end
 end
 if SERVER then
@@ -1941,7 +1970,7 @@ else
 				print("-------------------------------------------------------------")
 				print("[MAP RETEXTURIZER] - Failed to load these materials:")
 				print("-------------------------------------------------------------")
-				print(table.ToString(mr.dup.run.count.errors.list, "Missing Materials ", true))
+				print(table.ToString(mr.dup.run.count.errors.list, "List ", true))
 				print("-------------------------------------------------------------")
 				print("")
 				table.Empty(mr.dup.run.count.errors.list)
@@ -1977,7 +2006,7 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	-- Set the aditive delay time
 	mr.dup.models.delay = mr.dup.models.delay + 0.1
 
-	-- Change the stored entity to the actual one
+	-- Change the stored entity to the current one
 	savedTable.ent = ent
 
 	-- Get the max delay time
@@ -2131,6 +2160,9 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			end
 		end
 
+		-- Get the correct materials table
+		materialTable = savedTable.map or savedTable.displacements
+
 		-- Fix the duplicator generic spawn entity
 		if not mr.dup.hidden then
 			Duplicator_CreateEnt(ent)
@@ -2141,7 +2173,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 			position = 1
 
 			-- Set the counting
-			ply.mr.dup.run.count.total = MML_Count(savedTable)
+			ply.mr.dup.run.count.total = MML_Count(materialTable)
 			ply.mr.dup.run.count.current = 0
 
 			-- Update the client
@@ -2149,17 +2181,26 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		end
 
 		-- Check if we have a valid entry
-		if savedTable[position] and not mr.dup.forceStop then
+		if materialTable[position] and not mr.dup.forceStop then
 			-- Yes. Is it an INvalid entry?
-			if savedTable[position].oldMaterial == nil then
+			if materialTable[position].oldMaterial == nil then
 				-- Yes. Let's check the next entry
 				Duplicator_LoadMapMaterials(ply, nil, savedTable, position + 1)
 
 				return
 			end
 			-- No. Let's apply the changes
-		-- No more entries. And because it's the last duplicator section, just reset the variables
+		-- No more entries
 		else
+			-- If we still have a table to apply, go ahead
+			if savedTable.map and savedTable.displacements then
+				savedTable.map = nil
+				Duplicator_LoadMapMaterials(ply, nil, savedTable)
+				
+				return
+			end
+
+			-- Else just reset the variables because it's the last duplicator section		
 			ply.mr.dup.run.has.map = false
 			Duplicator_Finish(ply)
 
@@ -2170,16 +2211,22 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
 		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
 
-		-- Check if the material is valid
-		local isValid = Material_IsValid(savedTable[position].newMaterial)
+		-- Check if the materials are valid
+		local isValid = true
+		local newMaterial = materialTable[position].newMaterial
+		local newMaterial2 = materialTable[position].newMaterial2
+		if newMaterial and not Material_IsValid(newMaterial) or 
+			newMaterial2 and not Material_IsValid(newMaterial2) then
+			isValid = false
+		end
 
 		-- Apply the map material
 		if isValid then
-			Map_Material_Set(ply, savedTable[position])
+			Map_Material_Set(ply, materialTable[position], not savedTable.map and savedTable.displacements and true or false)
 		-- Or register an error
 		else
 			ply.mr.dup.run.count.errors.n = ply.mr.dup.run.count.errors.n + 1
-			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, savedTable[position].newMaterial)
+			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, materialTable[position].newMaterial)
 		end
 
 		-- Next material
@@ -2193,7 +2240,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck)
 		end)
 	end
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMaterials)
+duplicator.RegisterEntityModifier("MapRetexturizer_Map", Duplicator_LoadMapMaterials)
 
 -- Load the skybox
 function Duplicator_LoadSkybox(ply, ent, savedTable)
@@ -2215,7 +2262,7 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybo
 
 -- Render duplicator progress bar based on the ply.mr.dup.run.count numbers
 if CLIENT then
-	function Duplicator_RenderProgress(ply)
+	local function Duplicator_RenderProgress(ply)
 		if mr.dup.run then
 			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
 				local x, y, w, h = 25, ScrH()/2 + 200, 200, 20 
@@ -2366,7 +2413,7 @@ end)
 if CLIENT then
 	function Preview_Render(ply, mapMatMode)
 		local tr = ply:GetEyeTrace()
-		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial", nil)
+		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial")
 		local newData = mapMatMode and Data_Create(ply, tr) or Data_CreateDefaults(ply, tr)
 
 		-- Don't apply bad materials
@@ -2495,8 +2542,13 @@ function Save_Apply(saveName, saveFile)
 	]]
 	
 	-- Create a save table
-	mr.manage.save.list[saveName] = { decals = mr.decal.list, map = mr.map.list, skybox = GetConVar("mapret_skybox"):GetString() }
-	
+	mr.manage.save.list[saveName] = {
+		decals = mr.decal.list,
+		map = mr.map.list,
+		displacements = mr.displacements.list,
+		skybox = GetConVar("mapret_skybox"):GetString()
+	}
+
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(mr.manage.save.list[saveName]))
 
@@ -2651,8 +2703,8 @@ function Load_Apply(ply, loadTable)
 			end
 
 			-- Then map materials
-			outTable2 = loadTable and loadTable.map or mr.map.list
-			if MML_Count(outTable2) > 0 then
+			outTable2 = loadTable and { map = loadTable.map, displacements = loadTable.displacements } or { map = mr.map.list, displacements = mr.displacements.list }
+			if MML_Count(outTable2.map) > 0 or MML_Count(outTable2.displacements) > 0 then
 				Duplicator_LoadMapMaterials(ply, nil, outTable2)
 			end
 
@@ -2663,7 +2715,11 @@ function Load_Apply(ply, loadTable)
 				Duplicator_LoadSkybox(ply, nil, outTable3)
 			end
 
-			if table.Count(outTable1) == 0 and MML_Count(outTable2) == 0 and outTable3.skybox == "" then
+			if table.Count(outTable1) == 0 and
+				MML_Count(outTable2.map) == 0 and
+				MML_Count(outTable2.displacements) == 0 and
+				outTable3.skybox == "" then
+
 				-- Manually reset the firstSpawn state if it's true and there aren't any modifications
 				if ply.mr.state.firstSpawn then
 					ply.mr.state.firstSpawn = false
@@ -2941,7 +2997,7 @@ if SERVER then
 end
 
 -- Load the server modifications on the first spawn (start)
-function Load_firstSpawn(ply)
+function Load_FirstSpawn(ply)
 	if CLIENT then return; end
 
 	-- Index duplicator stuff (serverside)
@@ -3008,7 +3064,7 @@ end
 if SERVER then
 	util.AddNetworkString("MapRetPlyfirstSpawnEnd")
 
-	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", Load_firstSpawn)
+	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", Load_FirstSpawn)
 end
 if CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()
@@ -3141,7 +3197,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Check upper limit
-	if not MML_Check() then
+	if not MML_Check(mr.map.list, mr.map.limit) then
 		return false
 	end
 
@@ -3478,7 +3534,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List")
 
 	-- Displacements
-	if (table.Count(mr.displacements.list) > 0) then
+	if (table.Count(mr.displacements.detected) > 0) then
 		CPanel:Help(" ")
 		local sectionDisplacements = vgui.Create("DCollapsibleCategory", CPanel)
 			CPanel:AddItem(sectionDisplacements)
@@ -3493,7 +3549,7 @@ function TOOL.BuildCPanel(CPanel)
 						mr.gui.displacements.text2:SetValue("")
 					end					
 				end
-				for k,v in pairs(mr.displacements.list) do
+				for k,v in pairs(mr.displacements.detected) do
 					mr.gui.displacements.combo:AddChoice(k)
 				end
 				mr.gui.displacements.combo:AddChoice("", "")
@@ -3503,15 +3559,15 @@ function TOOL.BuildCPanel(CPanel)
 			mr.gui.displacements.text1 = CPanel:TextEntry("Texture 1:", "")
 				local function DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
 					if text1Value == "" then
-						text1Value = mr.displacements.list[comboBoxValue][1]
+						text1Value = mr.displacements.detected[comboBoxValue][1]
 						timer.Create("MapRetText1Update", 0.5, 1, function()
-							mr.gui.displacements.text1:SetValue(mr.displacements.list[comboBoxValue][1])
+							mr.gui.displacements.text1:SetValue(mr.displacements.detected[comboBoxValue][1])
 						end)
 					end
 					if text2Value == "" then
-						text2Value = mr.displacements.list[comboBoxValue][2]
+						text2Value = mr.displacements.detected[comboBoxValue][2]
 						timer.Create("MapRetText2Update", 0.5, 1, function()
-							mr.gui.displacements.text2:SetValue(mr.displacements.list[comboBoxValue][2])
+							mr.gui.displacements.text2:SetValue(mr.displacements.detected[comboBoxValue][2])
 						end)
 					end
 				end
@@ -3519,7 +3575,7 @@ function TOOL.BuildCPanel(CPanel)
 					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
 					local text1Value = mr.gui.displacements.text1:GetValue()
 					local text2Value = mr.gui.displacements.text2:GetValue()
-					if not mr.displacements.list[comboBoxValue] then
+					if not mr.displacements.detected[comboBoxValue] then
 						return
 					end
 					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
@@ -3530,7 +3586,7 @@ function TOOL.BuildCPanel(CPanel)
 					local comboBoxValue, _ = mr.gui.displacements.combo:GetSelected()
 					local text1Value = mr.gui.displacements.text1:GetValue()
 					local text2Value = mr.gui.displacements.text2:GetValue()
-					if not mr.displacements.list[comboBoxValue] then
+					if not mr.displacements.detected[comboBoxValue] then
 						return
 					end
 					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)

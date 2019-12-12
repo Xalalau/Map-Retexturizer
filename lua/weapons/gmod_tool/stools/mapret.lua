@@ -1741,7 +1741,9 @@ function Skybox_Remove(ply)
 
 	RunConsoleCommand("mapret_skybox", "")	
 
-	duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox")
+	if IsValid(mr.dup.entity) then
+		duplicator.ClearEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox")
+	end
 end
 if SERVER then
 	util.AddNetworkString("Skybox_Remove")

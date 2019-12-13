@@ -485,7 +485,7 @@ end
 
 -- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
 function Ply_IsAdmin(ply)
-	if ply ~= fakeHostPly and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+	if ply ~= fakeHostPly and IsValid(ply) and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
 		end

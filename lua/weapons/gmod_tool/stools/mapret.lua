@@ -480,19 +480,19 @@ end
 
 -- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
 function Ply_IsAdmin(ply)
-	if SERVER and ply and ply.admin == true then
+	if SERVER and ply:IsPlayer() and ply.admin == true then
+		return true
+	else
+		if ply:IsPlayer() and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+			if CLIENT then
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
+			end
+
+			return false
+		end
+	
 		return true
 	end
-
-	if not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
-		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
-		end
-
-		return false
-	end
-	
-	return true
 end
 
 -------------------------------------
@@ -2484,7 +2484,7 @@ if CLIENT then
 		if ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			local tool = ply:GetTool()
 
-			if tool.Mode and tool.Mode == "mapret" and mr.state.previewMode and mr.state.decalMode then
+			if tool and tool.Mode and tool.Mode == "mapret" and mr.state.previewMode and mr.state.decalMode then
 				Preview_Render(ply, false)
 			end
 		end

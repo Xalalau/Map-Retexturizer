@@ -50,26 +50,32 @@ local function ParseDir(t, dir, ext, MaterialBox)
 end
 
 local function CreateMaterialBrowser()
+	local topBar = 25
+	local border = 5
+	local buttonsHeight = 25
+
+	local windowWidth = 700
+	local windowHeight = 4 * windowWidth/7 + buttonsHeight + topBar + border
+
+	local materialBoxSize = 4 * windowWidth/7 - border * 2
+
 	Window = vgui.Create("DFrame")
-		Window:SetTitle("Material Browser")
-		Window:SetSize(300, 750)
+		Window:SetTitle("Map Retexturizer Material Browser")
+		Window:SetSize(windowWidth, windowHeight)
 		Window:SetDeleteOnClose(false)
-		Window:SetSizable(true)
-		Window:SetMinHeight(750)
-		Window:SetMinWidth(300)
 		Window:SetIcon("icon16/picture.png")
 		Window:SetBackgroundBlur(true)
 		Window:Center()
 		Window:SetPaintBackgroundEnabled(false)
 
 	local MaterialBox = vgui.Create("DImage", Window)
-		MaterialBox:SetSize(Window:GetWide(), 0.41 * (Window:GetTall() - 25))
-		MaterialBox:SetPos(0, 25)
+		MaterialBox:SetSize(materialBoxSize, materialBoxSize)
+		MaterialBox:SetPos(border, border + topBar)
 
 	local function CreateList()
 		List = vgui.Create("DTree", Window)
-			List:SetSize(Window:GetWide(), 0.55 * (Window:GetTall() - 25))
-			List:SetPos(0, 0.41 * (Window:GetTall() - 25) + 25)
+			List:SetSize(Window:GetWide() - materialBoxSize - border * 3, Window:GetTall() - topBar - border * 2)
+			List:SetPos(materialBoxSize + border * 2, border + topBar)
 			List:SetShowIcons(true)
 	end
 
@@ -84,8 +90,8 @@ local function CreateMaterialBrowser()
 	end
 
 	local Reload = vgui.Create("DButton", Window)
-		Reload:SetSize(Window:GetWide()/2, 0.04 * (Window:GetTall() - 25))
-		Reload:SetPos(0, 0.96 * (Window:GetTall() - 25)  +25)
+		Reload:SetSize(materialBoxSize/2 - border/2, buttonsHeight)
+		Reload:SetPos(border, materialBoxSize + border * 2 + topBar)
 		Reload:SetText("Reload List")
 		Reload.DoClick = function()
 			List:Remove()
@@ -94,8 +100,8 @@ local function CreateMaterialBrowser()
 		end
 
 	local Copy = vgui.Create("DButton", Window)
-		Copy:SetSize(Window:GetWide()/2, 0.04 * (Window:GetTall() - 25))
-		Copy:SetPos(Window:GetWide()/2, 0.96 * (Window:GetTall() - 25)  +25)
+		Copy:SetSize(materialBoxSize/2, buttonsHeight)
+		Copy:SetPos(border + materialBoxSize/2, materialBoxSize + border * 2 + topBar)
 		Copy:SetText("Copy to Clipboard")
 		Copy.DoClick = function()
 			SetClipboardText(MaterialBox:GetMaterial():GetTexture("$basetexture"):GetName())

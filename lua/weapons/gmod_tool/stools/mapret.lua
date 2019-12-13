@@ -2259,7 +2259,7 @@ if CLIENT then
 	function Duplicator_RenderProgress(ply)
 		if mr.dup.run then
 			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
-				local x, y, w, h = 25, ScrH()/2 + 200, 200, 20 
+				local x, y, w, h = 25, ScrH() - 110, 200, 20 
 
 				surface.SetDrawColor(0, 0, 0, 255)
 				surface.DrawOutlinedRect(x, y, w, h)

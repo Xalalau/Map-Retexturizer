@@ -592,6 +592,7 @@ function Data_Create(ply, tr)
 		ent = tr and tr.Entity or game.GetWorld(),
 		oldMaterial = tr and Material_GetOriginal(tr) or "",
 		newMaterial = ply:GetInfo("mapret_material"),
+		newMaterial2 = nil,
 		offsetx = ply:GetInfo("mapret_offsetx"),
 		offsety = ply:GetInfo("mapret_offsety"),
 		scalex = ply:GetInfo("mapret_scalex") ~= "0" and ply:GetInfo("mapret_scalex") or "0.01",
@@ -1337,22 +1338,40 @@ function Map_Material_SetAll(ply)
 
 	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), 0.5, 1, function()
 		-- Create a fake loading table
-		local newTable = {}
-		local map = {}
+		local newTable = {
+			map = {},
+			displacements = {},
+			skybox = {}
+		}
 
-		-- Get all the textures
+		-- Fill the fake loading table with the correct structures (ignoring water materials)
+		newTable.skybox = material
+
 		local map_data = MR_OpenBSP()
 		local found = map_data:ReadLumpTextDataStringData()
-
-		-- Fill the fake loading table with the correct structure (ignoring water materials)
+		
 		for k,v in pairs(found) do
-			local data = Data_Create(ply)
+			if not v:find("water") then
+				local isDiscplacement = false
+			
+				if Material(v):GetString("$surfaceprop2") then
+					isDiscplacement = true
+				end
 
-			if not v:find("water") then -- Ignore water
-				data.oldMaterial = v
-				data.newMaterial = material
+				local data = Data_Create(ply)
+			
+				if isDiscplacement then
+					data.oldMaterial = v
+					data.newMaterial = material
+					data.newMaterial2 = material
 
-				table.insert(map, data)
+					table.insert(newTable.displacements, data)
+				else
+					data.oldMaterial = v
+					data.newMaterial = material
+
+					table.insert(newTable.map, data)
+				end
 			end
 		end
 
@@ -1372,8 +1391,6 @@ function Map_Material_SetAll(ply)
 			end
 		end
 		]]
-
-		newTable.map = map
 		
 		-- Apply the fake load
 		Load_Apply(ply, newTable)

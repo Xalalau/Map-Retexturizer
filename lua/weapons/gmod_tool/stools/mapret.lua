@@ -288,22 +288,13 @@ local mr = {}
 	end
 
 	-- -------------------------------------------------------------------------------------
---[[
-	local fakeHostPly
 
-		if SERVER then
-			fakeHostPly = mr.dup.run 
-		end
-]]
+	-- Fake client for remote control
+	local fakeHostPly
 	
-	local fakeHostPly = {
-		mr = {
-			dup = {
-				run = mr.dup.run
-			}
-		},
-		state = mr.state
-	}
+	if SERVER then
+		fakeHostPly = { admin = true }
+	end
 
 --------------------------------
 --- FUNCTION DECLARATIONS
@@ -489,7 +480,11 @@ end
 
 -- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
 function Ply_IsAdmin(ply)
-	if ply ~= fakeHostPly and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+	if SERVER and ply and ply.admin == true then
+		return true
+	end
+
+	if not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
 		end
@@ -1135,7 +1130,7 @@ function Map_Material_Set(ply, data, isDisplacement)
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.mr.state.initializing then
+	if CLIENT or SERVER and not mr.state.firstSpawn or SERVER and mr.state.firstSpawn and mr.state.initializing then
 		 -- Duplicator check
 		local isNewMaterial = false
 		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
@@ -1198,7 +1193,7 @@ function Map_Material_Set(ply, data, isDisplacement)
 
 	if SERVER then
 		-- Send the modification to every player
-		if not ply.mr.state.firstSpawn then
+		if not mr.state.firstSpawn then
 			net.Start("Map_Material_Set")
 				net.WriteTable(data)
 				net.WriteBool(true)
@@ -1486,7 +1481,7 @@ if SERVER then
 	util.AddNetworkString("MapRetToogleDecal")
 
 	net.Receive("MapRetToogleDecal", function(_, ply)
-		ply.mr.state.decalMode = net.ReadBool()
+		mr.state.decalMode = net.ReadBool()
 	end)
 end
 
@@ -1519,14 +1514,14 @@ function Decal_Start(ply, tr, duplicatorData)
 	-- Register and duplicator:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.mr.state.initializing then
+	if not mr.state.firstSpawn or mr.state.firstSpawn and mr.state.initializing then
 		table.insert(mr.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
 		duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Decals", mr.decal.list)
 	end
 
 	-- Send to all players
-	if not ply.mr.state.firstSpawn then
+	if not mr.state.firstSpawn then
 		net.Start("Decal_Apply")
 			net.WriteString(mat)
 			net.WriteEntity(ent)
@@ -1867,7 +1862,7 @@ function Duplicator_SendStatusToCl(ply, current, total, section, resetValues)
 	end
 
 	-- Update every client
-	if not ply.mr.state.firstSpawn then
+	if not mr.state.firstSpawn then
 		net.Start("MapRetUpdateDupProgress")
 			net.WriteInt(current or -1, 14)
 			net.WriteInt(total or -1, 14)
@@ -1917,7 +1912,7 @@ function Duplicator_SendErrorCountToCl(ply, count, material)
 	if CLIENT then return; end
 
 	-- Send the status all players
-	if not ply.mr.state.firstSpawn then
+	if not mr.state.firstSpawn then
 		net.Start("MapRetUpdateDupErrorCount")
 			net.WriteInt(count or 0, 14)
 			net.WriteString(material or "")
@@ -1989,7 +1984,7 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	-- Register that we have model materials to duplicate and count elements
 	if not mr.dup.has.models then
 		mr.dup.has.models = true
-		ply.mr.dup.run.step = "models"
+		mr.dup.run.step = "models"
 		Duplicator_SendStatusToCl(ply, nil, nil, "Model Materials")
 	end
 
@@ -2005,13 +2000,13 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 	end
 
 	-- Count 1
-	ply.mr.dup.run.count.total = ply.mr.dup.run.count.total + 1
-	Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total)
+	mr.dup.run.count.total = mr.dup.run.count.total + 1
+	Duplicator_SendStatusToCl(ply, nil, mr.dup.run.count.total)
 
 	timer.Create("MapRetDuplicatorMapMatWaiting"..tostring(mr.dup.models.delay)..tostring(ply), mr.dup.models.delay, 1, function()
 		-- Count 2
-		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
+		mr.dup.run.count.current = mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, mr.dup.run.count.current)
 
 		-- Check if the material is valid
 		local isValid = Material_IsValid(savedTable.newMaterial)
@@ -2021,13 +2016,13 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 			Model_Material_Set(savedTable)
 		-- Or register an error
 		else
-			ply.mr.dup.run.count.errors.n = ply.mr.dup.run.count.errors.n + 1
-			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, savedTable.newMaterial)
+			mr.dup.run.count.errors.n = mr.dup.run.count.errors.n + 1
+			Duplicator_SendErrorCountToCl(ply, mr.dup.run.count.errors.n, savedTable.newMaterial)
 		end
 
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
 		if mr.dup.models.delay == mr.dup.models.maxDelay then
-			ply.mr.dup.run.step = "decals"
+			mr.dup.run.step = "decals"
 			mr.dup.has.models = false
 			Duplicator_Finish(ply)
 		end
@@ -2048,18 +2043,18 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 
 	-- Force check
 	if forceCheck and not mr.dup.has.models then
-		ply.mr.dup.run.step = "decals"
+		mr.dup.run.step = "decals"
 	end
 
 	-- Register that we have decals to duplicate
-	if not ply.mr.dup.run.has.decals then
-		ply.mr.dup.run.has.decals = true
+	if not mr.dup.run.has.decals then
+		mr.dup.run.has.decals = true
 	end
 
-	if ply.mr.dup.run.step == "decals" then
+	if mr.dup.run.step == "decals" then
 		-- First cleanup
 		if not mr.dup.firstClean then
-			if not ply.mr.state.firstSpawn then
+			if not mr.state.firstSpawn then
 				mr.dup.firstClean = true
 				Material_RestoreAll(ply)
 				timer.Create("MapRetDuplicatorDecalsWaitCleanup", 1, 1, function()
@@ -2078,19 +2073,19 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			position = 1
 
 			-- Set the counting
-			ply.mr.dup.run.count.total = table.Count(savedTable)
-			ply.mr.dup.run.count.current = 0
+			mr.dup.run.count.total = table.Count(savedTable)
+			mr.dup.run.count.current = 0
 
 			-- Update the client
-			Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total, "Decals", true)
+			Duplicator_SendStatusToCl(ply, nil, mr.dup.run.count.total, "Decals", true)
 		end
 
 		-- Apply decal
 		Decal_Start(ply, nil, savedTable[position])
 
 		-- Count
-		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
+		mr.dup.run.count.current = mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, mr.dup.run.count.current)
 
 		-- Next material
 		position = position + 1 
@@ -2100,8 +2095,8 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 			end)
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
 		else
-			ply.mr.dup.run.step = "map"
-			ply.mr.dup.run.has.decals = false
+			mr.dup.run.step = "map"
+			mr.dup.run.has.decals = false
 			Duplicator_Finish(ply)
 		end
 	else
@@ -2135,19 +2130,19 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 	end
 
 	-- Force check
-	if forceCheck and (not mr.dup.has.models and not ply.mr.dup.run.has.decals) then
-		ply.mr.dup.run.step = "map"
+	if forceCheck and (not mr.dup.has.models and not mr.dup.run.has.decals) then
+		mr.dup.run.step = "map"
 	end
 
 	-- Register that we have map materials to duplicate
-	if not ply.mr.dup.run.has.map then
-		ply.mr.dup.run.has.map = true
+	if not mr.dup.run.has.map then
+		mr.dup.run.has.map = true
 	end
 
-	if ply.mr.dup.run.step == "map" then
+	if mr.dup.run.step == "map" then
 		-- First cleanup
 		if not mr.dup.firstClean then
-			if not ply.mr.state.firstSpawn then
+			if not mr.state.firstSpawn then
 				mr.dup.firstClean = true
 				Material_RestoreAll(ply)
 				timer.Create("MapRetDuplicatorMapMatWaitCleanup", 1, 1, function()
@@ -2171,11 +2166,11 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 			-- Set the counting
 			local total1 = savedTable.map and MML_Count(savedTable.map) or 0
 			local total2 = savedTable.displacements and MML_Count(savedTable.displacements) or 0
-			ply.mr.dup.run.count.total = keepCounting + total1 + total2
-			ply.mr.dup.run.count.current = keepCounting
+			mr.dup.run.count.total = keepCounting + total1 + total2
+			mr.dup.run.count.current = keepCounting
 
 			-- Update the client
-			Duplicator_SendStatusToCl(ply, nil, ply.mr.dup.run.count.total, "Map Materials", true)
+			Duplicator_SendStatusToCl(ply, nil, mr.dup.run.count.total, "Map Materials", true)
 		end
 
 		-- Check if we have a valid entry
@@ -2199,15 +2194,15 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 			end
 
 			-- Else just reset the variables because it's the last duplicator section		
-			ply.mr.dup.run.has.map = false
+			mr.dup.run.has.map = false
 			Duplicator_Finish(ply)
 
 			return
 		end
 
 		-- Count
-		ply.mr.dup.run.count.current = ply.mr.dup.run.count.current + 1
-		Duplicator_SendStatusToCl(ply, ply.mr.dup.run.count.current)
+		mr.dup.run.count.current = mr.dup.run.count.current + 1
+		Duplicator_SendStatusToCl(ply, mr.dup.run.count.current)
 
 		-- Check if the materials are valid
 		local isValid = true
@@ -2223,8 +2218,8 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 			Map_Material_Set(ply, materialTable[position], not savedTable.map and savedTable.displacements and true or false)
 		-- Or register an error
 		else
-			ply.mr.dup.run.count.errors.n = ply.mr.dup.run.count.errors.n + 1
-			Duplicator_SendErrorCountToCl(ply, ply.mr.dup.run.count.errors.n, materialTable[position].newMaterial)
+			mr.dup.run.count.errors.n = mr.dup.run.count.errors.n + 1
+			Duplicator_SendErrorCountToCl(ply, mr.dup.run.count.errors.n, materialTable[position].newMaterial)
 		end
 
 		-- Next material
@@ -2259,7 +2254,7 @@ function Duplicator_LoadSkybox(ply, ent, savedTable)
 end
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybox)
 
--- Render duplicator progress bar based on the ply.mr.dup.run.count numbers
+-- Render duplicator progress bar based on the mr.dup.run.count numbers
 if CLIENT then
 	function Duplicator_RenderProgress(ply)
 		if mr.dup.run then
@@ -2324,27 +2319,27 @@ end
 function Duplicator_Finish(ply)
 	if CLIENT then return; end
 
-	if not mr.dup.has.models and not ply.mr.dup.run.has.decals and not ply.mr.dup.run.has.map then
+	if not mr.dup.has.models and not mr.dup.run.has.decals and not mr.dup.run.has.map then
 		-- Set the duplicator as initialized
 		if not mr.initialized then
 			mr.initialized = true
 		end
 
 		-- Reset the progress bar
-		ply.mr.dup.run.step = ""
-		ply.mr.dup.run.count.total = 0
-		ply.mr.dup.run.count.current = 0
+		mr.dup.run.step = ""
+		mr.dup.run.count.total = 0
+		mr.dup.run.count.current = 0
 		Duplicator_SendStatusToCl(ply, 0, 0, "")
 
 		-- Reset the error counting
-		if ply.mr.dup.run.count.errors.n > 0 then
+		if mr.dup.run.count.errors.n > 0 then
 			Duplicator_SendErrorCountToCl(ply, 0)
-			ply.mr.dup.run.count.errors.n = 0
+			mr.dup.run.count.errors.n = 0
 		end
 
 		-- Finish for new players
-		if ply.mr.state.firstSpawn then
-			ply.mr.state.firstSpawn = false
+		if mr.state.firstSpawn then
+			mr.state.firstSpawn = false
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 		-- Finish for the normal usage
@@ -2390,7 +2385,7 @@ function Preview_Toogle(ply, state, setOnClient, setOnServer)
 		end
 	else
 		if setOnServer then
-			ply.mr.state.previewMode = state
+			mr.state.previewMode = state
 		end
 		if setOnClient then
 			net.Start("MapRetTooglePreview")
@@ -2403,9 +2398,7 @@ if SERVER then
 	util.AddNetworkString("MapRetTooglePreview")
 end
 net.Receive("MapRetTooglePreview", function(_, ply)
-	ply = ply or fakeHostPly
-
-	ply.mr.state.previewMode = net.ReadBool()
+	mr.state.previewMode = net.ReadBool()
 end)
 
 -- Material rendering
@@ -2684,7 +2677,7 @@ function Load_Apply(ply, loadTable)
 		local delay = 0
 
 		-- Force to stop any running loading
-		if not ply.mr.state.firstSpawn then
+		if not mr.state.firstSpawn then
 			Duplicator_ForceStop()
 			delay = 0.4
 		end
@@ -2716,20 +2709,20 @@ function Load_Apply(ply, loadTable)
 				outTable3.skybox == "" then
 
 				-- Manually reset the firstSpawn state if it's true and there aren't any modifications
-				if ply.mr.state.firstSpawn then
-					ply.mr.state.firstSpawn = false
+				if mr.state.firstSpawn then
+					mr.state.firstSpawn = false
 					net.Start("MapRetPlyfirstSpawnEnd")
 					net.Send(ply)
 				end
 			else
 				-- Server alert
-				if not ply.mr.state.firstSpawn then
+				if not mr.state.firstSpawn then
 					print("[Map Retexturizer] Loading started...")
 				end
 			end
 
 			-- Reset the force stop var (It was set true in Duplicator_ForceStop())
-			if not ply.mr.state.firstSpawn then
+			if not mr.state.firstSpawn then
 				mr.dup.forceStop = false
 			end
 		end)
@@ -2995,14 +2988,6 @@ end
 function Load_FirstSpawn(ply)
 	if CLIENT then return; end
 
-	-- Index duplicator stuff (serverside)
-	ply.mr = {
-		dup = {
-			run = mr.dup.run
-		},
-		state = mr.state
-	}
-
 	-- Fill up the player load list
 	net.Start("MapRetLoadFillList")
 		net.WriteTable(mr.manage.load.list)
@@ -3016,7 +3001,7 @@ function Load_FirstSpawn(ply)
 		then
 
 		-- Register that the player completed the spawn
-		ply.mr.state.firstSpawn = false
+		mr.state.firstSpawn = false
 		net.Start("MapRetPlyfirstSpawnEnd")
 		net.Send(ply)
 
@@ -3041,7 +3026,7 @@ function Load_FirstSpawn(ply)
 				end
 					
 				if not isloading then
-					ply.mr.state.initializing = true
+					mr.state.initializing = true
 				end
 			end
 
@@ -3078,13 +3063,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	end
 
 	-- The player can't use the tool if he's joining the game yet
-	local ply2
-	if SERVER then
-		ply2 = ply
-	else
-		ply2 = mr.dup.run
-	end
-	if ply2.firstSpawn then
+	if mr.state.firstSpawn then
 		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is still loading, wait a moment.")
 	
 		return false
@@ -3109,7 +3088,7 @@ end
 
 -- Apply materials
 function TOOL:LeftClick(tr)
-	local ply = self:GetOwner() or LocalPlayer()
+	local ply = self:GetOwner() or LocalPlayer()	
 	local ent = tr.Entity	
 	local originalMaterial = Material_GetOriginal(tr)
 
@@ -3119,15 +3098,9 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Do not modify anything in the middle of a loading
-	local ply2
-	if SERVER then
-		ply2 = ply
-	else
-		ply2 = mr.dup.run
-	end
-	if mr.dup.loadingFile ~= "" or ply2.mr.dup.run.step ~= "" then
+	if mr.dup.loadingFile ~= "" or mr.dup.run.step ~= "" then
 		if SERVER then
-			if not ply.mr.state.decalMode then
+			if not mr.state.decalMode then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")
 			end
 		end
@@ -3140,7 +3113,7 @@ function TOOL:LeftClick(tr)
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
-				if not ply.mr_decalmode then
+				if not mr.state.decalMode then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
 				end
 			end
@@ -3182,13 +3155,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- If we are dealing with decals
-	local ply3
-	if SERVER then
-		ply3 = fakeHostPly
-	else
-		ply3 = self:GetOwner()
-	end
-	if ply3.state.decalMode then
+	if mr.state.decalMode then
 		return Decal_Start(ply, tr)
 	end
 
@@ -3365,7 +3332,7 @@ function TOOL:Reload(tr)
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
-				if not ply.mr_decalmode then
+				if not mr.state.decalMode then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
 				end
 			end

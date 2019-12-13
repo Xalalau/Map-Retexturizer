@@ -2356,7 +2356,6 @@ function Duplicator_Finish(ply)
 
 		-- Finish for new players
 		if ply.mr.state.firstSpawn then
-			print("Acabou SV")
 			ply.mr.state.firstSpawn = false
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
@@ -3080,7 +3079,6 @@ if SERVER then
 end
 if CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()
-		print("Acabou CL")
 		mr.state.firstSpawn = false
 	end)
 end
@@ -3285,18 +3283,19 @@ function TOOL:RightClick(tr)
 
 	-- Skybox
 	if originalMaterial == "tools/toolsskybox" then
-		-- Get the materials
-		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
-		local selectedMaterial = GetConVar("mapret_material"):GetString()
+		if CLIENT then
+			-- Get the materials
+			local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
+			local selectedMaterial = GetConVar("mapret_material"):GetString()
 
-		-- Check if the copy isn't necessary
-		if skyboxMaterial == selectedMaterial then
-			return false
+			-- Check if the copy isn't necessary
+			if skyboxMaterial == selectedMaterial then
+				return false
+			end
+
+			-- Copy the material
+			RunConsoleCommand("mapret_material", skyboxMaterial)
 		end
-
-		-- Copy the material
-		ply:ConCommand("mapret_material "..skyboxMaterial)
-
 	-- Normal materials
 	else
 		-- Get data tables with the future and current materials

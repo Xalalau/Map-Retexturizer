@@ -168,6 +168,11 @@ local mr = {}
 		-- Data structures, all the modifications
 		list = {}
 	}
+	if CLIENT then
+		-- I'm reaplying the grass materials on the first usage because they get darker after modified (Tool bug)
+		-- Fix it in the future!
+		mr.displacements.hack = true
+	end
 
 	-- -------------------------------------------------------------------------------------
 
@@ -400,7 +405,7 @@ include("3rd/bsp.lua")
 --------------------------------
 
 -- Fill the displacements list
-timer.Create("MapRetDiscplamentsList", 0.1, 1, function()
+do
 	local map_data = MR_OpenBSP()
 	local found = map_data:ReadLumpTextDataStringData()
 
@@ -412,7 +417,7 @@ timer.Create("MapRetDiscplamentsList", 0.1, 1, function()
 			}
 		end
 	end
-end)
+end
 
 -- Initialize paths
 mr.manage.mapFolder = mr.manage.mainFolder..mr.manage.mapFolder
@@ -464,19 +469,6 @@ if CLIENT then
 
 	-- Default save location
 	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
-
-	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
-	timer.Create("MapRetDiscplamentsDirtyHack", 0.3, 1, function()
-		for k,v in pairs(mr.displacements.detected) do
-			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
-
-			Displacements_Start(ply, k, "dev/graygrid", "dev/graygrid")
-
-			timer.Create("MapRetDiscplamentsDirtyHack3"..k, 0.2, 1, function()
-				Material_Restore(nil, k, true)
-			end)
-		end
-	end)
 end
 
 -------------------------------------
@@ -1743,14 +1735,38 @@ end
 --------------------------------
 
 -- Change the displacements
-function Displacements_Start(ply, displacement, newMaterial, newMaterial2)
+function Displacements_Start(displacement, newMaterial, newMaterial2)
 	if SERVER then return; end
 
-	net.Start("MapRetDisplacements")
-		net.WriteString(displacement)
-		net.WriteString(newMaterial and newMaterial or "")
-		net.WriteString(newMaterial2 and newMaterial2 or "")
-	net.SendToServer()
+	local delay = 0
+
+	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
+	if mr.displacements.hack then
+		for k,v in pairs(mr.displacements.detected) do
+			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
+
+			net.Start("MapRetDisplacements")
+				net.WriteString(k)
+				net.WriteString("dev/graygrid")
+				net.WriteString("dev/graygrid")
+			net.SendToServer()
+
+			timer.Create("MapRetDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
+				Material_Restore(nil, k, true)
+			end, k)
+		end
+
+		delay = 0.3
+		mr.displacements.hack = false
+	end
+
+	timer.Create("MapRetDiscplamentsDirtyHackAdjustment", delay, 1, function()
+		net.Start("MapRetDisplacements")
+			net.WriteString(displacement)
+			net.WriteString(newMaterial and newMaterial or "")
+			net.WriteString(newMaterial2 and newMaterial2 or "")
+		net.SendToServer()
+	end, displacement, newMaterial, newMaterial2)
 end
 function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 	if CLIENT then return; end
@@ -2091,7 +2107,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 		-- Next material
 		position = position + 1 
 		if savedTable[position] and not mr.dup.forceStop then
-			timer.Create("MapRetDuplicatorDecalDelay"..tostring(ply), 0.1, 1, function()
+			timer.Create("MapRetDuplicatorDecalDelay"..tostring(ply), 0.05, 1, function()
 				Duplicator_LoadDecals(ply, nil, savedTable, position)
 			end)
 		-- No more entries. Set the next duplicator section to run if it's active and try to reset variables
@@ -2224,7 +2240,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 		end
 
 		-- Next material
-		timer.Create("MapRetDuplicatorMapMatDelay"..tostring(ply), 0.1, 1, function()
+		timer.Create("MapRetDuplicatorMapMatDelay"..tostring(ply), 0.05, 1, function()
 			Duplicator_LoadMapMaterials(ply, nil, savedTable, position + 1)
 		end)
 	else
@@ -2241,8 +2257,8 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMate
 function Duplicator_LoadSkybox(ply, ent, savedTable)
 	if CLIENT then return; end
 
-	-- This timer is only for good aesthetics on loading
-	timer.Create("MapRetDuplicatorSkyboxWait", 2.5, 1, function()
+	-- This timer avoids cleaning up the sky by accident
+	timer.Create("MapRetDuplicatorSkyboxWait", 1, 1, function()
 		-- Check if client is valid
 		if IsEntity(ply) then
 			if not ply:IsValid() then
@@ -2340,6 +2356,7 @@ function Duplicator_Finish(ply)
 
 		-- Finish for new players
 		if ply.mr.state.firstSpawn then
+			print("Acabou SV")
 			ply.mr.state.firstSpawn = false
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
@@ -3063,6 +3080,7 @@ if SERVER then
 end
 if CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()
+		print("Acabou CL")
 		mr.state.firstSpawn = false
 	end)
 end
@@ -3078,9 +3096,11 @@ function TOOL_BasicChecks(ply, ent, tr)
 	end
 
 	-- The player can't use the tool if he's joining the game yet
-	if SERVER and ply.mr.state.firstSpawn or mr.state.firstSpawn then
-		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is still loading, wait a moment.")
-	
+	if SERVER and ply.mr.state.firstSpawn or CLIENT and mr.state.firstSpawn then
+		if SERVER then
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] The tool is still loading, wait a moment.")
+		end
+
 		return false
 	end
 
@@ -3113,7 +3133,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Do not modify anything in the middle of a loading
-	if mr.dup.loadingFile ~= "" or SERVER and ply.mr.dup.run.step ~= "" or mr.dup.run.step ~= "" then
+	if mr.dup.loadingFile ~= "" or SERVER and ply.mr.dup.run.step ~= "" or CLIENT and mr.dup.run.step ~= "" then
 		if SERVER then
 			if not ply.mr.state.decalMode then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")
@@ -3170,7 +3190,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- If we are dealing with decals
-	if SERVER and ply.mr.state.decalMode or mr.state.decalMode then
+	if SERVER and ply.mr.state.decalMode or CLIENT and mr.state.decalMode then
 		return Decal_Start(ply, tr)
 	end
 
@@ -3228,7 +3248,7 @@ function TOOL:LeftClick(tr)
 	end
 
 	-- Set
-	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0.1 or 0, 1, function()
+	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 		-- model material
 		if IsValid(ent) then
 			Model_Material_Set(newData)
@@ -3370,7 +3390,7 @@ function TOOL:Reload(tr)
 	-- Reset the material
 	if Data_Get(tr) then
 		if SERVER then
-			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0.1 or 0, 1, function()
+			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				Material_Restore(ent, Material_GetOriginal(tr))
 			end)
 		end
@@ -3390,7 +3410,7 @@ function TOOL:DrawHUD()
 
 	-- HACK: Needed to force mapret_detail to use the right value
 	if mr.state.cVarValueHack then
-		timer.Create("mapretDetailHack", 0.3, 1, function()
+		timer.Create("MapRetDetailHack", 0.3, 1, function()
 			CVars_SetToDefaults(LocalPlayer())
 		end)
 
@@ -3402,7 +3422,11 @@ end
 function TOOL.BuildCPanel(CPanel)
 	CPanel:SetName("#tool.mapret.name")
 	CPanel:Help("#tool.mapret.desc")
-	local ply = LocalPlayer()
+	local ply
+
+	timer.Create("MapRetMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
+		ply = LocalPlayer()
+	end)
 
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
 	local function Properties_Toogle(val)
@@ -3558,7 +3582,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-					Displacements_Start(ply, comboBoxValue, text1Value, mr.gui.displacements.text2:GetValue())
+					Displacements_Start(comboBoxValue, text1Value, mr.gui.displacements.text2:GetValue())
 				end
 			mr.gui.displacements.text2 = CPanel:TextEntry("Texture 2:", "")
 				mr.gui.displacements.text2.OnEnter = function(self)
@@ -3569,7 +3593,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 					DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-					Displacements_Start(ply, comboBoxValue, mr.gui.displacements.text1:GetValue(), text2Value)
+					Displacements_Start(comboBoxValue, mr.gui.displacements.text1:GetValue(), text2Value)
 				end
 			CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
 	end

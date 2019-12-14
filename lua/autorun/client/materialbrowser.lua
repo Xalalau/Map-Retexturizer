@@ -101,10 +101,9 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 end
 
 local Window
+local MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
 
 local function CreateMaterialBrowser()
-	local MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = "color"})
-
 	local topBar = 25
 	local border = 5
 	local buttonsHeight = 25
@@ -115,6 +114,8 @@ local function CreateMaterialBrowser()
 	local materialBoxSize = 4 * windowWidth/7 - border * 2
 
 	if not Window then
+		MatRetMaterial:SetTexture("$basetexture", Material("color"):GetTexture("$basetexture"));
+	
 		Window = vgui.Create("DFrame")
 			Window:SetTitle("Map Retexturizer Material Browser")
 			Window:SetSize(windowWidth, windowHeight)

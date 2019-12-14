@@ -153,6 +153,10 @@ local mr = {}
 		-- Data structures, all the modifications
 		list = {}
 	}
+	if SERVER then
+		-- List of valid exclusive valid clientside materials
+		mr.map.clientOnlyList = {}
+	end
 	
 	-- -------------------------------------------------------------------------------------
 
@@ -329,6 +333,7 @@ local CVars_SetToData
 local CVars_SetToDefaults
 
 local Material_IsValid
+local Material_ForceValid
 local Material_GetOriginal
 local Material_GetCurrent
 local Material_GetNew
@@ -702,40 +707,53 @@ end
 
 -- Check if a given material path is valid
 function Material_IsValid(material)
-	-- Do not try to load nonexistent materials
+	-- Do not try to check nonexistent materials
 	if not material or material == "" then
 		return false
 	end
 
+	-- Checks
 	local fileExists = false
 
-	--for _,v in pairs({ ".vmf", ".png", ".jpg" }) do
-	for _,v in pairs({ ".vmf" }) do
+	for _,v in pairs({ ".vmf" }) do -- { ".vmf", ".png", ".jpg" }
 		if file.Exists("materials/"..material..v, "GAME") then
 			fileExists = true
+			print("exste")
 		end
 	end
 
-	if not fileExists then
-		-- For some reason there are map materials loaded and working but not present in the folders.
-		-- I guess they are embbeded. So if the material is not considered an error, go ahead...
-		if Material(material):IsError() then
-			return false
-		end
-	end
-
-	-- Checks
-	if material == "" or 
+	if material == "" or
 		string.find(material, "../", 1, true) or
 		string.find(material, "pp/", 1, true) or
-		not Material(material):GetTexture("$basetexture") or
-		Material(material):IsError() and not fileExists then
+		Material(material):IsError() or
+		not Material(material):GetTexture("$basetexture") then
+		
+		if SERVER and mr.map.clientOnlyList[material] then
+			return true
+		end
 
 		return false
 	end
 
 	-- Ok
 	return true
+end
+
+-- Force valid exclusive clientside materials to be valid on serverside
+if SERVER then
+	util.AddNetworkString("Material_ForceValid")
+end
+function Material_ForceValid(material)
+	if CLIENT then return; end
+
+	if not Material_IsValid(material) then
+		mr.map.clientOnlyList[material] = ""
+	end
+end
+if SERVER then
+	net.Receive("Material_ForceValid", function()
+		Material_ForceValid(net.ReadString())
+	end)
 end
 
 -- Get the original material full path
@@ -3463,6 +3481,13 @@ function TOOL.BuildCPanel(CPanel)
 
 	timer.Create("MapRetMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
 		ply = LocalPlayer()
+
+		-- Validate the selected material
+		if CLIENT then
+			net.Start("Material_ForceValid")
+				net.WriteString(GetConVar("mapret_material"):GetString())
+			net.SendToServer()
+		end
 	end)
 
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
@@ -3487,7 +3512,13 @@ function TOOL.BuildCPanel(CPanel)
 	local sectionGeneral = vgui.Create("DCollapsibleCategory", CPanel)
 	CPanel:AddItem(sectionGeneral)
 		sectionGeneral:SetLabel("General")
-		CPanel:TextEntry("Material path", "mapret_material")
+		local materialValue = CPanel:TextEntry("Material path", "mapret_material")
+		materialValue.OnEnter = function(self)
+			net.Start("Material_ForceValid")
+				net.WriteString(self:GetValue())
+			net.SendToServer()
+		end
+		
 		local generalPanel = vgui.Create("DPanel")
 			CPanel:AddItem(generalPanel)
 			generalPanel:SetHeight(20)

@@ -91,6 +91,9 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 				n.DoClick = function()
 					RunConsoleCommand("mapret_material", arq)
 					MatRetMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"));
+					net.Start("Material_ForceValid")
+						net.WriteString(arq)
+					net.SendToServer()
 				end
 			end
 		end

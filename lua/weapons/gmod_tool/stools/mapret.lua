@@ -2483,16 +2483,31 @@ if CLIENT then
 
 		-- Map material
 		if mapMatMode then
-			-- Resize
-			while width > 512 or height > 300 do
-				width = width/1.1
-				height = height/1.1
+			-- Resize material to a max size keeping the proportions
+			local maxSize = 250
+			
+			local texture = {
+				["width"] = preview:Width(),
+				["height"] = preview:Height()
+			}
+
+			local dimension
+
+			if texture["width"] > texture["height"] then
+				dimension = "width"
+			else
+				dimension = "height"
 			end
+
+			local proportion = maxSize / texture[dimension]
+
+			texture["width"] = texture["width"] * proportion
+			texture["height"] = texture["height"] * proportion
 
 			-- Render map material
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(preview)
-			surface.DrawTexturedRect(25, ScrH()/2 - height/2, width, height)
+			surface.DrawTexturedRect(25, ScrH() - texture["height"] - 100, texture["width"], texture["height"])
 		-- Decal
 		else
 			local ang = tr.HitNormal:Angle()

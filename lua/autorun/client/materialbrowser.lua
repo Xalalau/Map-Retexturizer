@@ -169,7 +169,7 @@ local function CreateMaterialBrowser()
 			Copy:SetPos(border + materialBoxSize/2, materialBoxSize + border * 2 + topBar)
 			Copy:SetText("Copy to Clipboard")
 			Copy.DoClick = function()
-				SetClipboardText(MaterialBox:GetMaterial():GetTexture("$basetexture"):GetName())
+				SetClipboardText(MatRetMaterial:GetTexture("$basetexture"):GetName())
 			end
 
 		FillList()

@@ -53,7 +53,7 @@ CreateConVar("mapret_skybox", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATE
 CreateConVar("mapret_skybox_toolgun", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
 CreateConVar("mapret_decal", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
 CreateConVar("mapret_preview", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE })
-CreateConVar("mapret_using_material_browser", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
+CreateConVar("mapret_block_preview", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
 TOOL.ClientConVar["displacement"] = ""
 TOOL.ClientConVar["savename"] = ""
 TOOL.ClientConVar["material"] = "dev/dev_blendmeasure"
@@ -368,6 +368,7 @@ local Displacements_Start
 local Displacements_Apply
 local Displacements_Remove
 
+local Duplicator_Start
 local Duplicator_CreateEnt
 local Duplicator_SendStatusToCl
 local Duplicator_SendErrorCountToCl
@@ -1888,7 +1889,24 @@ end
 --- DUPLICATOR
 --------------------------------
 
--- Models and decals must be processed first than the map.
+-- Note: models and decals must be processed first than the map materials.
+
+-- Duplicator start
+function Duplicator_Start(ply, ent, savedTable)
+	if CLIENT then return; end
+
+	-- Block the preview
+	ply:ConCommand("mapret_block_preview 1")
+
+	-- Start loading
+	if savedTable.decals then
+		Duplicator_LoadDecals(ply, ent, savedTable)
+	elseif savedTable.map or savedTable.displacements then
+		Duplicator_LoadMapMaterials(ply, ent, savedTable)
+	elseif savedTable.skybox then
+		Duplicator_LoadSkybox(ply, ent, savedTable)
+	end
+end
 
 -- Set the duplicator
 function Duplicator_CreateEnt(ent)
@@ -2088,7 +2106,7 @@ function Duplicator_LoadModelMaterials(ply, ent, savedTable)
 		end
 	end)
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Models", Duplicator_LoadModelMaterials)
+duplicator.RegisterEntityModifier("MapRetexturizer_Models", Duplicator_Start)
 
 -- Load map materials from saves
 function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
@@ -2166,7 +2184,7 @@ function Duplicator_LoadDecals(ply, ent, savedTable, position, forceCheck)
 		end)
 	end
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_LoadDecals)
+duplicator.RegisterEntityModifier("MapRetexturizer_Decals", Duplicator_Start)
 
 -- Load map materials from saves
 function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck, keepCounting)
@@ -2180,6 +2198,9 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 	-- Compatibility with the old saving format
 	if not savedTable.map and not savedTable.displacements then
 		savedTable = { map = savedTable, displacements = nil }
+
+		-- Block the preview
+		ply:ConCommand("mapret_block_preview 1")
 	end
 
 	-- Check if client is valid
@@ -2293,7 +2314,7 @@ function Duplicator_LoadMapMaterials(ply, ent, savedTable, position, forceCheck,
 		end)
 	end
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Map", Duplicator_LoadMapMaterials)
+duplicator.RegisterEntityModifier("MapRetexturizer_Map", Duplicator_Start)
 duplicator.RegisterEntityModifier("MapRetexturizer_Maps", Duplicator_LoadMapMaterials) -- Compatibility with the old saving format
 
 -- Load the skybox
@@ -2312,7 +2333,7 @@ function Duplicator_LoadSkybox(ply, ent, savedTable)
 		Skybox_Apply(ply, savedTable.skybox)
 	end)
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_LoadSkybox)
+duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_Start)
 
 -- Render duplicator progress bar based on the mr.dup.run.count numbers
 if CLIENT then
@@ -2384,6 +2405,9 @@ function Duplicator_Finish(ply)
 		if not mr.initialized then
 			mr.initialized = true
 		end
+
+		-- Unblock the preview
+		ply:ConCommand("mapret_block_preview 0")
 
 		-- Reset the progress bar
 		ply.mr.dup.run.step = ""
@@ -2469,7 +2493,7 @@ end)
 if CLIENT then
 	function Preview_Render(ply, mapMatMode)
 		-- Don't render if the material browser is open
-		if GetConVar("mapret_using_material_browser"):GetBool() then
+		if GetConVar("mapret_block_preview"):GetBool() then
 			return
 		end
 
@@ -2754,6 +2778,9 @@ function Load_Apply(ply, loadTable)
 		end
 	end
 	]]
+
+	-- Block the preview
+	ply:ConCommand("mapret_block_preview 1")
 
 	local outTable1, outTable2, outTable3
 
@@ -3556,7 +3583,7 @@ function TOOL.BuildCPanel(CPanel)
 		CPanel:Button("Change all map materials","mapret_changeall")
 		local openMaterialBrowser = CPanel:Button("Open Material Browser","mapret_materialbrowser")
 			function openMaterialBrowser:DoClick()				
-				RunConsoleCommand("mapret_using_material_browser", "1")
+				RunConsoleCommand("mapret_block_preview", "1")
 				RunConsoleCommand("mapret_materialbrowser")
 			end
 

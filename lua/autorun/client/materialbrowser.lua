@@ -130,7 +130,7 @@ local function CreateMaterialBrowser()
 			end
 			Window.Close = function()
 				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				RunConsoleCommand("mapret_using_material_browser", "0")
+				RunConsoleCommand("mapret_block_preview", "0")
 				Window:SetVisible(false)
 			end
 

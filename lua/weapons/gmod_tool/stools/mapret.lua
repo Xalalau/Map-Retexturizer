@@ -3514,9 +3514,11 @@ function TOOL.BuildCPanel(CPanel)
 		sectionGeneral:SetLabel("General")
 		local materialValue = CPanel:TextEntry("Material path", "mapret_material")
 		materialValue.OnEnter = function(self)
-			net.Start("Material_ForceValid")
-				net.WriteString(self:GetValue())
-			net.SendToServer()
+			if Material_IsValid(self:GetValue()) then
+				net.Start("Material_ForceValid")
+					net.WriteString(self:GetValue())
+				net.SendToServer()
+			end
 		end
 		
 		local generalPanel = vgui.Create("DPanel")

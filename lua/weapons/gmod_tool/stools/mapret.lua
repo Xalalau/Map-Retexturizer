@@ -53,6 +53,7 @@ CreateConVar("mapret_skybox", "", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATE
 CreateConVar("mapret_skybox_toolgun", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE, FCVAR_REPLICATED })
 CreateConVar("mapret_decal", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
 CreateConVar("mapret_preview", "1", { FCVAR_CLIENTCMD_CAN_EXECUTE })
+CreateConVar("mapret_using_material_browser", "0", { FCVAR_CLIENTCMD_CAN_EXECUTE })
 TOOL.ClientConVar["displacement"] = ""
 TOOL.ClientConVar["savename"] = ""
 TOOL.ClientConVar["material"] = "dev/dev_blendmeasure"
@@ -83,6 +84,7 @@ local mr = {}
 		mr.state.initializing = true
 	elseif CLIENT then
 		mr.state.cVarValueHack = true
+		mr.state.materialBrowserMode = false
 	end
 
 	-- -------------------------------------------------------------------------------------
@@ -2466,6 +2468,12 @@ end)
 -- Material rendering
 if CLIENT then
 	function Preview_Render(ply, mapMatMode)
+		-- Don't render if the material browser is open
+		if GetConVar("mapret_using_material_browser"):GetBool() then
+			return
+		end
+
+		-- Start...
 		local tr = ply:GetEyeTrace()
 		local oldData = Data_CreateFromMaterial("MatRetPreviewMaterial")
 		local newData = mapMatMode and Data_Create(ply, tr) or Data_CreateDefaults(ply, tr)
@@ -3546,7 +3554,11 @@ function TOOL.BuildCPanel(CPanel)
 				end
 				]]
 		CPanel:Button("Change all map materials","mapret_changeall")
-		CPanel:Button("Open Material Browser","mapret_materialbrowser")
+		local openMaterialBrowser = CPanel:Button("Open Material Browser","mapret_materialbrowser")
+			function openMaterialBrowser:DoClick()				
+				RunConsoleCommand("mapret_using_material_browser", "1")
+				RunConsoleCommand("mapret_materialbrowser")
+			end
 
 	-- Properties
 	CPanel:Help(" ")

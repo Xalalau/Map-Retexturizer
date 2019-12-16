@@ -81,7 +81,7 @@ local mr = {}
 		decalMode = false
 	}
 	if SERVER then
-		mr.state.initializing = true
+		mr.state.initializing = false
 	elseif CLIENT then
 		mr.state.cVarValueHack = true
 		mr.state.materialBrowserMode = false
@@ -307,7 +307,7 @@ local mr = {}
 
 	-- Fake client for remote control
 	local fakeHostPly
-	
+
 	if SERVER then
 		fakeHostPly = { admin = true }
 	end
@@ -1151,10 +1151,11 @@ function Map_Material_Set(ply, data, isDisplacement)
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
+	local materialTable = isDisplacement and mr.displacements.list or mr.map.list
+
 	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.mr.state.initializing then
-		 -- Duplicator check
+		-- Duplicator check
 		local isNewMaterial = false
-		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
 
 		if SERVER then
 			if not data.backup then
@@ -1349,7 +1350,7 @@ function Map_Material_SetAll(ply)
 		return false
 	end
 
-	-- Register that the map is manually modified
+	-- Register that the map is modified
 	if not mr.initialized then
 		mr.initialized = true
 	end
@@ -1676,12 +1677,19 @@ function Skybox_Apply(ply, mat)
 
 	-- Apply the material to every client
 	RunConsoleCommand("mapret_skybox", mat)	
+	
+	return true
 end
 if SERVER then
 	util.AddNetworkString("MapRetSkybox")
 
 	net.Receive("MapRetSkybox", function(_, ply)
-		Skybox_Apply(ply, net.ReadString())
+		if Skybox_Apply(ply, net.ReadString()) then
+			-- Register that the map is modified
+			if not mr.initialized then
+				mr.initialized = true
+			end
+		end
 	end)
 end
 
@@ -1846,6 +1854,11 @@ function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2
+
+	-- Register that the map is modified
+	if not mr.initialized then
+		mr.initialized = true
+	end
 
 	-- Apply the changes
 	Map_Material_Set(ply, data, true)
@@ -2401,7 +2414,7 @@ function Duplicator_Finish(ply)
 	if CLIENT then return; end
 
 	if not mr.dup.has.models and not ply.mr.dup.run.has.decals and not ply.mr.dup.run.has.map then
-		-- Set the duplicator as initialized
+		-- Register that the map is modified
 		if not mr.initialized then
 			mr.initialized = true
 		end
@@ -3137,7 +3150,8 @@ function Load_FirstSpawn(ply)
 			Load_Apply(ply, nil)
 		-- Or load a saved file
 		else
-			-- Register if the player is also initializing the material table
+			-- Register if A player is initializing the materials tables (first load ever)
+			-- Only him can fill up the data, others apply it directly from the saved file
 			if not mr.initialized then
 				local isloading = false
 
@@ -3259,6 +3273,11 @@ function TOOL:LeftClick(tr)
 			Skybox_Apply(ply, selectedMaterial)
 		end
 
+		-- Register that the map is modified
+		if not mr.initialized then
+			mr.initialized = true
+		end
+
 		-- Set the Undo
 		undo.Create("Material")
 			undo.SetPlayer(ply)
@@ -3314,7 +3333,7 @@ function TOOL:LeftClick(tr)
 		return false
 	end
 
-	-- Register that the map is manually modified
+	-- Register that the map is modified
 	if not mr.initialized then
 		mr.initialized = true
 	end

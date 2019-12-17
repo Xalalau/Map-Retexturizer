@@ -236,9 +236,8 @@ local mr = {}
 		}
 		-- Register what type of materials the duplicator has
 		mr.dup.has = {
-			models = false
+			models = false -- Note: [FIX] this field is from an old structure! Add it into mr.dup.run.has.models. (Models duplication is disabled by default)
 		}
-		-- Register what type of materials the duplicator has
 		mr.dup.run.has = {
 			map = false,
 			decals = false

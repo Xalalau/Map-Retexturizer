@@ -1061,32 +1061,43 @@ if SERVER then
 	util.AddNetworkString("Model_Material_Set")
 end
 function Model_Material_Set(data)
-	if SERVER then
-		-- Send the modification to every player
-		net.Start("Model_Material_Set")
-			net.WriteTable(data)
-		net.Broadcast()
+	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.mr.state.initializing then
+		if SERVER then
+			-- Set the duplicator
+			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
+		end
 
-		-- Set the duplicator
-		duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
+		-- Create a material
+		local materialID = Model_Material_Create(data)
+
+		-- Changes the new material for the created new one
+		data.newMaterial = materialID
+
+		-- Indicate that the model got modified by this tool
+		data.ent.modifiedMaterial = data
+
+		-- Set the alpha
+		data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
+		data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
+
+		if CLIENT then
+			-- Apply the material
+			data.ent:SetMaterial("!"..materialID)
+		end	
 	end
 
-	-- Create a material
-	local materialID = Model_Material_Create(data)
-
-	-- Changes the new material for the created new one
-	data.newMaterial = materialID
-
-	-- Indicate that the model got modified by this tool
-	data.ent.modifiedMaterial = data
-
-	-- Set the alpha
-	data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
-	data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
-
-	if CLIENT then
-		-- Apply the material
-		data.ent:SetMaterial("!"..materialID)
+	if SERVER then
+		-- Send the modification to every player
+		if not ply.mr.state.firstSpawn then
+			net.Start("Model_Material_Set")
+				net.WriteTable(data)
+			net.Broadcast()
+		-- Or for a single player
+		else
+			net.Start("Model_Material_Set")
+				net.WriteTable(data)
+			net.Send(ply)
+		end
 	end
 end
 if CLIENT then
@@ -1143,9 +1154,9 @@ function Map_Material_Set(ply, data, isDisplacement)
 	-- Set the backup:
 	-- Olny register the modifications if they are being made by a player not in the first spawn or
 	-- a player in the first spawn and initializing the materials on the serverside
-	local materialTable = isDisplacement and mr.displacements.list or mr.map.list
-
 	if CLIENT or SERVER and not ply.mr.state.firstSpawn or SERVER and ply.mr.state.firstSpawn and ply.mr.state.initializing then
+		local materialTable = isDisplacement and mr.displacements.list or mr.map.list
+	
 		-- Duplicator check
 		local isNewMaterial = false
 
@@ -1536,20 +1547,16 @@ function Decal_Start(ply, tr, duplicatorData)
 		return true
 	end
 
-	-- Create the duplicator entity if it's necessary
-	Duplicator_CreateEnt()
-
 	-- Get the basic properties
 	local ent = tr and tr.Entity or duplicatorData.ent
 	local pos = tr and tr.HitPos or duplicatorData.pos
 	local hit = tr and tr.HitNormal or duplicatorData.hit
 
-	-- Register and duplicator:
-	-- Olny register the modifications if they are being made by a player not in the first spawn or
-	-- a player in the first spawn and initializing the materials on the serverside
 	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.mr.state.initializing then
+		-- Index the data
 		table.insert(mr.decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
+		-- Set the duplicator
 		duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Decals", mr.decal.list)
 	end
 
@@ -1673,14 +1680,16 @@ function Skybox_Apply(ply, mat)
 		return false
 	end
 
-	-- Create the duplicator entity if it's necessary
-	Duplicator_CreateEnt()
+	if not ply.mr.state.firstSpawn or ply.mr.state.firstSpawn and ply.mr.state.initializing then
+		-- Create the duplicator entity if it's necessary
+		Duplicator_CreateEnt()
 
-	-- Set the duplicator
-	duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox", { skybox = mat })
+		-- Set the duplicator
+		duplicator.StoreEntityModifier(mr.dup.entity, "MapRetexturizer_Skybox", { skybox = mat })
 
-	-- Apply the material to every client
-	RunConsoleCommand("mapret_skybox", mat)	
+		-- Apply the material to every client
+		RunConsoleCommand("mapret_skybox", mat)	
+	end
 	
 	return true
 end

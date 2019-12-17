@@ -925,8 +925,8 @@ function Material_RestoreAll(ply)
 	Model_Material_RemoveAll(ply)
 	Map_Material_RemoveAll(ply)
 	Decal_RemoveAll(ply)
+	Displacements_RemoveAll(ply)
 	Skybox_Remove(ply)
-	Displacements_Remove(ply)
 end
 if SERVER then
 	util.AddNetworkString("Material_RestoreAll")
@@ -1481,16 +1481,7 @@ function Map_Material_RemoveAll(ply)
 	-- Stop the duplicator
 	Duplicator_ForceStop()
 
-	-- Remove displacements
-	if MML_Count(mr.displacements.list) > 0 then
-		for k,v in pairs(mr.displacements.list) do
-			if v.oldMaterial ~=nil then
-				Material_Restore(nil, v.oldMaterial, true)
-			end
-		end
-	end
-
-	-- Remove general materials
+	-- Remove
 	if MML_Count(mr.map.list) > 0 then
 		for k,v in pairs(mr.map.list) do
 			if v.oldMaterial ~=nil then
@@ -1904,19 +1895,32 @@ if SERVER then
 	end)
 end
 
--- Remove all displacements
-function Displacements_Remove(ply)
+-- Remove displacements
+function Displacements_RemoveAll(ply)
 	if CLIENT then return; end
 
-	for k,v in pairs(mr.displacements.list) do
-		Material_Restore(nil, k, true)
+	-- Admin only
+	if not Ply_IsAdmin(ply) then
+		return false
+	end
+
+	-- Stop the duplicator
+	Duplicator_ForceStop()
+
+	-- Remove
+	if MML_Count(mr.displacements.list) > 0 then
+		for k,v in pairs(mr.displacements.list) do
+			if v.oldMaterial ~=nil then
+				Material_Restore(nil, v.oldMaterial, true)
+			end
+		end
 	end
 end
 if SERVER then
-	util.AddNetworkString("Displacements_Remove")
+	util.AddNetworkString("Displacements_RemoveAll")
 
-	net.Receive("Displacements_Remove", function(_, ply)
-		Displacements_Remove(ply)
+	net.Receive("Displacements_RemoveAll", function(_, ply)
+		Displacements_RemoveAll(ply)
 	end)
 end
 

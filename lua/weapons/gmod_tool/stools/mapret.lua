@@ -418,6 +418,8 @@ do
 
 	for k,v in pairs(found) do
 		if Material(v):GetString("$surfaceprop2") then
+			v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
+
 			mr.displacements.detected[v] = {
 				Material(v):GetTexture("$basetexture"):GetName(),
 				Material(v):GetTexture("$basetexture2"):GetName()
@@ -1384,7 +1386,7 @@ function Map_Material_SetAll(ply)
 
 				local data = Data_Create(ply)
 				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
-			
+
 				if isDiscplacement then
 					data.oldMaterial = v
 					data.newMaterial = material
@@ -1808,8 +1810,6 @@ function Displacements_Start(displacement, newMaterial, newMaterial2)
 	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
 	if mr.displacements.hack then
 		for k,v in pairs(mr.displacements.detected) do
-			local k = k:sub(1, #k - 1) -- Remove last char (linebreak?)
-
 			net.Start("MapRetDisplacements")
 				net.WriteString(k)
 				net.WriteString("dev/graygrid")
@@ -1843,7 +1843,7 @@ function Displacements_Apply(ply, displacement, newMaterial, newMaterial2)
 
 	-- Correct the material values
 	for k,v in pairs(mr.displacements.detected) do -- Don't apply default  materials directly
-		if k:sub(1, #k - 1) == displacement then -- Note: remove last char (linebreak?)
+		if k == displacement then
 			if v[1] == newMaterial then
 				newMaterial = nil
 			end
@@ -2803,7 +2803,7 @@ function Load_IsRunning(ply)
 	-- Don't use the tool in the middle of a loading
 	if mr.dup.loadingFile ~= "" then
 		if ply then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait for the loading to finish.")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until loading finishes.")
 		end
 
 		return true

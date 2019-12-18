@@ -478,6 +478,13 @@ if CLIENT then
 
 	-- Default save location
 	RunConsoleCommand("mapret_savename", mr.manage.save.defaulName)
+
+	-- Validate the selected material
+	timer.Create("WaitForNet", 0.1, 1, function()
+		net.Start("Material_ForceValid")
+			net.WriteString(GetConVar("mapret_material"):GetString())
+		net.SendToServer()
+	end)
 end
 
 -------------------------------------
@@ -3559,13 +3566,6 @@ function TOOL.BuildCPanel(CPanel)
 
 	timer.Create("MapRetMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
 		ply = LocalPlayer()
-
-		-- Validate the selected material
-		if CLIENT then
-			net.Start("Material_ForceValid")
-				net.WriteString(GetConVar("mapret_material"):GetString())
-			net.SendToServer()
-		end
 	end)
 
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }

@@ -1360,7 +1360,7 @@ function Map_Material_SetAll(ply)
 	-- Clean the map
 	Material_RestoreAll(ply, true)
 
-	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), 0.5, 1, function()
+	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not ply.mr.state.firstSpawn and  Duplicator_ForceStop() and 0.4 or 0, 1, function() -- Wait to the last command to be done			
 		-- Create a fake loading table
 		local newTable = {
 			map = {},
@@ -1417,7 +1417,7 @@ function Map_Material_SetAll(ply)
 		]]
 		
 		-- Apply the fake load
-		Load_Apply(ply, newTable)
+		Load_Apply(ply, newTable, "all_materials")
 	end)
 end
 if CLIENT then
@@ -2833,7 +2833,7 @@ function Load_Start(ply)
 		net.WriteString(loadName)
 	net.SendToServer()
 end
-function Load_Apply(ply, loadTable)
+function Load_Apply(ply, loadTable, loadName)
 	if CLIENT then return; end
 
 	--[[
@@ -2849,6 +2849,13 @@ function Load_Apply(ply, loadTable)
 
 	-- Block the preview
 	ply:ConCommand("mapret_block_preview 1")
+
+	-- Register the name of the loading (one that is running for all the players)
+	mr.dup.loadingFile = loadName
+
+	net.Start("MapRetLoad_SetPly")
+		net.WriteString(loadName)
+	net.Send(ply)
 
 	-- Apply decals
 	outTable1 = loadTable and loadTable.decals or mr.decal.list
@@ -2877,6 +2884,7 @@ function Load_Apply(ply, loadTable)
 		-- Manually reset the firstSpawn state if it's true and there aren't any modifications
 		if ply.mr.state.firstSpawn then
 			ply.mr.state.firstSpawn = false
+
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 		end
@@ -2909,22 +2917,16 @@ if SERVER then
 
 		-- Get the load file content
 		loadTable = util.JSONToTable(file.Read(loadFile, "DATA"))
-		
+
+		-- Start the loading
 		if loadTable then
 			timer.Create("MapRetFirstJoinStart", not ply.mr.state.firstSpawn and  Duplicator_ForceStop() and 0.4 or 0, 1, function() -- Wait to the last command to be done				
-				-- Register the name of the loading (one that is running for all the players)
-				mr.dup.loadingFile = loadName
-				net.Start("MapRetLoad_SetPly")
-					net.WriteString(loadName)
-				net.Send(ply)
-
-				-- Start the loading
-				Load_Apply(ply, loadTable)
+				Load_Apply(ply, loadTable, loadFile)
 			end)
 
 			return true
 		end
-		
+
 		return false
 
 	end)
@@ -3183,7 +3185,7 @@ function Load_FirstSpawn(ply)
 	timer.Create("MapRetfirstSpawnApplyDelay"..tostring(ply), 5, 1, function()
 		-- Send the current modifications
 		if not Load_IsRunning() and (GetConVar("mapret_autoload"):GetString() == "" or mr.initialized) then
-			Load_Apply(ply, nil)
+			Load_Apply(ply, nil, "first_spawn_current")
 		-- Or load a saved file
 		else
 			-- Register if A player is initializing the materials tables (first load ever)
@@ -3208,7 +3210,7 @@ function Load_FirstSpawn(ply)
 			-- Load the materials
 			if autol ~= "" then
 				local loadTable = util.JSONToTable(file.Read(mr.manage.mapFolder..autol..".txt"))
-				Load_Apply(ply, loadTable)
+				Load_Apply(ply, loadTable, "first_spawn_load_file")
 			end
 		end
 	end)

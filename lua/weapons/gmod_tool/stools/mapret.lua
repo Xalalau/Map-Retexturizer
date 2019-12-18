@@ -1383,6 +1383,7 @@ function Map_Material_SetAll(ply)
 				end
 
 				local data = Data_Create(ply)
+				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 			
 				if isDiscplacement then
 					data.oldMaterial = v

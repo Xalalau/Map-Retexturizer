@@ -2391,7 +2391,7 @@ if CLIENT then
 	function Duplicator_RenderProgress(ply)
 		if mr.dup.run then
 			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
-				local x, y, w, h = 25, ScrH() - 110, 200, 20 
+				local x, y, w, h = ScrW()/2 - 100, ScrH() - 40, 200, 20
 
 				surface.SetDrawColor(0, 0, 0, 255)
 				surface.DrawOutlinedRect(x, y, w, h)
@@ -2590,8 +2590,8 @@ if CLIENT then
 		-- Map material
 		if mapMatMode then
 			-- Resize material to a max size keeping the proportions
-			local maxSize = 250
-			
+			local maxSize = 200 * ScrH() / 768 -- Current screen height / 720p screen height = good resizing up to 4k
+
 			local texture = {
 				["width"] = preview:Width(),
 				["height"] = preview:Height()
@@ -2613,7 +2613,7 @@ if CLIENT then
 			-- Render map material
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(preview)
-			surface.DrawTexturedRect(25, ScrH() - texture["height"] - 100, texture["width"], texture["height"])
+			surface.DrawTexturedRect( 20, 230, texture["width"], texture["height"])
 		-- Decal
 		else
 			local ang = tr.HitNormal:Angle()

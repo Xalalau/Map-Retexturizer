@@ -2386,26 +2386,64 @@ function Duplicator_LoadSkybox(ply, ent, savedTable)
 end
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", Duplicator_Start)
 
--- Render duplicator progress bar based on the mr.dup.run.count numbers
+-- Render duplicator progress
 if CLIENT then
 	function Duplicator_RenderProgress(ply)
-		if mr.dup.run then
-			if mr.dup.run.count.total > 0 and mr.dup.run.count.current > 0 then
-				local x, y, w, h = ScrW()/2 - 100, ScrH() - 40, 200, 20
+		if mr.dup.count then
+			if mr.dup.count.total > 0 and mr.dup.count.current > 0 then				
+				local borderOut = 2
+				local border = 5
 
-				surface.SetDrawColor(0, 0, 0, 255)
-				surface.DrawOutlinedRect(x, y, w, h)
-					
-				surface.SetDrawColor(200, 0, 0, 255)
-				surface.DrawRect(x + 1.2, y + 1.2, w * (mr.dup.run.count.current / mr.dup.run.count.total) - 2, h - 2)
+				local line = {
+					w = 200,
+					h = 20
+				}
 
-				surface.SetDrawColor(0, 0, 0, 150)
-				surface.DrawRect(x + 1.2, y - 42, w, h * 2)
+				local window = {
+					x = ScrW() / 2 - line.w / 2,
+					y = ScrH() - line.h * 5,
+					w = line.w,
+					h = line.h * 3 + border * 3
+				}
 
-				draw.DrawText("MAP RETEXTURIZER","HudHintTextLarge",x+w/2,y-40,Color(255,255,255,255),1)
-				draw.DrawText(mr.dup.run.step..": "..tostring(mr.dup.run.count.current).."/"..tostring(mr.dup.run.count.total),"CenterPrintText",x+w/2,y-20,Color(255,255,255,255),1)
-				if mr.dup.run.count.errors.n > 0 then
-					draw.DrawText("Errors: "..tostring(mr.dup.run.count.errors.n),"CenterPrintText",x+w/2,y,Color(255,255,255,255),1)
+				local text = {
+					x = window.x + border,
+					y = window.y + border,
+					w = window.w - border * 2,
+					h = line.h * 2
+				}
+
+				local progress = {
+					x = window.x + border,
+					y = text.y + text.h + border,
+					w = window.w - border * 2,
+					h = line.h
+				}
+
+				-- Window background 1
+				draw.RoundedBox(5, window.x - borderOut, window.y - borderOut, window.w + borderOut * 2, window.h + borderOut * 2, Color(255, 255, 255, 45))
+
+				-- Window background 2
+				draw.RoundedBox(5, window.x, window.y, window.w, window.h, Color(0, 0, 0, 180))
+
+				-- Text background
+				draw.RoundedBox(5, text.x, text.y, text.w, text.h, Color(0, 0, 0, 230))
+
+				-- Text
+				draw.DrawText("MAP RETEXTURIZER", "HudHintTextLarge", text.x + window.w / 2 - border, text.y + border, Color(255, 255, 255, 255), 1)
+
+				-- Text - Counter
+				draw.DrawText(tostring(mr.dup.count.current).." / "..tostring(mr.dup.count.total), "CenterPrintText", text.x + window.w / 2 - border, text.y + line.h, Color(255, 255, 255, 255), 1)
+
+				-- Bar background
+				draw.RoundedBox(5, progress.x, progress.y, progress.w, progress.h, Color(0, 0, 0, 230))
+
+				-- Bar progress
+				draw.RoundedBox(5, progress.x + 2, progress.y + 2, window.w * (mr.dup.count.current / mr.dup.count.total) - border * 2 - 4, progress.h - 4, Color(200, 0, 0, 255))
+
+				-- Error counter
+				if mr.dup.count.errors.n > 0 then
+					draw.DrawText("Errors: "..tostring(mr.dup.count.errors.n), "CenterPrintText", window.x + window.w / 2, progress.y + 2, Color(255, 255, 255, 255), 1)
 				end
 			end
 		end

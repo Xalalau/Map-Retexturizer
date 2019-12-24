@@ -491,22 +491,29 @@ end
 --- GENERAL
 -------------------------------------
 
--- The tool is admin only, but can be free if the admin runs the cvar mapret_admin 0
+-- Detect admin privileges 
 function Ply_IsAdmin(ply)
+	-- fakeHostPly
+	if SERVER and ply == fakeHostPly then
+		return true
+	end
+
 	-- Trash
 	if not IsValid(ply) or IsValid(ply) and not ply:IsPlayer() then
 		return false
 	end
 
-	-- Admin check
-	if ply ~= fakeHostPly and not ply:IsAdmin() and not ply:IsSuperAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
-		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is set as admin only!")
+	-- General admin check
+	if not ply:IsAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
+		if SERVER then
+			print("[Map Retexturizer] Admin detection failed!")
+		elseif CLIENT then
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
 		end
 
 		return false
 	end
-	
+
 	return true
 end
 

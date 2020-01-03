@@ -1,3 +1,5 @@
+AddCSLuaFile()
+
 local function UpdateMaterialBox(Window, MatRetMaterial, defaults)
 	-- Check if the draw is valid
 	if not Window or not MatRetMaterial then
@@ -101,9 +103,15 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 end
 
 local Window
-local MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+local MatRetMaterial
 
-local function CreateMaterialBrowser()
+if CLIENT then
+	MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+end
+
+function CreateMaterialBrowser(mr)
+	if SERVER then return; end
+
 	local topBar = 25
 	local border = 5
 	local buttonsHeight = 25
@@ -130,7 +138,7 @@ local function CreateMaterialBrowser()
 			end
 			Window.Close = function()
 				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				RunConsoleCommand("mapret_block_preview", "0")
+				mr.state.inMatBrowser = false
 				Window:SetVisible(false)
 			end
 
@@ -182,5 +190,3 @@ local function CreateMaterialBrowser()
 		UpdateMaterialBox(Window, MatRetMaterial, {materialBoxSize = materialBoxSize, topBar = topBar, border = border})
 	end)
 end
-
-concommand.Add("mapret_materialbrowser", CreateMaterialBrowser)

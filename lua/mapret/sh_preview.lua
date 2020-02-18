@@ -156,7 +156,7 @@ if CLIENT then
 	function Preview:Render_Decals(ply)
 		--self.Mode and self.Mode == "mapret"
 
-		if ply:GetActiveWeapon():GetClass() == "gmod_tool" then
+		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			local tool = ply:GetTool()
 
 			if tool and tool.Mode and tool.Mode == "mapret" and Ply:GetPreviewMode(ply) and Ply:GetDecalMode(ply) then

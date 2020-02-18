@@ -56,3 +56,12 @@ if SERVER then
 		end
 	end
 end
+
+-- Initialization
+MR:Init()
+Ply:Init()
+Preview:Init()
+Save:Init()
+Load:Init()
+Materials:Init()
+MapMaterials.Displacements:Init()

@@ -149,6 +149,10 @@ function Load:FirstSpawn(ply)
 end
 if SERVER then
 	util.AddNetworkString("MapRetPlyfirstSpawnEnd")
+
+	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", function(ply)
+		Load:FirstSpawn(ply);
+	end)
 elseif CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()
 		Ply:SetFirstSpawn(LocalPlayer())

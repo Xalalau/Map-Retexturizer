@@ -34,7 +34,7 @@ TOOL.Information = {
 	{name = "reload"}
 }
 
-if (CLIENT) then
+if CLIENT then
 	language.Add("tool.mapret.name", "Map Retexturizer")
 	language.Add("tool.mapret.left", "Set material")
 	language.Add("tool.mapret.right", "Copy material")
@@ -60,24 +60,6 @@ TOOL.ClientConVar["offsety"] = "0"
 TOOL.ClientConVar["scalex"] = "1"
 TOOL.ClientConVar["scaley"] = "1"
 TOOL.ClientConVar["rotation"] = "0"
-
---------------------------------
---- INITIALIZATION
---------------------------------
-
-MR:Init()
-Ply:Init()
-Preview:Init()
-Save:Init()
-Load:Init()
-Materials:Init()
-MapMaterials.Displacements:Init()
-
-if SERVER then
-	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", function(ply)
-		Load:FirstSpawn(ply);
-	end)
-end
 
 --------------------------------
 --- TOOL

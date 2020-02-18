@@ -1,5 +1,3 @@
-AddCSLuaFile()
-
 local function UpdateMaterialBox(Window, MatRetMaterial, defaults)
 	-- Check if the draw is valid
 	if not Window or not MatRetMaterial then
@@ -93,7 +91,7 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 				n.DoClick = function()
 					RunConsoleCommand("mapret_material", arq)
 					MatRetMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"));
-					net.Start("Material_ForceValid")
+					net.Start("Materials:SetValid")
 						net.WriteString(arq)
 					net.SendToServer()
 				end
@@ -138,7 +136,7 @@ function CreateMaterialBrowser(mr)
 			end
 			Window.Close = function()
 				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				mr.state.inMatBrowser = false
+				Ply:SetInMatBrowser(LocalPlayer(), false)
 				Window:SetVisible(false)
 			end
 

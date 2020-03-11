@@ -187,19 +187,30 @@ end
 function MapMaterials:SetAux(data)
 	if SERVER then return; end
 
-	-- Get the materials
+	-- Get the material to be modified
 	local oldMaterial = Material(data.oldMaterial)
-	local newMaterial = data.newMaterial and Material(data.newMaterial) or nil
-	local newMaterial2 = data.newMaterial2 and Material(data.newMaterial2) or nil
 
-	-- Apply the base texture
-	if newMaterial then
+	-- Base texture
+	if data.newMaterial then
+		local newMaterial = nil
+
+		-- Get the correct material
+		local element = MML:GetElement(map.list, data.newMaterial)
+		
+		if element and element.backup then
+			newMaterial = Material(element.backup.newMaterial)
+		else
+			newMaterial = Material(data.newMaterial)
+		end
+
+		-- Apply
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	end
 
-	-- Apply the second base texture (if it's a displacement)
-	if newMaterial2 then
+	-- Base texture 2 (if it's a displacement)
+	if data.newMaterial2 then
 		local keyValue = "$basetexture"
+		local newMaterial2 = nil
 	
 		--If it's running a displacement backup the second material is in $basetexture2
 		if data.newMaterial == data.newMaterial2 then 
@@ -210,6 +221,16 @@ function MapMaterials:SetAux(data)
 			end
 		end
 
+		-- Get the correct material
+		local element = MML:GetElement(map.list, data.newMaterial2)
+
+		if element and element.backup then
+			newMaterial2 = Material(element.backup.newMaterial2)
+		else
+			newMaterial2 = Material(data.newMaterial2)
+		end
+
+		-- Apply
 		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture(keyValue))
 	end
 

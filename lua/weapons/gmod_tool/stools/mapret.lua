@@ -483,6 +483,8 @@ function TOOL.BuildCPanel(CPanel)
 				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
 
 				function decalBox:OnChange(val)
+					if not ply then return; end
+
 					Properties_Toogle(val)
 					Decals:Toogle(ply, val)
 				end

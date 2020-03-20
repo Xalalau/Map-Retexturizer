@@ -18,6 +18,7 @@
  [*] le0board
  [*] Matsilagi
  [*] NickMBR
+ [*] Nerdy
  
  Valeu, pessoal!!
 ]]

@@ -20,7 +20,11 @@ function Utils:PlyIsAdmin(ply)
 	-- General admin check
 	if not ply:IsAdmin() and GetConVar("mapret_admin"):GetString() == "1" then
 		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
+			if not timer.Exists("MapRetNotAdminPrint") then
+				timer.Create("MapRetNotAdminPrint", 2, 1, function() end)
+				
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
+			end
 		end
 
 		return false

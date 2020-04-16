@@ -89,7 +89,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	-- The tool can't change displacement materials
 	if ent:IsWorld() and Materials:GetCurrent(tr) == "**displacement**" then
 		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify the displacements using the tool menu.")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify displacements using the tool menu.")
 		end
 
 		return false

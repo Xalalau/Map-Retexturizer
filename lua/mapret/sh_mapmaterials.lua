@@ -369,7 +369,7 @@ function MapMaterials:SetAll(ply)
 		]]
 
 		-- Apply the fake load
-		Duplicator:Start(ply, nil, newTable)
+		Duplicator:Start(ply, nil, newTable, "changeAll")
 	end)
 end
 if SERVER then

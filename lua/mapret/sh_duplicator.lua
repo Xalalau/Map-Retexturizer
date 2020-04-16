@@ -30,6 +30,7 @@ Duplicator = {}
 Duplicator.__index = Duplicator
 
 -- Check if the duplicator is running
+-- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
 	return SERVER and dup.serverRunning or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and Ply:GetDupRunning(ply) or nil
 end
@@ -71,7 +72,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 
 			-- No more entries, call our duplicator
 			if dup.models.startTime == dup.models.delay then
-				Duplicator:Start(Ply:GetFakeHostPly(), nil, dup.recreatedTable)
+				Duplicator:Start(Ply:GetFakeHostPly(), nil, dup.recreatedTable, "dupTranslation")
 			else
 				dup.models.startTime = dup.models.startTime + 0.05
 			end
@@ -110,7 +111,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	timer.Create("MapRetDuplicatorWaiting"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
 		if not dup.recreatedTable.initialized then
 			dup.recreatedTable.initialized = true
-			Duplicator:Start(Ply:GetFakeHostPly(), ent, dup.recreatedTable)
+			Duplicator:Start(Ply:GetFakeHostPly(), ent, dup.recreatedTable, "dupTranslation")
 		end
 	end)
 end
@@ -129,6 +130,8 @@ if SERVER then
 	util.AddNetworkString("MapRetDuplicator:SetRunning")
 end
 function Duplicator:Start(ply, ent, savedTable, loadName)
+	-- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
+
 	if CLIENT then return; end
 
 	-- Deal with GMod saves
@@ -147,22 +150,22 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		dup.recreatedTable.initialized = false
 	end
 
+	-- Deal with older modifications
 	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
-		-- Cease ongoing duplications and cleanup
+		-- Cleanup
 		if GetConVar("mapret_duplicator_clean"):GetInt() == 1 then
 			Materials:RestoreAll(ply)
-		-- Cease ongoing duplications
-		else
-			Duplicator:ForceStop()
 		end
+
+		-- Cease ongoing duplications
+		Duplicator:ForceStop()
 	end
 
 	-- Adjust the duplicator generic spawn entity
 	Duplicator:CreateEnt(ent)
 
-	-- Stop an ongoing loading / start a loading
-	-- Note: it has to start after the Duplicator:ForceStop() timer
-	timer.Create("MapRetDuplicatorStart", 0.5, 1, function()
+	-- Start a loading
+	timer.Create("MapRetDuplicatorStart", 0.5, 1, function() -- Note: it has to start after the Duplicator:ForceStop() timer
 		local decalsTable = savedTable and savedTable.decals or Ply:GetFirstSpawn(ply) and Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or Ply:GetFirstSpawn(ply) and { map = MapMaterials:GetList(), displacements = MapMaterials.Displacements:GetList() } or nil
 		local skyboxTable = savedTable and savedTable.skybox and savedTable or Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mapret_skybox"):GetString() } or { skybox = "" }
@@ -205,7 +208,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 			print("[Map Retexturizer] Loading started...")
 		end
 
-		-- No modifications to do
+		-- If there are no modifications to do, stop
 		if total == 0 then
 			Duplicator:Finish(ply)
 
@@ -214,14 +217,16 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 		-- Set the duplicator running state
 		net.Start("MapRetDuplicator:SetRunning")
-		if not Duplicator:IsRunning(ply) and loadName then
-			dup.serverRunning = loadName
-			net.WriteString(dup.serverRunning)
-			net.Broadcast()
-		else
-			Ply:SetDupRunning(ply, loadName or "Syncing...")
-			net.WriteString(Ply:GetDupRunning(ply))
+		if not loadName then
+			net.WriteString("Syncing...")
 			net.Send(ply)
+			
+			Ply:SetDupRunning(ply, "Syncing...")
+		else
+			net.WriteString(loadName)
+			net.Broadcast()
+			
+			dup.serverRunning = loadName
 		end
 
 		-- Set the total modifications to do
@@ -522,7 +527,7 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	-- No more entries
 	else
 		-- If we still have the displacements to apply
-		if savedTable.map and savedTable.displacements then
+		if savedTable.map and savedTable.displacements and not dup.forceStop then
 			savedTable.map = nil
 			Duplicator:LoadMapMaterials(ply, nil, savedTable, nil)
 			
@@ -713,11 +718,11 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		-- Set "running" to nothing
 		net.Start("MapRetDupFinish")
 		if dup.serverRunning then
-			dup.serverRunning = nil
+			dup.serverRunning = false
 
 			net.Broadcast()
 		else
-			Ply:SetDupRunning(ply, nil)
+			Ply:SetDupRunning(ply, false)
 
 			net.Send(ply)
 		end
@@ -744,6 +749,6 @@ if SERVER then
 	util.AddNetworkString("MapRetDupFinish")
 elseif CLIENT then
 	net.Receive("MapRetDupFinish", function()
-		Ply:SetDupRunning(LocalPlayer(), nil)
+		Ply:SetDupRunning(LocalPlayer(), false)
 	end)
 end

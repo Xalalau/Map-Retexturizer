@@ -84,7 +84,7 @@ if SERVER then
 	util.AddNetworkString("MapRetLoad")
 
 	net.Receive("MapRetLoad", function(_, ply)
-		Load:Start(Ply:GetFakeHostPly(), net.ReadString(), true)
+		Load:Start(Ply:GetFakeHostPly(), net.ReadString())
 	end)
 end
 
@@ -108,7 +108,7 @@ function Load:FirstSpawn(ply)
 
 		-- Start an ongoing load from the beggining
 		if Duplicator:IsRunning() then
-			Load:Start(ply, Duplicator:IsRunning(), false)
+			Load:Start(ply, Duplicator:IsRunning())
 		-- Send the current modifications
 		elseif MR:GetInitialized() then
 			Duplicator:Start(ply)
@@ -118,7 +118,7 @@ function Load:FirstSpawn(ply)
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 
-			Load:Start(Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString(), true)
+			Load:Start(Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
 		-- Nothing to send, finish the joining process
 		else
 			Ply:SetFirstSpawn(ply)

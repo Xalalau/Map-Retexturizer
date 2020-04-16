@@ -85,7 +85,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_load", function(_1, _2, _3, loadName)
-		if Load:Start(Ply:GetFakeHostPly(), loadName, true) then
+		if Load:Start(Ply:GetFakeHostPly(), loadName) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..loadName.."\"...")
 		else
 			print("[Map Retexturizer] File not found.")

@@ -13,7 +13,7 @@ local mrPlayer = {
 	},
 	dup = {
 		-- If a save is being loaded, the file name keeps stored here until it's done
-		running = nil,
+		running = false,
 		-- Number of elements
 		count = {
 			total = 0,

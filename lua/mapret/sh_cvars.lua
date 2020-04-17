@@ -69,8 +69,6 @@ if SERVER then
 						net.WriteString(k or 0)
 						net.WriteString(k2)
 					net.Send(ply)
-					
-					print(k.." / "..k2 .. ": "..v2)
 				end
 			else
 				net.Start("MapRetReplicateCl")

@@ -54,7 +54,7 @@ if SERVER then
 	util.AddNetworkString("MapRetReplicateCl")
 
 	net.Receive("MapRetReplicate", function(_, ply)
-		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadBool())
+		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
 	end)
 else
 	net.Receive("MapRetReplicateCl", function()

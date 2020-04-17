@@ -538,12 +538,19 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionSkybox)
 
 			GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path:"))
-				GUI:Get("skybox", "text").OnEnter = function(self)
-					-- Admin only
-					if not Utils:PlyIsAdmin(ply) then
+			element = GUI:Get("skybox", "text")
+				element.OnEnter = function(self)
+					-- Force the field to update and disable a sync loop block
+					if CVars:GetSynced() then
+						GUI:Get("skybox", "text"):SetValue(val)
+						CVars:SetSynced(false)
+
+						return
+					-- Admin only: reset the option if it's not being synced and return
+					elseif not Utils:PlyIsAdmin(ply) then
 						GUI:Get("skybox", "text"):SetValue(GetConVar("mapret_skybox"):GetString())
 
-						return false
+						return
 					end
 
 					Skybox:Start(ply, self:GetValue())
@@ -571,11 +578,17 @@ function TOOL.BuildCPanel(CPanel)
 				GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the toolgun"))
 				element = GUI:Get("skybox", "box")
 					function element:OnChange(val)
-						-- Admin only
-						if not Utils:PlyIsAdmin(ply) then
+						-- Force the field to update and disable a sync loop block
+						if CVars:GetSynced() then
+							GUI:Get("skybox", "box"):SetChecked(val)
+							CVars:SetSynced(false)
+
+							return
+						-- Admin only: reset the option if it's not being synced and return
+						elseif not Utils:PlyIsAdmin(ply) then
 							GUI:Get("skybox", "box"):SetChecked(GetConVar("mapret_skybox_toolgun"):GetBool())
-							
-							return false
+
+							return
 						end
 
 						net.Start("MapRetReplicate")
@@ -688,14 +701,20 @@ function TOOL.BuildCPanel(CPanel)
 
 			GUI:Set("save", "box", CPanel:CheckBox("Autosave"))
 			element = GUI:Get("save", "box")
-				GUI:Get("save", "box"):SetValue(true)
+				element:SetValue(true)
 
 				function element:OnChange(val)
-					-- Admin only
-					if not Utils:PlyIsAdmin(ply) then
+					-- Force the field to update and disable a sync loop block
+					if CVars:GetSynced() then
+						GUI:Get("save", "box"):SetChecked(val)
+						CVars:SetSynced(false)
+
+						return
+					-- Admin only: reset the option if it's not being synced and return
+					elseif not Utils:PlyIsAdmin(ply) then
 						GUI:Get("save", "box"):SetChecked(GetConVar("mapret_autosave"):GetBool())
 
-						return false
+						return
 					end
 
 					Save:Auto_Start(ply, val)
@@ -729,17 +748,27 @@ function TOOL.BuildCPanel(CPanel)
 					-- Hack to initialize the field
 					if GUI:Get("load", "slider"):GetValue() == 0 then
 						GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
-						
+
 						return
 					end
 
-					-- Admin only
-					if not Utils:PlyIsAdmin(ply) then
+					-- Force the field to update and disable a sync loop block
+					if CVars:GetSynced() then
+						timer.Create("ForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
+							GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
+						end)
+
+						CVars:SetSynced(false)
+
+						return
+					-- Admin only: reset the option if it's not being synced and return
+					elseif not Utils:PlyIsAdmin(ply) then
 						GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
 
-						return false
+						return
 					end
 
+					-- Start syncing
 					net.Start("MapRetReplicate")
 						net.WriteString("mapret_delay")
 						net.WriteString(string.format("%0.3f", val))
@@ -750,16 +779,23 @@ function TOOL.BuildCPanel(CPanel)
 
 			GUI:Set("load", "box", CPanel:CheckBox("Cleanup the map before loading"))
 			element = GUI:Get("load", "box")
-				GUI:Get("load", "box"):SetChecked(true)
+				element:SetChecked(true)
 
 				function element:OnChange(val)
-					-- Admin only
-					if not Utils:PlyIsAdmin(ply) then
+					-- Force the field to update and disable a sync loop block
+					if CVars:GetSynced() then
+						GUI:Get("load", "box"):SetChecked(val)
+						CVars:SetSynced(false)
+
+						return
+					-- Admin only: reset the option if it's not being synced and return
+					elseif not Utils:PlyIsAdmin(ply) then
 						GUI:Get("load", "box"):SetChecked(GetConVar("mapret_duplicator_clean"):GetBool())
 
-						return false
+						return
 					end
 
+					-- Start syncing
 					net.Start("MapRetReplicate")
 						net.WriteString("mapret_duplicator_clean")
 						net.WriteString(val and "1" or "0")
@@ -793,10 +829,11 @@ function TOOL.BuildCPanel(CPanel)
 				autoLoadLabel:SetDark(1)
 
 			GUI:Set("load", "autoloadtext", vgui.Create("DTextEntry", autoLoadPanel))
-				GUI:Get("load", "autoloadtext"):SetValue("")
-				GUI:Get("load", "autoloadtext"):SetEnabled(false)
-				GUI:Get("load", "autoloadtext"):SetPos(65, 10)
-				GUI:Get("load", "autoloadtext"):SetSize(195, 20)
+			element = GUI:Get("load", "autoloadtext")
+				element:SetValue("")
+				element:SetEnabled(false)
+				element:SetPos(65, 10)
+				element:SetSize(195, 20)
 
 			local autoLoadSetButton = vgui.Create("DButton", autoLoadPanel)
 				autoLoadSetButton:SetText("Set")

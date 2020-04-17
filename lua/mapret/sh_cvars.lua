@@ -2,23 +2,27 @@
 --- CVARS
 --------------------------------
 
-local synced = false
+-- When I sync a field it triggers and tries to sync itself again, entering a loop. This is a control to block it
+local blockSyncLoop = false
 
 CVars = {}
 CVars.__index = CVars
 
+function CVars:GetSynced()
+	if SERVER then return; end
+
+	return blockSyncLoop
+end
+
+function CVars:SetSynced(value)
+	if SERVER then return; end
+
+	blockSyncLoop = value
+end
+
 -- Set replicated CVAR
 function CVars:Replicate(ply, command, value, field1, field2, updatePly)
 	if CLIENT then return; end
-
-	-- When I sync a field it triggers and tries to sync itself again, entering a loop. Block it
-	if synced then
-		synced = false
-		
-		return
-	else
-		synced = true
-	end
 
 	-- Admin only
 	if not Utils:PlyIsAdmin(ply) then
@@ -50,7 +54,7 @@ if SERVER then
 	util.AddNetworkString("MapRetReplicateCl")
 
 	net.Receive("MapRetReplicate", function(_, ply)
-		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
+		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadBool())
 	end)
 else
 	net.Receive("MapRetReplicateCl", function()
@@ -59,6 +63,9 @@ else
 		if ply == LocalPlayer() and not updatePly then
 			return
 		end
+
+		-- Enable a sync loop block
+		CVars:SetSynced(true)
 
 		if field1 and field2 and not isstring(GUI:Get(field1, field2)) and IsValid(GUI:Get(field1, field2)) then
 			GUI:Get(field1, field2):SetValue(value)

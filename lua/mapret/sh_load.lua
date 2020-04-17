@@ -125,26 +125,6 @@ function Load:FirstSpawn(ply)
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 		end
-
-		-- Sync menu fields
-		for k,v in pairs(GUI:GetTable()) do
-			if istable(v) then
-				for k2,v2 in pairs(v) do
-					net.Start("MapRetReplicateCl")
-						net.WriteEntity(nil)
-						net.WriteString(v2)
-						net.WriteString(k)
-						net.WriteString(k2)
-					net.Send(ply)
-				end
-			else
-				net.Start("MapRetReplicateCl")
-					net.WriteEntity(nil)
-					net.WriteString(v)
-					net.WriteString(k)
-				net.Send(ply)
-			end
-		end
 	end)
 end
 if SERVER then

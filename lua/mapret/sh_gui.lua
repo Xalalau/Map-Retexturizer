@@ -7,16 +7,16 @@
 -- Note2: don't forget to sync then when a player joins
 local gui = {
 	["save"] = {
-		["box"] = ""
+		["box"] = "1"
 	},
 	["load"] = {
-		["slider"] = "",
-		["box"] = "",
+		["slider"] = "0.050",
+		["box"] = "1",
 		["autoloadtext"] = ""
 	},
 	["skybox"] = {
 		["text"] = "",
-		["box"] = ""
+		["box"] = "1"
 	}
 }
 

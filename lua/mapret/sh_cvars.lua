@@ -52,9 +52,34 @@ end
 if SERVER then
 	util.AddNetworkString("MapRetReplicate")
 	util.AddNetworkString("MapRetReplicateCl")
+	util.AddNetworkString("MapRetReplicateFirstSpawn")
 
 	net.Receive("MapRetReplicate", function(_, ply)
 		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
+	end)
+
+	-- Sync menu fields (after it's loaded)
+	net.Receive("MapRetReplicateFirstSpawn", function(_, ply)
+		for k,v in pairs(GUI:GetTable()) do
+			if istable(v) then
+				for k2,v2 in pairs(v) do
+					net.Start("MapRetReplicateCl")
+						net.WriteEntity(nil)
+						net.WriteString(v2)
+						net.WriteString(k or 0)
+						net.WriteString(k2)
+					net.Send(ply)
+					
+					print(k.." / "..k2 .. ": "..v2)
+				end
+			else
+				net.Start("MapRetReplicateCl")
+					net.WriteEntity(nil)
+					net.WriteString(v)
+					net.WriteString(k)
+				net.Send(ply)
+			end
+		end
 	end)
 else
 	net.Receive("MapRetReplicateCl", function()

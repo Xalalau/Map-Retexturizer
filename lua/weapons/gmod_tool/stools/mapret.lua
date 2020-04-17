@@ -440,6 +440,12 @@ function TOOL.BuildCPanel(CPanel)
 		end	
 	end
 
+	-- Sync some menu fields (after it's loaded for real)
+	if LocalPlayer() then -- I can avoid the first background menu load checking LocalPlayer() because it's invalid at this point
+		net.Start("MapRetReplicateFirstSpawn")
+		net.SendToServer()
+	end
+
 	-- General ---------------------------------------------------------
 	CPanel:Help(" ")
 

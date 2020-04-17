@@ -2,12 +2,23 @@
 --- CVARS
 --------------------------------
 
+local synced = false
+
 CVars = {}
 CVars.__index = CVars
 
 -- Set replicated CVAR
 function CVars:Replicate(ply, command, value, field1, field2, updatePly)
 	if CLIENT then return; end
+
+	-- When I sync a field it triggers and tries to sync itself again, entering a loop. Block it
+	if synced then
+		synced = false
+		
+		return
+	else
+		synced = true
+	end
 
 	-- Admin only
 	if not Utils:PlyIsAdmin(ply) then

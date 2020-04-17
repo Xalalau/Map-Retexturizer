@@ -35,6 +35,7 @@ end
 GUI = {}
 GUI.__index = GUI
 
+-- Field initialization (doesn't work updating its values)
 function GUI:Set(field1, field2, value)
 	if field1 and not field2 and gui[field1] then
 		gui[field1] = value

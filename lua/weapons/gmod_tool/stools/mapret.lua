@@ -829,6 +829,8 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
+			CPanel:Help(" ")
+
 			local delSave = CPanel:Button("Delete Load")
 				function delSave:DoClick()
 					Load:Delete_Start(ply)

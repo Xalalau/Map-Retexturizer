@@ -741,9 +741,14 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionLoad)
 
-			local mapSec = CPanel:TextEntry("Map:")
-				mapSec:SetEnabled(false)
-				mapSec:SetText(game.GetMap())
+			local currentMap = CPanel:TextEntry("Map:")
+				currentMap:SetEnabled(false)
+				currentMap:SetText(game.GetMap())
+
+			GUI:Set("load", "autoloadtext", CPanel:TextEntry("Autoload:"))
+			element = GUI:Get("load", "autoloadtext")
+				element:SetEnabled(false)
+				element:SetText("")
 
 			GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
 				Load:FillList(mr)
@@ -817,48 +822,16 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
-			local delSave = CPanel:Button("Delete")
-				function delSave:DoClick()
-					Load:Delete_Start(ply)
-				end
-
-			local autoLoadPanel = vgui.Create("DPanel")
-				autoLoadPanel:SetPos(10, 30)
-				autoLoadPanel:SetHeight(70)
-
-			CPanel:AddItem(autoLoadPanel)
-
-			local autoLoadLabel = vgui.Create("DLabel", autoLoadPanel)
-				autoLoadLabel:SetPos(10, 13)
-				autoLoadLabel:SetText("Autoload:")
-				autoLoadLabel:SizeToContents()
-				autoLoadLabel:SetDark(1)
-
-			GUI:Set("load", "autoloadtext", vgui.Create("DTextEntry", autoLoadPanel))
-			element = GUI:Get("load", "autoloadtext")
-				element:SetValue("")
-				element:SetEnabled(false)
-				element:SetPos(65, 10)
-				element:SetSize(195, 20)
-
-			local autoLoadSetButton = vgui.Create("DButton", autoLoadPanel)
-				autoLoadSetButton:SetText("Set")
-				autoLoadSetButton:SetPos(10, 37)
-				autoLoadSetButton:SetSize(120, 25)
-				autoLoadSetButton.DoClick = function()
+			local setAutoload = CPanel:Button("Set Autoload")
+				function setAutoload:DoClick()
 					net.Start("MapRetAutoLoadSet")
 						net.WriteString(GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
-			local autoLoadUnsetButton = vgui.Create("DButton", autoLoadPanel)
-				autoLoadUnsetButton:SetText("Unset")
-				autoLoadUnsetButton:SetPos(140, 37)
-				autoLoadUnsetButton:SetSize(120, 25)
-				autoLoadUnsetButton.DoClick = function()
-					net.Start("MapRetAutoLoadSet")
-						net.WriteString("")
-					net.SendToServer()
+			local delSave = CPanel:Button("Delete Load")
+				function delSave:DoClick()
+					Load:Delete_Start(ply)
 				end
 	end
 

@@ -34,24 +34,37 @@ end
 -- Get the current material full path
 function ModelMaterials:GetCurrent(tr)
 	if IsValid(tr.Entity) then
-		local path = tr.Entity.modifiedMaterial
+		local data = tr.Entity.modifiedMaterial
+		local material = ""
 
 		-- Get a material generated for the model
-		if path then
-			path = Model_Materials:RevertIDName(tr.Entity.modifiedMaterial.newMaterial)
+		if data then
+			newMaterial = ModelMaterials:RevertID(data.newMaterial)
 		-- Or the real thing
 		else
-			path = tr.Entity:GetMaterials()[1]
+			newMaterial = tr.Entity:GetMaterials()[1]
 		end
-		
-		return path
+
+		return newMaterial
 	end
 
 	return nil
 end
 
--- Generate the material unique id
-function ModelMaterials:GenerateID(data)
+-- Get the pure "newMaterial" from our ID
+function ModelMaterials:RevertID(materialID)
+	local parts = string.Explode("-=+", materialID)
+	local result
+
+	if parts then
+		result = parts[2]
+	end
+
+	return result
+end
+
+-- Generate the material unique ID
+function ModelMaterials:SetID(data)
 	local materialID = ""
 
 	-- SortedPairs so the order will be always the same
@@ -82,7 +95,7 @@ end
 
 -- Create a new model material (if it doesn't exist yet) and return its unique new name
 function ModelMaterials:Create(data)
-	local materialID = ModelMaterials:GenerateID(data)
+	local materialID = ModelMaterials:SetID(data)
 
 	if CLIENT then
 		-- Create the material if it's necessary

@@ -101,37 +101,44 @@ function Load:FirstSpawn(ply)
 		net.WriteTable(load.list)
 	net.Send(ply)
 
-	-- Wait a bit (decals and LocalPlayer() usage need this)
-	timer.Create("MapRetfirstSpawnApplyDelay"..tostring(ply), 5, 1, function()
-		-- Index the player control
-		Ply:Set(ply)
+	-- Index the player control
+	Ply:Set(ply)
 
-		-- Start an ongoing load from the beggining
-		if Duplicator:IsRunning() then
-			Load:Start(ply, Duplicator:IsRunning())
-		-- Send the current modifications
-		elseif MR:GetInitialized() then
-			Duplicator:Start(ply)
-		-- Run an autoload
-		elseif GetConVar("mapret_autoload"):GetString() ~= "" then
-			Ply:SetFirstSpawn(ply)
-			net.Start("MapRetPlyfirstSpawnEnd")
-			net.Send(ply)
+	-- Start an ongoing load from the beggining
+	if Duplicator:IsRunning() then
+		Load:Start(ply, Duplicator:IsRunning())
+	-- Send the current modifications
+	elseif MR:GetInitialized() then
+		Duplicator:Start(ply)
+	-- Run an autoload
+	elseif GetConVar("mapret_autoload"):GetString() ~= "" then
+		Ply:SetFirstSpawn(ply)
+		net.Start("MapRetPlyfirstSpawnEnd")
+		net.Send(ply)
 
-			Load:Start(Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
-		-- Nothing to send, finish the joining process
-		else
-			Ply:SetFirstSpawn(ply)
-			net.Start("MapRetPlyfirstSpawnEnd")
-			net.Send(ply)
-		end
-	end)
+		Load:Start(Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
+	-- Nothing to send, finish the joining process
+	else
+		Ply:SetFirstSpawn(ply)
+		net.Start("MapRetPlyfirstSpawnEnd")
+		net.Send(ply)
+	end
 end
 if SERVER then
 	util.AddNetworkString("MapRetPlyfirstSpawnEnd")
 
+	-- Wait until the player fully loads (https://github.com/Facepunch/garrysmod-requests/issues/718)
 	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", function(ply)
-		Load:FirstSpawn(ply);
+		hook.Add("SetupMove", ply, function(self, ply, _, cmd)
+			if self == ply and not cmd:IsForced() then
+				-- Wait just a bit more for players with weaker hardware
+				timer.Create("MapRetfirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
+					Load:FirstSpawn(ply);
+				end)
+
+				hook.Remove("SetupMove",self)
+			end
+		end)
 	end)
 elseif CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()

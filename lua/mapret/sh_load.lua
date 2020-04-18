@@ -39,6 +39,11 @@ end
 function Load:Start(ply, loadName)
 	if CLIENT then return; end
 
+	-- Admin only
+	if not Utils:PlyIsAdmin(ply) then
+		return false
+	end
+
 	-- Check if there is a load name
 	if not loadName or loadName == "" then
 		return false
@@ -46,11 +51,6 @@ function Load:Start(ply, loadName)
 
 	-- Don't start a loading if we are stopping one
 	if Duplicator:IsStopping() then
-		return false
-	end
-
-	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
 		return false
 	end
 

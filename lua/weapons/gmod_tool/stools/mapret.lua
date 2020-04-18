@@ -570,7 +570,7 @@ function TOOL.BuildCPanel(CPanel)
 						return false
 					end
 
-					Skybox:Start(ply, value, true)
+					Skybox:Start(ply, value)
 				end
 
 				for k,v in pairs(Skybox:GetList()) do

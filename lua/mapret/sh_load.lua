@@ -290,7 +290,7 @@ function Load:Auto_Set(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	CVars:Replicate(ply, "mapret_autoload", loadName, "load", "autoloadtext", true)
+	CVars:Replicate(ply, "mapret_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MapRetWaitToSave", 0.3, 1, function()
 		file.Write(MR:GetAutoLoadFile(), GetConVar("mapret_autoload"):GetString())

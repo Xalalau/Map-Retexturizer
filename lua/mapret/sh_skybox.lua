@@ -37,7 +37,7 @@ Skybox = {}
 Skybox.__index = Skybox
 
 -- Change the skybox
-function Skybox:Start(ply, value, replicateOnPly)
+function Skybox:Start(ply, value)
 	if SERVER then return; end
 
 	-- Don't use the tool in the middle of a loading
@@ -47,10 +47,9 @@ function Skybox:Start(ply, value, replicateOnPly)
 
 	net.Start("MapRetSkybox")
 		net.WriteString(value)
-		net.WriteBool(replicateOnPly or false)
 	net.SendToServer()
 end
-function Skybox:Set(ply, mat, replicateOnPly)
+function Skybox:Set(ply, mat)
 	if CLIENT then return; end
 	
 	-- Admin only
@@ -67,7 +66,7 @@ function Skybox:Set(ply, mat, replicateOnPly)
 		duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
-		CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text", replicateOnPly)
+		CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text")
 	end
 
 	-- Register that the map is modified
@@ -81,7 +80,7 @@ if SERVER then
 	util.AddNetworkString("MapRetSkybox")
 
 	net.Receive("MapRetSkybox", function(_, ply)
-		Skybox:Set(ply, net.ReadString(), net.ReadBool())
+		Skybox:Set(ply, net.ReadString())
 	end)
 end
 

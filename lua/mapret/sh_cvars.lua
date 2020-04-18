@@ -21,7 +21,7 @@ function CVars:SetSynced(value)
 end
 
 -- Set replicated CVAR
-function CVars:Replicate(ply, command, value, field1, field2, updatePly)
+function CVars:Replicate(ply, command, value, field1, field2)
 	if CLIENT then return; end
 
 	-- Admin only

@@ -284,7 +284,8 @@ function Load:Auto_Set(ply, loadName)
 		return false
 	end
 
-	if not load.list[loadName] and loadName ~= "" then
+	-- Check if the load name is valid
+	if not loadName or not load.list[loadName] and loadName ~= "" then
 		return false
 	end
 

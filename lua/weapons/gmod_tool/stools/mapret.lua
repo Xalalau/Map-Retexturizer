@@ -847,7 +847,7 @@ function TOOL.BuildCPanel(CPanel)
 				autoLoadSetButton:SetSize(120, 25)
 				autoLoadSetButton.DoClick = function()
 					net.Start("MapRetAutoLoadSet")
-						net.WriteString(GUI:GetLoadText():GetSelected())
+						net.WriteString(GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 

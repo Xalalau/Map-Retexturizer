@@ -45,7 +45,6 @@ function CVars:Replicate(ply, command, value, field1, field2)
 			net.WriteString(value)
 			net.WriteString(field1)
 			net.WriteString(field2 or "")
-			net.WriteBool(updatePly or false)
 		net.Broadcast()
 	end
 end
@@ -81,11 +80,7 @@ if SERVER then
 	end)
 else
 	net.Receive("MapRetReplicateCl", function()
-		local ply, value, field1, field2, updatePly = net.ReadEntity(), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadBool()
-
-		if ply == LocalPlayer() and not updatePly then
-			return
-		end
+		local ply, value, field1, field2 = net.ReadEntity(), net.ReadString(), net.ReadString(), net.ReadString()
 
 		-- Enable a sync loop block
 		CVars:SetSynced(true)

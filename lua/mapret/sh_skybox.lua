@@ -4,7 +4,18 @@
 
 -- HL2 sky list
 local skybox = {
-	list = {
+	name = "skybox/"..GetConVar("sv_skyname"):GetString(),
+	backupName = "mapretexturizer/backup",
+	painted = GetConVar("sv_skyname"):GetString() == "painted" and true or false,
+	suffixes = {
+		"ft",
+		"bk",
+		"lf",
+		"rt",
+		"up",
+		"dn"
+	},
+	HL2List = {
 		[""] = "",
 		["skybox/sky_borealis01"] = "",
 		["skybox/sky_day01_01"] = "",
@@ -35,6 +46,25 @@ local skybox = {
 
 Skybox = {}
 Skybox.__index = Skybox
+
+-- Get HL2 skies list
+function Skybox:GetList()
+	return skybox.HL2List
+end
+
+-- Check if the skybox is a valid 6 side setup
+function Skybox:IsValidFullSky(material)
+	if Materials:IsValid(material..skybox.suffixes[1]) then
+		return true
+	else
+		return false
+	end
+end
+
+-- Fix the material name for the preview mode
+function Skybox:FixValidFullSkyPreviewName(material)
+	return material..skybox.suffixes[3]
+end
 
 -- Change the skybox
 function Skybox:Start(ply, value)
@@ -74,83 +104,132 @@ function Skybox:Set(ply, mat)
 		MR:SetInitialized()
 	end
 
+	-- Send the change to everyone
+	net.Start("MapRetSkyboxCl")
+		net.WriteString(mat)
+	net.Broadcast()
+
 	return true
 end
 if SERVER then
 	util.AddNetworkString("MapRetSkybox")
+	util.AddNetworkString("MapRetSkyboxCl")
 
 	net.Receive("MapRetSkybox", function(_, ply)
 		Skybox:Set(ply, net.ReadString())
 	end)
+else
+	net.Receive("MapRetSkyboxCl", function()
+		Skybox:Apply(net.ReadString())
+	end)
 end
 
-function Skybox:GetList()
-	return skybox.list
-end
+function Skybox:Apply(newMaterial)
+	-- If the map has an env_skypainted this code will only serve as a backup for the material name
+	-- So the rendering will be done in Skybox:RenderEnvPainted()
+	if SERVER then return; end
 
--- Material rendering
-if CLIENT then
-	-- Skybox extra layer rendering
-	function Skybox:Render()
-		local distance = 200
-		local width = distance * 2.01
-		local height = distance * 2.01
-		local mat = GetConVar("mapret_skybox"):GetString()
+	local suffixes = { "", "", "", "", "", "" }
+	local i
 
-		-- Check if it's empty
-		if mat ~= "" then
-			local suffixes
-			local aux = { "ft", "bk", "lf", "rt", "up", "dn" }
+	-- Block nil names
+	if not newMaterial then
+		return
+	end
 
-			-- If we aren't using a HL2 sky we need to check what is going on
-			if not skybox.list[mat] then
-				-- Check if the material is valid
-				if not Materials:IsValid(mat) and not Materials:IsValid(mat.."ft") then
-					-- Nope
-					return
-				else
-					-- Check if a valid 6 side skybox
-					for k, v in pairs(aux) do
-						if not Materials:IsValid(mat..v) then
-							-- If it's not a full skybox, it's a valid single material
-							suffixes = { "", "", "", "", "", "" }
-							break
-						end
-					end
-				end
-
-				-- It's a valid full skybox
-				if not suffixes then
-					suffixes = aux
-				end
-			else
-				suffixes = aux
-			end
-
-			-- Render our sky layer
-			render.OverrideDepthEnable(true, false)
-			render.SetLightingMode(2)
-			cam.Start3D(Vector(0, 0, 0), EyeAngles())
-				render.SetMaterial(Material(mat..suffixes[1]))
-				render.DrawQuadEasy(Vector(-distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
-				render.SetMaterial(Material(mat..suffixes[2]))
-				render.DrawQuadEasy(Vector(distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
-				render.SetMaterial(Material(mat..suffixes[3]))
-				render.DrawQuadEasy(Vector(0,distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
-				render.SetMaterial(Material(mat..suffixes[4]))
-				render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
-				render.SetMaterial(Material(mat..suffixes[5]))
-				render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 90)
-				render.SetMaterial(Material(mat..suffixes[6]))
-				render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,1), width, height, Color(255,255,255,255), 180)
-			cam.End3D()
-			render.OverrideDepthEnable(false, false)
-			render.SetLightingMode(0)
+	-- Set the original skybox backup
+	-- Note: it's done once and here because it's a safe place (the game textures will be loaded for sure)
+	if not Material(skybox.backupName..skybox.suffixes[1]):GetTexture("$basetexture") then
+		for i = 1,6 do
+			Material(skybox.backupName..skybox.suffixes[i]):SetTexture("$basetexture", Material(skybox.name..skybox.suffixes[i]):GetTexture("$basetexture"))
 		end
 	end
 
+	-- If we aren't using a HL2 sky or applying a backup...
+	if newMaterial ~= "" and not skybox.HL2List[newMaterial] then
+		if not Materials:IsValid(newMaterial) then
+			-- It's a full skybox
+			if Skybox:IsValidFullSky(newMaterial) then
+				suffixes = skybox.suffixes
+			-- It's an invalid material
+			else
+				return
+			end
+		end
+		-- It's a single material
+	else
+		suffixes = skybox.suffixes
+	end
+
+	-- Set to use the backup if the material name is empty
+	if newMaterial == "" or newMaterial == skybox.name then 
+		newMaterial = skybox.backupName
+	end
+
+	-- Change the sky material
+	for i = 1,6 do 
+		Material(skybox.name..skybox.suffixes[i]):SetTexture("$basetexture", Material(newMaterial..suffixes[i]):GetTexture("$basetexture"))
+	end
+end
+
+if CLIENT then
+	-- Skybox rendering for maps with env_skypainted entity
+	function Skybox:RenderEnvPainted()
+		local distance = 200
+		local width = distance * 2.01
+		local height = distance * 2.01
+		local newMaterial = GetConVar("mapret_skybox"):GetString()
+		local suffixes = { "", "", "", "", "", "" }
+
+		-- Stop renderind if it's empty
+		if newMaterial == "" then
+			return
+		end
+
+		-- If we aren't using a HL2 sky...
+		if not skybox.HL2List[newMaterial] then
+			if not Materials:IsValid(newMaterial) then
+				-- It's a full skybox
+				if Skybox:IsValidFullSky(newMaterial) then
+					suffixes = skybox.suffixes
+				-- It's an invalid material
+				else
+					return
+				end
+			-- It's a single material (don't need to render our box on simpler maps without env_)
+			else
+				if not skybox.painted then
+					return
+				end
+			end
+		else
+			suffixes = skybox.suffixes
+		end
+
+		-- Render our sky layer
+		render.OverrideDepthEnable(true, false)
+		render.SetLightingMode(2)
+		cam.Start3D(Vector(0, 0, 0), EyeAngles())
+			render.SetMaterial(Material(newMaterial..suffixes[1]))
+			render.DrawQuadEasy(Vector(-distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[2]))
+			render.DrawQuadEasy(Vector(distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[3]))
+			render.DrawQuadEasy(Vector(0,distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[4]))
+			render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[5]))
+			render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 90)
+			render.SetMaterial(Material(newMaterial..suffixes[6]))
+			render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,1), width, height, Color(255,255,255,255), 180)
+		cam.End3D()
+		render.OverrideDepthEnable(false, false)
+		render.SetLightingMode(0)
+	end
+
+	-- Hook the rendering
 	hook.Add("PostDraw2DSkyBox", "MapRetSkyboxLayer", function()
-		Skybox:Render()
+		Skybox:RenderEnvPainted()
 	end)
 end
 

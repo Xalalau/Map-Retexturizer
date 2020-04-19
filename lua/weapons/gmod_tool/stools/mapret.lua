@@ -49,7 +49,7 @@ CreateConVar("mapret_autoload", "", { FCVAR_REPLICATED })
 CreateConVar("mapret_skybox", "", { FCVAR_REPLICATED })
 CreateConVar("mapret_delay", "0.050", { FCVAR_REPLICATED })
 CreateConVar("mapret_duplicator_clean", "1", { FCVAR_REPLICATED })
-CreateConVar("mapret_skybox_toolgun", "0", { FCVAR_REPLICATED })
+CreateConVar("mapret_skybox_toolgun", "1", { FCVAR_REPLICATED })
 TOOL.ClientConVar["decal"] = "0"
 TOOL.ClientConVar["displacement"] = ""
 TOOL.ClientConVar["savename"] = ""
@@ -189,8 +189,11 @@ end
 		oldData.newMaterial = ModelMaterials:GetNew(oldData.newMaterial)
 	end	
 
+	-- Adjustments for skybox materials
+	if Skybox:IsValidFullSky(newData.newMaterial) then
+		newData.newMaterial = Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
 	-- Don't apply bad materials
-	if not Materials:IsValid(newData.newMaterial) then
+	elseif not Materials:IsValid(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -271,8 +274,13 @@ function TOOL:RightClick(tr)
 	-- Skybox
 	if originalMaterial == "tools/toolsskybox" then
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
+		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
 		local selectedMaterial = ply:GetInfo("mapret_material")
+
+		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material that is a missing texture
+		if skyboxMaterial == "skybox/painted" then
+			skyboxMaterial = originalMaterial
+		end
 
 		-- Check if the copy isn't necessary
 		if skyboxMaterial == selectedMaterial then

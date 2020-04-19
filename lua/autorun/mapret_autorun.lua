@@ -6,7 +6,7 @@ local mode = "hybrid"
 --[[  mode:
 		gma = the uploaded addon with all the materials included
 		files = tool files extracted into the addons folder with the necessary materials
-		hybrid = tool files extracted into the addons folder using an extra gma with all the necessary materials
+		hybrid = tool files extracted into the addons folder using materials from an extra gma and from files
 ]]
 
 -- Load libs
@@ -44,16 +44,21 @@ ParseDir("mapret/")
 
 -- Add resources
 if SERVER then
-	if mode == "gma" then
-		resource.AddWorkshop("1357913645")
-	elseif mode == "hybrid" then
-		resource.AddWorkshop("1937149388")
-	elseif mode == "files" then
+	local function SendFiles()
 		local files, _ = file.Find("materials/mapretexturizer/*.vmt", "GAME")
 
 		for k, v in ipairs(files) do
 			resource.AddFile("materials/mapretexturizer/"..v)
 		end
+	end
+
+	if mode == "gma" then
+		resource.AddWorkshop("1357913645")
+	elseif mode == "files" then
+		SendFiles()
+	elseif mode == "hybrid" then
+		resource.AddWorkshop("1937149388")
+		SendFiles()
 	end
 end
 

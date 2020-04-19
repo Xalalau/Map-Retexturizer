@@ -68,8 +68,11 @@ if CLIENT then
 		local oldData = Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MapMaterials:GetFilename() }, Materials:GetDetailList())
 		local newData = mapMatMode and Data:Create(ply, tr) or Data:CreateDefaults(ply, tr)
 
+		-- Adjustments for skybox materials
+		if Skybox:IsValidFullSky(newData.newMaterial) then
+			newData.newMaterial = Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
 		-- Don't apply bad materials
-		if not Materials:IsValid(newData.newMaterial) then
+		elseif not Materials:IsValid(newData.newMaterial) then
 			return
 		end
 

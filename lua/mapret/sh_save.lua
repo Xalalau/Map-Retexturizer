@@ -7,8 +7,9 @@ local save = {
 	list = {}
 }
 
-Save = {}
+local Save = {}
 Save.__index = Save
+MR.Save = Save
 
 function Save:Init()
 	if SERVER then return; end

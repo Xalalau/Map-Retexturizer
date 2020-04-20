@@ -109,7 +109,7 @@ if SERVER then
 			return
 		end
 
-		Save:Set(saveName, MR.Base:GetMapFolder()..saveName..".txt")
+		MR.Save:Set(saveName, MR.Base:GetMapFolder()..saveName..".txt")
 	end)
 
 	concommand.Add("mapret_remote_autosave", function(_1, _2, _3, valueIn)
@@ -125,7 +125,7 @@ if SERVER then
 			return
 		end
 		
-		Save:Auto_Set(MR.Ply:GetFakeHostPly(), value)
+		MR.Save:Auto_Set(MR.Ply:GetFakeHostPly(), value)
 		
 		local message = "[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled").."."
 		

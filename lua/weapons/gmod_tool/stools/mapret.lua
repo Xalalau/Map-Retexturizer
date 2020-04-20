@@ -222,7 +222,7 @@ end
 		if not timer.Exists("MapRetAutoSave") then
 			timer.Create("MapRetAutoSave", 60, 1, function()
 				if not MR.Duplicator:IsRunning() then
-					Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
+					MR.Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 				end
 			end)
@@ -731,12 +731,12 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					Save:Auto_Start(ply, val)
+					MR.Save:Auto_Start(ply, val)
 				end
 
 			local saveChanges = CPanel:Button("Save")
 				function saveChanges:DoClick()
-					Save:Start(ply)
+					MR.Save:Start(ply)
 				end
 	end
 

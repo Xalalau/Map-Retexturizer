@@ -69,7 +69,7 @@ end
 MR.Base:Init()
 MR.Ply:Init()
 MR.Preview:Init()
-Save:Init()
+MR.Save:Init()
 MR.Load:Init()
 MR.Materials:Init()
 MR.MapMaterials.Displacements:Init()

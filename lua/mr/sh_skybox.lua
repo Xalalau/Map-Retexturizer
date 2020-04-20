@@ -63,7 +63,7 @@ function Skybox:IsValidFullSky(material)
 end
 
 -- Fix the material name for the preview mode
-function Skybox:FixValidFullSkyPreviewName(material)
+function Skybox:FixValidFullSkyName(material)
 	return material..skybox.suffixes[3]
 end
 

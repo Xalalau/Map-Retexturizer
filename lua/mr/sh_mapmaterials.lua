@@ -300,7 +300,7 @@ function MapMaterials:SetAll(ply)
 
 	-- Adjustments for skybox materials
 	if MR.Skybox:IsValidFullSky(material) then
-		material = MR.Skybox:FixValidFullSkyPreviewName(material)
+		material = MR.Skybox:FixValidFullSkyName(material)
 	-- Don't apply bad materials
 	elseif not MR.Materials:IsValid(material) then
 		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")

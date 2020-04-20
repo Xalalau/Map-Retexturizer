@@ -72,7 +72,7 @@ function Skybox:Start(ply, value)
 	if SERVER then return; end
 
 	-- Don't use the tool in the middle of a loading
-	if Duplicator:IsRunning(ply) then
+	if MR.Duplicator:IsRunning(ply) then
 		return false
 	end
 
@@ -91,10 +91,10 @@ function Skybox:Set(ply, mat)
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
 	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
 		-- Create the duplicator entity if it's necessary
-		Duplicator:CreateEnt()
+		MR.Duplicator:CreateEnt()
 
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
 		MR.CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text")
@@ -244,13 +244,13 @@ function Skybox:Remove(ply)
 	end
 
 	-- Stop the duplicator
-	Duplicator:ForceStop()
+	MR.Duplicator:ForceStop()
 
 	-- Cleanup
 	RunConsoleCommand("mapret_skybox", "")
 
-	if IsValid(Duplicator:GetEnt()) then
-		duplicator.ClearEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Skybox")
+	if IsValid(MR.Duplicator:GetEnt()) then
+		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox")
 	end
 end
 if SERVER then

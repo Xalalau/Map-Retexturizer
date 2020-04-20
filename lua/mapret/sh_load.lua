@@ -51,7 +51,7 @@ function Load:Start(ply, loadName)
 	end
 
 	-- Don't start a loading if we are stopping one
-	if Duplicator:IsStopping() then
+	if MR.Duplicator:IsStopping() then
 		return false
 	end
 
@@ -74,7 +74,7 @@ function Load:Start(ply, loadName)
 
 	-- Start the loading
 	if loadTable then
-		Duplicator:Start(ply, nil, loadTable, loadName)
+		MR.Duplicator:Start(ply, nil, loadTable, loadName)
 
 		return true
 	end
@@ -106,11 +106,11 @@ function Load:FirstSpawn(ply)
 	Ply:Set(ply)
 
 	-- Start an ongoing load from the beggining
-	if Duplicator:IsRunning() then
-		Load:Start(ply, Duplicator:IsRunning())
+	if MR.Duplicator:IsRunning() then
+		Load:Start(ply, MR.Duplicator:IsRunning())
 	-- Send the current modifications
 	elseif MR.Base:GetInitialized() then
-		Duplicator:Start(ply)
+		MR.Duplicator:Start(ply)
 	-- Run an autoload
 	elseif GetConVar("mapret_autoload"):GetString() ~= "" then
 		Ply:SetFirstSpawn(ply)

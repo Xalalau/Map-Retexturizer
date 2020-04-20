@@ -253,7 +253,7 @@ function ModelMaterials:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	Duplicator:ForceStop()
+	MR.Duplicator:ForceStop()
 
 	-- Cleanup
 	for k,v in pairs(ents.GetAll()) do

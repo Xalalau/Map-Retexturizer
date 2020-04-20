@@ -22,7 +22,7 @@ function Save:Start(ply, forceName)
 	if SERVER then return; end
 
 	-- Don't use the tool in the middle of a loading
-	if Duplicator:IsRunning(ply) then
+	if MR.Duplicator:IsRunning(ply) then
 		return false
 	end
 
@@ -40,7 +40,7 @@ function Save:Set(saveName, saveFile)
 	if CLIENT then return; end
 
 	-- Don't save in the middle of a loading
-	if Duplicator:IsRunning(ply) then
+	if MR.Duplicator:IsRunning(ply) then
 		return false
 	end
 

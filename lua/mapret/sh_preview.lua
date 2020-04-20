@@ -60,7 +60,7 @@ end)
 if CLIENT then
 	function Preview:Render(ply, mapMatMode)
 		-- Don't render if there is a loading or the material browser is open
-		if Duplicator:IsRunning(ply) or Ply:GetInMatBrowser(ply) then
+		if MR.Duplicator:IsRunning(ply) or Ply:GetInMatBrowser(ply) then
 			return
 		end
 

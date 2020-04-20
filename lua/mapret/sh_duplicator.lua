@@ -26,8 +26,9 @@ if SERVER then
 	}
 end
 
-Duplicator = {}
+local Duplicator = {}
 Duplicator.__index = Duplicator
+MR.Duplicator = Duplicator
 
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil

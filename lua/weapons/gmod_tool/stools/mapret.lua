@@ -73,7 +73,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	end
 
 	-- Don't use the tool in the middle of a loading
-	if Duplicator:IsRunning(ply) then
+	if MR.Duplicator:IsRunning(ply) then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until loading finishes.")
 		end
@@ -159,7 +159,7 @@ end
 
 	-- Create the duplicator entity used to restore map materials, decals and skybox
 	if SERVER then
-		Duplicator:CreateEnt()
+		MR.Duplicator:CreateEnt()
 	end
 
 	-- If we are dealing with decals
@@ -221,7 +221,7 @@ end
 	if GetConVar("mapret_autosave"):GetString() == "1" then
 		if not timer.Exists("MapRetAutoSave") then
 			timer.Create("MapRetAutoSave", 60, 1, function()
-				if not Duplicator:IsRunning() then
+				if not MR.Duplicator:IsRunning() then
 					Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 				end

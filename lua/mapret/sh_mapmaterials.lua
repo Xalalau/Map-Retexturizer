@@ -141,9 +141,9 @@ function MapMaterials:Set(ply, data)
 		-- Set the duplicator
 		if SERVER then
 			if not isDisplacement then
-				duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Maps", { map = map.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps", { map = map.list })
 			else
-				duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Displacements", { displacements = map.displacements.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements", { displacements = map.displacements.list })
 			end
 		end
 	end
@@ -288,7 +288,7 @@ function MapMaterials:SetAll(ply)
 	end
 
 	-- Create the duplicator entity used to restore map materials, decals and skybox
-	Duplicator:CreateEnt()
+	MR.Duplicator:CreateEnt()
 
 	-- Check upper limit
 	if MML:IsFull(map.list, map.limit) then
@@ -313,7 +313,7 @@ function MapMaterials:SetAll(ply)
 	-- Clean the map
 	MR.Materials:RestoreAll(ply, true)
 
-	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not Ply:GetFirstSpawn(ply) and  Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
+	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
 		-- Create a fake loading table
 		local newTable = {
 			map = {},
@@ -371,7 +371,7 @@ function MapMaterials:SetAll(ply)
 		]]
 
 		-- Apply the fake load
-		Duplicator:Start(ply, nil, newTable, "changeAll")
+		MR.Duplicator:Start(ply, nil, newTable, "changeAll")
 	end)
 end
 if SERVER then
@@ -401,13 +401,13 @@ function MapMaterials:Remove(oldMaterial)
 			MML:DisableElement(element)
 
 			if SERVER then
-				if IsValid(Duplicator:GetEnt()) then
+				if IsValid(MR.Duplicator:GetEnt()) then
 					if MML:Count(map.list) == 0 then
-						duplicator.ClearEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Maps")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
 					end
 
 					if MML:Count(map.displacements.list) == 0 then
-						duplicator.ClearEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Displacements")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
 					end
 				end
 			end
@@ -442,7 +442,7 @@ function MapMaterials:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	Duplicator:ForceStop()
+	MR.Duplicator:ForceStop()
 
 	-- Remove
 	if MML:Count(map.list) > 0 then
@@ -496,7 +496,7 @@ function MapMaterials.Displacements:Start(displacement, newMaterial, newMaterial
 	local delay = 0
 
 	-- Don't use the tool in the middle of a loading
-	if Duplicator:IsRunning(LocalPlayer()) then
+	if MR.Duplicator:IsRunning(LocalPlayer()) then
 		return false
 	end
 
@@ -560,7 +560,7 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	end
 
 	-- Create the duplicator entity if it's necessary
-	Duplicator:CreateEnt()
+	MR.Duplicator:CreateEnt()
 
 	-- Create the data table
 	local data = Data:CreateFromMaterial({ name = displacement, filename = map.filename }, MR.Materials:GetDetailList(), nil, { filename = map.displacements.filename })
@@ -605,7 +605,7 @@ function MapMaterials.Displacements:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	Duplicator:ForceStop()
+	MR.Duplicator:ForceStop()
 
 	-- Remove
 	if MML:Count(map.displacements.list) > 0 then

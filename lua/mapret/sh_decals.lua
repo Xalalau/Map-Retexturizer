@@ -49,7 +49,7 @@ function Decals:Start(ply, tr, duplicatorData)
 		table.insert(decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = decal.list })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = decal.list })
 	end
 
 	-- Send to...
@@ -122,7 +122,7 @@ function Decals:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	Duplicator:ForceStop()
+	MR.Duplicator:ForceStop()
 
 	-- Cleanup
 	for k,v in pairs(player.GetAll()) do
@@ -131,7 +131,7 @@ function Decals:RemoveAll(ply)
 		end
 	end
 	table.Empty(decal.list)
-	duplicator.ClearEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Decals")
+	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals")
 end
 if SERVER then
 	util.AddNetworkString("Decals:RemoveAll")

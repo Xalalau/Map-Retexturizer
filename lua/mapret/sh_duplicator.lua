@@ -82,7 +82,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		return
 	-- Map materials saving format 1.0
 	elseif savedTable[1] and savedTable[1].oldMaterial then
-		MML:Clean(savedTable)
+		MR.MML:Clean(savedTable)
 		dup.recreatedTable.map = savedTable
 		notModelDelay = 0.36
 	-- Map materials
@@ -95,7 +95,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		notModelDelay = 0.38
 	-- Decals saving format 1.0
 	elseif savedTable[1] and savedTable[1].mat then
-		MML:Clean(savedTable)
+		MR.MML:Clean(savedTable)
 		dup.recreatedTable.decals = savedTable
 		notModelDelay = 0.39
 	-- Decals
@@ -196,8 +196,8 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 		-- Get the total modifications to do
 		local decalsTotal = decalsTable and table.Count(decalsTable) or 0
-		local mapMaterialsTotal = mapTable and mapTable.map and MML:Count(mapTable.map) or 0
-		local displacementsTotal = mapTable and mapTable.displacements and MML:Count(mapTable.displacements) or 0
+		local mapMaterialsTotal = mapTable and mapTable.map and MR.MML:Count(mapTable.map) or 0
+		local displacementsTotal = mapTable and mapTable.displacements and MR.MML:Count(mapTable.displacements) or 0
 		local total = decalsTotal + mapMaterialsTotal + displacementsTotal + modelsTable.count
 
 		if skyboxTable.skybox ~= "" then

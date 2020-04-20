@@ -2,8 +2,9 @@
 --- DATA MATERIAL LISTS MANAGEMENT
 -------------------------------------
 
-MML = {}
+local MML = {}
 MML.__index = MML
+MR.MML = MML
 
 -- Check if the element is active
 function MML:IsActive(element)

@@ -73,7 +73,7 @@ function MapMaterials:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local path = ""
 
-		local element = MML:GetElement(map.list, MR.Materials:GetOriginal(tr))
+		local element = MR.MML:GetElement(map.list, MR.Materials:GetOriginal(tr))
 
 		if element then
 			path = element.newMaterial
@@ -95,7 +95,7 @@ function MapMaterials:Set(ply, data)
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		local materialTable = isDisplacement and map.displacements.list or map.list
-		local element = MML:GetElement(materialTable, data.oldMaterial)
+		local element = MR.MML:GetElement(materialTable, data.oldMaterial)
 		local i
 
 		-- Set the backup
@@ -105,15 +105,15 @@ function MapMaterials:Set(ply, data)
 			data.backup = element.backup
 
 			-- Cleanup
-			MML:DisableElement(element)
+			MR.MML:DisableElement(element)
 			MapMaterials:SetAux(data.backup)
 
 			-- Get a map.list free index
-			i = MML:GetFreeIndex(materialTable)
+			i = MR.MML:GetFreeIndex(materialTable)
 		-- If the material is untouched
 		else
 			-- Get a map.list free index
-			i = MML:GetFreeIndex(materialTable)
+			i = MR.MML:GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
 			local dataBackup = data.backup or MR.Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
@@ -133,7 +133,7 @@ function MapMaterials:Set(ply, data)
 		end
 
 		-- Index the Data
-		MML:InsertElement(materialTable, data, i)
+		MR.MML:InsertElement(materialTable, data, i)
 
 		-- Apply the new state to the map material
 		MapMaterials:SetAux(data)
@@ -197,7 +197,7 @@ function MapMaterials:SetAux(data)
 		local newMaterial = nil
 
 		-- Get the correct material
-		local element = MML:GetElement(map.list, data.newMaterial)
+		local element = MR.MML:GetElement(map.list, data.newMaterial)
 		
 		if element and element.backup then
 			newMaterial = Material(element.backup.newMaterial)
@@ -224,7 +224,7 @@ function MapMaterials:SetAux(data)
 		end
 
 		-- Get the correct material
-		local element = MML:GetElement(map.list, data.newMaterial2)
+		local element = MR.MML:GetElement(map.list, data.newMaterial2)
 
 		if element and element.backup then
 			newMaterial2 = Material(element.backup.newMaterial2)
@@ -291,7 +291,7 @@ function MapMaterials:SetAll(ply)
 	MR.Duplicator:CreateEnt()
 
 	-- Check upper limit
-	if MML:IsFull(map.list, map.limit) then
+	if MR.MML:IsFull(map.list, map.limit) then
 		return false
 	end
 
@@ -390,23 +390,23 @@ function MapMaterials:Remove(oldMaterial)
 
 	local materialTable = MR.Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
 
-	if MML:Count(materialTable) > 0 then
-		local element = MML:GetElement(materialTable, oldMaterial)
+	if MR.MML:Count(materialTable) > 0 then
+		local element = MR.MML:GetElement(materialTable, oldMaterial)
 
 		if element then
 			if CLIENT then
 				MapMaterials:SetAux(element.backup)
 			end
 
-			MML:DisableElement(element)
+			MR.MML:DisableElement(element)
 
 			if SERVER then
 				if IsValid(MR.Duplicator:GetEnt()) then
-					if MML:Count(map.list) == 0 then
+					if MR.MML:Count(map.list) == 0 then
 						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
 					end
 
-					if MML:Count(map.displacements.list) == 0 then
+					if MR.MML:Count(map.displacements.list) == 0 then
 						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
 					end
 				end
@@ -445,9 +445,9 @@ function MapMaterials:RemoveAll(ply)
 	MR.Duplicator:ForceStop()
 
 	-- Remove
-	if MML:Count(map.list) > 0 then
+	if MR.MML:Count(map.list) > 0 then
 		for k,v in pairs(map.list) do
-			if MML:IsActive(v) then
+			if MR.MML:IsActive(v) then
 				MapMaterials:Remove(v.oldMaterial)
 			end
 		end
@@ -537,7 +537,7 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	end
 
 	-- Check upper limit
-	if MML:IsFull(map.list, map.displacements.limit) then
+	if MR.MML:IsFull(map.list, map.displacements.limit) then
 		return false
 	end
 
@@ -608,9 +608,9 @@ function MapMaterials.Displacements:RemoveAll(ply)
 	MR.Duplicator:ForceStop()
 
 	-- Remove
-	if MML:Count(map.displacements.list) > 0 then
+	if MR.MML:Count(map.displacements.list) > 0 then
 		for k,v in pairs(map.displacements.list) do
-			if MML:IsActive(v) then
+			if MR.MML:IsActive(v) then
 				MapMaterials:Remove(v.oldMaterial)
 			end
 		end

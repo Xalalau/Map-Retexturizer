@@ -112,5 +112,5 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML:GetElement(list, MR.Materials:GetOriginal(tr))
+	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
 end

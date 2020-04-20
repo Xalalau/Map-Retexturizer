@@ -68,8 +68,8 @@ function Load:Start(ply, loadName)
 
 	-- Extra: remove all the disabled elements (Compatibility with the saving format 1.0)
 	if not loadTable.savingFormat then
-		MML:Clean(loadTable.decals)
-		MML:Clean(loadTable.map)
+		MR.MML:Clean(loadTable.decals)
+		MR.MML:Clean(loadTable.map)
 	end
 
 	-- Start the loading

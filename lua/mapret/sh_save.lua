@@ -54,9 +54,9 @@ function Save:Set(saveName, saveFile)
 	}
 
 	-- Remove all the disabled elements
-	MML:Clean(save.list[saveName].decals)
-	MML:Clean(save.list[saveName].map)
-	MML:Clean(save.list[saveName].displacements)
+	MR.MML:Clean(save.list[saveName].decals)
+	MR.MML:Clean(save.list[saveName].map)
+	MR.MML:Clean(save.list[saveName].displacements)
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save.list[saveName]))

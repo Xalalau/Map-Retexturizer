@@ -170,7 +170,7 @@ end
 	end
 
 	-- Check upper limit
-	if MML:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
+	if MR.MML:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
 		return false
 	end
 

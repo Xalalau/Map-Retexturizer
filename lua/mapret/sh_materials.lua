@@ -47,7 +47,7 @@ function Materials:IsValid(material)
 		Material(material):IsError() or
 		not Material(material):GetTexture("$basetexture") then
 		
-		if SERVER and MapMaterials:CheckCLOList(material) then
+		if SERVER and MR.MapMaterials:CheckCLOList(material) then
 			return true
 		end
 
@@ -59,7 +59,7 @@ end
 
 -- Check if a given material path is a displacement
 function Materials:IsDisplacement(material)
-	for k,v in pairs(MapMaterials.Displacements:GetDetected()) do
+	for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
 		if k == material then
 			return true
 		end
@@ -73,7 +73,7 @@ function Materials:SetValid(material)
 	if CLIENT then return; end
 
 	if not Materials:IsValid(material) then
-		MapMaterials:SetCLOList(material)
+		MR.MapMaterials:SetCLOList(material)
 	end
 end
 if SERVER then
@@ -96,12 +96,12 @@ end
 
 -- Get the original material full path
 function Materials:GetOriginal(tr)
-	return ModelMaterials:GetOriginal(tr) or MapMaterials:GetOriginal(tr) or nil
+	return ModelMaterials:GetOriginal(tr) or MR.MapMaterials:GetOriginal(tr) or nil
 end
 
 -- Get the current material full path
 function Materials:GetCurrent(tr)
-	return ModelMaterials:GetCurrent(tr) or MapMaterials:GetCurrent(tr) or ""
+	return ModelMaterials:GetCurrent(tr) or MR.MapMaterials:GetCurrent(tr) or ""
 end
 
 -- Get the new material from the cvar
@@ -120,9 +120,9 @@ function Materials:RestoreAll(ply)
 
 	-- Cleanup
 	ModelMaterials:RemoveAll(ply)
-	MapMaterials:RemoveAll(ply)
+	MR.MapMaterials:RemoveAll(ply)
 	Decals:RemoveAll(ply)
-	MapMaterials.Displacements:RemoveAll(ply)
+	MR.MapMaterials.Displacements:RemoveAll(ply)
 	MR.Skybox:Remove(ply)
 end
 if SERVER then

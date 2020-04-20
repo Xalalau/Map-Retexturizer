@@ -31,11 +31,13 @@ elseif CLIENT then
 	map.displacements.hack = true
 end
 
-MapMaterials = {}
+local MapMaterials = {}
 MapMaterials.__index = MapMaterials
+MR.MapMaterials = MapMaterials
 
 MapMaterials.Displacements = {}
 MapMaterials.Displacements.__index = MapMaterials.Displacements
+MR.MapMaterials.Displacements = MapMaterials.Displacements
 
 function MapMaterials:GetList()
 	return map.list

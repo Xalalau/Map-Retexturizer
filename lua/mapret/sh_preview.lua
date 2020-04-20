@@ -66,7 +66,7 @@ if CLIENT then
 
 		-- Start...
 		local tr = ply:GetEyeTrace()
-		local oldData = Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+		local oldData = Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		local newData = mapMatMode and Data:Create(ply, tr) or Data:CreateDefaults(ply, tr)
 
 		-- Adjustments for skybox materials
@@ -91,7 +91,7 @@ if CLIENT then
 
 		-- Update the material if necessary
 		if not Data:IsEqual(oldData, newData) then
-			MapMaterials:SetAux(newData)
+			MR.MapMaterials:SetAux(newData)
 			preview.rotationHack = newData.rotation
 			preview.newMaterial = newData.newMaterial
 		end

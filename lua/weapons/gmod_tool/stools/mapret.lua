@@ -170,17 +170,17 @@ end
 	end
 
 	-- Check upper limit
-	if MML:IsFull(MapMaterials:GetList(), MapMaterials:GetLimit()) then
+	if MML:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
 		return false
 	end
 
 	-- Get data tables with the future and current materials
 	local newData = Data:Create(ply, tr)
-	local oldData = table.Copy(Data:Get(tr, MapMaterials:GetList()))
+	local oldData = table.Copy(Data:Get(tr, MR.MapMaterials:GetList()))
 
 	if not oldData then
 		-- If there isn't a saved data, create one from the material
-		oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+		oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		
 		-- Adjust the material name to permit the tool check if changes are needed
 		oldData.newMaterial = oldData.oldMaterial 
@@ -236,7 +236,7 @@ end
 			ModelMaterials:Set(ply, newData)
 		-- or map material
 		elseif ent:IsWorld() then
-			MapMaterials:Set(ply, newData)
+			MR.MapMaterials:Set(ply, newData)
 		end
 	end)
 
@@ -250,7 +250,7 @@ end
 					ModelMaterials:Remove(ent)
 				-- or map material
 				elseif ent:IsWorld() then
-					MapMaterials:Remove(data.oldMaterial)
+					MR.MapMaterials:Remove(data.oldMaterial)
 				end
 			end
 		end, newData)
@@ -293,11 +293,11 @@ function TOOL:RightClick(tr)
 	else
 		-- Get data tables with the future and current materials
 		local newData = Data:Create(ply, tr)
-		local oldData = table.Copy(Data:Get(tr, MapMaterials:GetList()))
+		local oldData = table.Copy(Data:Get(tr, MR.MapMaterials:GetList()))
 
 		if not oldData then
 			-- If there isn't a saved data, create one from the material
-			oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+			oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 
 			-- Adjust the material name to permit the tool check if changes are needed
 			oldData.newMaterial = oldData.oldMaterial 
@@ -384,7 +384,7 @@ function TOOL:Reload(tr)
 	end
 
 	-- Reset the material
-	if Data:Get(tr, MapMaterials:GetList()) then
+	if Data:Get(tr, MR.MapMaterials:GetList()) then
 		if SERVER then
 			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- model material
@@ -392,7 +392,7 @@ function TOOL:Reload(tr)
 					ModelMaterials:Remove(ent)
 				-- or map material
 				elseif ent:IsWorld() then
-					MapMaterials:Remove(MR.Materials:GetOriginal(tr))
+					MR.MapMaterials:Remove(MR.Materials:GetOriginal(tr))
 				end
 			end)
 		end
@@ -619,7 +619,7 @@ function TOOL.BuildCPanel(CPanel)
 	end
 
 	-- Displacements ---------------------------------------------------
-	if (table.Count(MapMaterials.Displacements:GetDetected()) > 0) then
+	if (table.Count(MR.MapMaterials.Displacements:GetDetected()) > 0) then
 		CPanel:Help(" ")
 
 		do
@@ -640,7 +640,7 @@ function TOOL.BuildCPanel(CPanel)
 						end					
 					end
 
-					for k,v in pairs(MapMaterials.Displacements:GetDetected()) do
+					for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
 						GUI:GetDisplacementsCombo():AddChoice(k)
 					end
 
@@ -653,18 +653,18 @@ function TOOL.BuildCPanel(CPanel)
 				GUI:SetDisplacementsText1(CPanel:TextEntry("Texture 1:", ""))
 					local function DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
 						if text1Value == "" then
-							text1Value = MapMaterials.Displacements:GetDetected()[comboBoxValue][1]
+							text1Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1]
 
 							timer.Create("MapRetText1Update", 0.5, 1, function()
-								GUI:GetDisplacementsText1():SetValue(MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
+								GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
 							end)
 						end
 
 						if text2Value == "" then
-							text2Value = MapMaterials.Displacements:GetDetected()[comboBoxValue][2]
+							text2Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2]
 
 							timer.Create("MapRetText2Update", 0.5, 1, function()
-								GUI:GetDisplacementsText2():SetValue(MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
+								GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
 							end)
 						end
 					end
@@ -674,12 +674,12 @@ function TOOL.BuildCPanel(CPanel)
 						local text1Value = GUI:GetDisplacementsText1():GetValue()
 						local text2Value = GUI:GetDisplacementsText2():GetValue()
 
-						if not MapMaterials.Displacements:GetDetected()[comboBoxValue] then
+						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
 							return
 						end
 
 						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MapMaterials.Displacements:Start(comboBoxValue, text1Value, GUI:GetDisplacementsText2():GetValue())
+						MR.MapMaterials.Displacements:Start(comboBoxValue, text1Value, GUI:GetDisplacementsText2():GetValue())
 					end
 
 				GUI:SetDisplacementsText2(CPanel:TextEntry("Texture 2:", ""))
@@ -688,12 +688,12 @@ function TOOL.BuildCPanel(CPanel)
 						local text1Value = GUI:GetDisplacementsText1():GetValue()
 						local text2Value = GUI:GetDisplacementsText2():GetValue()
 
-						if not MapMaterials.Displacements:GetDetected()[comboBoxValue] then
+						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
 							return
 						end
 
 						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MapMaterials.Displacements:Start(comboBoxValue, GUI:GetDisplacementsText1():GetValue(), text2Value)
+						MR.MapMaterials.Displacements:Start(comboBoxValue, GUI:GetDisplacementsText1():GetValue(), text2Value)
 					end
 
 				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")

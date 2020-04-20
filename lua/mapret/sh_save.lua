@@ -47,8 +47,8 @@ function Save:Set(saveName, saveFile)
 	-- Create a save table
 	save.list[saveName] = {
 		decals = Decals:GetList(),
-		map = MapMaterials:GetList(),
-		displacements = MapMaterials.Displacements:GetList(),
+		map = MR.MapMaterials:GetList(),
+		displacements = MR.MapMaterials.Displacements:GetList(),
 		skybox = GetConVar("mapret_skybox"):GetString(),
 		savingFormat = "2.0"
 	}

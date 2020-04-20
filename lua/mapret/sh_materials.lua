@@ -33,7 +33,7 @@ function Materials:Init()
 	-- Validate the selected material
 	timer.Create("WaitForNet", 0.1, 1, function()
 		net.Start("Materials:SetValid")
-			net.WriteString(GetConVar("mapret_material"):GetString())
+			net.WriteString(GetConVar("mr_material"):GetString())
 		net.SendToServer()
 	end)
 end
@@ -106,7 +106,7 @@ end
 
 -- Get the new material from the cvar
 function Materials:GetNew(ply)
-	return ply:GetInfo("mapret_material")
+	return ply:GetInfo("mr_material")
 end
 
 -- Clean up everything

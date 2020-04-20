@@ -15,7 +15,7 @@ function Save:Init()
 	if SERVER then return; end
 
 	-- Default save location
-	RunConsoleCommand("mapret_savename", MR.Base:GetSaveDefaultName())
+	RunConsoleCommand("mr_savename", MR.Base:GetSaveDefaultName())
 end
 
 -- Save the modifications to a file and reload the menu
@@ -27,13 +27,13 @@ function Save:Start(ply, forceName)
 		return false
 	end
 
-	local saveName = GetConVar("mapret_savename"):GetString()
+	local saveName = GetConVar("mr_savename"):GetString()
 
 	if saveName == "" then
 		return
 	end
 
-	net.Start("MapRetSave")
+	net.Start("MRSave")
 		net.WriteString(saveName)
 	net.SendToServer()
 end
@@ -50,7 +50,7 @@ function Save:Set(saveName, saveFile)
 		decals = MR.Decals:GetList(),
 		map = MR.MapMaterials:GetList(),
 		displacements = MR.MapMaterials.Displacements:GetList(),
-		skybox = GetConVar("mapret_skybox"):GetString(),
+		skybox = GetConVar("mr_skybox"):GetString(),
 		savingFormat = "2.0"
 	}
 
@@ -69,15 +69,15 @@ function Save:Set(saveName, saveFile)
 	MR.Load:Set(saveName, saveFile)
 
 	-- Update the load list on every client
-	net.Start("MapRetSaveAddToLoadList")
+	net.Start("MRSaveAddToLoadList")
 		net.WriteString(saveName)
 	net.Broadcast()
 end
 if SERVER then
-	util.AddNetworkString("MapRetSave")
-	util.AddNetworkString("MapRetSaveAddToLoadList")
+	util.AddNetworkString("MRSave")
+	util.AddNetworkString("MRSaveAddToLoadList")
 
-	net.Receive("MapRetSave", function(_, ply)
+	net.Receive("MRSave", function(_, ply)
 		-- Admin only
 		if not MR.Utils:PlyIsAdmin(ply) then
 			return false
@@ -89,7 +89,7 @@ if SERVER then
 	end)
 end
 if CLIENT then
-	net.Receive("MapRetSaveAddToLoadList", function()
+	net.Receive("MRSaveAddToLoadList", function()
 		local saveName = net.ReadString()
 		local saveFile = MR.Base:GetMapFolder()..saveName..".txt"
 
@@ -105,7 +105,7 @@ function Save:Auto_Start(ply, value)
 	if SERVER then return; end
 
 	-- Set the autoSave option on every client
-	net.Start("MapRetAutoSaveSet")
+	net.Start("MRAutoSaveSet")
 		net.WriteBool(value)
 	net.SendToServer()
 end
@@ -119,18 +119,18 @@ function Save:Auto_Set(ply, value)
 
 	-- Remove the autoSave timer
 	if not value then
-		if timer.Exists("MapRetAutoSave") then
-			timer.Remove("MapRetAutoSave")
+		if timer.Exists("MRAutoSave") then
+			timer.Remove("MRAutoSave")
 		end
 	end
  
 	-- Apply the change on clients
-	MR.CVars:Replicate(ply, "mapret_autosave", value and "1" or "0", "save", "box")
+	MR.CVars:Replicate(ply, "mr_autosave", value and "1" or "0", "save", "box")
 end
 if SERVER then
-	util.AddNetworkString("MapRetAutoSaveSet")
+	util.AddNetworkString("MRAutoSaveSet")
 
-	net.Receive("MapRetAutoSaveSet", function(_, ply)
+	net.Receive("MRAutoSaveSet", function(_, ply)
 		Save:Auto_Set(ply, net.ReadBool(value))
 	end)
 end

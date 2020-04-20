@@ -89,7 +89,7 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 
 				n.Icon:SetImage("icon16/picture.png")
 				n.DoClick = function()
-					RunConsoleCommand("mapret_material", arq)
+					RunConsoleCommand("mr_material", arq)
 					MatRetMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"));
 					net.Start("Materials:SetValid")
 						net.WriteString(arq)

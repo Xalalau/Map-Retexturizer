@@ -46,15 +46,15 @@ function Ply:Set(ply)
 
 	if SERVER then
 		if ply ~= fakeHostPly then
-			net.Start("MapRetPlySet")
+			net.Start("MRPlySet")
 			net.Send(ply)
 		end
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetPlySet")
+	util.AddNetworkString("MRPlySet")
 elseif CLIENT then
-	net.Receive("MapRetPlySet", function()
+	net.Receive("MRPlySet", function()
 		Ply:Set(LocalPlayer())
 	end)
 end

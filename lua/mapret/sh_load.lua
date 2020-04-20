@@ -25,10 +25,10 @@ function Load:Init()
 	local value = file.Read(MR.Base:GetAutoLoadFile(), "Data")
 
 	if value then
-		RunConsoleCommand("mapret_autoload", value)
+		RunConsoleCommand("mr_autoload", value)
 		MR.GUI:Set("load", "autoloadtext", value)
 	else
-		RunConsoleCommand("mapret_autoload", "")
+		RunConsoleCommand("mr_autoload", "")
 	end
 end
 
@@ -82,9 +82,9 @@ function Load:Start(ply, loadName)
 	return false
 end
 if SERVER then
-	util.AddNetworkString("MapRetLoad")
+	util.AddNetworkString("MRLoad")
 
-	net.Receive("MapRetLoad", function(_, ply)
+	net.Receive("MRLoad", function(_, ply)
 		Load:Start(MR.Ply:GetFakeHostPly(), net.ReadString())
 	end)
 end
@@ -98,7 +98,7 @@ function Load:FirstSpawn(ply)
 	if CLIENT then return; end
 
 	-- Fill up the player load list
-	net.Start("MapRetLoadFillList")
+	net.Start("MRLoadFillList")
 		net.WriteTable(load.list)
 	net.Send(ply)
 
@@ -112,28 +112,28 @@ function Load:FirstSpawn(ply)
 	elseif MR.Base:GetInitialized() then
 		MR.Duplicator:Start(ply)
 	-- Run an autoload
-	elseif GetConVar("mapret_autoload"):GetString() ~= "" then
+	elseif GetConVar("mr_autoload"):GetString() ~= "" then
 		MR.Ply:SetFirstSpawn(ply)
-		net.Start("MapRetPlyfirstSpawnEnd")
+		net.Start("MRPlyfirstSpawnEnd")
 		net.Send(ply)
 
-		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
+		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("mr_autoload"):GetString())
 	-- Nothing to send, finish the joining process
 	else
 		MR.Ply:SetFirstSpawn(ply)
-		net.Start("MapRetPlyfirstSpawnEnd")
+		net.Start("MRPlyfirstSpawnEnd")
 		net.Send(ply)
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetPlyfirstSpawnEnd")
+	util.AddNetworkString("MRPlyfirstSpawnEnd")
 
 	-- Wait until the player fully loads (https://github.com/Facepunch/garrysmod-requests/issues/718)
-	hook.Add("PlayerInitialSpawn", "MapRetPlyfirstSpawn", function(ply)
+	hook.Add("PlayerInitialSpawn", "MRPlyfirstSpawn", function(ply)
 		hook.Add("SetupMove", ply, function(self, ply, _, cmd)
 			if self == ply and not cmd:IsForced() then
 				-- Wait just a bit more for players with weaker hardware
-				timer.Create("MapRetfirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
+				timer.Create("MRfirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
 					Load:FirstSpawn(ply);
 				end)
 
@@ -142,7 +142,7 @@ if SERVER then
 		end)
 	end)
 elseif CLIENT then
-	net.Receive("MapRetPlyfirstSpawnEnd", function()
+	net.Receive("MRPlyfirstSpawnEnd", function()
 		MR.Ply:SetFirstSpawn(LocalPlayer())
 	end)
 end
@@ -158,10 +158,10 @@ function Load:FillList(mr)
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetLoadFillList")
+	util.AddNetworkString("MRLoadFillList")
 end
 if CLIENT then
-	net.Receive("MapRetLoadFillList", function()
+	net.Receive("MRLoadFillList", function()
 		load.list = net.ReadTable()
 	end)
 end
@@ -216,7 +216,7 @@ function Load:Delete_Start(ply)
 		buttonYes.DoClick = function()
 			-- Remove the load on every client
 			qPanel:Close()
-			net.Start("MapRetLoadDeleteSV")
+			net.Start("MRLoadDeleteSV")
 				net.WriteString(loadName)
 			net.SendToServer()
 		end
@@ -248,7 +248,7 @@ function Load:Delete_Set(ply, loadName)
 	load.list[loadName] = nil
 
 	-- Unset autoload if needed
-	if GetConVar("mapret_autoload"):GetString() == loadName then
+	if GetConVar("mr_autoload"):GetString() == loadName then
 		Load:Auto_Set(ply, "")
 	end
 
@@ -256,22 +256,22 @@ function Load:Delete_Set(ply, loadName)
 	file.Delete(loadFile)
 
 	-- Updates the load list on every client
-	net.Start("MapRetLoadDeleteCL")
+	net.Start("MRLoadDeleteCL")
 		net.WriteString(loadName)
 	net.Broadcast()
 	
 	return true
 end
 if SERVER then
-	util.AddNetworkString("MapRetLoadDeleteSV")
-	util.AddNetworkString("MapRetLoadDeleteCL")
+	util.AddNetworkString("MRLoadDeleteSV")
+	util.AddNetworkString("MRLoadDeleteCL")
 
-	net.Receive("MapRetLoadDeleteSV", function(_, ply)
+	net.Receive("MRLoadDeleteSV", function(_, ply)
 		Load:Delete_Set(ply, net.ReadString())
 	end)
 end
 if CLIENT then
-	net.Receive("MapRetLoadDeleteCL", function()
+	net.Receive("MRLoadDeleteCL", function()
 		local loadName = net.ReadString()
 
 		load.list[loadName] = nil
@@ -298,18 +298,18 @@ function Load:Auto_Set(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	MR.CVars:Replicate(ply, "mapret_autoload", loadName, "load", "autoloadtext")
+	MR.CVars:Replicate(ply, "mr_autoload", loadName, "load", "autoloadtext")
 
-	timer.Create("MapRetWaitToSave", 0.3, 1, function()
-		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("mapret_autoload"):GetString())
+	timer.Create("MRWaitToSave", 0.3, 1, function()
+		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("mr_autoload"):GetString())
 	end)
 
 	return true
 end
 if SERVER then
-	util.AddNetworkString("MapRetAutoLoadSet")
+	util.AddNetworkString("MRAutoLoadSet")
 
-	net.Receive("MapRetAutoLoadSet", function(_, ply)
+	net.Receive("MRAutoLoadSet", function(_, ply)
 		Load:Auto_Set(ply, net.ReadString())
 	end)
 end

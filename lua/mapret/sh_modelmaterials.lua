@@ -185,7 +185,7 @@ function ModelMaterials:Set(ply, data)
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		if SERVER then
 			-- Set the duplicator
-			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
+			duplicator.StoreEntityModifier(data.ent, "MRexturizer_Models", data)
 		end
 
 		-- Recreate the new material
@@ -224,7 +224,7 @@ function ModelMaterials:Remove(ent)
 	ent.modifiedMaterial = nil
 
 	if SERVER then
-		duplicator.ClearEntityModifier(ent, "MapRetexturizer_Models")
+		duplicator.ClearEntityModifier(ent, "MRexturizer_Models")
 
 		net.Start("ModelMaterials:Remove")
 			net.WriteEntity(ent)

@@ -4,7 +4,7 @@
 
 local map = {
 	-- The name of our backup map material files. They are file1, file2, file3...
-	filename = "mapretexturizer/file",
+	filename = "mr/file",
 	-- 1512 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
 	limit = 1512,
 	-- Data structures, all the modifications
@@ -13,7 +13,7 @@ local map = {
 	displacements = {
 		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
 		-- Note: same type of list as map.list, but it's separated because these files never get clean for reuse
-		filename = "mapretexturizer/disp_file",
+		filename = "mr/disp_file",
 		-- 24 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
 		limit = 24,
 		-- List of detected displacements on the map
@@ -141,9 +141,9 @@ function MapMaterials:Set(ply, data)
 		-- Set the duplicator
 		if SERVER then
 			if not isDisplacement then
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps", { map = map.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Maps", { map = map.list })
 			else
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements", { displacements = map.displacements.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Displacements", { displacements = map.displacements.list })
 			end
 		end
 	end
@@ -296,7 +296,7 @@ function MapMaterials:SetAll(ply)
 	end
 
 	-- Get the material
-	local material = ply:GetInfo("mapret_material")
+	local material = ply:GetInfo("mr_material")
 
 	-- Don't apply bad materials
 	if not MR.Materials:IsValid(material) then
@@ -313,7 +313,7 @@ function MapMaterials:SetAll(ply)
 	-- Clean the map
 	MR.Materials:RestoreAll(ply, true)
 
-	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
+	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
 		-- Create a fake loading table
 		local newTable = {
 			map = {},
@@ -403,11 +403,11 @@ function MapMaterials:Remove(oldMaterial)
 			if SERVER then
 				if IsValid(MR.Duplicator:GetEnt()) then
 					if MR.MML:Count(map.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Maps")
 					end
 
 					if MR.MML:Count(map.displacements.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Displacements")
 					end
 				end
 			end
@@ -503,13 +503,13 @@ function MapMaterials.Displacements:Start(displacement, newMaterial, newMaterial
 	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
 	if map.displacements.hack then
 		for k,v in pairs(map.displacements.detected) do
-			net.Start("MapRetDisplacements")
+			net.Start("MRDisplacements")
 				net.WriteString(k)
 				net.WriteString("dev/graygrid")
 				net.WriteString("dev/graygrid")
 			net.SendToServer()
 
-			timer.Create("MapRetDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
+			timer.Create("MRDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
 				MapMaterials:Remove(k)
 			end)
 		end
@@ -518,8 +518,8 @@ function MapMaterials.Displacements:Start(displacement, newMaterial, newMaterial
 		map.displacements.hack = false
 	end
 
-	timer.Create("MapRetDiscplamentsDirtyHackAdjustment", delay, 1, function()
-		net.Start("MapRetDisplacements")
+	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay, 1, function()
+		net.Start("MRDisplacements")
 			net.WriteString(displacement)
 			net.WriteString(newMaterial and newMaterial or "")
 			net.WriteString(newMaterial2 and newMaterial2 or "")
@@ -588,9 +588,9 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	undo.Finish()
 end
 if SERVER then
-	util.AddNetworkString("MapRetDisplacements")
+	util.AddNetworkString("MRDisplacements")
 
-	net.Receive("MapRetDisplacements", function(_, ply)
+	net.Receive("MRDisplacements", function(_, ply)
 		MapMaterials.Displacements:Set(ply, net.ReadString(), net.ReadString(), net.ReadString())
 	end)
 end

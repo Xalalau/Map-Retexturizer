@@ -8,7 +8,7 @@ MR.Base = Base
 
 local base = {
 	-- Our folder inside data
-	mainFolder = "mapret/",
+	mainFolder = "mr/",
 	-- mapFolder inside the mainFolder
 	mapFolder = game.GetMap().."/",
 	save = {

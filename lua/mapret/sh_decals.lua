@@ -21,14 +21,14 @@ function Decals:Toogle(ply, value)
 
 	MR.Ply:SetDecalMode(ply, value)
 
-	net.Start("MapRetToogleDecal")
+	net.Start("MRToogleDecal")
 		net.WriteBool(value)
 	net.SendToServer()
 end
 if SERVER then
-	util.AddNetworkString("MapRetToogleDecal")
+	util.AddNetworkString("MRToogleDecal")
 
-	net.Receive("MapRetToogleDecal", function(_, ply)
+	net.Receive("MRToogleDecal", function(_, ply)
 		MR.Ply:SetDecalMode(ply, net.ReadBool())
 	end)
 end
@@ -50,7 +50,7 @@ function Decals:Start(ply, tr, duplicatorData)
 		table.insert(decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = decal.list })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Decals", { decals = decal.list })
 	end
 
 	-- Send to...
@@ -132,7 +132,7 @@ function Decals:RemoveAll(ply)
 		end
 	end
 	table.Empty(decal.list)
-	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals")
+	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Decals")
 end
 if SERVER then
 	util.AddNetworkString("Decals:RemoveAll")

@@ -28,7 +28,7 @@
 --------------------------------
 
 TOOL.Category = "Render"
-TOOL.Name = "#tool.mapret.name"
+TOOL.Name = "#tool.mr.name"
 TOOL.Information = {
 	{name = "left"},
 	{name = "right"},
@@ -36,20 +36,20 @@ TOOL.Information = {
 }
 
 if CLIENT then
-	language.Add("tool.mapret.name", "Map Retexturizer")
-	language.Add("tool.mapret.left", "Set material")
-	language.Add("tool.mapret.right", "Copy material")
-	language.Add("tool.mapret.reload", "Remove material")
-	language.Add("tool.mapret.desc", "Change the look of your map any way you want!")
+	language.Add("tool.mr.name", "Map Retexturizer")
+	language.Add("tool.mr.left", "Set material")
+	language.Add("tool.mr.right", "Copy material")
+	language.Add("tool.mr.reload", "Remove material")
+	language.Add("tool.mr.desc", "Change the look of your map any way you want!")
 end
 
-CreateConVar("mapret_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
-CreateConVar("mapret_autosave", "1", { FCVAR_REPLICATED })
-CreateConVar("mapret_autoload", "", { FCVAR_REPLICATED })
-CreateConVar("mapret_skybox", "", { FCVAR_REPLICATED })
-CreateConVar("mapret_delay", "0.050", { FCVAR_REPLICATED })
-CreateConVar("mapret_duplicator_clean", "1", { FCVAR_REPLICATED })
-CreateConVar("mapret_skybox_toolgun", "1", { FCVAR_REPLICATED })
+CreateConVar("mr_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
+CreateConVar("mr_autosave", "1", { FCVAR_REPLICATED })
+CreateConVar("mr_autoload", "", { FCVAR_REPLICATED })
+CreateConVar("mr_skybox", "", { FCVAR_REPLICATED })
+CreateConVar("mr_delay", "0.050", { FCVAR_REPLICATED })
+CreateConVar("mr_duplicator_clean", "1", { FCVAR_REPLICATED })
+CreateConVar("mr_skybox_toolgun", "1", { FCVAR_REPLICATED })
 TOOL.ClientConVar["decal"] = "0"
 TOOL.ClientConVar["displacement"] = ""
 TOOL.ClientConVar["savename"] = ""
@@ -112,7 +112,7 @@ end
 	-- Skybox modification
 	if originalMaterial == "tools/toolsskybox" then
 		-- Check if it's allowed
-		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
+		if GetConVar("mr_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
 				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
@@ -123,8 +123,8 @@ end
 		end
 
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or originalMaterial
-		local selectedMaterial = ply:GetInfo("mapret_material")
+		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or originalMaterial
+		local selectedMaterial = ply:GetInfo("mr_material")
 
 		-- Check if the copy isn't necessary
 		if skyboxMaterial == selectedMaterial then
@@ -218,9 +218,9 @@ end
 	end
 
 	-- Auto save
-	if GetConVar("mapret_autosave"):GetString() == "1" then
-		if not timer.Exists("MapRetAutoSave") then
-			timer.Create("MapRetAutoSave", 60, 1, function()
+	if GetConVar("mr_autosave"):GetString() == "1" then
+		if not timer.Exists("MRAutoSave") then
+			timer.Create("MRAutoSave", 60, 1, function()
 				if not MR.Duplicator:IsRunning() then
 					MR.Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
@@ -274,8 +274,8 @@ function TOOL:RightClick(tr)
 	-- Skybox
 	if originalMaterial == "tools/toolsskybox" then
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mapret_skybox"):GetString() ~= "" and GetConVar("mapret_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
-		local selectedMaterial = ply:GetInfo("mapret_material")
+		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
+		local selectedMaterial = ply:GetInfo("mr_material")
 
 		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material that is a missing texture
 		if skyboxMaterial == "skybox/painted" then
@@ -288,7 +288,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Copy the material
-		ply:ConCommand("mapret_material "..skyboxMaterial)
+		ply:ConCommand("mr_material "..skyboxMaterial)
 	-- Normal materials
 	else
 		-- Get data tables with the future and current materials
@@ -334,7 +334,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Copy the material
-		ply:ConCommand("mapret_material "..MR.Materials:GetCurrent(tr))
+		ply:ConCommand("mr_material "..MR.Materials:GetCurrent(tr))
 
 		-- Set the cvars to data values
 		if oldData then
@@ -361,7 +361,7 @@ function TOOL:Reload(tr)
 	-- Skybox cleanup
 	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 		-- Check if it's allowed
-		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
+		if GetConVar("mr_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
 				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
@@ -372,7 +372,7 @@ function TOOL:Reload(tr)
 		end
 
 		-- Clean
-		if GetConVar("mapret_skybox"):GetString() ~= "" then
+		if GetConVar("mr_skybox"):GetString() ~= "" then
 			if SERVER then
 				MR.Skybox:Set(ply, "")
 			end
@@ -406,13 +406,13 @@ end
 -- Preview materials and decals when the tool is open
 function TOOL:DrawHUD()
 	-- Map materials preview
-	if self.Mode and self.Mode == "mapret" and MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
+	if self.Mode and self.Mode == "mr" and MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
 		MR.Preview:Render(LocalPlayer(), true)
 	end
 
-	-- HACK: Needed to force mapret_detail to use the right value
+	-- HACK: Needed to force mr_detail to use the right value
 	if MR.Ply:GetCVarValueHack(LocalPlayer()) then
-		timer.Create("MapRetDetailHack", 0.3, 1, function()
+		timer.Create("MRDetailHack", 0.3, 1, function()
 			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
 		end)
 
@@ -422,12 +422,12 @@ end
 
 -- Panels
 function TOOL.BuildCPanel(CPanel)
-	CPanel:SetName("#tool.mapret.name")
-	CPanel:Help("#tool.mapret.desc")
+	CPanel:SetName("#tool.mr.name")
+	CPanel:Help("#tool.mr.desc")
 	local ply
 	local element -- Little workaround to help me setting some menu functions
 
-	timer.Create("MapRetMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
+	timer.Create("MRMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
 		ply = LocalPlayer()
 	end)
 
@@ -450,7 +450,7 @@ function TOOL.BuildCPanel(CPanel)
 
 	-- Sync some menu fields (after it's loaded for real)
 	if LocalPlayer() then -- I can avoid the first background menu load checking LocalPlayer() because it's invalid at this point
-		net.Start("MapRetReplicateFirstSpawn")
+		net.Start("MRReplicateFirstSpawn")
 		net.SendToServer()
 	end
 
@@ -463,7 +463,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionGeneral)
 
-			local materialValue = CPanel:TextEntry("Material path", "mapret_material")
+			local materialValue = CPanel:TextEntry("Material path", "mr_material")
 				materialValue.OnEnter = function(self)
 					if MR.Materials:IsValid(self:GetValue()) then
 						net.Start("Materials:SetValid")
@@ -493,7 +493,7 @@ function TOOL.BuildCPanel(CPanel)
 			
 			CPanel:ControlHelp("It's not accurate with decals (GMod bugs).")
 
-			local decalBox = CPanel:CheckBox("Use as Decal", "mapret_decal")
+			local decalBox = CPanel:CheckBox("Use as Decal", "mr_decal")
 
 				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
 
@@ -504,7 +504,7 @@ function TOOL.BuildCPanel(CPanel)
 					MR.Decals:Toogle(ply, val)
 				end
 
-			CPanel:Button("Change all map materials","mapret_changeall")
+			CPanel:Button("Change all map materials","mr_changeall")
 
 			local openMaterialBrowser = CPanel:Button("Open Material Browser")
 				function openMaterialBrowser:DoClick()				
@@ -522,19 +522,19 @@ function TOOL.BuildCPanel(CPanel)
 
 		CPanel:AddItem(sectionProperties)
 
-		local detail, label = CPanel:ComboBox("Detail", "mapret_detail")
+		local detail, label = CPanel:ComboBox("Detail", "mr_detail")
 		MR.GUI:SetDetail(detail)
 		properties.label = label
 			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 				MR.GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
-			properties.a = CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
-			properties.b = CPanel:NumSlider("Horizontal Translation", "mapret_offsetx", -1, 1, 2)
-			properties.c = CPanel:NumSlider("Vertical Translation", "mapret_offsety", -1, 1, 2)
-			properties.d = CPanel:NumSlider("Width Magnification", "mapret_scalex", 0.01, 6, 2)
-			properties.e = CPanel:NumSlider("Height Magnification", "mapret_scaley", 0.01, 6, 2)
-			properties.f = CPanel:NumSlider("Rotation", "mapret_rotation", 0, 179, 0)
+			properties.a = CPanel:NumSlider("Alpha", "mr_alpha", 0, 1, 2)
+			properties.b = CPanel:NumSlider("Horizontal Translation", "mr_offsetx", -1, 1, 2)
+			properties.c = CPanel:NumSlider("Vertical Translation", "mr_offsety", -1, 1, 2)
+			properties.d = CPanel:NumSlider("Width Magnification", "mr_scalex", 0.01, 6, 2)
+			properties.e = CPanel:NumSlider("Height Magnification", "mr_scaley", 0.01, 6, 2)
+			properties.f = CPanel:NumSlider("Rotation", "mr_rotation", 0, 179, 0)
 			properties.baseMaterialReset = CPanel:Button("Reset")			
 
 			function properties.baseMaterialReset:DoClick()
@@ -562,7 +562,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("mapret_skybox"):GetString())
+						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("mr_skybox"):GetString())
 
 						return
 					end
@@ -585,7 +585,7 @@ function TOOL.BuildCPanel(CPanel)
 					MR.GUI:GetSkyboxCombo():AddChoice(k, k)
 				end	
 
-				timer.Create("MapRetSkyboxDelay", 0.1, 1, function()
+				timer.Create("MRSkyboxDelay", 0.1, 1, function()
 					MR.GUI:GetSkyboxCombo():SetValue("")
 				end)
 
@@ -600,13 +600,13 @@ function TOOL.BuildCPanel(CPanel)
 							return
 						-- Admin only: reset the option if it's not being synced and return
 						elseif not MR.Utils:PlyIsAdmin(ply) then
-							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("mapret_skybox_toolgun"):GetBool())
+							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("mr_skybox_toolgun"):GetBool())
 
 							return
 						end
 
-						net.Start("MapRetReplicate")
-							net.WriteString("mapret_skybox_toolgun")
+						net.Start("MRReplicate")
+							net.WriteString("mr_skybox_toolgun")
 							net.WriteString(val and "1" or "0")
 							net.WriteString("skybox")
 							net.WriteString("box")
@@ -646,7 +646,7 @@ function TOOL.BuildCPanel(CPanel)
 
 					MR.GUI:GetDisplacementsCombo():AddChoice("", "")
 
-					timer.Create("MapRetdisplacementsDelay", 0.1, 1, function()
+					timer.Create("MRdisplacementsDelay", 0.1, 1, function()
 						MR.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
@@ -655,7 +655,7 @@ function TOOL.BuildCPanel(CPanel)
 						if text1Value == "" then
 							text1Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1]
 
-							timer.Create("MapRetText1Update", 0.5, 1, function()
+							timer.Create("MRText1Update", 0.5, 1, function()
 								MR.GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
 							end)
 						end
@@ -663,7 +663,7 @@ function TOOL.BuildCPanel(CPanel)
 						if text2Value == "" then
 							text2Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2]
 
-							timer.Create("MapRetText2Update", 0.5, 1, function()
+							timer.Create("MRText2Update", 0.5, 1, function()
 								MR.GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
 							end)
 						end
@@ -709,7 +709,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSave)
 
-			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "mapret_savename"))
+			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "mr_savename"))
 				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
@@ -726,7 +726,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("save", "box"):SetChecked(GetConVar("mapret_autosave"):GetBool())
+						MR.GUI:Get("save", "box"):SetChecked(GetConVar("mr_autosave"):GetBool())
 
 						return
 					end
@@ -766,7 +766,7 @@ function TOOL.BuildCPanel(CPanel)
 				function element:OnValueChanged(val)
 					-- Hack to initialize the field
 					if MR.GUI:Get("load", "slider"):GetValue() == 0 then
-						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
+						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
 
 						return
 					end
@@ -782,14 +782,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
+						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
 
 						return
 					end
 
 					-- Start syncing
-					net.Start("MapRetReplicate")
-						net.WriteString("mapret_delay")
+					net.Start("MRReplicate")
+						net.WriteString("mr_delay")
 						net.WriteString(string.format("%0.3f", val))
 						net.WriteString("load")
 						net.WriteString("slider")
@@ -809,14 +809,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("load", "box"):SetChecked(GetConVar("mapret_duplicator_clean"):GetBool())
+						MR.GUI:Get("load", "box"):SetChecked(GetConVar("mr_duplicator_clean"):GetBool())
 
 						return
 					end
 
 					-- Start syncing
-					net.Start("MapRetReplicate")
-						net.WriteString("mapret_duplicator_clean")
+					net.Start("MRReplicate")
+						net.WriteString("mr_duplicator_clean")
 						net.WriteString(val and "1" or "0")
 						net.WriteString("load")
 						net.WriteString("box")
@@ -825,14 +825,14 @@ function TOOL.BuildCPanel(CPanel)
 
 			local loadSave = CPanel:Button("Load")
 				function loadSave:DoClick()
-					net.Start("MapRetLoad")
+					net.Start("MRLoad")
 						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
 			local setAutoload = CPanel:Button("Set Autoload")
 				function setAutoload:DoClick()
-					net.Start("MapRetAutoLoadSet")
+					net.Start("MRAutoLoadSet")
 						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
@@ -862,7 +862,7 @@ function TOOL.BuildCPanel(CPanel)
 				cleanupCombobox:AddChoice("Model Materials","ModelMaterials:RemoveAll")
 				cleanupCombobox:AddChoice("Skybox","Skybox:Remove")
 
-			local cleanupButton = CPanel:Button("Cleanup","mapret_cleanup_all")
+			local cleanupButton = CPanel:Button("Cleanup","mr_cleanup_all")
 				function cleanupButton:DoClick()
 					local _, netName = cleanupCombobox:GetSelected()
 

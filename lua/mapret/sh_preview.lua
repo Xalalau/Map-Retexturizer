@@ -31,7 +31,7 @@ function Preview:Toogle(ply, state, setOnClient, setOnServer)
 		end
 
 		if setOnServer then
-			net.Start("MapRetTooglePreview")
+			net.Start("MRTooglePreview")
 				net.WriteBool(state)
 			net.SendToServer()
 		end
@@ -41,16 +41,16 @@ function Preview:Toogle(ply, state, setOnClient, setOnServer)
 		end
 
 		if setOnClient then
-			net.Start("MapRetTooglePreview")
+			net.Start("MRTooglePreview")
 				net.WriteBool(state)
 			net.Send(ply)
 		end
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetTooglePreview")
+	util.AddNetworkString("MRTooglePreview")
 end
-net.Receive("MapRetTooglePreview", function(_, ply)
+net.Receive("MRTooglePreview", function(_, ply)
 	if CLIENT then ply = LocalPlayer(); end
 
 	MR.Ply:SetPreviewMode(ply, net.ReadBool())
@@ -158,17 +158,17 @@ if CLIENT then
 
 	-- Start decals preview
 	function Preview:Render_Decals(ply)
-		--self.Mode and self.Mode == "mapret"
+		--self.Mode and self.Mode == "mr"
 
 		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			local tool = ply:GetTool()
 
-			if tool and tool.Mode and tool.Mode == "mapret" and MR.Ply:GetPreviewMode(ply) and MR.Ply:GetDecalMode(ply) then
+			if tool and tool.Mode and tool.Mode == "mr" and MR.Ply:GetPreviewMode(ply) and MR.Ply:GetDecalMode(ply) then
 				Preview:Render(ply, false)
 			end
 		end
 	end
-	hook.Add("PostDrawOpaqueRenderables", "MapRetPreview", function()
+	hook.Add("PostDrawOpaqueRenderables", "MRPreview", function()
 		Preview:Render_Decals(LocalPlayer())
 	end)
 

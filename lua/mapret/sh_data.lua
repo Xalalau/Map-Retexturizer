@@ -38,15 +38,15 @@ function Data:Create(ply, tr)
 	local data = {
 		ent = tr and tr.Entity or game.GetWorld(),
 		oldMaterial = tr and MR.Materials:GetOriginal(tr) or "",
-		newMaterial = ply:GetInfo("mapret_material"),
+		newMaterial = ply:GetInfo("mr_material"),
 		newMaterial2 = nil,
-		offsetx = ply:GetInfo("mapret_offsetx"),
-		offsety = ply:GetInfo("mapret_offsety"),
-		scalex = ply:GetInfo("mapret_scalex") ~= "0" and ply:GetInfo("mapret_scalex") or "0.01",
-		scaley = ply:GetInfo("mapret_scaley") ~= "0" and ply:GetInfo("mapret_scaley") or "0.01",
-		rotation = ply:GetInfo("mapret_rotation"),
-		alpha = ply:GetInfo("mapret_alpha"),
-		detail = ply:GetInfo("mapret_detail"),
+		offsetx = ply:GetInfo("mr_offsetx"),
+		offsety = ply:GetInfo("mr_offsety"),
+		scalex = ply:GetInfo("mr_scalex") ~= "0" and ply:GetInfo("mr_scalex") or "0.01",
+		scaley = ply:GetInfo("mr_scaley") ~= "0" and ply:GetInfo("mr_scaley") or "0.01",
+		rotation = ply:GetInfo("mr_rotation"),
+		alpha = ply:GetInfo("mr_alpha"),
+		detail = ply:GetInfo("mr_detail"),
 	}
 
 	return data
@@ -57,7 +57,7 @@ function Data:CreateDefaults(ply, tr)
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = MR.Materials:GetCurrent(tr),
-		newMaterial = ply:GetInfo("mapret_material"),
+		newMaterial = ply:GetInfo("mr_material"),
 		offsetx = "0.00",
 		offsety = "0.00",
 		scalex = "1.00",

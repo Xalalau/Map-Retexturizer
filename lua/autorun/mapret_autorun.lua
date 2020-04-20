@@ -43,15 +43,15 @@ local function ParseDir(dir)
 	end
 end
 
-ParseDir("mapret/")
+ParseDir("mr/")
 
 -- Add resources
 if SERVER then
 	local function SendFiles()
-		local files, _ = file.Find("materials/mapretexturizer/*.vmt", "GAME")
+		local files, _ = file.Find("materials/mr/*.vmt", "GAME")
 
 		for k, v in ipairs(files) do
-			resource.AddFile("materials/mapretexturizer/"..v)
+			resource.AddFile("materials/mr/"..v)
 		end
 	end
 

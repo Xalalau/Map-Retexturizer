@@ -41,7 +41,7 @@ function CVars:Replicate(ply, command, value, field1, field2)
 	end
 
 	if field1 then
-		net.Start("MapRetReplicateCl")
+		net.Start("MRReplicateCl")
 			net.WriteEntity(ply)
 			net.WriteString(value)
 			net.WriteString(field1)
@@ -50,20 +50,20 @@ function CVars:Replicate(ply, command, value, field1, field2)
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetReplicate")
-	util.AddNetworkString("MapRetReplicateCl")
-	util.AddNetworkString("MapRetReplicateFirstSpawn")
+	util.AddNetworkString("MRReplicate")
+	util.AddNetworkString("MRReplicateCl")
+	util.AddNetworkString("MRReplicateFirstSpawn")
 
-	net.Receive("MapRetReplicate", function(_, ply)
+	net.Receive("MRReplicate", function(_, ply)
 		CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
 	end)
 
 	-- Sync menu fields (after it's loaded)
-	net.Receive("MapRetReplicateFirstSpawn", function(_, ply)
+	net.Receive("MRReplicateFirstSpawn", function(_, ply)
 		for k,v in pairs(MR.GUI:GetTable()) do
 			if istable(v) then
 				for k2,v2 in pairs(v) do
-					net.Start("MapRetReplicateCl")
+					net.Start("MRReplicateCl")
 						net.WriteEntity(nil)
 						net.WriteString(v2)
 						net.WriteString(k or 0)
@@ -71,7 +71,7 @@ if SERVER then
 					net.Send(ply)
 				end
 			else
-				net.Start("MapRetReplicateCl")
+				net.Start("MRReplicateCl")
 					net.WriteEntity(nil)
 					net.WriteString(v)
 					net.WriteString(k)
@@ -80,7 +80,7 @@ if SERVER then
 		end
 	end)
 else
-	net.Receive("MapRetReplicateCl", function()
+	net.Receive("MRReplicateCl", function()
 		local ply, value, field1, field2 = net.ReadEntity(), net.ReadString(), net.ReadString(), net.ReadString()
 
 		-- Enable a sync loop block
@@ -98,22 +98,22 @@ end
 function CVars:SetPropertiesToData(ply, data)
 	if CLIENT then return; end
 
-	ply:ConCommand("mapret_detail "..data.detail)
-	ply:ConCommand("mapret_offsetx "..data.offsetx)
-	ply:ConCommand("mapret_offsety "..data.offsety)
-	ply:ConCommand("mapret_scalex "..data.scalex)
-	ply:ConCommand("mapret_scaley "..data.scaley)
-	ply:ConCommand("mapret_rotation "..data.rotation)
-	ply:ConCommand("mapret_alpha "..data.alpha)
+	ply:ConCommand("mr_detail "..data.detail)
+	ply:ConCommand("mr_offsetx "..data.offsetx)
+	ply:ConCommand("mr_offsety "..data.offsety)
+	ply:ConCommand("mr_scalex "..data.scalex)
+	ply:ConCommand("mr_scaley "..data.scaley)
+	ply:ConCommand("mr_rotation "..data.rotation)
+	ply:ConCommand("mr_alpha "..data.alpha)
 end
 
 -- Set the cvars to data defaults
 function CVars:SetPropertiesToDefaults(ply)
-	ply:ConCommand("mapret_detail None")
-	ply:ConCommand("mapret_offsetx 0")
-	ply:ConCommand("mapret_offsety 0")
-	ply:ConCommand("mapret_scalex 1")
-	ply:ConCommand("mapret_scaley 1")
-	ply:ConCommand("mapret_rotation 0")
-	ply:ConCommand("mapret_alpha 1")
+	ply:ConCommand("mr_detail None")
+	ply:ConCommand("mr_offsetx 0")
+	ply:ConCommand("mr_offsety 0")
+	ply:ConCommand("mr_scalex 1")
+	ply:ConCommand("mr_scaley 1")
+	ply:ConCommand("mr_rotation 0")
+	ply:ConCommand("mr_alpha 1")
 end

@@ -67,7 +67,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		end
 
 		-- Set a timer with a different delay for each entity  (and faster than the other duplicator calls)
-		timer.Create("MapRetDuplicatorWaiting"..tostring(dup.models.delay)..tostring(ply), dup.models.delay, 1, function()
+		timer.Create("MRDuplicatorWaiting"..tostring(dup.models.delay)..tostring(ply), dup.models.delay, 1, function()
 			-- Store the changed model
 			table.insert(dup.recreatedTable.models, savedTable)
 
@@ -109,7 +109,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	end
 
 	-- Call our duplicator
-	timer.Create("MapRetDuplicatorWaiting"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
+	timer.Create("MRDuplicatorWaiting"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
 		if not dup.recreatedTable.initialized then
 			dup.recreatedTable.initialized = true
 			Duplicator:Start(MR.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "dupTranslation")
@@ -119,16 +119,16 @@ end
 local function RecreateTable(ply, ent, savedTable)
 	Duplicator:RecreateTable(ply, ent, savedTable)
 end
-duplicator.RegisterEntityModifier("MapRetexturizer_Models", RecreateTable)
-duplicator.RegisterEntityModifier("MapRetexturizer_Decals", RecreateTable)
-duplicator.RegisterEntityModifier("MapRetexturizer_Maps", RecreateTable)
-duplicator.RegisterEntityModifier("MapRetexturizer_Displacements", RecreateTable)
-duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", RecreateTable)
+duplicator.RegisterEntityModifier("MRexturizer_Models", RecreateTable)
+duplicator.RegisterEntityModifier("MRexturizer_Decals", RecreateTable)
+duplicator.RegisterEntityModifier("MRexturizer_Maps", RecreateTable)
+duplicator.RegisterEntityModifier("MRexturizer_Displacements", RecreateTable)
+duplicator.RegisterEntityModifier("MRexturizer_Skybox", RecreateTable)
 
 -- Duplicator start
 if SERVER then
-	util.AddNetworkString("MapRetLoad")
-	util.AddNetworkString("MapRetDuplicator:SetRunning")
+	util.AddNetworkString("MRLoad")
+	util.AddNetworkString("MRDuplicator:SetRunning")
 end
 function Duplicator:Start(ply, ent, savedTable, loadName)
 	-- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
@@ -144,7 +144,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		-- Copy and clean our GMod duplicator reconstructed table
 		savedTable = table.Copy(dup.recreatedTable)
 
-		timer.Create("MapRetDuplicatorCleanRecTable", 0.6, 1, function()
+		timer.Create("MRDuplicatorCleanRecTable", 0.6, 1, function()
 			table.Empty(dup.recreatedTable)
 			dup.recreatedTable.models = {}
 		end)
@@ -154,7 +154,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Cleanup
-		if GetConVar("mapret_duplicator_clean"):GetInt() == 1 then
+		if GetConVar("mr_duplicator_clean"):GetInt() == 1 then
 			MR.Materials:RestoreAll(ply)
 		end
 
@@ -166,10 +166,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	Duplicator:CreateEnt(ent)
 
 	-- Start a loading
-	timer.Create("MapRetDuplicatorStart", 0.5, 1, function() -- Note: it has to start after the Duplicator:ForceStop() timer
+	timer.Create("MRDuplicatorStart", 0.5, 1, function() -- Note: it has to start after the Duplicator:ForceStop() timer
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or MR.Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
-		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mapret_skybox"):GetString() } or { skybox = "" }
+		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mr_skybox"):GetString() } or { skybox = "" }
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
 		-- Get the changed models for new players
@@ -217,7 +217,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 
 		-- Set the duplicator running state
-		net.Start("MapRetDuplicator:SetRunning")
+		net.Start("MRDuplicator:SetRunning")
 		if not loadName then
 			net.WriteString("Syncing...")
 			net.Send(ply)
@@ -256,7 +256,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	end)
 end
 if CLIENT then
-	net.Receive("MapRetDuplicator:SetRunning", function()
+	net.Receive("MRDuplicator:SetRunning", function()
 		MR.Ply:SetDupRunning(LocalPlayer(), net.ReadString())
 	end)
 end
@@ -280,7 +280,7 @@ function Duplicator:CreateEnt(ent)
 		dup.entity:Spawn()
 		dup.entity:SetSolid(0)
 		dup.entity:PhysicsInitStatic(SOLID_NONE)
-		dup.entity:SetName("MapRetDup")
+		dup.entity:SetName("MRDup")
 	end
 end
 
@@ -296,7 +296,7 @@ function Duplicator:SendStatusToCl(ply, current, total)
 	if CLIENT then return; end
 
 	-- Update...
-	net.Start("MapRetUpdateDupProgress")
+	net.Start("MRUpdateDupProgress")
 		net.WriteInt(current or -1, 14)
 		net.WriteInt(total or -1, 14)
 	-- every client
@@ -310,10 +310,10 @@ function Duplicator:SendStatusToCl(ply, current, total)
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetUpdateDupProgress")
+	util.AddNetworkString("MRUpdateDupProgress")
 elseif CLIENT then
 	-- Updates the duplicator progress in the client
-	net.Receive("MapRetUpdateDupProgress", function()
+	net.Receive("MRUpdateDupProgress", function()
 		local a, b = net.ReadInt(14), net.ReadInt(14)
 		local isBroadcasted = net.ReadBool()
 		local ply = LocalPlayer()
@@ -339,7 +339,7 @@ function Duplicator:SendErrorCountToCl(ply, count, material)
 	if CLIENT then return; end
 
 	-- Send the status to...
-	net.Start("MapRetUpdateDupErrorCount")
+	net.Start("MRUpdateDupErrorCount")
 		net.WriteInt(count or 0, 14)
 		net.WriteString(material or "")
 	-- all players
@@ -353,10 +353,10 @@ function Duplicator:SendErrorCountToCl(ply, count, material)
 	end
 end
 if SERVER then
-	util.AddNetworkString("MapRetUpdateDupErrorCount")
+	util.AddNetworkString("MRUpdateDupErrorCount")
 elseif CLIENT then
 	-- Error printing in the console
-	net.Receive("MapRetUpdateDupErrorCount", function()
+	net.Receive("MRUpdateDupErrorCount", function()
 		local count = net.ReadInt(14)
 		local mat = net.ReadString()
 		local isBroadcasted = net.ReadBool()
@@ -433,7 +433,7 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	MR.ModelMaterials:Set(ply, savedTable[position])
 
 	-- Next material
-	timer.Create("MapRetDuplicatorModelsDelay"..tostring(ply), GetConVar("mapret_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorModelsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadModelMaterials(ply, savedTable, position + 1)
 	end)
 end
@@ -480,7 +480,7 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	MR.Decals:Start(ply, nil, savedTable[position])
 
 	-- Next material
-	timer.Create("MapRetDuplicatorDecalsDelay"..tostring(ply), GetConVar("mapret_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorDecalsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadDecals(ply, nil, savedTable, position + 1 )
 	end)
 end
@@ -549,7 +549,7 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	MR.MapMaterials:Set(ply, materialTable[position])
 
 	-- Next material
-	timer.Create("MapRetDuplicatorMapMatsDelay"..tostring(ply), GetConVar("mapret_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorMapMatsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadMapMaterials(ply, nil, savedTable, position + 1)
 	end)
 end
@@ -655,7 +655,7 @@ if CLIENT then
 		end
 	end
 
-	hook.Add("HUDPaint", "MapRetDupProgress", function()
+	hook.Add("HUDPaint", "MRDupProgress", function()
 		Duplicator:RenderProgress(LocalPlayer())
 	end)
 end
@@ -667,10 +667,10 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	if Duplicator:IsRunning() or isGModLoadStarting then
 		dup.forceStop = true
 
-		net.Start("MapRetForceDupToStop")
+		net.Start("MRForceDupToStop")
 		net.Broadcast()
 
-		timer.Create("MapRetDuplicatorForceStop", 0.1, 1, function()
+		timer.Create("MRDuplicatorForceStop", 0.1, 1, function()
 			dup.forceStop = false
 		end)
 
@@ -680,12 +680,12 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	return false
 end
 if SERVER then
-	util.AddNetworkString("MapRetForceDupToStop")
+	util.AddNetworkString("MRForceDupToStop")
 else
-	net.Receive("MapRetForceDupToStop", function()
+	net.Receive("MRForceDupToStop", function()
 		dup.forceStop = true
 
-		timer.Create("MapRetDuplicatorForceStop", 0.1, 1, function()
+		timer.Create("MRDuplicatorForceStop", 0.1, 1, function()
 			dup.forceStop = false
 		end)
 	end)
@@ -717,7 +717,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		dup.models.startTime = 0
 
 		-- Set "running" to nothing
-		net.Start("MapRetDupFinish")
+		net.Start("MRDupFinish")
 		if dup.serverRunning then
 			dup.serverRunning = false
 
@@ -737,7 +737,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		if ply ~= MR.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
 			-- Disable the first spawn state
 			MR.Ply:SetFirstSpawn(ply)
-			net.Start("MapRetPlyfirstSpawnEnd")
+			net.Start("MRPlyfirstSpawnEnd")
 			net.Send(ply)
 		end
 
@@ -747,9 +747,9 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 	return false
 end
 if SERVER then
-	util.AddNetworkString("MapRetDupFinish")
+	util.AddNetworkString("MRDupFinish")
 elseif CLIENT then
-	net.Receive("MapRetDupFinish", function()
+	net.Receive("MRDupFinish", function()
 		MR.Ply:SetDupRunning(LocalPlayer(), false)
 	end)
 end

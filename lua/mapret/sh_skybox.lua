@@ -5,7 +5,7 @@
 -- HL2 sky list
 local skybox = {
 	name = "skybox/"..GetConVar("sv_skyname"):GetString(),
-	backupName = "mapretexturizer/backup",
+	backupName = "mr/backup",
 	painted = GetConVar("sv_skyname"):GetString() == "painted" and true or false,
 	suffixes = {
 		"ft",
@@ -76,7 +76,7 @@ function Skybox:Start(ply, value)
 		return false
 	end
 
-	net.Start("MapRetSkybox")
+	net.Start("MRSkybox")
 		net.WriteString(value)
 	net.SendToServer()
 end
@@ -94,10 +94,10 @@ function Skybox:Set(ply, mat)
 		MR.Duplicator:CreateEnt()
 
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
-		MR.CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text")
+		MR.CVars:Replicate(ply, "mr_skybox", mat, "skybox", "text")
 	end
 
 	-- Register that the map is modified
@@ -106,21 +106,21 @@ function Skybox:Set(ply, mat)
 	end
 
 	-- Send the change to everyone
-	net.Start("MapRetSkyboxCl")
+	net.Start("MRSkyboxCl")
 		net.WriteString(mat)
 	net.Broadcast()
 
 	return true
 end
 if SERVER then
-	util.AddNetworkString("MapRetSkybox")
-	util.AddNetworkString("MapRetSkyboxCl")
+	util.AddNetworkString("MRSkybox")
+	util.AddNetworkString("MRSkyboxCl")
 
-	net.Receive("MapRetSkybox", function(_, ply)
+	net.Receive("MRSkybox", function(_, ply)
 		Skybox:Set(ply, net.ReadString())
 	end)
 else
-	net.Receive("MapRetSkyboxCl", function()
+	net.Receive("MRSkyboxCl", function()
 		Skybox:Apply(net.ReadString())
 	end)
 end
@@ -179,7 +179,7 @@ if CLIENT then
 		local distance = 200
 		local width = distance * 2.01
 		local height = distance * 2.01
-		local newMaterial = GetConVar("mapret_skybox"):GetString()
+		local newMaterial = GetConVar("mr_skybox"):GetString()
 		local suffixes = { "", "", "", "", "", "" }
 
 		-- Stop renderind if it's empty
@@ -229,7 +229,7 @@ if CLIENT then
 	end
 
 	-- Hook the rendering
-	hook.Add("PostDraw2DSkyBox", "MapRetSkyboxLayer", function()
+	hook.Add("PostDraw2DSkyBox", "MRSkyboxLayer", function()
 		Skybox:RenderEnvPainted()
 	end)
 end
@@ -247,10 +247,10 @@ function Skybox:Remove(ply)
 	MR.Duplicator:ForceStop()
 
 	-- Cleanup
-	RunConsoleCommand("mapret_skybox", "")
+	RunConsoleCommand("mr_skybox", "")
 
 	if IsValid(MR.Duplicator:GetEnt()) then
-		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox")
+		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Skybox")
 	end
 end
 if SERVER then

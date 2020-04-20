@@ -7,8 +7,9 @@ local decal = {
 	list = {}
 }
 
-Decals = {}
+local Decals = {}
 Decals.__index = Decals
+MR.Decals = Decals
 
 function Decals:GetList()
 	return decal.list

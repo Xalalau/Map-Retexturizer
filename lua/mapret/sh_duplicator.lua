@@ -167,7 +167,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Start a loading
 	timer.Create("MapRetDuplicatorStart", 0.5, 1, function() -- Note: it has to start after the Duplicator:ForceStop() timer
-		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and Decals:GetList() or nil
+		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or MR.Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
 		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mapret_skybox"):GetString() } or { skybox = "" }
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
@@ -477,7 +477,7 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	Duplicator:SendStatusToCl(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply decal
-	Decals:Start(ply, nil, savedTable[position])
+	MR.Decals:Start(ply, nil, savedTable[position])
 
 	-- Next material
 	timer.Create("MapRetDuplicatorDecalsDelay"..tostring(ply), GetConVar("mapret_delay"):GetFloat(), 1, function()

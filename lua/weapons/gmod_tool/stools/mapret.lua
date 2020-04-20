@@ -164,7 +164,7 @@ end
 
 	-- If we are dealing with decals
 	if MR.Ply:GetDecalMode(ply) then
-		Decals:Start(ply, tr)
+		MR.Decals:Start(ply, tr)
 
 		return true
 	end
@@ -501,7 +501,7 @@ function TOOL.BuildCPanel(CPanel)
 					if not ply then return; end
 
 					Properties_Toogle(val)
-					Decals:Toogle(ply, val)
+					MR.Decals:Toogle(ply, val)
 				end
 
 			CPanel:Button("Change all map materials","mapret_changeall")

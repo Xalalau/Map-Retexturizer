@@ -121,7 +121,7 @@ function Materials:RestoreAll(ply)
 	-- Cleanup
 	MR.ModelMaterials:RemoveAll(ply)
 	MR.MapMaterials:RemoveAll(ply)
-	Decals:RemoveAll(ply)
+	MR.Decals:RemoveAll(ply)
 	MR.MapMaterials.Displacements:RemoveAll(ply)
 	MR.Skybox:Remove(ply)
 end

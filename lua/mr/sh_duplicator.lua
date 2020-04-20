@@ -48,6 +48,9 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 
 	local notModelDelay
 
+	-- Upgrade the format if it's necessary
+	Duplicator:UpgradeSaveFormat(savedTable)
+
 	-- Models
 	if ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
 		-- Set the aditive delay time
@@ -80,11 +83,6 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		end)
 
 		return
-	-- Map materials saving format 1.0
-	elseif savedTable[1] and savedTable[1].oldMaterial then
-		MR.MML:Clean(savedTable)
-		dup.recreatedTable.map = savedTable
-		notModelDelay = 0.36
 	-- Map materials
 	elseif savedTable.map then
 		dup.recreatedTable.map = savedTable.map
@@ -93,19 +91,14 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	elseif savedTable.displacements then
 		dup.recreatedTable.displacements = savedTable.displacements
 		notModelDelay = 0.38
-	-- Decals saving format 1.0
-	elseif savedTable[1] and savedTable[1].mat then
-		MR.MML:Clean(savedTable)
-		dup.recreatedTable.decals = savedTable
-		notModelDelay = 0.39
 	-- Decals
 	elseif savedTable.decals then
 		dup.recreatedTable.decals = savedTable.decals
-		notModelDelay = 0.40
+		notModelDelay = 0.39
 	-- Skybox
 	elseif savedTable.skybox then
 		dup.recreatedTable.skybox = savedTable.skybox
-		notModelDelay = 0.41
+		notModelDelay = 0.40
 	end
 
 	-- Call our duplicator
@@ -125,6 +118,36 @@ duplicator.RegisterEntityModifier("MRexturizer_Maps", RecreateTable)
 duplicator.RegisterEntityModifier("MRexturizer_Displacements", RecreateTable)
 duplicator.RegisterEntityModifier("MRexturizer_Skybox", RecreateTable)
 
+-- Format upgrading
+function Duplicator:UpgradeSaveFormat(savedTable)
+	-- 1.0 to 2.0
+	if not savedTable.savingFormat then
+		-- Update map materials structure
+		if savedTable[1] and savedTable[1].oldMaterial then
+			MR.MML:Clean(savedTable)
+			savedTable.map = savedTable
+		-- Update decals structure
+		elseif savedTable[1] and savedTable[1].mat then
+			MR.MML:Clean(savedTable)
+			savedTable.decals = savedTable
+		end
+
+		-- Chage mapretexturizer to mr on map materials table
+		if savedTable.map then
+			local i
+
+			for i = 1,#savedTable.map do		
+				savedTable.map[i].backup.newMaterial, _ = string.gsub(savedTable.map[i].backup.newMaterial, "%mapretexturizer", "mr")
+			end
+		end
+		
+		-- Update format number
+		savedTable.savingFormat = "2.0"
+	end
+
+	return savedTable
+end
+
 -- Duplicator start
 if SERVER then
 	util.AddNetworkString("MRLoad")
@@ -132,8 +155,10 @@ if SERVER then
 end
 function Duplicator:Start(ply, ent, savedTable, loadName)
 	-- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
-
 	if CLIENT then return; end
+
+	-- Upgrade the format if it's necessary
+	Duplicator:UpgradeSaveFormat(savedTable)
 
 	-- Deal with GMod saves
 	if dup.recreatedTable.initialized then

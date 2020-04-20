@@ -48,7 +48,7 @@ end
 
 if SERVER then
 	concommand.Add("mapret_remote_cleanup", function()
-		MR.Materials:RestoreAll(Ply:GetFakeHostPly(), true)
+		MR.Materials:RestoreAll(MR.Ply:GetFakeHostPly(), true)
 
 		local message = "[Map Retexturizer] Console: cleaning modifications..."
 		
@@ -57,7 +57,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_delay", function(_1, _2, _3, value)
-		MR.CVars:Replicate(Ply:GetFakeHostPly(), "mapret_delay", value, "load", "slider")
+		MR.CVars:Replicate(MR.Ply:GetFakeHostPly(), "mapret_delay", value, "load", "slider")
 
 		local message = "[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. "."
 		
@@ -72,7 +72,7 @@ if SERVER then
 			return
 		end
 
-		MR.CVars:Replicate(Ply:GetFakeHostPly(), "mapret_duplicator_clean", value, "load", "box")
+		MR.CVars:Replicate(MR.Ply:GetFakeHostPly(), "mapret_duplicator_clean", value, "load", "box")
 
 		local message = "[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. "."
 		
@@ -85,7 +85,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_load", function(_1, _2, _3, loadName)
-		if MR.Load:Start(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Start(MR.Ply:GetFakeHostPly(), loadName) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..loadName.."\"...")
 		else
 			print("[Map Retexturizer] File not found.")
@@ -94,7 +94,7 @@ if SERVER then
 
 
 	concommand.Add("mapret_remote_autoload", function(_1, _2, _3, loadName)
-		if MR.Load:Auto_Set(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Auto_Set(MR.Ply:GetFakeHostPly(), loadName) then
 			local message = "[Map Retexturizer] Console: autoload set to \""..loadName.."\"."
 
 			PrintMessage(HUD_PRINTTALK, message)
@@ -125,7 +125,7 @@ if SERVER then
 			return
 		end
 		
-		Save:Auto_Set(Ply:GetFakeHostPly(), value)
+		Save:Auto_Set(MR.Ply:GetFakeHostPly(), value)
 		
 		local message = "[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled").."."
 		
@@ -134,7 +134,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_delete", function(_1, _2, _3, loadName)
-		if MR.Load:Delete_Set(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Delete_Set(MR.Ply:GetFakeHostPly(), loadName) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 			print("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 		else

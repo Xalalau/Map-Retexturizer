@@ -5,7 +5,7 @@
 -- Fake client for server usage
 local fakeHostPly = {}
 
-local mrPlayer = {
+local MRPlayer = {
 	state = {
 		firstSpawn = true,
 		previewMode = true,
@@ -27,12 +27,13 @@ local mrPlayer = {
 }
 
 if CLIENT then
-	mrPlayer.state.cVarValueHack = true
-	mrPlayer.state.inMatBrowser = false
+	MRPlayer.state.cVarValueHack = true
+	MRPlayer.state.inMatBrowser = false
 end
 
-Ply = {}
+local Ply = {}
 Ply.__index = Ply
+MR.Ply = Ply
 
 function Ply:Init()
 	if CLIENT then return; end
@@ -41,7 +42,7 @@ function Ply:Init()
 end
 
 function Ply:Set(ply)
-	ply.mr = table.Copy(mrPlayer)
+	ply.mr = table.Copy(MRPlayer)
 
 	if SERVER then
 		if ply ~= fakeHostPly then

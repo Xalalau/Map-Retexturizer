@@ -89,7 +89,7 @@ function Skybox:Set(ply, mat)
 	end
 
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
-	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Create the duplicator entity if it's necessary
 		MR.Duplicator:CreateEnt()
 

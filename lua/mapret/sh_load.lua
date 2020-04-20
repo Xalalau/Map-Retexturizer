@@ -85,7 +85,7 @@ if SERVER then
 	util.AddNetworkString("MapRetLoad")
 
 	net.Receive("MapRetLoad", function(_, ply)
-		Load:Start(Ply:GetFakeHostPly(), net.ReadString())
+		Load:Start(MR.Ply:GetFakeHostPly(), net.ReadString())
 	end)
 end
 
@@ -103,7 +103,7 @@ function Load:FirstSpawn(ply)
 	net.Send(ply)
 
 	-- Index the player control
-	Ply:Set(ply)
+	MR.Ply:Set(ply)
 
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then
@@ -113,14 +113,14 @@ function Load:FirstSpawn(ply)
 		MR.Duplicator:Start(ply)
 	-- Run an autoload
 	elseif GetConVar("mapret_autoload"):GetString() ~= "" then
-		Ply:SetFirstSpawn(ply)
+		MR.Ply:SetFirstSpawn(ply)
 		net.Start("MapRetPlyfirstSpawnEnd")
 		net.Send(ply)
 
-		Load:Start(Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
+		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("mapret_autoload"):GetString())
 	-- Nothing to send, finish the joining process
 	else
-		Ply:SetFirstSpawn(ply)
+		MR.Ply:SetFirstSpawn(ply)
 		net.Start("MapRetPlyfirstSpawnEnd")
 		net.Send(ply)
 	end
@@ -143,7 +143,7 @@ if SERVER then
 	end)
 elseif CLIENT then
 	net.Receive("MapRetPlyfirstSpawnEnd", function()
-		Ply:SetFirstSpawn(LocalPlayer())
+		MR.Ply:SetFirstSpawn(LocalPlayer())
 	end)
 end
 

@@ -18,7 +18,7 @@ end
 function Decals:Toogle(ply, value)
 	if SERVER then return; end
 
-	Ply:SetDecalMode(ply, value)
+	MR.Ply:SetDecalMode(ply, value)
 
 	net.Start("MapRetToogleDecal")
 		net.WriteBool(value)
@@ -28,7 +28,7 @@ if SERVER then
 	util.AddNetworkString("MapRetToogleDecal")
 
 	net.Receive("MapRetToogleDecal", function(_, ply)
-		Ply:SetDecalMode(ply, net.ReadBool())
+		MR.Ply:SetDecalMode(ply, net.ReadBool())
 	end)
 end
 
@@ -44,7 +44,7 @@ function Decals:Start(ply, tr, duplicatorData)
 	local hit = tr and tr.HitNormal or duplicatorData.hit
 
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
-	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Index the data
 		table.insert(decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
 
@@ -59,7 +59,7 @@ function Decals:Start(ply, tr, duplicatorData)
 		net.WriteVector(pos)
 		net.WriteVector(hit)
 	-- all players
-	if not Ply:GetFirstSpawn(ply) or ply == fakeHostPly then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == fakeHostPly then
 		net.WriteBool(true)
 		net.Broadcast()
 	-- a single player
@@ -103,7 +103,7 @@ if CLIENT then
 		local isBroadcasted = net.ReadBool()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if Ply:GetFirstSpawn(ply) and isBroadcasted then
+		if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
 			return
 		end
 

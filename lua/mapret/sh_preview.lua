@@ -27,7 +27,7 @@ end
 function Preview:Toogle(ply, state, setOnClient, setOnServer)
 	if CLIENT then
 		if setOnClient then
-			Ply:SetPreviewMode(ply, state)
+			MR.Ply:SetPreviewMode(ply, state)
 		end
 
 		if setOnServer then
@@ -37,7 +37,7 @@ function Preview:Toogle(ply, state, setOnClient, setOnServer)
 		end
 	else
 		if setOnServer then
-			Ply:SetPreviewMode(ply, state)
+			MR.Ply:SetPreviewMode(ply, state)
 		end
 
 		if setOnClient then
@@ -53,14 +53,14 @@ end
 net.Receive("MapRetTooglePreview", function(_, ply)
 	if CLIENT then ply = LocalPlayer(); end
 
-	Ply:SetPreviewMode(ply, net.ReadBool())
+	MR.Ply:SetPreviewMode(ply, net.ReadBool())
 end)
 
 -- Material rendering
 if CLIENT then
 	function Preview:Render(ply, mapMatMode)
 		-- Don't render if there is a loading or the material browser is open
-		if MR.Duplicator:IsRunning(ply) or Ply:GetInMatBrowser(ply) then
+		if MR.Duplicator:IsRunning(ply) or MR.Ply:GetInMatBrowser(ply) then
 			return
 		end
 
@@ -163,7 +163,7 @@ if CLIENT then
 		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
 			local tool = ply:GetTool()
 
-			if tool and tool.Mode and tool.Mode == "mapret" and Ply:GetPreviewMode(ply) and Ply:GetDecalMode(ply) then
+			if tool and tool.Mode and tool.Mode == "mapret" and MR.Ply:GetPreviewMode(ply) and MR.Ply:GetDecalMode(ply) then
 				Preview:Render(ply, false)
 			end
 		end

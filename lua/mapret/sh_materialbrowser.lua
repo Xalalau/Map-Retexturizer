@@ -136,7 +136,7 @@ function CreateMaterialBrowser(mr)
 			end
 			Window.Close = function()
 				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				Ply:SetInMatBrowser(LocalPlayer(), false)
+				MR.Ply:SetInMatBrowser(LocalPlayer(), false)
 				Window:SetVisible(false)
 			end
 

@@ -33,7 +33,7 @@ MR.Duplicator = Duplicator
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
-	return SERVER and dup.serverRunning or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and Ply:GetDupRunning(ply) or nil
+	return SERVER and dup.serverRunning or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or nil
 end
 
 -- Check if the duplicator is stopping
@@ -73,7 +73,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 
 			-- No more entries, call our duplicator
 			if dup.models.startTime == dup.models.delay then
-				Duplicator:Start(Ply:GetFakeHostPly(), nil, dup.recreatedTable, "dupTranslation")
+				Duplicator:Start(MR.Ply:GetFakeHostPly(), nil, dup.recreatedTable, "dupTranslation")
 			else
 				dup.models.startTime = dup.models.startTime + 0.05
 			end
@@ -112,7 +112,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	timer.Create("MapRetDuplicatorWaiting"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
 		if not dup.recreatedTable.initialized then
 			dup.recreatedTable.initialized = true
-			Duplicator:Start(Ply:GetFakeHostPly(), ent, dup.recreatedTable, "dupTranslation")
+			Duplicator:Start(MR.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "dupTranslation")
 		end
 	end)
 end
@@ -152,7 +152,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	end
 
 	-- Deal with older modifications
-	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Cleanup
 		if GetConVar("mapret_duplicator_clean"):GetInt() == 1 then
 			MR.Materials:RestoreAll(ply)
@@ -167,10 +167,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Start a loading
 	timer.Create("MapRetDuplicatorStart", 0.5, 1, function() -- Note: it has to start after the Duplicator:ForceStop() timer
-		local decalsTable = savedTable and savedTable.decals or Ply:GetFirstSpawn(ply) and Decals:GetList() or nil
-		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
-		local skyboxTable = savedTable and savedTable.skybox and savedTable or Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mapret_skybox"):GetString() } or { skybox = "" }
-		local modelsTable = { list = savedTable and savedTable.models or Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
+		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and Decals:GetList() or nil
+		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or MR.Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
+		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mapret_skybox"):GetString() } or { skybox = "" }
+		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
 		-- Get the changed models for new players
 		if modelsTable.list and modelsTable.list == "" then
@@ -205,7 +205,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 
 		-- Server alert
-		if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 			print("[Map Retexturizer] Loading started...")
 		end
 
@@ -222,7 +222,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 			net.WriteString("Syncing...")
 			net.Send(ply)
 			
-			Ply:SetDupRunning(ply, "Syncing...")
+			MR.Ply:SetDupRunning(ply, "Syncing...")
 		else
 			net.WriteString(loadName)
 			net.Broadcast()
@@ -231,8 +231,8 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 
 		-- Set the total modifications to do
-		Ply:SetDupTotal(ply, total)
-		Duplicator:SendStatusToCl(ply, nil, Ply:GetDupTotal(ply))
+		MR.Ply:SetDupTotal(ply, total)
+		Duplicator:SendStatusToCl(ply, nil, MR.Ply:GetDupTotal(ply))
 
 		-- Apply model materials
 		if modelsTable.count > 0 then
@@ -257,7 +257,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 end
 if CLIENT then
 	net.Receive("MapRetDuplicator:SetRunning", function()
-		Ply:SetDupRunning(LocalPlayer(), net.ReadString())
+		MR.Ply:SetDupRunning(LocalPlayer(), net.ReadString())
 	end)
 end
 
@@ -300,7 +300,7 @@ function Duplicator:SendStatusToCl(ply, current, total)
 		net.WriteInt(current or -1, 14)
 		net.WriteInt(total or -1, 14)
 	-- every client
-	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		net.WriteBool(true)
 		net.Broadcast()
 	-- a single client
@@ -319,17 +319,17 @@ elseif CLIENT then
 		local ply = LocalPlayer()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if Ply:GetFirstSpawn(ply) and isBroadcasted then
+		if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
 			return
 		end
 
 		-- Update the dup state
 		if a ~= -1 then
-			Ply:SetDupCurrent(ply, a)
+			MR.Ply:SetDupCurrent(ply, a)
 		end
 
 		if b ~= -1 then
-			Ply:SetDupTotal(ply, b)
+			MR.Ply:SetDupTotal(ply, b)
 		end
 	end)
 end
@@ -343,7 +343,7 @@ function Duplicator:SendErrorCountToCl(ply, count, material)
 		net.WriteInt(count or 0, 14)
 		net.WriteString(material or "")
 	-- all players
-	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		net.WriteBool(true)
 		net.Broadcast()
 	-- a single player
@@ -363,28 +363,28 @@ elseif CLIENT then
 		local ply = LocalPlayer()
 
 		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if Ply:GetFirstSpawn(LocalPlayer()) and isBroadcasted then
+		if MR.Ply:GetFirstSpawn(LocalPlayer()) and isBroadcasted then
 			return
 		end
 
 		-- Set the error count
-		Ply:SetDupErrorsN(ply, count)
+		MR.Ply:SetDupErrorsN(ply, count)
 
 		-- Get the missing material name
-		if Ply:GetDupErrorsN(ply) > 0 then
-			Ply:InsertDupErrorsList(ply, mat)
+		if MR.Ply:GetDupErrorsN(ply) > 0 then
+			MR.Ply:InsertDupErrorsList(ply, mat)
 		-- Print the failed materials table
 		else
-			if table.Count(Ply:GetDupErrorsList(ply)) > 0 then
+			if table.Count(MR.Ply:GetDupErrorsList(ply)) > 0 then
 				LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the terminal for the errors.")
 				print("")
 				print("-------------------------------------------------------------")
 				print("[MAP RETEXTURIZER] - Failed to load these materials:")
 				print("-------------------------------------------------------------")
-				print(table.ToString(Ply:GetDupErrorsList(ply), "List ", true))
+				print(table.ToString(MR.Ply:GetDupErrorsList(ply), "List ", true))
 				print("-------------------------------------------------------------")
 				print("")
-				Ply:EmptyDupErrorsList(ply)
+				MR.Ply:EmptyDupErrorsList(ply)
 			end
 		end
 	end)
@@ -410,8 +410,8 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 		if not MR.Materials:IsValid(savedTable[position].newMaterial) then
 
 			-- Register the error
-			Ply:IncrementDupErrorsN(ply)
-			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), savedTable[position].newMaterial)
+			MR.Ply:IncrementDupErrorsN(ply)
+			Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), savedTable[position].newMaterial)
 
 			-- Let's check the next entry
 			Duplicator:LoadModelMaterials(ply, savedTable, position + 1)
@@ -426,8 +426,8 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	end
 
 	-- Count
-	Ply:IncrementDupCurrent(ply)
-	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
+	MR.Ply:IncrementDupCurrent(ply)
+	Duplicator:SendStatusToCl(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply the map material
 	MR.ModelMaterials:Set(ply, savedTable[position])
@@ -457,8 +457,8 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 		-- Check if we have a valid material
 		if not MR.Materials:IsValid(savedTable[position].mat) then
 			-- Register the error
-			Ply:IncrementDupErrorsN(ply)
-			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), savedTable[position].mat)
+			MR.Ply:IncrementDupErrorsN(ply)
+			Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), savedTable[position].mat)
 
 			-- Let's check the next entry
 			Duplicator:LoadDecals(ply, nil, savedTable, position + 1)
@@ -473,8 +473,8 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	end
 
 	-- Count
-	Ply:IncrementDupCurrent(ply)
-	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
+	MR.Ply:IncrementDupCurrent(ply)
+	Duplicator:SendStatusToCl(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply decal
 	Decals:Start(ply, nil, savedTable[position])
@@ -512,12 +512,12 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 			newMaterial2 and not MR.Materials:IsValid(newMaterial2) then
 
 			-- Register the error
-			Ply:IncrementDupErrorsN(ply)
-			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "Displacement: " .. materialTable[position].oldMaterial)
+			MR.Ply:IncrementDupErrorsN(ply)
+			Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), "Displacement: " .. materialTable[position].oldMaterial)
 			if not MR.Materials:IsValid(newMaterial) then
-				Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "  $basetexture: " .. materialTable[position].newMaterial)
+				Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), "  $basetexture: " .. materialTable[position].newMaterial)
 			else
-				Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "  $basetexture2: " ..  materialTable[position].newMaterial2)
+				Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), "  $basetexture2: " ..  materialTable[position].newMaterial2)
 			end
 
 			-- Let's check the next entry
@@ -542,8 +542,8 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	end
 
 	-- Count
-	Ply:IncrementDupCurrent(ply)
-	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
+	MR.Ply:IncrementDupCurrent(ply)
+	Duplicator:SendStatusToCl(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply the map material
 	MR.MapMaterials:Set(ply, materialTable[position])
@@ -569,8 +569,8 @@ function Duplicator:LoadSkybox(ply, ent, savedTable)
 		if not MR.Materials:IsValid(savedTable.skybox) and not MR.Materials:IsValid(savedTable.skybox.."ft") then
 
 			-- Register the error
-			Ply:IncrementDupErrorsN(ply)
-			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), savedTable.skybox)
+			MR.Ply:IncrementDupErrorsN(ply)
+			Duplicator:SendErrorCountToCl(ply, MR.Ply:GetDupErrorsN(ply), savedTable.skybox)
 
 			Duplicator:Finish(ply)
 
@@ -584,8 +584,8 @@ function Duplicator:LoadSkybox(ply, ent, savedTable)
 	end
 
 	-- Count
-	Ply:IncrementDupCurrent(ply)
-	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
+	MR.Ply:IncrementDupCurrent(ply)
+	Duplicator:SendStatusToCl(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply skybox
 	MR.Skybox:Set(ply, savedTable.skybox, true)
@@ -597,7 +597,7 @@ end
 -- Render duplicator progress bar based on the dup.count.count numbers
 if CLIENT then
 	function Duplicator:RenderProgress(ply)
-		if Ply:IsInitialized(ply) and Ply:GetDupTotal(ply) > 0 and Ply:GetDupCurrent(ply) > 0 then				
+		if MR.Ply:IsInitialized(ply) and MR.Ply:GetDupTotal(ply) > 0 and MR.Ply:GetDupCurrent(ply) > 0 then				
 			local borderOut = 2
 			local border = 5
 
@@ -640,17 +640,17 @@ if CLIENT then
 			draw.DrawText("MAP RETEXTURIZER", "HudHintTextLarge", text.x + window.w / 2 - border, text.y + border, Color(255, 255, 255, 255), 1)
 
 			-- Text - Counter
-			draw.DrawText(tostring(Ply:GetDupCurrent(ply)).." / "..tostring(Ply:GetDupTotal(ply)), "CenterPrintText", text.x + window.w / 2 - border, text.y + line.h, Color(255, 255, 255, 255), 1)
+			draw.DrawText(tostring(MR.Ply:GetDupCurrent(ply)).." / "..tostring(MR.Ply:GetDupTotal(ply)), "CenterPrintText", text.x + window.w / 2 - border, text.y + line.h, Color(255, 255, 255, 255), 1)
 
 			-- Bar background
 			draw.RoundedBox(5, progress.x, progress.y, progress.w, progress.h, Color(0, 0, 0, 230))
 
 			-- Bar progress
-			draw.RoundedBox(5, progress.x + 2, progress.y + 2, window.w * (Ply:GetDupCurrent(ply) / Ply:GetDupTotal(ply)) - border * 2 - 4, progress.h - 4, Color(200, 0, 0, 255))
+			draw.RoundedBox(5, progress.x + 2, progress.y + 2, window.w * (MR.Ply:GetDupCurrent(ply) / MR.Ply:GetDupTotal(ply)) - border * 2 - 4, progress.h - 4, Color(200, 0, 0, 255))
 
 			-- Error counter
-			if Ply:GetDupErrorsN(ply) > 0 then
-				draw.DrawText("Errors: "..tostring(Ply:GetDupErrorsN(ply)), "CenterPrintText", window.x + window.w / 2, progress.y + 2, Color(255, 255, 255, 255), 1)
+			if MR.Ply:GetDupErrorsN(ply) > 0 then
+				draw.DrawText("Errors: "..tostring(MR.Ply:GetDupErrorsN(ply)), "CenterPrintText", window.x + window.w / 2, progress.y + 2, Color(255, 255, 255, 255), 1)
 			end
 		end
 	end
@@ -695,21 +695,21 @@ end
 function Duplicator:Finish(ply, isGModLoadOverriding)
 	if CLIENT then return; end
 
-	if dup.forceStop or Ply:GetDupCurrent(ply) + Ply:GetDupErrorsN(ply) == Ply:GetDupTotal(ply) then
+	if dup.forceStop or MR.Ply:GetDupCurrent(ply) + MR.Ply:GetDupErrorsN(ply) == MR.Ply:GetDupTotal(ply) then
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()
 		end
 
 		-- Reset the progress bar
-		Ply:SetDupTotal(ply, 0)
-		Ply:SetDupCurrent(ply, 0)
+		MR.Ply:SetDupTotal(ply, 0)
+		MR.Ply:SetDupCurrent(ply, 0)
 		Duplicator:SendStatusToCl(ply, 0, 0)
 
 		-- Print the errors on the console and reset the counting
-		if Ply:GetDupErrorsN(ply) then
+		if MR.Ply:GetDupErrorsN(ply) then
 			Duplicator:SendErrorCountToCl(ply, 0)
-			Ply:SetDupErrorsN(ply, 0)
+			MR.Ply:SetDupErrorsN(ply, 0)
 		end
 
 		-- Reset model delay adjuster
@@ -723,20 +723,20 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 			net.Broadcast()
 		else
-			Ply:SetDupRunning(ply, false)
+			MR.Ply:SetDupRunning(ply, false)
 
 			net.Send(ply)
 		end
 
 		-- Print alert
-		if not Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.Ply:GetFakeHostPly() then
 			print("[Map Retexturizer] Loading finished.")
 		end
 
 		-- Finish for new players
-		if ply ~= Ply:GetFakeHostPly() and Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
+		if ply ~= MR.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
 			-- Disable the first spawn state
-			Ply:SetFirstSpawn(ply)
+			MR.Ply:SetFirstSpawn(ply)
 			net.Start("MapRetPlyfirstSpawnEnd")
 			net.Send(ply)
 		end
@@ -750,6 +750,6 @@ if SERVER then
 	util.AddNetworkString("MapRetDupFinish")
 elseif CLIENT then
 	net.Receive("MapRetDupFinish", function()
-		Ply:SetDupRunning(LocalPlayer(), false)
+		MR.Ply:SetDupRunning(LocalPlayer(), false)
 	end)
 end

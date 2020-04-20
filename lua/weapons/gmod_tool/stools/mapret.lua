@@ -114,7 +114,7 @@ end
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
-				if not Ply:GetDecalMode(ply) then
+				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
 				end
 			end
@@ -163,7 +163,7 @@ end
 	end
 
 	-- If we are dealing with decals
-	if Ply:GetDecalMode(ply) then
+	if MR.Ply:GetDecalMode(ply) then
 		Decals:Start(ply, tr)
 
 		return true
@@ -363,7 +363,7 @@ function TOOL:Reload(tr)
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
-				if not Ply:GetDecalMode(ply) then
+				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
 				end
 			end
@@ -406,17 +406,17 @@ end
 -- Preview materials and decals when the tool is open
 function TOOL:DrawHUD()
 	-- Map materials preview
-	if self.Mode and self.Mode == "mapret" and Ply:GetPreviewMode(LocalPlayer()) and not Ply:GetDecalMode(LocalPlayer()) then
+	if self.Mode and self.Mode == "mapret" and MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
 		MR.Preview:Render(LocalPlayer(), true)
 	end
 
 	-- HACK: Needed to force mapret_detail to use the right value
-	if Ply:GetCVarValueHack(LocalPlayer()) then
+	if MR.Ply:GetCVarValueHack(LocalPlayer()) then
 		timer.Create("MapRetDetailHack", 0.3, 1, function()
 			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
 		end)
 
-		Ply:SetCVarValueHack(LocalPlayer())
+		MR.Ply:SetCVarValueHack(LocalPlayer())
 	end
 end
 
@@ -508,7 +508,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local openMaterialBrowser = CPanel:Button("Open Material Browser")
 				function openMaterialBrowser:DoClick()				
-					Ply:SetInMatBrowser(ply, true)
+					MR.Ply:SetInMatBrowser(ply, true)
 					CreateMaterialBrowser(mr)
 				end
 	end

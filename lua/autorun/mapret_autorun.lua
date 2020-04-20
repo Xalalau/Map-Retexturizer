@@ -67,7 +67,7 @@ end
 
 -- Initialization
 MR.Base:Init()
-Ply:Init()
+MR.Ply:Init()
 MR.Preview:Init()
 Save:Init()
 MR.Load:Init()

@@ -174,7 +174,7 @@ function ModelMaterials:Set(ply, data)
 		net.Start("ModelMaterials:Set")
 			net.WriteTable(data)
 		-- every player
-		if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 			net.Broadcast()
 		-- a single player
 		else
@@ -182,7 +182,7 @@ function ModelMaterials:Set(ply, data)
 		end
 	end
 
-	if CLIENT or SERVER and not Ply:GetFirstSpawn(ply) or SERVER and ply == Ply:GetFakeHostPly() then
+	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		if SERVER then
 			-- Set the duplicator
 			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)

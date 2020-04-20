@@ -9,7 +9,7 @@ MR.Utils = Utils
 -- Detect admin privileges 
 function MR.Utils:PlyIsAdmin(ply)
 	-- fakeHostPly
-	if SERVER and ply == Ply:GetFakeHostPly() then
+	if SERVER and ply == MR.Ply:GetFakeHostPly() then
 		return true
 	end
 

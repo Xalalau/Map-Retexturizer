@@ -93,7 +93,7 @@ function MapMaterials:Set(ply, data)
 	local isDisplacement = MR.Materials:IsDisplacement(data.oldMaterial)
 
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
-	if CLIENT or SERVER and not Ply:GetFirstSpawn(ply) or SERVER and ply == Ply:GetFakeHostPly() then
+	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		local materialTable = isDisplacement and map.displacements.list or map.list
 		local element = MML:GetElement(materialTable, data.oldMaterial)
 		local i
@@ -153,7 +153,7 @@ function MapMaterials:Set(ply, data)
 		net.Start("MapMaterials:Set")
 			net.WriteTable(data)
 		-- every player
-		if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 			net.WriteBool(true)
 			net.Broadcast()
 		-- a single player
@@ -174,7 +174,7 @@ elseif CLIENT then
 		local isBroadcasted = net.ReadBool()
 
 		-- Player's first spawn
-		if Ply:GetFirstSpawn(ply) then
+		if MR.Ply:GetFirstSpawn(ply) then
 			-- Block the changes if a loading is running. The player will start it from the beggining
 			if isBroadcasted then
 				return
@@ -313,7 +313,7 @@ function MapMaterials:SetAll(ply)
 	-- Clean the map
 	MR.Materials:RestoreAll(ply, true)
 
-	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
+	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
 		-- Create a fake loading table
 		local newTable = {
 			map = {},

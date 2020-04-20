@@ -7,8 +7,9 @@ local load = {
 	list = {}
 }
 
-Load = {}
+local Load = {}
 Load.__index = Load
+MR.Load = Load
 
 function Load:Init()
 	if CLIENT then return; end

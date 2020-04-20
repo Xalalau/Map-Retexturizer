@@ -65,7 +65,7 @@ function Save:Set(saveName, saveFile)
 	print("[Map Retexturizer] Saved the current materials as \""..saveName.."\".")
 
 	-- Associte a name with the saved file
-	Load:Set(saveName, saveFile)
+	MR.Load:Set(saveName, saveFile)
 
 	-- Update the load list on every client
 	net.Start("MapRetSaveAddToLoadList")
@@ -92,9 +92,9 @@ if CLIENT then
 		local saveName = net.ReadString()
 		local saveFile = MR.Base:GetMapFolder()..saveName..".txt"
 
-		if Load:GetList()[saveName] == nil then
+		if MR.Load:GetList()[saveName] == nil then
 			GUI:GetLoadText():AddChoice(saveName)
-			Load:Set(saveName, saveFile)
+			MR.Load:Set(saveName, saveFile)
 		end
 	end)
 end

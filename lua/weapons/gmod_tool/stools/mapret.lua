@@ -759,7 +759,7 @@ function TOOL.BuildCPanel(CPanel)
 				element:SetText("")
 
 			GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
-				Load:FillList(mr)
+				MR.Load:FillList(mr)
 
 			GUI:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
 			element = GUI:Get("load", "slider")
@@ -841,7 +841,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local delSave = CPanel:Button("Delete Load")
 				function delSave:DoClick()
-					Load:Delete_Start(ply)
+					MR.Load:Delete_Start(ply)
 				end
 	end
 

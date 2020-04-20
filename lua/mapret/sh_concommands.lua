@@ -81,11 +81,11 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_list", function(_1, _2, _3, loadName)
-		Load:ShowList()
+		MR.Load:ShowList()
 	end)
 
 	concommand.Add("mapret_remote_load", function(_1, _2, _3, loadName)
-		if Load:Start(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Start(Ply:GetFakeHostPly(), loadName) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..loadName.."\"...")
 		else
 			print("[Map Retexturizer] File not found.")
@@ -94,7 +94,7 @@ if SERVER then
 
 
 	concommand.Add("mapret_remote_autoload", function(_1, _2, _3, loadName)
-		if Load:Auto_Set(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Auto_Set(Ply:GetFakeHostPly(), loadName) then
 			local message = "[Map Retexturizer] Console: autoload set to \""..loadName.."\"."
 
 			PrintMessage(HUD_PRINTTALK, message)
@@ -134,7 +134,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_delete", function(_1, _2, _3, loadName)
-		if Load:Delete_Set(Ply:GetFakeHostPly(), loadName) then
+		if MR.Load:Delete_Set(Ply:GetFakeHostPly(), loadName) then
 			PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 			print("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 		else

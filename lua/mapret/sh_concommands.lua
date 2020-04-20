@@ -48,7 +48,7 @@ end
 
 if SERVER then
 	concommand.Add("mapret_remote_cleanup", function()
-		Materials:RestoreAll(Ply:GetFakeHostPly(), true)
+		MR.Materials:RestoreAll(Ply:GetFakeHostPly(), true)
 
 		local message = "[Map Retexturizer] Console: cleaning modifications..."
 		
@@ -109,7 +109,7 @@ if SERVER then
 			return
 		end
 
-		Save:Set(saveName, MR:GetMapFolder()..saveName..".txt")
+		Save:Set(saveName, Base:GetMapFolder()..saveName..".txt")
 	end)
 
 	concommand.Add("mapret_remote_autosave", function(_1, _2, _3, valueIn)

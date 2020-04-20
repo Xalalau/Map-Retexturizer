@@ -13,8 +13,9 @@ if CLIENT then
 	}
 end
 
-Preview = {}
+local Preview = {}
 Preview.__index = Preview
+MR.Preview = Preview
 
 function Preview:Init()
 	if SERVER then return; end
@@ -65,19 +66,19 @@ if CLIENT then
 
 		-- Start...
 		local tr = ply:GetEyeTrace()
-		local oldData = Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MapMaterials:GetFilename() }, Materials:GetDetailList())
+		local oldData = Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		local newData = mapMatMode and Data:Create(ply, tr) or Data:CreateDefaults(ply, tr)
 
 		-- Adjustments for skybox materials
-		if Skybox:IsValidFullSky(newData.newMaterial) then
-			newData.newMaterial = Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
+		if MR.Skybox:IsValidFullSky(newData.newMaterial) then
+			newData.newMaterial = MR.Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
 		-- Don't apply bad materials
-		elseif not Materials:IsValid(newData.newMaterial) then
+		elseif not MR.Materials:IsValid(newData.newMaterial) then
 			return
 		end
 
 		-- Don't render decal materials over the skybox
-		if not mapMatMode and Materials:GetOriginal(tr) == "tools/toolsskybox" then
+		if not mapMatMode and MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 			return
 		end
 

@@ -154,7 +154,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	if not Ply:GetFirstSpawn(ply) or ply == Ply:GetFakeHostPly() then
 		-- Cleanup
 		if GetConVar("mapret_duplicator_clean"):GetInt() == 1 then
-			Materials:RestoreAll(ply)
+			MR.Materials:RestoreAll(ply)
 		end
 
 		-- Cease ongoing duplications
@@ -406,7 +406,7 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	-- Check if we have a valid entry
 	if savedTable[position] and not dup.forceStop then
 		-- Check if we have a valid material
-		if not Materials:IsValid(savedTable[position].newMaterial) then
+		if not MR.Materials:IsValid(savedTable[position].newMaterial) then
 
 			-- Register the error
 			Ply:IncrementDupErrorsN(ply)
@@ -454,7 +454,7 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	-- Check if we have a valid entry
 	if savedTable[position] and not dup.forceStop then
 		-- Check if we have a valid material
-		if not Materials:IsValid(savedTable[position].mat) then
+		if not MR.Materials:IsValid(savedTable[position].mat) then
 			-- Register the error
 			Ply:IncrementDupErrorsN(ply)
 			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), savedTable[position].mat)
@@ -507,13 +507,13 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 		local newMaterial2 = materialTable[position].newMaterial2
 		
 		-- Check if we have a valid material
-		if newMaterial and not Materials:IsValid(newMaterial) or 
-			newMaterial2 and not Materials:IsValid(newMaterial2) then
+		if newMaterial and not MR.Materials:IsValid(newMaterial) or 
+			newMaterial2 and not MR.Materials:IsValid(newMaterial2) then
 
 			-- Register the error
 			Ply:IncrementDupErrorsN(ply)
 			Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "Displacement: " .. materialTable[position].oldMaterial)
-			if not Materials:IsValid(newMaterial) then
+			if not MR.Materials:IsValid(newMaterial) then
 				Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "  $basetexture: " .. materialTable[position].newMaterial)
 			else
 				Duplicator:SendErrorCountToCl(ply, Ply:GetDupErrorsN(ply), "  $basetexture2: " ..  materialTable[position].newMaterial2)
@@ -565,7 +565,7 @@ function Duplicator:LoadSkybox(ply, ent, savedTable)
 	-- Check if we have a valid entry
 	if not dup.forceStop then
 		-- Check if we have a valid material
-		if not Materials:IsValid(savedTable.skybox) and not Materials:IsValid(savedTable.skybox.."ft") then
+		if not MR.Materials:IsValid(savedTable.skybox) and not MR.Materials:IsValid(savedTable.skybox.."ft") then
 
 			-- Register the error
 			Ply:IncrementDupErrorsN(ply)
@@ -587,7 +587,7 @@ function Duplicator:LoadSkybox(ply, ent, savedTable)
 	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
 
 	-- Apply skybox
-	Skybox:Set(ply, savedTable.skybox, true)
+	MR.Skybox:Set(ply, savedTable.skybox, true)
 
 	-- Finish
 	Duplicator:Finish(ply)
@@ -696,8 +696,8 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 	if dup.forceStop or Ply:GetDupCurrent(ply) + Ply:GetDupErrorsN(ply) == Ply:GetDupTotal(ply) then
 		-- Register that the map is modified
-		if not MR:GetInitialized() and not isGModLoadOverriding then
-			MR:SetInitialized()
+		if not Base:GetInitialized() and not isGModLoadOverriding then
+			Base:SetInitialized()
 		end
 
 		-- Reset the progress bar

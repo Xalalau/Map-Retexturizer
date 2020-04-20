@@ -36,7 +36,7 @@ end
 function Decals:Start(ply, tr, duplicatorData)
 	if CLIENT then return; end
 
-	local mat = tr and Materials:GetNew(ply) or duplicatorData.mat
+	local mat = tr and MR.Materials:GetNew(ply) or duplicatorData.mat
 
 	-- Get the basic properties
 	local ent = tr and tr.Entity or duplicatorData.ent

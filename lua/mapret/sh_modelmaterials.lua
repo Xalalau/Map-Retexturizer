@@ -123,8 +123,8 @@ function ModelMaterials:Create(data)
 
 			-- Apply detail
 			if data.detail ~= "None" then
-				if Materials:GetDetailList()[data.detail] then
-					newMaterial:SetTexture("$detail", Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
+				if MR.Materials:GetDetailList()[data.detail] then
+					newMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
 					newMaterial:SetString("$detailblendfactor", "1")
 				else
 					newMaterial:SetString("$detailblendfactor", "0")

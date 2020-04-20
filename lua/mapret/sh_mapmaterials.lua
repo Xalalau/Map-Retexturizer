@@ -71,12 +71,12 @@ function MapMaterials:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local path = ""
 
-		local element = MML:GetElement(map.list, Materials:GetOriginal(tr))
+		local element = MML:GetElement(map.list, MR.Materials:GetOriginal(tr))
 
 		if element then
 			path = element.newMaterial
 		else
-			path = Materials:GetOriginal(tr)
+			path = MR.Materials:GetOriginal(tr)
 		end
 
 		return path
@@ -88,7 +88,7 @@ end
 -- Set map material:::
 function MapMaterials:Set(ply, data)
 	-- Handle displacements
-	local isDisplacement = Materials:IsDisplacement(data.oldMaterial)
+	local isDisplacement = MR.Materials:IsDisplacement(data.oldMaterial)
 
 	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
 	if CLIENT or SERVER and not Ply:GetFirstSpawn(ply) or SERVER and ply == Ply:GetFakeHostPly() then
@@ -114,7 +114,7 @@ function MapMaterials:Set(ply, data)
 			i = MML:GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
+			local dataBackup = data.backup or Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
 
 			-- Save the material texture
 			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
@@ -248,7 +248,7 @@ function MapMaterials:SetAux(data)
 
 	-- Apply the detail
 	if data.detail ~= "None" then
-		oldMaterial:SetTexture("$detail", Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
+		oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
 		oldMaterial:SetString("$detailblendfactor", "1")
 	else
 		oldMaterial:SetString("$detailblendfactor", "0")
@@ -297,19 +297,19 @@ function MapMaterials:SetAll(ply)
 	local material = ply:GetInfo("mapret_material")
 
 	-- Don't apply bad materials
-	if not Materials:IsValid(material) then
+	if not MR.Materials:IsValid(material) then
 		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 
 		return false
 	end
 
 	-- Register that the map is modified
-	if not MR:GetInitialized() then
-		MR:SetInitialized()
+	if not Base:GetInitialized() then
+		Base:SetInitialized()
 	end
 
 	-- Clean the map
-	Materials:RestoreAll(ply, true)
+	MR.Materials:RestoreAll(ply, true)
 
 	timer.Create("MapRetChangeAllDelay"..tostring(math.random(999))..tostring(ply), not Ply:GetFirstSpawn(ply) and  Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
 		-- Create a fake loading table
@@ -386,7 +386,7 @@ function MapMaterials:Remove(oldMaterial)
 		return false
 	end
 
-	local materialTable = Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
+	local materialTable = MR.Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
 
 	if MML:Count(materialTable) > 0 then
 		local element = MML:GetElement(materialTable, oldMaterial)
@@ -552,8 +552,8 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	end
 
 	-- Check if the materials are valid
-	if newMaterial and newMaterial ~= "" and not Materials:IsValid(newMaterial) or 
-		newMaterial2 and newMaterial2 ~= "" and not Materials:IsValid(newMaterial2) then
+	if newMaterial and newMaterial ~= "" and not MR.Materials:IsValid(newMaterial) or 
+		newMaterial2 and newMaterial2 ~= "" and not MR.Materials:IsValid(newMaterial2) then
 		return
 	end
 
@@ -561,14 +561,14 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	Duplicator:CreateEnt()
 
 	-- Create the data table
-	local data = Data:CreateFromMaterial({ name = displacement, filename = map.filename }, Materials:GetDetailList(), nil, { filename = map.displacements.filename })
+	local data = Data:CreateFromMaterial({ name = displacement, filename = map.filename }, MR.Materials:GetDetailList(), nil, { filename = map.displacements.filename })
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2
 
 	-- Register that the map is modified
-	if not MR:GetInitialized() then
-		MR:SetInitialized()
+	if not Base:GetInitialized() then
+		Base:SetInitialized()
 	end
 
 	-- Apply the changes

@@ -36,7 +36,7 @@ end
 function Data:Create(ply, tr)
 	local data = {
 		ent = tr and tr.Entity or game.GetWorld(),
-		oldMaterial = tr and Materials:GetOriginal(tr) or "",
+		oldMaterial = tr and MR.Materials:GetOriginal(tr) or "",
 		newMaterial = ply:GetInfo("mapret_material"),
 		newMaterial2 = nil,
 		offsetx = ply:GetInfo("mapret_offsetx"),
@@ -55,7 +55,7 @@ end
 function Data:CreateDefaults(ply, tr)
 	local data = {
 		ent = game.GetWorld(),
-		oldMaterial = Materials:GetCurrent(tr),
+		oldMaterial = MR.Materials:GetCurrent(tr),
 		newMaterial = ply:GetInfo("mapret_material"),
 		offsetx = "0.00",
 		offsety = "0.00",
@@ -111,5 +111,5 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML:GetElement(list, Materials:GetOriginal(tr))
+	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MML:GetElement(list, MR.Materials:GetOriginal(tr))
 end

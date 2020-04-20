@@ -44,8 +44,9 @@ local skybox = {
 	}
 }
 
-Skybox = {}
+local Skybox = {}
 Skybox.__index = Skybox
+MR.Skybox = Skybox
 
 -- Get HL2 skies list
 function Skybox:GetList()
@@ -54,7 +55,7 @@ end
 
 -- Check if the skybox is a valid 6 side setup
 function Skybox:IsValidFullSky(material)
-	if Materials:IsValid(material..skybox.suffixes[1]) then
+	if MR.Materials:IsValid(material..skybox.suffixes[1]) then
 		return true
 	else
 		return false
@@ -100,8 +101,8 @@ function Skybox:Set(ply, mat)
 	end
 
 	-- Register that the map is modified
-	if not MR:GetInitialized() then
-		MR:SetInitialized()
+	if not Base:GetInitialized() then
+		Base:SetInitialized()
 	end
 
 	-- Send the change to everyone
@@ -147,7 +148,7 @@ function Skybox:Apply(newMaterial)
 
 	-- If we aren't using a HL2 sky or applying a backup...
 	if newMaterial ~= "" and not skybox.HL2List[newMaterial] then
-		if not Materials:IsValid(newMaterial) then
+		if not MR.Materials:IsValid(newMaterial) then
 			-- It's a full skybox
 			if Skybox:IsValidFullSky(newMaterial) then
 				suffixes = skybox.suffixes
@@ -188,7 +189,7 @@ if CLIENT then
 
 		-- If we aren't using a HL2 sky...
 		if not skybox.HL2List[newMaterial] then
-			if not Materials:IsValid(newMaterial) then
+			if not MR.Materials:IsValid(newMaterial) then
 				-- It's a full skybox
 				if Skybox:IsValidFullSky(newMaterial) then
 					suffixes = skybox.suffixes

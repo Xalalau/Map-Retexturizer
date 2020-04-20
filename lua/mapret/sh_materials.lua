@@ -13,8 +13,9 @@ local detail = {
 	}
 }
 
-Materials = {}
+local Materials = {}
 Materials.__index = Materials
+MR.Materials = Materials
 
 function Materials:GetDetailList()
 	return detail.list()
@@ -122,7 +123,7 @@ function Materials:RestoreAll(ply)
 	MapMaterials:RemoveAll(ply)
 	Decals:RemoveAll(ply)
 	MapMaterials.Displacements:RemoveAll(ply)
-	Skybox:Remove(ply)
+	MR.Skybox:Remove(ply)
 end
 if SERVER then
 	util.AddNetworkString("Materials:RestoreAll")

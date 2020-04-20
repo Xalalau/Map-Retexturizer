@@ -9,6 +9,9 @@ local mode = "hybrid"
 		hybrid = tool files extracted into the addons folder using materials from an extra gma and from files
 ]]
 
+-- Global tool functions
+MR = {}
+
 -- Load libs
 local function HandleFile(dir, file)
 	local path = dir .. file
@@ -63,10 +66,10 @@ if SERVER then
 end
 
 -- Initialization
-MR:Init()
+Base:Init()
 Ply:Init()
-Preview:Init()
+MR.Preview:Init()
 Save:Init()
 Load:Init()
-Materials:Init()
+MR.Materials:Init()
 MapMaterials.Displacements:Init()

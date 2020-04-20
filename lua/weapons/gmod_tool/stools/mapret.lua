@@ -87,7 +87,7 @@ function TOOL_BasicChecks(ply, ent, tr)
 	end
 
 	-- The tool can't change displacement materials
-	if ent:IsWorld() and Materials:GetCurrent(tr) == "**displacement**" then
+	if ent:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify displacements using the tool menu.")
 		end
@@ -102,7 +102,7 @@ end
  function TOOL:LeftClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()	
 	local ent = tr.Entity	
-	local originalMaterial = Materials:GetOriginal(tr)
+	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
@@ -133,12 +133,12 @@ end
 
 		-- Apply the new skybox
 		if SERVER then
-			Skybox:Set(ply, selectedMaterial)
+			MR.Skybox:Set(ply, selectedMaterial)
 		end
 
 		-- Register that the map is modified
-		if not MR:GetInitialized() then
-			MR:SetInitialized()
+		if not Base:GetInitialized() then
+			Base:SetInitialized()
 		end
 
 		-- Set the Undo
@@ -147,7 +147,7 @@ end
 				undo.SetPlayer(ply)
 				undo.AddFunction(function(tab)
 					if SERVER then
-						Skybox:Set(ply, "")
+						MR.Skybox:Set(ply, "")
 					end
 				end)
 				undo.SetCustomUndoText("Undone Material")
@@ -180,7 +180,7 @@ end
 
 	if not oldData then
 		-- If there isn't a saved data, create one from the material
-		oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, Materials:GetDetailList())
+		oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		
 		-- Adjust the material name to permit the tool check if changes are needed
 		oldData.newMaterial = oldData.oldMaterial 
@@ -190,10 +190,10 @@ end
 	end	
 
 	-- Adjustments for skybox materials
-	if Skybox:IsValidFullSky(newData.newMaterial) then
-		newData.newMaterial = Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
+	if MR.Skybox:IsValidFullSky(newData.newMaterial) then
+		newData.newMaterial = MR.Skybox:FixValidFullSkyPreviewName(newData.newMaterial)
 	-- Don't apply bad materials
-	elseif not Materials:IsValid(newData.newMaterial) then
+	elseif not MR.Materials:IsValid(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -208,8 +208,8 @@ end
 	end
 
 	-- Register that the map is modified
-	if not MR:GetInitialized() then
-		MR:SetInitialized()
+	if not Base:GetInitialized() then
+		Base:SetInitialized()
 	end
 
 	-- All verifications are done for the client. Let's only check the autoSave now
@@ -222,7 +222,7 @@ end
 		if not timer.Exists("MapRetAutoSave") then
 			timer.Create("MapRetAutoSave", 60, 1, function()
 				if not Duplicator:IsRunning() then
-					Save:Set(MR:GetAutoSaveName(), MR:GetAutoSaveFile())
+					Save:Set(Base:GetAutoSaveName(), Base:GetAutoSaveFile())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 				end
 			end)
@@ -264,7 +264,7 @@ end
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 	local ent = tr.Entity
-	local originalMaterial = Materials:GetOriginal(tr)
+	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, ent, tr) then
@@ -297,7 +297,7 @@ function TOOL:RightClick(tr)
 
 		if not oldData then
 			-- If there isn't a saved data, create one from the material
-			oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, Materials:GetDetailList())
+			oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 
 			-- Adjust the material name to permit the tool check if changes are needed
 			oldData.newMaterial = oldData.oldMaterial 
@@ -307,7 +307,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Check if the copy isn't necessary
-		if Materials:GetCurrent(tr) == Materials:GetNew(ply) then
+		if MR.Materials:GetCurrent(tr) == MR.Materials:GetNew(ply) then
 			if Data:IsEqual(oldData, newData) then
 
 				return false
@@ -318,7 +318,7 @@ function TOOL:RightClick(tr)
 		if CLIENT then
 			local i = 1
 
-			for k,v in SortedPairs(Materials:GetDetailList()) do
+			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 				if k == newData.detail then
 					break
 				else
@@ -334,7 +334,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Copy the material
-		ply:ConCommand("mapret_material "..Materials:GetCurrent(tr))
+		ply:ConCommand("mapret_material "..MR.Materials:GetCurrent(tr))
 
 		-- Set the cvars to data values
 		if oldData then
@@ -359,7 +359,7 @@ function TOOL:Reload(tr)
 	end
 
 	-- Skybox cleanup
-	if Materials:GetOriginal(tr) == "tools/toolsskybox" then
+	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 		-- Check if it's allowed
 		if GetConVar("mapret_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
@@ -374,7 +374,7 @@ function TOOL:Reload(tr)
 		-- Clean
 		if GetConVar("mapret_skybox"):GetString() ~= "" then
 			if SERVER then
-				Skybox:Set(ply, "")
+				MR.Skybox:Set(ply, "")
 			end
 
 			return true
@@ -392,7 +392,7 @@ function TOOL:Reload(tr)
 					ModelMaterials:Remove(ent)
 				-- or map material
 				elseif ent:IsWorld() then
-					MapMaterials:Remove(Materials:GetOriginal(tr))
+					MapMaterials:Remove(MR.Materials:GetOriginal(tr))
 				end
 			end)
 		end
@@ -407,7 +407,7 @@ end
 function TOOL:DrawHUD()
 	-- Map materials preview
 	if self.Mode and self.Mode == "mapret" and Ply:GetPreviewMode(LocalPlayer()) and not Ply:GetDecalMode(LocalPlayer()) then
-		Preview:Render(LocalPlayer(), true)
+		MR.Preview:Render(LocalPlayer(), true)
 	end
 
 	-- HACK: Needed to force mapret_detail to use the right value
@@ -465,7 +465,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local materialValue = CPanel:TextEntry("Material path", "mapret_material")
 				materialValue.OnEnter = function(self)
-					if Materials:IsValid(self:GetValue()) then
+					if MR.Materials:IsValid(self:GetValue()) then
 						net.Start("Materials:SetValid")
 							net.WriteString(self:GetValue())
 						net.SendToServer()
@@ -480,7 +480,7 @@ function TOOL.BuildCPanel(CPanel)
 					previewBox:SetChecked(true)
 
 					function previewBox:OnChange(val)
-						Preview:Toogle(ply, val, true, true)
+						MR.Preview:Toogle(ply, val, true, true)
 					end
 
 				local previewDLabel = vgui.Create("DLabel", generalPanel)
@@ -525,7 +525,7 @@ function TOOL.BuildCPanel(CPanel)
 		local detail, label = CPanel:ComboBox("Detail", "mapret_detail")
 		GUI:SetDetail(detail)
 		properties.label = label
-			for k,v in SortedPairs(Materials:GetDetailList()) do
+			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 				GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
@@ -567,7 +567,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					Skybox:Start(ply, self:GetValue())
+					MR.Skybox:Start(ply, self:GetValue())
 				end
 
 			GUI:SetSkyboxCombo(CPanel:ComboBox("HL2:"))
@@ -578,10 +578,10 @@ function TOOL.BuildCPanel(CPanel)
 						return false
 					end
 
-					Skybox:Start(ply, value)
+					MR.Skybox:Start(ply, value)
 				end
 
-				for k,v in pairs(Skybox:GetList()) do
+				for k,v in pairs(MR.Skybox:GetList()) do
 					GUI:GetSkyboxCombo():AddChoice(k, k)
 				end	
 
@@ -710,7 +710,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionSave)
 
 			GUI:SetSaveText(CPanel:TextEntry("Filename:", "mapret_savename"))
-				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR:GetMapFolder().."\"")
+				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
 			GUI:Set("save", "box", CPanel:CheckBox("Autosave"))

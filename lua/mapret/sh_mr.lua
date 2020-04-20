@@ -2,10 +2,10 @@
 --- MAP RETEXTURIZER BASE
 -------------------------------------
 
-MR = {}
-MR.__index = MR
+Base = {}
+Base.__index = Base
 
-local mr = {
+local base = {
 	-- Our folder inside data
 	mainFolder = "mapret/",
 	-- mapFolder inside the mainFolder
@@ -29,14 +29,14 @@ local mr = {
 
 if SERVER then
 	-- Tell if material changes were already made since the beggining of the game
-	mr.initialized = false
+	base.initialized = false
 end
 
-function MR:Init()
-	mr.mapFolder = mr.mainFolder..mr.mapFolder
-	mr.autoLoad.folder = mr.mapFolder..mr.autoLoad.folder
-	mr.autoSave.file = mr.mapFolder..mr.autoSave.file
-	mr.autoLoad.file = mr.autoLoad.folder..mr.autoLoad.file
+function Base:Init()
+	base.mapFolder = base.mainFolder..base.mapFolder
+	base.autoLoad.folder = base.mapFolder..base.autoLoad.folder
+	base.autoSave.file = base.mapFolder..base.autoSave.file
+	base.autoLoad.file = base.autoLoad.folder..base.autoLoad.file
 
 	-- Create the folders
 	if SERVER then
@@ -46,40 +46,40 @@ function MR:Init()
 			end
 		end
 
-		CreateDir(mr.mainFolder)
-		CreateDir(mr.mapFolder)
-		CreateDir(mr.autoLoad.folder)
+		CreateDir(base.mainFolder)
+		CreateDir(base.mapFolder)
+		CreateDir(base.autoLoad.folder)
 	end
 end
 
-function MR:GetInitialized()
-	return mr.initialized
+function Base:GetInitialized()
+	return base.initialized
 end
 
-function MR:SetInitialized()
-	mr.initialized = true
+function Base:SetInitialized()
+	base.initialized = true
 end
 
-function MR:GetMapFolder()
-	return mr.mapFolder
+function Base:GetMapFolder()
+	return base.mapFolder
 end
 
-function MR:GetSaveDefaultName()
-	return mr.save.defaultName
+function Base:GetSaveDefaultName()
+	return base.save.defaultName
 end
 
-function MR:GetAutoSaveName()
-	return mr.autoSave.name
+function Base:GetAutoSaveName()
+	return base.autoSave.name
 end
 
-function MR:GetAutoSaveFile()
-	return mr.autoSave.file
+function Base:GetAutoSaveFile()
+	return base.autoSave.file
 end
 
-function MR:GetAutoLoadFolder()
-	return mr.autoLoad.folder
+function Base:GetAutoLoadFolder()
+	return base.autoLoad.folder
 end
 
-function MR:GetAutoLoadFile()
-	return mr.autoLoad.file
+function Base:GetAutoLoadFile()
+	return base.autoLoad.file
 end

@@ -338,10 +338,10 @@ function TOOL:RightClick(tr)
 
 		-- Set the cvars to data values
 		if oldData then
-			CVars:SetPropertiesToData(ply, oldData)
+			MR.CVars:SetPropertiesToData(ply, oldData)
 		-- Or set the cvars to default values
 		else
-			CVars:SetPropertiesToDefaults(ply)
+			MR.CVars:SetPropertiesToDefaults(ply)
 		end
 	end
 
@@ -413,7 +413,7 @@ function TOOL:DrawHUD()
 	-- HACK: Needed to force mapret_detail to use the right value
 	if Ply:GetCVarValueHack(LocalPlayer()) then
 		timer.Create("MapRetDetailHack", 0.3, 1, function()
-			CVars:SetPropertiesToDefaults(LocalPlayer())
+			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
 		end)
 
 		Ply:SetCVarValueHack(LocalPlayer())
@@ -538,7 +538,7 @@ function TOOL.BuildCPanel(CPanel)
 			properties.baseMaterialReset = CPanel:Button("Reset")			
 
 			function properties.baseMaterialReset:DoClick()
-				CVars:SetPropertiesToDefaults(ply)
+				MR.CVars:SetPropertiesToDefaults(ply)
 			end
 	end
 
@@ -555,9 +555,9 @@ function TOOL.BuildCPanel(CPanel)
 			element = GUI:Get("skybox", "text")
 				element.OnEnter = function(self)
 					-- Force the field to update and disable a sync loop block
-					if CVars:GetSynced() then
+					if MR.CVars:GetSynced() then
 						GUI:Get("skybox", "text"):SetValue(val)
-						CVars:SetSynced(false)
+						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -593,9 +593,9 @@ function TOOL.BuildCPanel(CPanel)
 				element = GUI:Get("skybox", "box")
 					function element:OnChange(val)
 						-- Force the field to update and disable a sync loop block
-						if CVars:GetSynced() then
+						if MR.CVars:GetSynced() then
 							GUI:Get("skybox", "box"):SetChecked(val)
-							CVars:SetSynced(false)
+							MR.CVars:SetSynced(false)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
@@ -719,9 +719,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if CVars:GetSynced() then
+					if MR.CVars:GetSynced() then
 						GUI:Get("save", "box"):SetChecked(val)
-						CVars:SetSynced(false)
+						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -772,12 +772,12 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					-- Force the field to update and disable a sync loop block
-					if CVars:GetSynced() then
+					if MR.CVars:GetSynced() then
 						timer.Create("ForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
-						CVars:SetSynced(false)
+						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -802,9 +802,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if CVars:GetSynced() then
+					if MR.CVars:GetSynced() then
 						GUI:Get("load", "box"):SetChecked(val)
-						CVars:SetSynced(false)
+						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return

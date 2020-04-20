@@ -5,8 +5,9 @@
 -- When I sync a field it triggers and tries to sync itself again, entering a loop. This is a control to block it
 local blockSyncLoop = false
 
-CVars = {}
+local CVars = {}
 CVars.__index = CVars
+MR.CVars = CVars
 
 function CVars:GetSynced()
 	if SERVER then return; end

@@ -97,7 +97,7 @@ function Skybox:Set(ply, mat)
 		duplicator.StoreEntityModifier(Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
-		CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text")
+		MR.CVars:Replicate(ply, "mapret_skybox", mat, "skybox", "text")
 	end
 
 	-- Register that the map is modified

@@ -57,7 +57,7 @@ if SERVER then
 	end)
 
 	concommand.Add("mapret_remote_delay", function(_1, _2, _3, value)
-		CVars:Replicate(Ply:GetFakeHostPly(), "mapret_delay", value, "load", "slider")
+		MR.CVars:Replicate(Ply:GetFakeHostPly(), "mapret_delay", value, "load", "slider")
 
 		local message = "[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. "."
 		
@@ -72,7 +72,7 @@ if SERVER then
 			return
 		end
 
-		CVars:Replicate(Ply:GetFakeHostPly(), "mapret_duplicator_clean", value, "load", "box")
+		MR.CVars:Replicate(Ply:GetFakeHostPly(), "mapret_duplicator_clean", value, "load", "box")
 
 		local message = "[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. "."
 		

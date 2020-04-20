@@ -124,7 +124,7 @@ function Save:Auto_Set(ply, value)
 	end
  
 	-- Apply the change on clients
-	CVars:Replicate(ply, "mapret_autosave", value and "1" or "0", "save", "box")
+	MR.CVars:Replicate(ply, "mapret_autosave", value and "1" or "0", "save", "box")
 end
 if SERVER then
 	util.AddNetworkString("MapRetAutoSaveSet")

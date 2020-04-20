@@ -109,7 +109,7 @@ if SERVER then
 			return
 		end
 
-		Save:Set(saveName, Base:GetMapFolder()..saveName..".txt")
+		Save:Set(saveName, MR.Base:GetMapFolder()..saveName..".txt")
 	end)
 
 	concommand.Add("mapret_remote_autosave", function(_1, _2, _3, valueIn)

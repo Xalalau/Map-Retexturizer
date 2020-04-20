@@ -66,7 +66,7 @@ if SERVER then
 end
 
 -- Initialization
-Base:Init()
+MR.Base:Init()
 Ply:Init()
 MR.Preview:Init()
 Save:Init()

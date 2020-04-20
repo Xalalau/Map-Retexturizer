@@ -101,8 +101,8 @@ function Skybox:Set(ply, mat)
 	end
 
 	-- Register that the map is modified
-	if not Base:GetInitialized() then
-		Base:SetInitialized()
+	if not MR.Base:GetInitialized() then
+		MR.Base:SetInitialized()
 	end
 
 	-- Send the change to everyone

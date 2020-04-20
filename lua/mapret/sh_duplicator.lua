@@ -696,8 +696,8 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 	if dup.forceStop or Ply:GetDupCurrent(ply) + Ply:GetDupErrorsN(ply) == Ply:GetDupTotal(ply) then
 		-- Register that the map is modified
-		if not Base:GetInitialized() and not isGModLoadOverriding then
-			Base:SetInitialized()
+		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
+			MR.Base:SetInitialized()
 		end
 
 		-- Reset the progress bar

@@ -14,7 +14,7 @@ function Save:Init()
 	if SERVER then return; end
 
 	-- Default save location
-	RunConsoleCommand("mapret_savename", Base:GetSaveDefaultName())
+	RunConsoleCommand("mapret_savename", MR.Base:GetSaveDefaultName())
 end
 
 -- Save the modifications to a file and reload the menu
@@ -84,13 +84,13 @@ if SERVER then
 
 		local saveName = net.ReadString()
 
-		Save:Set(saveName, Base:GetMapFolder()..saveName..".txt")
+		Save:Set(saveName, MR.Base:GetMapFolder()..saveName..".txt")
 	end)
 end
 if CLIENT then
 	net.Receive("MapRetSaveAddToLoadList", function()
 		local saveName = net.ReadString()
-		local saveFile = Base:GetMapFolder()..saveName..".txt"
+		local saveFile = MR.Base:GetMapFolder()..saveName..".txt"
 
 		if Load:GetList()[saveName] == nil then
 			GUI:GetLoadText():AddChoice(saveName)

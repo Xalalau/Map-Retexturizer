@@ -14,14 +14,14 @@ function Load:Init()
 	if CLIENT then return; end
 
 	-- Fill the load list on the server
-	local files = file.Find(Base:GetMapFolder().."*", "Data")
+	local files = file.Find(MR.Base:GetMapFolder().."*", "Data")
 
 	for k,v in pairs(files) do
-		load.list[v:sub(1, -5)] = Base:GetMapFolder()..v
+		load.list[v:sub(1, -5)] = MR.Base:GetMapFolder()..v
 	end
 
 	-- Set the autoLoad command
-	local value = file.Read(Base:GetAutoLoadFile(), "Data")
+	local value = file.Read(MR.Base:GetAutoLoadFile(), "Data")
 
 	if value then
 		RunConsoleCommand("mapret_autoload", value)
@@ -55,7 +55,7 @@ function Load:Start(ply, loadName)
 	end
 
 	-- Get the load file
-	local loadFile = load.list[loadName] or Base:GetMapFolder() .. loadName .. ".txt"
+	local loadFile = load.list[loadName] or MR.Base:GetMapFolder() .. loadName .. ".txt"
 
 	-- Check if it exists
 	if !file.Exists(loadFile, "Data") then
@@ -108,7 +108,7 @@ function Load:FirstSpawn(ply)
 	if Duplicator:IsRunning() then
 		Load:Start(ply, Duplicator:IsRunning())
 	-- Send the current modifications
-	elseif Base:GetInitialized() then
+	elseif MR.Base:GetInitialized() then
 		Duplicator:Start(ply)
 	-- Run an autoload
 	elseif GetConVar("mapret_autoload"):GetString() ~= "" then
@@ -300,7 +300,7 @@ function Load:Auto_Set(ply, loadName)
 	CVars:Replicate(ply, "mapret_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MapRetWaitToSave", 0.3, 1, function()
-		file.Write(Base:GetAutoLoadFile(), GetConVar("mapret_autoload"):GetString())
+		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("mapret_autoload"):GetString())
 	end)
 
 	return true

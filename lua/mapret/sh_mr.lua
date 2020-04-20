@@ -2,8 +2,9 @@
 --- MAP RETEXTURIZER BASE
 -------------------------------------
 
-Base = {}
+local Base = {}
 Base.__index = Base
+MR.Base = Base
 
 local base = {
 	-- Our folder inside data

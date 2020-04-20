@@ -137,8 +137,8 @@ end
 		end
 
 		-- Register that the map is modified
-		if not Base:GetInitialized() then
-			Base:SetInitialized()
+		if not MR.Base:GetInitialized() then
+			MR.Base:SetInitialized()
 		end
 
 		-- Set the Undo
@@ -208,8 +208,8 @@ end
 	end
 
 	-- Register that the map is modified
-	if not Base:GetInitialized() then
-		Base:SetInitialized()
+	if not MR.Base:GetInitialized() then
+		MR.Base:SetInitialized()
 	end
 
 	-- All verifications are done for the client. Let's only check the autoSave now
@@ -222,7 +222,7 @@ end
 		if not timer.Exists("MapRetAutoSave") then
 			timer.Create("MapRetAutoSave", 60, 1, function()
 				if not Duplicator:IsRunning() then
-					Save:Set(Base:GetAutoSaveName(), Base:GetAutoSaveFile())
+					Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 				end
 			end)
@@ -710,7 +710,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionSave)
 
 			GUI:SetSaveText(CPanel:TextEntry("Filename:", "mapret_savename"))
-				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..Base:GetMapFolder().."\"")
+				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
 			GUI:Set("save", "box", CPanel:CheckBox("Autosave"))

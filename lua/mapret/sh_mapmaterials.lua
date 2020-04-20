@@ -304,8 +304,8 @@ function MapMaterials:SetAll(ply)
 	end
 
 	-- Register that the map is modified
-	if not Base:GetInitialized() then
-		Base:SetInitialized()
+	if not MR.Base:GetInitialized() then
+		MR.Base:SetInitialized()
 	end
 
 	-- Clean the map
@@ -567,8 +567,8 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	data.newMaterial2 = newMaterial2
 
 	-- Register that the map is modified
-	if not Base:GetInitialized() then
-		Base:SetInitialized()
+	if not MR.Base:GetInitialized() then
+		MR.Base:SetInitialized()
 	end
 
 	-- Apply the changes

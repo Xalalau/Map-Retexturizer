@@ -121,7 +121,7 @@ duplicator.RegisterEntityModifier("MRexturizer_Skybox", RecreateTable)
 -- Format upgrading
 function Duplicator:UpgradeSaveFormat(savedTable)
 	-- 1.0 to 2.0
-	if not savedTable.savingFormat then
+	if savedTable and not savedTable.savingFormat then
 		-- Update map materials structure
 		if savedTable[1] and savedTable[1].oldMaterial then
 			MR.MML:Clean(savedTable)

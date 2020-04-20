@@ -116,7 +116,7 @@ function MapMaterials:Set(ply, data)
 			i = MML:GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
+			local dataBackup = data.backup or MR.Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
 
 			-- Save the material texture
 			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
@@ -335,7 +335,7 @@ function MapMaterials:SetAll(ply)
 					isDiscplacement = true
 				end
 
-				local data = Data:Create(ply)
+				local data = MR.Data:Create(ply)
 				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 
 				if isDiscplacement then
@@ -358,7 +358,7 @@ function MapMaterials:SetAll(ply)
 		-- Note: this is my old GMod buggy implementation. In the future I can use it if this is closed:
 		-- https://github.com/Facepunch/garrysmod-issues/issues/3216
 		for k, v in pairs (game.GetWorld():GetMaterials()) do 
-			local data = Data:Create(ply)
+			local data = MR.Data:Create(ply)
 			
 			-- Ignore water
 			if not string.find(v, "water") then
@@ -563,7 +563,7 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 	MR.Duplicator:CreateEnt()
 
 	-- Create the data table
-	local data = Data:CreateFromMaterial({ name = displacement, filename = map.filename }, MR.Materials:GetDetailList(), nil, { filename = map.displacements.filename })
+	local data = MR.Data:CreateFromMaterial({ name = displacement, filename = map.filename }, MR.Materials:GetDetailList(), nil, { filename = map.displacements.filename })
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2

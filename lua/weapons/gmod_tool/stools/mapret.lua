@@ -175,12 +175,12 @@ end
 	end
 
 	-- Get data tables with the future and current materials
-	local newData = Data:Create(ply, tr)
-	local oldData = table.Copy(Data:Get(tr, MR.MapMaterials:GetList()))
+	local newData = MR.Data:Create(ply, tr)
+	local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
 
 	if not oldData then
 		-- If there isn't a saved data, create one from the material
-		oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+		oldData = MR.Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		
 		-- Adjust the material name to permit the tool check if changes are needed
 		oldData.newMaterial = oldData.oldMaterial 
@@ -202,7 +202,7 @@ end
 	end
 
 	-- Do not apply the material if it's not necessary
-	if Data:IsEqual(oldData, newData) then
+	if MR.Data:IsEqual(oldData, newData) then
 
 		return false
 	end
@@ -292,12 +292,12 @@ function TOOL:RightClick(tr)
 	-- Normal materials
 	else
 		-- Get data tables with the future and current materials
-		local newData = Data:Create(ply, tr)
-		local oldData = table.Copy(Data:Get(tr, MR.MapMaterials:GetList()))
+		local newData = MR.Data:Create(ply, tr)
+		local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
 
 		if not oldData then
 			-- If there isn't a saved data, create one from the material
-			oldData = Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+			oldData = MR.Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 
 			-- Adjust the material name to permit the tool check if changes are needed
 			oldData.newMaterial = oldData.oldMaterial 
@@ -308,7 +308,7 @@ function TOOL:RightClick(tr)
 
 		-- Check if the copy isn't necessary
 		if MR.Materials:GetCurrent(tr) == MR.Materials:GetNew(ply) then
-			if Data:IsEqual(oldData, newData) then
+			if MR.Data:IsEqual(oldData, newData) then
 
 				return false
 			end
@@ -384,7 +384,7 @@ function TOOL:Reload(tr)
 	end
 
 	-- Reset the material
-	if Data:Get(tr, MR.MapMaterials:GetList()) then
+	if MR.Data:Get(tr, MR.MapMaterials:GetList()) then
 		if SERVER then
 			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- model material

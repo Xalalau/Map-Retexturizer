@@ -2,8 +2,9 @@
 --- Data TABLE
 --------------------------------
 
-Data = {}
+local Data = {}
 Data.__index = Data
+MR.Data = Data
 
 -- Check if the tables are the same
 function Data:IsEqual(Data1, Data2)

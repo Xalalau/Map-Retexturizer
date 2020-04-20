@@ -247,7 +247,7 @@ function Skybox:Remove(ply)
 	MR.Duplicator:ForceStop()
 
 	-- Cleanup
-	RunConsoleCommand("mr_skybox", "")
+	Skybox:Set(ply, "")
 
 	if IsValid(MR.Duplicator:GetEnt()) then
 		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Skybox")

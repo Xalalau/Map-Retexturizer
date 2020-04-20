@@ -374,7 +374,7 @@ function TOOL:Reload(tr)
 		-- Clean
 		if GetConVar("mr_skybox"):GetString() ~= "" then
 			if SERVER then
-				MR.Skybox:Set(ply, "")
+				MR.Skybox:Remove(ply)
 			end
 
 			return true

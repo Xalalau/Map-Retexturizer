@@ -326,8 +326,8 @@ function TOOL:RightClick(tr)
 				end
 			end
 
-			if GUI:GetDetail() then
-				GUI:GetDetail():ChooseOptionID(i)
+			if MR.GUI:GetDetail() then
+				MR.GUI:GetDetail():ChooseOptionID(i)
 			end
 			
 			return true
@@ -434,9 +434,9 @@ function TOOL.BuildCPanel(CPanel)
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
 	local function Properties_Toogle(val)
 		if val then
-			GUI:GetDetail():Hide()
+			MR.GUI:GetDetail():Hide()
 		else
-			GUI:GetDetail():Show()
+			MR.GUI:GetDetail():Show()
 		end
 
 		for k,v in pairs(properties) do
@@ -523,10 +523,10 @@ function TOOL.BuildCPanel(CPanel)
 		CPanel:AddItem(sectionProperties)
 
 		local detail, label = CPanel:ComboBox("Detail", "mapret_detail")
-		GUI:SetDetail(detail)
+		MR.GUI:SetDetail(detail)
 		properties.label = label
 			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
-				GUI:GetDetail():AddChoice(k, k, v)
+				MR.GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
 			properties.a = CPanel:NumSlider("Alpha", "mapret_alpha", 0, 1, 2)
@@ -551,18 +551,18 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSkybox)
 
-			GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path:"))
-			element = GUI:Get("skybox", "text")
+			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path:"))
+			element = MR.GUI:Get("skybox", "text")
 				element.OnEnter = function(self)
 					-- Force the field to update and disable a sync loop block
 					if MR.CVars:GetSynced() then
-						GUI:Get("skybox", "text"):SetValue(val)
+						MR.GUI:Get("skybox", "text"):SetValue(val)
 						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						GUI:Get("skybox", "text"):SetValue(GetConVar("mapret_skybox"):GetString())
+						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("mapret_skybox"):GetString())
 
 						return
 					end
@@ -570,8 +570,8 @@ function TOOL.BuildCPanel(CPanel)
 					MR.Skybox:Start(ply, self:GetValue())
 				end
 
-			GUI:SetSkyboxCombo(CPanel:ComboBox("HL2:"))
-			element = GUI:GetSkyboxCombo()
+			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2:"))
+			element = MR.GUI:GetSkyboxCombo()
 				function element:OnSelect(index, value, data)
 					-- Admin only
 					if not MR.Utils:PlyIsAdmin(ply) then
@@ -582,25 +582,25 @@ function TOOL.BuildCPanel(CPanel)
 				end
 
 				for k,v in pairs(MR.Skybox:GetList()) do
-					GUI:GetSkyboxCombo():AddChoice(k, k)
+					MR.GUI:GetSkyboxCombo():AddChoice(k, k)
 				end	
 
 				timer.Create("MapRetSkyboxDelay", 0.1, 1, function()
-					GUI:GetSkyboxCombo():SetValue("")
+					MR.GUI:GetSkyboxCombo():SetValue("")
 				end)
 
-				GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the toolgun"))
-				element = GUI:Get("skybox", "box")
+				MR.GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the toolgun"))
+				element = MR.GUI:Get("skybox", "box")
 					function element:OnChange(val)
 						-- Force the field to update and disable a sync loop block
 						if MR.CVars:GetSynced() then
-							GUI:Get("skybox", "box"):SetChecked(val)
+							MR.GUI:Get("skybox", "box"):SetChecked(val)
 							MR.CVars:SetSynced(false)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
 						elseif not MR.Utils:PlyIsAdmin(ply) then
-							GUI:Get("skybox", "box"):SetChecked(GetConVar("mapret_skybox_toolgun"):GetBool())
+							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("mapret_skybox_toolgun"):GetBool())
 
 							return
 						end
@@ -628,35 +628,35 @@ function TOOL.BuildCPanel(CPanel)
 
 				CPanel:AddItem(sectionDisplacements)
 
-				GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected:"))
-				element = GUI:GetDisplacementsCombo()
+				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected:"))
+				element = MR.GUI:GetDisplacementsCombo()
 					function element:OnSelect(index, value, data)
 						if value ~= "" then
-							GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
-							GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
+							MR.GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
+							MR.GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
 						else
-							GUI:GetDisplacementsText1():SetValue("")
-							GUI:GetDisplacementsText2():SetValue("")
+							MR.GUI:GetDisplacementsText1():SetValue("")
+							MR.GUI:GetDisplacementsText2():SetValue("")
 						end					
 					end
 
 					for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
-						GUI:GetDisplacementsCombo():AddChoice(k)
+						MR.GUI:GetDisplacementsCombo():AddChoice(k)
 					end
 
-					GUI:GetDisplacementsCombo():AddChoice("", "")
+					MR.GUI:GetDisplacementsCombo():AddChoice("", "")
 
 					timer.Create("MapRetdisplacementsDelay", 0.1, 1, function()
-						GUI:GetDisplacementsCombo():SetValue("")
+						MR.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
-				GUI:SetDisplacementsText1(CPanel:TextEntry("Texture 1:", ""))
+				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture 1:", ""))
 					local function DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
 						if text1Value == "" then
 							text1Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1]
 
 							timer.Create("MapRetText1Update", 0.5, 1, function()
-								GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
+								MR.GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
 							end)
 						end
 
@@ -664,36 +664,36 @@ function TOOL.BuildCPanel(CPanel)
 							text2Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2]
 
 							timer.Create("MapRetText2Update", 0.5, 1, function()
-								GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
+								MR.GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
 							end)
 						end
 					end
 
-					GUI:GetDisplacementsText1().OnEnter = function(self)
-						local comboBoxValue, _ = GUI:GetDisplacementsCombo():GetSelected()
-						local text1Value = GUI:GetDisplacementsText1():GetValue()
-						local text2Value = GUI:GetDisplacementsText2():GetValue()
+					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
+						local comboBoxValue, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
+						local text1Value = MR.GUI:GetDisplacementsText1():GetValue()
+						local text2Value = MR.GUI:GetDisplacementsText2():GetValue()
 
 						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
 							return
 						end
 
 						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MR.MapMaterials.Displacements:Start(comboBoxValue, text1Value, GUI:GetDisplacementsText2():GetValue())
+						MR.MapMaterials.Displacements:Start(comboBoxValue, text1Value, MR.GUI:GetDisplacementsText2():GetValue())
 					end
 
-				GUI:SetDisplacementsText2(CPanel:TextEntry("Texture 2:", ""))
-					GUI:GetDisplacementsText2().OnEnter = function(self)
-						local comboBoxValue, _ = GUI:GetDisplacementsCombo():GetSelected()
-						local text1Value = GUI:GetDisplacementsText1():GetValue()
-						local text2Value = GUI:GetDisplacementsText2():GetValue()
+				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture 2:", ""))
+					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
+						local comboBoxValue, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
+						local text1Value = MR.GUI:GetDisplacementsText1():GetValue()
+						local text2Value = MR.GUI:GetDisplacementsText2():GetValue()
 
 						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
 							return
 						end
 
 						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MR.MapMaterials.Displacements:Start(comboBoxValue, GUI:GetDisplacementsText1():GetValue(), text2Value)
+						MR.MapMaterials.Displacements:Start(comboBoxValue, MR.GUI:GetDisplacementsText1():GetValue(), text2Value)
 					end
 
 				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
@@ -709,24 +709,24 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSave)
 
-			GUI:SetSaveText(CPanel:TextEntry("Filename:", "mapret_savename"))
+			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "mapret_savename"))
 				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
-			GUI:Set("save", "box", CPanel:CheckBox("Autosave"))
-			element = GUI:Get("save", "box")
+			MR.GUI:Set("save", "box", CPanel:CheckBox("Autosave"))
+			element = MR.GUI:Get("save", "box")
 				element:SetValue(true)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
 					if MR.CVars:GetSynced() then
-						GUI:Get("save", "box"):SetChecked(val)
+						MR.GUI:Get("save", "box"):SetChecked(val)
 						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						GUI:Get("save", "box"):SetChecked(GetConVar("mapret_autosave"):GetBool())
+						MR.GUI:Get("save", "box"):SetChecked(GetConVar("mapret_autosave"):GetBool())
 
 						return
 					end
@@ -753,20 +753,20 @@ function TOOL.BuildCPanel(CPanel)
 				currentMap:SetEnabled(false)
 				currentMap:SetText(game.GetMap())
 
-			GUI:Set("load", "autoloadtext", CPanel:TextEntry("Autoload:"))
-			element = GUI:Get("load", "autoloadtext")
+			MR.GUI:Set("load", "autoloadtext", CPanel:TextEntry("Autoload:"))
+			element = MR.GUI:Get("load", "autoloadtext")
 				element:SetEnabled(false)
 				element:SetText("")
 
-			GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
+			MR.GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
 				MR.Load:FillList(mr)
 
-			GUI:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
-			element = GUI:Get("load", "slider")
+			MR.GUI:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
+			element = MR.GUI:Get("load", "slider")
 				function element:OnValueChanged(val)
 					-- Hack to initialize the field
-					if GUI:Get("load", "slider"):GetValue() == 0 then
-						GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
+					if MR.GUI:Get("load", "slider"):GetValue() == 0 then
+						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
 
 						return
 					end
@@ -774,7 +774,7 @@ function TOOL.BuildCPanel(CPanel)
 					-- Force the field to update and disable a sync loop block
 					if MR.CVars:GetSynced() then
 						timer.Create("ForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
-							GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
+							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
 						MR.CVars:SetSynced(false)
@@ -782,7 +782,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
+						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
 
 						return
 					end
@@ -796,20 +796,20 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
-			GUI:Set("load", "box", CPanel:CheckBox("Cleanup the map before loading"))
-			element = GUI:Get("load", "box")
+			MR.GUI:Set("load", "box", CPanel:CheckBox("Cleanup the map before loading"))
+			element = MR.GUI:Get("load", "box")
 				element:SetChecked(true)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
 					if MR.CVars:GetSynced() then
-						GUI:Get("load", "box"):SetChecked(val)
+						MR.GUI:Get("load", "box"):SetChecked(val)
 						MR.CVars:SetSynced(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						GUI:Get("load", "box"):SetChecked(GetConVar("mapret_duplicator_clean"):GetBool())
+						MR.GUI:Get("load", "box"):SetChecked(GetConVar("mapret_duplicator_clean"):GetBool())
 
 						return
 					end
@@ -826,14 +826,14 @@ function TOOL.BuildCPanel(CPanel)
 			local loadSave = CPanel:Button("Load")
 				function loadSave:DoClick()
 					net.Start("MapRetLoad")
-						net.WriteString(GUI:GetLoadText():GetSelected() or "")
+						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
 			local setAutoload = CPanel:Button("Set Autoload")
 				function setAutoload:DoClick()
 					net.Start("MapRetAutoLoadSet")
-						net.WriteString(GUI:GetLoadText():GetSelected() or "")
+						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 

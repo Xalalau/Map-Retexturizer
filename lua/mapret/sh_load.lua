@@ -26,7 +26,7 @@ function Load:Init()
 
 	if value then
 		RunConsoleCommand("mapret_autoload", value)
-		GUI:Set("load", "autoloadtext", value)
+		MR.GUI:Set("load", "autoloadtext", value)
 	else
 		RunConsoleCommand("mapret_autoload", "")
 	end
@@ -151,10 +151,10 @@ end
 function Load:FillList(mr)
 	if SERVER then return; end
 
-	GUI:GetLoadText():AddChoice("")
+	MR.GUI:GetLoadText():AddChoice("")
 
 	for k,v in pairs(load.list) do
-		GUI:GetLoadText():AddChoice(k)
+		MR.GUI:GetLoadText():AddChoice(k)
 	end
 end
 if SERVER then
@@ -184,7 +184,7 @@ function Load:Delete_Start(ply)
 	if SERVER then return; end
 
 	-- Get the load name and check if it's no empty
-	local loadName = GUI:GetLoadText():GetSelected()
+	local loadName = MR.GUI:GetLoadText():GetSelected()
 
 	if not loadName or loadName == "" then
 		return
@@ -207,7 +207,7 @@ function Load:Delete_Start(ply)
 	local text = vgui.Create("DLabel", qPanel)
 		text:SetPos(10, 25)
 		text:SetSize(300, 25)
-		text:SetText("Are you sure you want to delete "..GUI:GetLoadText():GetSelected().."?")
+		text:SetText("Are you sure you want to delete "..MR.GUI:GetLoadText():GetSelected().."?")
 
 	local buttonYes = vgui.Create("DButton", qPanel)
 		buttonYes:SetPos(24, 50)
@@ -275,10 +275,10 @@ if CLIENT then
 		local loadName = net.ReadString()
 
 		load.list[loadName] = nil
-		GUI:GetLoadText():Clear()
+		MR.GUI:GetLoadText():Clear()
 
 		for k,v in pairs(load.list) do
-			GUI:GetLoadText():AddChoice(k)
+			MR.GUI:GetLoadText():AddChoice(k)
 		end
 	end)
 end

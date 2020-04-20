@@ -35,9 +35,9 @@ function CVars:Replicate(ply, command, value, field1, field2)
 
 	-- Change field values
 	if field1 and field2 then
-		GUI:Set(field1, field2, value)
+		MR.GUI:Set(field1, field2, value)
 	elseif field1 then
-		GUI:Set(field1, nil, value)
+		MR.GUI:Set(field1, nil, value)
 	end
 
 	if field1 then
@@ -60,7 +60,7 @@ if SERVER then
 
 	-- Sync menu fields (after it's loaded)
 	net.Receive("MapRetReplicateFirstSpawn", function(_, ply)
-		for k,v in pairs(GUI:GetTable()) do
+		for k,v in pairs(MR.GUI:GetTable()) do
 			if istable(v) then
 				for k2,v2 in pairs(v) do
 					net.Start("MapRetReplicateCl")
@@ -86,10 +86,10 @@ else
 		-- Enable a sync loop block
 		CVars:SetSynced(true)
 
-		if field1 and field2 and not isstring(GUI:Get(field1, field2)) and IsValid(GUI:Get(field1, field2)) then
-			GUI:Get(field1, field2):SetValue(value)
-		elseif field1 and not isstring(GUI:Get(field1)) and IsValid(GUI:Get(field1)) then
-			GUI:Get(field1):SetValue(value)
+		if field1 and field2 and not isstring(MR.GUI:Get(field1, field2)) and IsValid(MR.GUI:Get(field1, field2)) then
+			MR.GUI:Get(field1, field2):SetValue(value)
+		elseif field1 and not isstring(MR.GUI:Get(field1)) and IsValid(MR.GUI:Get(field1)) then
+			MR.GUI:Get(field1):SetValue(value)
 		end
 	end)
 end

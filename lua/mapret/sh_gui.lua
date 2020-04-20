@@ -32,8 +32,9 @@ if CLIENT then
 	}
 end
 
-GUI = {}
+local GUI = {}
 GUI.__index = GUI
+MR.GUI = GUI
 
 -- Field initialization (doesn't work updating its values)
 function GUI:Set(field1, field2, value)

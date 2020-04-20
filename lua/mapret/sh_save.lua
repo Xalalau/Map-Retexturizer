@@ -93,7 +93,7 @@ if CLIENT then
 		local saveFile = MR.Base:GetMapFolder()..saveName..".txt"
 
 		if MR.Load:GetList()[saveName] == nil then
-			GUI:GetLoadText():AddChoice(saveName)
+			MR.GUI:GetLoadText():AddChoice(saveName)
 			MR.Load:Set(saveName, saveFile)
 		end
 	end)

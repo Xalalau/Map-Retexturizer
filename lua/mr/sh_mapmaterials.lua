@@ -318,7 +318,8 @@ function MapMaterials:SetAll(ply)
 		local newTable = {
 			map = {},
 			displacements = {},
-			skybox = {}
+			skybox = {},
+			savingFormat = "2.0"
 		}
 
 		-- Fill the fake loading table with the correct structures (ignoring water materials)

@@ -186,7 +186,7 @@ end
 		oldData.newMaterial = oldData.oldMaterial 
 	elseif IsValid(tr.Entity) then
 		-- Correct a model newMaterial to permit the tool check if changes are needed
-		oldData.newMaterial = ModelMaterials:GetNew(oldData.newMaterial)
+		oldData.newMaterial = MR.ModelMaterials:GetNew(oldData.newMaterial)
 	end	
 
 	-- Adjustments for skybox materials
@@ -233,7 +233,7 @@ end
 	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 		-- model material
 		if IsValid(ent) then
-			ModelMaterials:Set(ply, newData)
+			MR.ModelMaterials:Set(ply, newData)
 		-- or map material
 		elseif ent:IsWorld() then
 			MR.MapMaterials:Set(ply, newData)
@@ -247,7 +247,7 @@ end
 			if data.oldMaterial then
 				-- model material
 				if IsValid(ent) then
-					ModelMaterials:Remove(ent)
+					MR.ModelMaterials:Remove(ent)
 				-- or map material
 				elseif ent:IsWorld() then
 					MR.MapMaterials:Remove(data.oldMaterial)
@@ -303,7 +303,7 @@ function TOOL:RightClick(tr)
 			oldData.newMaterial = oldData.oldMaterial 
 		elseif IsValid(tr.Entity) then
 			-- Correct a model newMaterial to permit the tool check if changes are needed
-			oldData.newMaterial = ModelMaterials:GetNew(oldData.newMaterial)
+			oldData.newMaterial = MR.ModelMaterials:GetNew(oldData.newMaterial)
 		end
 
 		-- Check if the copy isn't necessary
@@ -389,7 +389,7 @@ function TOOL:Reload(tr)
 			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- model material
 				if IsValid(ent) then
-					ModelMaterials:Remove(ent)
+					MR.ModelMaterials:Remove(ent)
 				-- or map material
 				elseif ent:IsWorld() then
 					MR.MapMaterials:Remove(MR.Materials:GetOriginal(tr))

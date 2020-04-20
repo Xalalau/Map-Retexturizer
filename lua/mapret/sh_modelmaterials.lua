@@ -2,8 +2,9 @@
 --- MATERIALS (MODELS)
 --------------------------------
 
-ModelMaterials = {}
+local ModelMaterials = {}
 ModelMaterials.__index = ModelMaterials
+MR.ModelMaterials = ModelMaterials
 
 -- materialID = String, all the modifications
 local model = {

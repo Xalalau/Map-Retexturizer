@@ -429,7 +429,7 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	Duplicator:SendStatusToCl(ply, Ply:GetDupCurrent(ply))
 
 	-- Apply the map material
-	ModelMaterials:Set(ply, savedTable[position])
+	MR.ModelMaterials:Set(ply, savedTable[position])
 
 	-- Next material
 	timer.Create("MapRetDuplicatorModelsDelay"..tostring(ply), GetConVar("mapret_delay"):GetFloat(), 1, function()

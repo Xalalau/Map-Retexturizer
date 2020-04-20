@@ -96,12 +96,12 @@ end
 
 -- Get the original material full path
 function Materials:GetOriginal(tr)
-	return ModelMaterials:GetOriginal(tr) or MR.MapMaterials:GetOriginal(tr) or nil
+	return MR.ModelMaterials:GetOriginal(tr) or MR.MapMaterials:GetOriginal(tr) or nil
 end
 
 -- Get the current material full path
 function Materials:GetCurrent(tr)
-	return ModelMaterials:GetCurrent(tr) or MR.MapMaterials:GetCurrent(tr) or ""
+	return MR.ModelMaterials:GetCurrent(tr) or MR.MapMaterials:GetCurrent(tr) or ""
 end
 
 -- Get the new material from the cvar
@@ -119,7 +119,7 @@ function Materials:RestoreAll(ply)
 	end
 
 	-- Cleanup
-	ModelMaterials:RemoveAll(ply)
+	MR.ModelMaterials:RemoveAll(ply)
 	MR.MapMaterials:RemoveAll(ply)
 	Decals:RemoveAll(ply)
 	MR.MapMaterials.Displacements:RemoveAll(ply)

@@ -394,7 +394,7 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	if CLIENT then return; end
 
 	-- Revalidate
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return
 	end
 
@@ -442,7 +442,7 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	if CLIENT then return; end
 
 	-- Revalidate
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return
 	end
 
@@ -489,7 +489,7 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	if CLIENT then return; end
 
 	-- Revalidate
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return
 	end
 
@@ -558,7 +558,7 @@ function Duplicator:LoadSkybox(ply, ent, savedTable)
 	if CLIENT then return; end
 
 	-- Revalidate
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return
 	end
 

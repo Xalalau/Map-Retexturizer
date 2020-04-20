@@ -283,7 +283,7 @@ function MapMaterials:SetAll(ply)
 	if CLIENT then return; end
 
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 
@@ -437,7 +437,7 @@ function MapMaterials:RemoveAll(ply)
 	if CLIENT then return; end
 
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 
@@ -600,7 +600,7 @@ function MapMaterials.Displacements:RemoveAll(ply)
 	if CLIENT then return; end
 
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 

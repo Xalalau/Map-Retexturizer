@@ -25,7 +25,7 @@ function CVars:Replicate(ply, command, value, field1, field2)
 	if CLIENT then return; end
 
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 

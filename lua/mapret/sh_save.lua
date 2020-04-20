@@ -78,7 +78,7 @@ if SERVER then
 
 	net.Receive("MapRetSave", function(_, ply)
 		-- Admin only
-		if not Utils:PlyIsAdmin(ply) then
+		if not MR.Utils:PlyIsAdmin(ply) then
 			return false
 		end
 
@@ -112,7 +112,7 @@ function Save:Auto_Set(ply, value)
 	if CLIENT then return; end
 
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 

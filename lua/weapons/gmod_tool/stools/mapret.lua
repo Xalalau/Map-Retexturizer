@@ -68,7 +68,7 @@ TOOL.ClientConVar["rotation"] = "0"
 
 function TOOL_BasicChecks(ply, ent, tr)
 	-- Admin only
-	if not Utils:PlyIsAdmin(ply) then
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 
@@ -561,7 +561,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not Utils:PlyIsAdmin(ply) then
+					elseif not MR.Utils:PlyIsAdmin(ply) then
 						GUI:Get("skybox", "text"):SetValue(GetConVar("mapret_skybox"):GetString())
 
 						return
@@ -574,7 +574,7 @@ function TOOL.BuildCPanel(CPanel)
 			element = GUI:GetSkyboxCombo()
 				function element:OnSelect(index, value, data)
 					-- Admin only
-					if not Utils:PlyIsAdmin(ply) then
+					if not MR.Utils:PlyIsAdmin(ply) then
 						return false
 					end
 
@@ -599,7 +599,7 @@ function TOOL.BuildCPanel(CPanel)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
-						elseif not Utils:PlyIsAdmin(ply) then
+						elseif not MR.Utils:PlyIsAdmin(ply) then
 							GUI:Get("skybox", "box"):SetChecked(GetConVar("mapret_skybox_toolgun"):GetBool())
 
 							return
@@ -725,7 +725,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not Utils:PlyIsAdmin(ply) then
+					elseif not MR.Utils:PlyIsAdmin(ply) then
 						GUI:Get("save", "box"):SetChecked(GetConVar("mapret_autosave"):GetBool())
 
 						return
@@ -781,7 +781,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not Utils:PlyIsAdmin(ply) then
+					elseif not MR.Utils:PlyIsAdmin(ply) then
 						GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mapret_delay"):GetFloat()))
 
 						return
@@ -808,7 +808,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not Utils:PlyIsAdmin(ply) then
+					elseif not MR.Utils:PlyIsAdmin(ply) then
 						GUI:Get("load", "box"):SetChecked(GetConVar("mapret_duplicator_clean"):GetBool())
 
 						return

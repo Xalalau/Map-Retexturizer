@@ -2,11 +2,12 @@
 --- UTILITIES
 -------------------------------------
 
-Utils = {}
+local Utils = {}
 Utils.__index = Utils
+MR.Utils = Utils
 
 -- Detect admin privileges 
-function Utils:PlyIsAdmin(ply)
+function MR.Utils:PlyIsAdmin(ply)
 	-- fakeHostPly
 	if SERVER and ply == Ply:GetFakeHostPly() then
 		return true

@@ -447,6 +447,9 @@ function TOOL.BuildCPanel(CPanel)
 	-- Sync some menu fields
 	net.Start("CVars:ReplicateFirstSpawn")
 	net.SendToServer()
+	timer.Create("MRReplicateFirstSpawn", 0.3, 1, function()
+		MR.CVars:SetSynced(false)
+	end)
 
 	-- HACK: force mr_detail to use the right value
 	timer.Create("MRDetailHack", 0.3, 1, function()

@@ -559,11 +559,6 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					-- Don't apply a skybox in the middle of a loading
-					if MR.Duplicator:IsRunning(ply) then
-						return false
-					end
-
 					net.Start("Skybox:Set_SV")
 						net.WriteString(value or "")
 					net.SendToServer()

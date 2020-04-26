@@ -546,14 +546,15 @@ function TOOL.BuildCPanel(CPanel)
 			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path:"))
 			element = MR.GUI:Get("skybox", "text")
 				element.OnEnter = function(self)
-					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetSynced() then
-						MR.GUI:Get("skybox", "text"):SetValue(val)
-						MR.CVars:SetSynced(false)
+					local value = MR.GUI:Get("skybox", "text"):GetValue()
 
-						return
-					-- Admin only: reset the option if it's not being synced and return
-					elseif not MR.Utils:PlyIsAdmin(ply) then
+					-- This field doesn't have problems with a sync loop, so disable the block
+					timer.Create("MRDisableSyncLoolBlock", 0.3, 1, function()
+						MR.CVars:SetSynced(false)
+					end)
+
+					-- Admin only
+					if not MR.Utils:PlyIsAdmin(ply) then
 						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("mr_skybox"):GetString())
 
 						return

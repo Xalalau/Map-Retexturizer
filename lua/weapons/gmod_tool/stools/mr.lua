@@ -414,17 +414,17 @@ function TOOL:DrawHUD()
 	end
 end
 
--- Panels
+-- Panel
 function TOOL.BuildCPanel(CPanel)
 	CPanel:SetName("#tool.mr.name")
 	CPanel:Help("#tool.mr.desc")
 	local element -- Little workaround to help me setting some menu functions
-	local ply
+	local ply = LocalPlayer()
 
-	-- Get the player when it's ready
-	timer.Create("MRMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
-		ply = LocalPlayer()
-	end)
+	-- Block GMod from openning the menu if the player isn't fully loaded yet
+	if not LocalPlayer() then
+		return true
+	end
 
 	-- Show and hide the properties section
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
@@ -444,17 +444,14 @@ function TOOL.BuildCPanel(CPanel)
 		end	
 	end
 
-	-- After the menu is loaded for real...
-	if LocalPlayer() then
-		-- Sync some menu fields
-		net.Start("CVars:ReplicateFirstSpawn")
-		net.SendToServer()
+	-- Sync some menu fields
+	net.Start("CVars:ReplicateFirstSpawn")
+	net.SendToServer()
 
-		-- HACK: force mr_detail to use the right value
-		timer.Create("MRDetailHack", 0.3, 1, function()
-			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
-		end)
-	end
+	-- HACK: force mr_detail to use the right value
+	timer.Create("MRDetailHack", 0.3, 1, function()
+		MR.CVars:SetPropertiesToDefaults(LocalPlayer())
+	end)
 
 	-- General ---------------------------------------------------------
 	CPanel:Help(" ")

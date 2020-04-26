@@ -33,8 +33,6 @@ local MRPlayer = {
 }
 
 if CLIENT then
-	-- HACK: Needed to force mr_detail to use the right value
-	MRPlayer.state.cVarValueHack = true
 	-- Tells if the player is with the material browser openned
 	MRPlayer.state.inMatBrowser = false
 end
@@ -115,18 +113,6 @@ end
 
 function Ply:SetDecalMode(ply, value)
 	ply.mr.state.decalMode = value
-end
-
-function Ply:GetCVarValueHack(ply)
-	if SERVER then return; end
-
-	return ply.mr.state.cVarValueHack
-end
-
-function Ply:SetCVarValueHack(ply)
-	if SERVER then return; end
-
-	ply.mr.state.cVarValueHack = false
 end
 
 function Ply:GetInMatBrowser(ply)

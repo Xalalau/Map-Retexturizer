@@ -407,20 +407,10 @@ function TOOL:Reload(tr)
 	return false
 end
 
--- Preview materials and decals when the tool is open
+-- Map materials preview
 function TOOL:DrawHUD()
-	-- Map materials preview
 	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
 		MR.Preview:Render(LocalPlayer())
-	end
-
-	-- HACK: Needed to force mr_detail to use the right value
-	if MR.Ply:GetCVarValueHack(LocalPlayer()) then
-		timer.Create("MRDetailHack", 0.3, 1, function()
-			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
-		end)
-
-		MR.Ply:SetCVarValueHack(LocalPlayer())
 	end
 end
 
@@ -454,10 +444,16 @@ function TOOL.BuildCPanel(CPanel)
 		end	
 	end
 
-	-- Sync some menu fields (after it's loaded for real)
-	if LocalPlayer() then -- I can avoid the first background menu load checking LocalPlayer() because it's invalid at this point
+	-- After the menu is loaded for real...
+	if LocalPlayer() then
+		-- Sync some menu fields
 		net.Start("CVars:ReplicateFirstSpawn")
 		net.SendToServer()
+
+		-- HACK: force mr_detail to use the right value
+		timer.Create("MRDetailHack", 0.3, 1, function()
+			MR.CVars:SetPropertiesToDefaults(LocalPlayer())
+		end)
 	end
 
 	-- General ---------------------------------------------------------

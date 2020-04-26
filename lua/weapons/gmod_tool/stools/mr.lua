@@ -827,7 +827,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionCleanup)
 
 			local cleanupCombobox = CPanel:ComboBox("Select:")
-				cleanupCombobox:AddChoice("All","Materials:RestoreAll", true)
+				cleanupCombobox:AddChoice("All","Materials:RemoveAll", true)
 				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
 				cleanupCombobox:AddChoice("Displacements","MapMaterials.Displacements:RemoveAll")
 				cleanupCombobox:AddChoice("Map Materials","MapMaterials:RemoveAll")

@@ -31,13 +31,13 @@ local materials = {
 -- Networking
 if SERVER then
 	util.AddNetworkString("Materials:SetValid_SV")
-	util.AddNetworkString("Materials:RestoreAll")
+	util.AddNetworkString("Materials:RemoveAll")
 
 	net.Receive("Materials:SetValid_SV", function()
 		Materials:SetValid_SV(net.ReadString(), net.ReadBool())
 	end)
 
-	net.Receive("Materials:RestoreAll", function(_, ply)
+	net.Receive("Materials:RemoveAll", function(_, ply)
 		 Materials:RemoveAll(ply)
 	end)
 end
@@ -117,7 +117,7 @@ function Materials:SetAll(ply)
 	end
 
 	-- Clean the map
-	Materials:RestoreAll(ply, true)
+	Materials:RemoveAll(ply, true)
 
 	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop_SV() and 0.15 or 0, 1, function() -- Wait for the map cleanup
 		-- Create a fake save table

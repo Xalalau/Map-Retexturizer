@@ -11,7 +11,7 @@ function Data:IsEqual(Data1, Data2)
 	local isDifferent = false
 
 	for k,v in pairs(Data1) do
-		if k ~= "backup" and v ~= Data2[k] then
+		if k ~= "backup" and v ~= Data2[k] then -- Ignore backup field
 			if isnumber(v) then
 				if tonumber(v) ~= tonumber(Data2[k]) then
 					isDifferent = true
@@ -52,7 +52,7 @@ function Data:Create(ply, tr)
 	return data
 end
 
--- Set a data table with the default properties
+-- Set a data table to default properties values
 function Data:CreateDefaults(ply, tr)
 	local data = {
 		ent = game.GetWorld(),
@@ -88,7 +88,7 @@ function Data:CreateFromMaterial(material, details, i, displacement)
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
 		scaley = string.format("%.2f", math.ceil((1/scaley)*1000)/1000),
-		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user 
+		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
 		rotation = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetAngles() and theMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
 		alpha = string.format("%.2f", theMaterial:GetString("$alpha") or "1.00"),
 		detail = theMaterial:GetString("$detail") and theMaterial:GetTexture("$detail"):GetName() or "None",
@@ -102,7 +102,6 @@ function Data:CreateFromMaterial(material, details, i, displacement)
 			end
 		end
 	end
-
 	if not details[data.detail] then
 		data.detail = "None"
 	end
@@ -112,5 +111,5 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and tr.Entity.modifiedMaterial or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
+	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
 end

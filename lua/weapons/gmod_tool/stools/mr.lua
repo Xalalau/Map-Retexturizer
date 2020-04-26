@@ -43,11 +43,12 @@ if CLIENT then
 	language.Add("tool.mr.desc", "Change the look of your map any way you want!")
 end
 
+-- Note: if you modify a default here, chante it also on sh_gui.lua and cl_gui.lua
 CreateConVar("mr_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
 CreateConVar("mr_autosave", "1", { FCVAR_REPLICATED })
 CreateConVar("mr_autoload", "", { FCVAR_REPLICATED })
 CreateConVar("mr_skybox", "", { FCVAR_REPLICATED })
-CreateConVar("mr_delay", "0.050", { FCVAR_REPLICATED })
+CreateConVar("mr_delay", "0.035", { FCVAR_REPLICATED })
 CreateConVar("mr_duplicator_clean", "1", { FCVAR_REPLICATED })
 CreateConVar("mr_skybox_toolgun", "1", { FCVAR_REPLICATED })
 TOOL.ClientConVar["decal"] = "0"
@@ -66,28 +67,33 @@ TOOL.ClientConVar["rotation"] = "0"
 --- TOOL
 --------------------------------
 
-function TOOL_BasicChecks(ply, ent, tr)
+function TOOL_BasicChecks(ply, tr)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
 
-	-- Don't use the tool in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) then
+	-- Don't use in the middle of a loading
+	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
 		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until loading finishes.")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the loading finishes.")
 		end
 
 		return false
 	end
 
-	-- The tool isn't meant to change the players
-	if ent:IsPlayer() then
+	-- Don't do anything if a loading is being stopped
+	if MR.Duplicator:IsStopping() then
 		return false
 	end
 
-	-- The tool can't change displacement materials
-	if ent:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
+	-- Don't change the players
+	if tr.Entity:IsPlayer() then
+		return false
+	end
+
+	-- Don't try to change displacements directly
+	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
 		if CLIENT then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify displacements using the tool menu.")
 		end
@@ -101,16 +107,14 @@ end
 -- Apply materials
  function TOOL:LeftClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()	
-	local ent = tr.Entity	
-	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, ent, tr) then
+	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
 	-- Skybox modification
-	if originalMaterial == "tools/toolsskybox" then
+	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 		-- Check if it's allowed
 		if GetConVar("mr_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
@@ -123,7 +127,7 @@ end
 		end
 
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or originalMaterial
+		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or MR.Materials:GetOriginal(tr)
 		local selectedMaterial = ply:GetInfo("mr_material")
 
 		-- Check if the copy isn't necessary
@@ -131,9 +135,18 @@ end
 			return false
 		end
 
+		-- Don't apply bad materials
+		if not MR.Materials:IsValid(skyboxMaterial) and not MR.Skybox:IsValidFullSky(skyboxMaterial) then
+			if SERVER then
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
+			end
+
+			return false
+		end
+
 		-- Apply the new skybox
 		if SERVER then
-			MR.Skybox:Set(ply, selectedMaterial)
+			MR.Skybox:Set_SV(ply, selectedMaterial)
 		end
 
 		-- Register that the map is modified
@@ -147,7 +160,7 @@ end
 				undo.SetPlayer(ply)
 				undo.AddFunction(function(tab)
 					if SERVER then
-						MR.Skybox:Set(ply, "")
+						MR.Skybox:Set_SV(ply, "")
 					end
 				end)
 				undo.SetCustomUndoText("Undone Material")
@@ -157,19 +170,18 @@ end
 		return true
 	end
 
-	-- Create the duplicator entity used to restore map materials, decals and skybox
-	if SERVER then
-		MR.Duplicator:CreateEnt()
-	end
-
-	-- If we are dealing with decals
+	-- If we are dealing with decals, apply it
 	if MR.Ply:GetDecalMode(ply) then
-		MR.Decals:Start(ply, tr)
+		if SERVER then
+			MR.Decals:Set_SV(ply, tr)
+		end
 
 		return true
 	end
 
-	-- Check upper limit
+	-- If we are dealing with map or model materials:
+
+	-- Check if the backup table is full
 	if MR.MML:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
 		return false
 	end
@@ -179,14 +191,12 @@ end
 	local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
 
 	if not oldData then
-		-- If there isn't a saved data, create one from the material
-		oldData = MR.Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
-		
-		-- Adjust the material name to permit the tool check if changes are needed
+		-- If there isn't a saved data, create one from the material and adjust the material name
+		oldData = MR.Data:CreateFromMaterial({ name = MR.Materials:GetOriginal(tr), filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
 		oldData.newMaterial = oldData.oldMaterial 
 	elseif IsValid(tr.Entity) then
-		-- Correct a model newMaterial to permit the tool check if changes are needed
-		oldData.newMaterial = MR.ModelMaterials:GetNew(oldData.newMaterial)
+		-- If it's a model, adjust the material name
+		oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
 	end	
 
 	-- Adjustments for skybox materials
@@ -212,7 +222,6 @@ end
 		MR.Base:SetInitialized()
 	end
 
-	-- All verifications are done for the client. Let's only check the autoSave now
 	if CLIENT then
 		return true
 	end
@@ -221,8 +230,8 @@ end
 	if GetConVar("mr_autosave"):GetString() == "1" then
 		if not timer.Exists("MRAutoSave") then
 			timer.Create("MRAutoSave", 60, 1, function()
-				if not MR.Duplicator:IsRunning() then
-					MR.Save:Set(MR.Base:GetAutoSaveName(), MR.Base:GetAutoSaveFile())
+				if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
+					MR.Save:Set_SV(ply, MR.Base:GetAutoSaveName())
 					PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 				end
 			end)
@@ -230,12 +239,12 @@ end
 	end
 
 	-- Set the material
-	timer.Create("LeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
+	timer.Create("MRLeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 		-- model material
-		if IsValid(ent) then
+		if IsValid(tr.Entity) then
 			MR.ModelMaterials:Set(ply, newData)
-		-- or map material
-		elseif ent:IsWorld() then
+		-- or map/displacement material
+		elseif tr.Entity:IsWorld() then
 			MR.MapMaterials:Set(ply, newData)
 		end
 	end)
@@ -246,10 +255,10 @@ end
 		undo.AddFunction(function(tab, data)
 			if data.oldMaterial then
 				-- model material
-				if IsValid(ent) then
-					MR.ModelMaterials:Remove(ent)
-				-- or map material
-				elseif ent:IsWorld() then
+				if IsValid(tr.Entity) then
+					MR.ModelMaterials:Remove(tr.Entity)
+				-- or map/displacement material
+				elseif tr.Entity:IsWorld() then
 					MR.MapMaterials:Remove(data.oldMaterial)
 				end
 			end
@@ -263,11 +272,10 @@ end
 -- Copy materials
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	local ent = tr.Entity
 	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, ent, tr) then
+	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
@@ -277,7 +285,7 @@ function TOOL:RightClick(tr)
 		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
 		local selectedMaterial = ply:GetInfo("mr_material")
 
-		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material that is a missing texture
+		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material (that is a missing texture)
 		if skyboxMaterial == "skybox/painted" then
 			skyboxMaterial = originalMaterial
 		end
@@ -296,14 +304,12 @@ function TOOL:RightClick(tr)
 		local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
 
 		if not oldData then
-			-- If there isn't a saved data, create one from the material
+			-- If there isn't a saved data, create one from the material and adjust the material name
 			oldData = MR.Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
-
-			-- Adjust the material name to permit the tool check if changes are needed
 			oldData.newMaterial = oldData.oldMaterial 
 		elseif IsValid(tr.Entity) then
-			-- Correct a model newMaterial to permit the tool check if changes are needed
-			oldData.newMaterial = MR.ModelMaterials:GetNew(oldData.newMaterial)
+			-- If it's a model, adjust the material name
+			oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
 		end
 
 		-- Check if the copy isn't necessary
@@ -336,10 +342,9 @@ function TOOL:RightClick(tr)
 		-- Copy the material
 		ply:ConCommand("mr_material "..MR.Materials:GetCurrent(tr))
 
-		-- Set the cvars to data values
+		-- Set the cvars to data values or to default values
 		if oldData then
 			MR.CVars:SetPropertiesToData(ply, oldData)
-		-- Or set the cvars to default values
 		else
 			MR.CVars:SetPropertiesToDefaults(ply)
 		end
@@ -351,10 +356,9 @@ end
 -- Restore materials
 function TOOL:Reload(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	local ent = tr.Entity
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, ent, tr) then
+	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
@@ -383,15 +387,15 @@ function TOOL:Reload(tr)
 		return false
 	end
 
-	-- Reset the material
+	-- Normal materials cleanup
 	if MR.Data:Get(tr, MR.MapMaterials:GetList()) then
 		if SERVER then
-			timer.Create("ReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
+			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- model material
-				if IsValid(ent) then
-					MR.ModelMaterials:Remove(ent)
-				-- or map material
-				elseif ent:IsWorld() then
+				if IsValid(tr.Entity) then
+					MR.ModelMaterials:Remove(tr.Entity)
+				-- or map/displacement material
+				elseif tr.Entity:IsWorld() then
 					MR.MapMaterials:Remove(MR.Materials:GetOriginal(tr))
 				end
 			end)
@@ -406,8 +410,8 @@ end
 -- Preview materials and decals when the tool is open
 function TOOL:DrawHUD()
 	-- Map materials preview
-	if self.Mode and self.Mode == "mr" and MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		MR.Preview:Render(LocalPlayer(), true)
+	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
+		MR.Preview:Render(LocalPlayer())
 	end
 
 	-- HACK: Needed to force mr_detail to use the right value
@@ -424,13 +428,15 @@ end
 function TOOL.BuildCPanel(CPanel)
 	CPanel:SetName("#tool.mr.name")
 	CPanel:Help("#tool.mr.desc")
-	local ply
 	local element -- Little workaround to help me setting some menu functions
+	local ply
 
+	-- Get the player when it's ready
 	timer.Create("MRMultiplayerWait", game.SinglePlayer() and 0 or 0.1, 1, function()
 		ply = LocalPlayer()
 	end)
 
+	-- Show and hide the properties section
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
 	local function Properties_Toogle(val)
 		if val then
@@ -450,7 +456,7 @@ function TOOL.BuildCPanel(CPanel)
 
 	-- Sync some menu fields (after it's loaded for real)
 	if LocalPlayer() then -- I can avoid the first background menu load checking LocalPlayer() because it's invalid at this point
-		net.Start("MRReplicateFirstSpawn")
+		net.Start("CVars:ReplicateFirstSpawn")
 		net.SendToServer()
 	end
 
@@ -464,13 +470,6 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionGeneral)
 
 			local materialValue = CPanel:TextEntry("Material path", "mr_material")
-				materialValue.OnEnter = function(self)
-					if MR.Materials:IsValid(self:GetValue()) then
-						net.Start("Materials:SetValid")
-							net.WriteString(self:GetValue())
-						net.SendToServer()
-					end
-				end
 
 			local generalPanel = vgui.Create("DPanel")
 				generalPanel:SetHeight(20)
@@ -480,7 +479,7 @@ function TOOL.BuildCPanel(CPanel)
 					previewBox:SetChecked(true)
 
 					function previewBox:OnChange(val)
-						MR.Preview:Toogle(ply, val, true, true)
+						MR.Preview:Toogle(ply, val)
 					end
 
 				local previewDLabel = vgui.Create("DLabel", generalPanel)
@@ -567,7 +566,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					MR.Skybox:Start(ply, self:GetValue())
+					-- Don't apply a skybox in the middle of a loading
+					if MR.Duplicator:IsRunning(ply) then
+						return false
+					end
+
+					net.Start("Skybox:Set_SV")
+						net.WriteString(value or "")
+					net.SendToServer()
 				end
 
 			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2:"))
@@ -578,7 +584,9 @@ function TOOL.BuildCPanel(CPanel)
 						return false
 					end
 
-					MR.Skybox:Start(ply, value)
+					net.Start("Skybox:Set_SV")
+						net.WriteString(value)
+					net.SendToServer()
 				end
 
 				for k,v in pairs(MR.Skybox:GetList()) do
@@ -605,7 +613,7 @@ function TOOL.BuildCPanel(CPanel)
 							return
 						end
 
-						net.Start("MRReplicate")
+						net.Start("CVars:Replicate_SV")
 							net.WriteString("mr_skybox_toolgun")
 							net.WriteString(val and "1" or "0")
 							net.WriteString("skybox")
@@ -641,59 +649,23 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
-						MR.GUI:GetDisplacementsCombo():AddChoice(k)
+						element:AddChoice(k)
 					end
 
-					MR.GUI:GetDisplacementsCombo():AddChoice("", "")
+					element:AddChoice("", "")
 
-					timer.Create("MRdisplacementsDelay", 0.1, 1, function()
+					timer.Create("MRDisplacementsDelay", 0.1, 1, function()
 						MR.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
 				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture 1:", ""))
-					local function DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						if text1Value == "" then
-							text1Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1]
-
-							timer.Create("MRText1Update", 0.5, 1, function()
-								MR.GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][1])
-							end)
-						end
-
-						if text2Value == "" then
-							text2Value = MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2]
-
-							timer.Create("MRText2Update", 0.5, 1, function()
-								MR.GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[comboBoxValue][2])
-							end)
-						end
-					end
-
 					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
-						local comboBoxValue, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
-						local text1Value = MR.GUI:GetDisplacementsText1():GetValue()
-						local text2Value = MR.GUI:GetDisplacementsText2():GetValue()
-
-						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
-							return
-						end
-
-						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MR.MapMaterials.Displacements:Start(comboBoxValue, text1Value, MR.GUI:GetDisplacementsText2():GetValue())
+						MR.MapMaterials.Displacements:Set_CL()
 					end
 
 				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture 2:", ""))
 					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
-						local comboBoxValue, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
-						local text1Value = MR.GUI:GetDisplacementsText1():GetValue()
-						local text2Value = MR.GUI:GetDisplacementsText2():GetValue()
-
-						if not MR.MapMaterials.Displacements:GetDetected()[comboBoxValue] then
-							return
-						end
-
-						DisplacementsHandleEmptyText(comboBoxValue, text1Value, text2Value)
-						MR.MapMaterials.Displacements:Start(comboBoxValue, MR.GUI:GetDisplacementsText1():GetValue(), text2Value)
+						MR.MapMaterials.Displacements:Set_CL()
 					end
 
 				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
@@ -731,12 +703,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					MR.Save:Auto_Start(ply, val)
+					net.Start("Save:SetAuto")
+						net.WriteBool(val)
+					net.SendToServer()
 				end
 
 			local saveChanges = CPanel:Button("Save")
 				function saveChanges:DoClick()
-					MR.Save:Start(ply)
+					MR.Save:Set_CL(ply)
 				end
 	end
 
@@ -759,7 +733,12 @@ function TOOL.BuildCPanel(CPanel)
 				element:SetText("")
 
 			MR.GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
-				MR.Load:FillList(mr)
+			element = MR.GUI:GetLoadText()
+				element:AddChoice("")
+
+				for k,v in pairs(MR.Load:GetList()) do
+					element:AddChoice(k)
+				end
 
 			MR.GUI:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
 			element = MR.GUI:Get("load", "slider")
@@ -773,7 +752,7 @@ function TOOL.BuildCPanel(CPanel)
 
 					-- Force the field to update and disable a sync loop block
 					if MR.CVars:GetSynced() then
-						timer.Create("ForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
+						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
@@ -788,7 +767,7 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					-- Start syncing
-					net.Start("MRReplicate")
+					net.Start("CVars:Replicate_SV")
 						net.WriteString("mr_delay")
 						net.WriteString(string.format("%0.3f", val))
 						net.WriteString("load")
@@ -815,7 +794,7 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					-- Start syncing
-					net.Start("MRReplicate")
+					net.Start("CVars:Replicate_SV")
 						net.WriteString("mr_duplicator_clean")
 						net.WriteString(val and "1" or "0")
 						net.WriteString("load")
@@ -825,14 +804,14 @@ function TOOL.BuildCPanel(CPanel)
 
 			local loadSave = CPanel:Button("Load")
 				function loadSave:DoClick()
-					net.Start("MRLoad")
+					net.Start("Load:Start")
 						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
 			local setAutoload = CPanel:Button("Set Autoload")
 				function setAutoload:DoClick()
-					net.Start("MRAutoLoadSet")
+					net.Start("Load:SetAuto")
 						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
@@ -841,7 +820,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local delSave = CPanel:Button("Delete Load")
 				function delSave:DoClick()
-					MR.Load:Delete_Start(ply)
+					MR.Load:Delete_CL(ply)
 				end
 	end
 

@@ -9,31 +9,33 @@ MR.Base = Base
 local base = {
 	-- Our folder inside data
 	mainFolder = "mr/",
-	-- mapFolder inside the mainFolder
+	-- Map folders are inside the main folder
 	mapFolder = game.GetMap().."/",
+	-- Save default name
 	save = {
 		defaultName = game.GetMap().."_save"
 	},
 	autoSave = {
-		-- Name to be listed in the save list
+		-- Autosave default name
 		name = "[autosave]",
-		-- The autoSave file for this map
+		-- Autosave default file name
 		file = "[autosave].txt"
 	},
 	autoLoad = {
-		-- autoLoad.folder inside the mapFolder
+		-- Autoload folder inside the a map folder
 		folder = "autoload/",
-		-- The autoLoad file inside autoLoad.folder (unique for each map, will receive a save name)
+		-- Autoload default file name
 		file = "autoload.txt"
 	}
 }
 
 if SERVER then
-	-- Tell if material changes were already made since the beggining of the game
+	-- Tell if any material change was made
 	base.initialized = false
 end
 
 function Base:Init()
+	-- Set paths
 	base.mapFolder = base.mainFolder..base.mapFolder
 	base.autoLoad.folder = base.mapFolder..base.autoLoad.folder
 	base.autoSave.file = base.mapFolder..base.autoSave.file
@@ -54,10 +56,14 @@ function Base:Init()
 end
 
 function Base:GetInitialized()
+	if CLIENT then return; end
+
 	return base.initialized
 end
 
 function Base:SetInitialized()
+	if CLIENT then return; end
+
 	base.initialized = true
 end
 

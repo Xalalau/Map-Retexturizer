@@ -1,35 +1,6 @@
 --------------------------------
---- MATERIALS (MAPS)
+--- MATERIALS (MAP & DISPLACEMENTS)
 --------------------------------
-
-local map = {
-	-- The name of our backup map material files. They are file1, file2, file3...
-	filename = "mr/file",
-	-- 1512 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
-	limit = 1512,
-	-- Data structures, all the modifications
-	list = {},
-	-- list: ["diplacement_material"] = { 1 = "backup_material_1", 2 = "backup_material_2" }
-	displacements = {
-		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
-		-- Note: same type of list as map.list, but it's separated because these files never get clean for reuse
-		filename = "mr/disp_file",
-		-- 24 file limit seemed to be more than enough. I use this "physical method" because of GMod limitations
-		limit = 24,
-		-- List of detected displacements on the map
-		detected = {},
-		-- Data structures, all the modifications
-		list = {}
-	}
-}
-if SERVER then
-	-- List of valid exclusive valid clientside materials
-	map.clientOnlyList = {}
-elseif CLIENT then
-	-- I'm reaplying the grass materials on the first usage because they get darker after modified (Tool bug)
-	-- Fix it in the future!
-	map.displacements.hack = true
-end
 
 local MapMaterials = {}
 MapMaterials.__index = MapMaterials
@@ -39,24 +10,85 @@ MapMaterials.Displacements = {}
 MapMaterials.Displacements.__index = MapMaterials.Displacements
 MR.MapMaterials.Displacements = MapMaterials.Displacements
 
+-- Note: I consider displacements a type of map material because most of the code it needs ends being almost
+-- the same. So the exclusive displacements functions are a effort to have a better/necessary control over them
+-- and to keep the "pure material functions" as clean as possible.
+
+local map = {
+	-- The name of our backup map material files. They are file1, file2, file3...
+	filename = "mr/file",
+	-- 1512 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
+	limit = 1512,
+	-- Table of "Data" structures = all the material modifications and backups
+	list = {},
+	-- displacement materials
+	displacements = {
+		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
+		-- Note: this is the same type of list as map.list, but it's separated because these files never get "clean" for reuse
+		filename = "mr/disp_file",
+		-- 24 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
+		limit = 24,
+		-- List of detected displacements on the map
+		-- ["displacement material"] = { [1] = "$basetexture material", [2] = "$basetexture2 material" }
+		detected = {},
+		-- Table of "Data" structures = all the material modifications and backups
+		list = {}
+	}
+}
+
+if CLIENT then
+	-- I reapply the grass materials before the first usage because they get darker after modified (Tool bug)
+	-- !!! Fix and remove it in the future !!!
+	map.displacements.hack = true
+end
+
+-- Networking
+if SERVER then
+	util.AddNetworkString("MapMaterials:Set")
+	util.AddNetworkString("MapMaterials:SetAll")
+	util.AddNetworkString("MapMaterials:Remove")
+	util.AddNetworkString("MapMaterials:RemoveAll")
+	util.AddNetworkString("MapMaterials.Displacements:Set_SV")
+	util.AddNetworkString("MapMaterials.Displacements:RemoveAll")
+
+	net.Receive("MapMaterials:SetAll", function(_,ply)
+		MR.Materials:SetAll(ply)
+	end)
+
+	net.Receive("MapMaterials:RemoveAll", function(_,ply)
+		MapMaterials:RemoveAll(ply)
+	end)
+
+	net.Receive("MapMaterials.Displacements:Set_SV", function(_, ply)
+		MapMaterials.Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString())
+	end)
+
+	net.Receive("MapMaterials.Displacements:RemoveAll", function(_, ply)
+		MapMaterials.Displacements:RemoveAll(ply)
+	end)
+elseif CLIENT then
+	net.Receive("MapMaterials:Set", function()
+		MapMaterials:Set(LocalPlayer(), net.ReadTable(), net.ReadBool())
+	end)
+
+	net.Receive("MapMaterials:Remove", function()
+		MapMaterials:Remove(net.ReadString())
+	end)
+end
+
+-- Get map modifications
 function MapMaterials:GetList()
 	return map.list
 end
 
+-- Get material limit
 function MapMaterials:GetLimit()
 	return map.limit
 end
 
+-- Get backup filenames
 function MapMaterials:GetFilename()
 	return map.filename
-end
-
-function MapMaterials:CheckCLOList(material)
-	return map.clientOnlyList[material]
-end
-
-function MapMaterials:SetCLOList(material)
-	map.clientOnlyList[material] = ""
 end
 
 -- Get the original material full path
@@ -87,18 +119,25 @@ function MapMaterials:GetCurrent(tr)
 	return nil
 end
 
--- Set map material:::
-function MapMaterials:Set(ply, data)
+-- Set map material
+function MapMaterials:Set(ply, data, isBroadcasted)
 	-- Handle displacements
 	local isDisplacement = MR.Materials:IsDisplacement(data.oldMaterial)
 
-	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
+	-- General first steps
+	if not isDisplacement or isBroadcasted then
+		if not MR.Materials:SetFirstSteps(ply, isBroadcasted, data.newMaterial, data.newMaterial2) then
+			return
+		end
+	end
+
+	-- run once serverside and once on every player clientside
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		local materialTable = isDisplacement and map.displacements.list or map.list
 		local element = MR.MML:GetElement(materialTable, data.oldMaterial)
 		local i
 
-		-- Set the backup
+		-- Set the backup:
 		-- If we are modifying an already modified material
 		if element then
 			-- Create an entry in the material Data poiting to the backup data
@@ -106,7 +145,7 @@ function MapMaterials:Set(ply, data)
 
 			-- Cleanup
 			MR.MML:DisableElement(element)
-			MapMaterials:SetAux(data.backup)
+			MapMaterials:Set_CL(data.backup)
 
 			-- Get a map.list free index
 			i = MR.MML:GetFreeIndex(materialTable)
@@ -126,7 +165,7 @@ function MapMaterials:Set(ply, data)
 				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
 			end
 
-			-- Create an entry in the material Data poting to the new backup Data (data.backup will shows itself already done only if we are running the duplicator)
+			-- Keep with a duplicator data.backup or point to a one
 			if not data.backup then
 				data.backup = dataBackup
 			end
@@ -136,14 +175,14 @@ function MapMaterials:Set(ply, data)
 		MR.MML:InsertElement(materialTable, data, i)
 
 		-- Apply the new state to the map material
-		MapMaterials:SetAux(data)
+		MapMaterials:Set_CL(data)
 
-		-- Set the duplicator
 		if SERVER then
+			-- Set the duplicator
 			if not isDisplacement then
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Maps", { map = map.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps", { map = map.list })
 			else
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Displacements", { displacements = map.displacements.list })
+				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements", { displacements = map.displacements.list })
 			end
 		end
 	end
@@ -156,43 +195,27 @@ function MapMaterials:Set(ply, data)
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 			net.WriteBool(true)
 			net.Broadcast()
-		-- a single player
+		-- the player
 		else
 			net.WriteBool(false)
 			net.Send(ply)
 		end
+
+		-- General final steps
+		MR.Materials:SetFinalSteps()
 	end
-	
+
 	return true
 end
-if SERVER then
-	util.AddNetworkString("MapMaterials:Set")
-elseif CLIENT then
-	net.Receive("MapMaterials:Set", function()
-		local ply = LocalPlayer()
-		local theTable = net.ReadTable()
-		local isBroadcasted = net.ReadBool()
 
-		-- Player's first spawn
-		if MR.Ply:GetFirstSpawn(ply) then
-			-- Block the changes if a loading is running. The player will start it from the beggining
-			if isBroadcasted then
-				return
-			end
-		end
-
-		MapMaterials:Set(ply, theTable)
-	end)
-end
-
--- Copy "all" the data from a material to another (auxiliar to MapMaterials:Set())
-function MapMaterials:SetAux(data)
+-- Set map material: client
+function MapMaterials:Set_CL(data)
 	if SERVER then return; end
 
 	-- Get the material to be modified
 	local oldMaterial = Material(data.oldMaterial)
 
-	-- Base texture
+	-- Change $basetexture
 	if data.newMaterial then
 		local newMaterial = nil
 
@@ -209,7 +232,7 @@ function MapMaterials:SetAux(data)
 		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	end
 
-	-- Base texture 2 (if it's a displacement)
+	-- Displacements: change $basetexture2
 	if data.newMaterial2 then
 		local keyValue = "$basetexture"
 		local newMaterial2 = nil
@@ -236,11 +259,11 @@ function MapMaterials:SetAux(data)
 		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture(keyValue))
 	end
 
-	-- Apply the alpha channel
+	-- Change the alpha channel
 	oldMaterial:SetString("$translucent", "1")
 	oldMaterial:SetString("$alpha", data.alpha)
 
-	-- Apply the matrix
+	-- Change the matrix
 	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
 
 	textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
@@ -248,7 +271,7 @@ function MapMaterials:SetAux(data)
 	textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
 	oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
 
-	-- Apply the detail
+	-- Change the detail
 	if data.detail ~= "None" then
 		oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
 		oldMaterial:SetString("$detailblendfactor", "1")
@@ -279,143 +302,42 @@ function MapMaterials:SetAux(data)
 ]]
 end
 
-function MapMaterials:SetAll(ply)
-	if CLIENT then return; end
-
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return false
-	end
-
-	-- Create the duplicator entity used to restore map materials, decals and skybox
-	MR.Duplicator:CreateEnt()
-
-	-- Check upper limit
-	if MR.MML:IsFull(map.list, map.limit) then
-		return false
-	end
-
-	-- Get the material
-	local material = ply:GetInfo("mr_material")
-
-	-- Adjustments for skybox materials
-	if MR.Skybox:IsValidFullSky(material) then
-		material = MR.Skybox:FixValidFullSkyName(material)
-	-- Don't apply bad materials
-	elseif not MR.Materials:IsValid(material) then
-		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
-
-		return false
-	end
-
-	-- Register that the map is modified
-	if not MR.Base:GetInitialized() then
-		MR.Base:SetInitialized()
-	end
-
-	-- Clean the map
-	MR.Materials:RestoreAll(ply, true)
-
-	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait to the last command to be done			
-		-- Create a fake loading table
-		local newTable = {
-			map = {},
-			displacements = {},
-			skybox = {},
-			savingFormat = "2.0"
-		}
-
-		-- Fill the fake loading table with the correct structures (ignoring water materials)
-		newTable.skybox = material
-
-		local map_data = MR_OpenBSP()
-		local found = map_data:ReadLumpTextDataStringData()
-		
-		for k,v in pairs(found) do
-			if not v:find("water") then
-				local isDiscplacement = false
-			
-				if Material(v):GetString("$surfaceprop2") then
-					isDiscplacement = true
-				end
-
-				local data = MR.Data:Create(ply)
-				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
-
-				if isDiscplacement then
-					data.oldMaterial = v
-					data.newMaterial = material
-					data.newMaterial2 = material
-
-					table.insert(newTable.displacements, data)
-				else
-					data.oldMaterial = v
-					data.newMaterial = material
-
-					table.insert(newTable.map, data)
-				end
-			end
-		end
-
-		--[[
-		-- Fill the fake loading table with the correct structure (ignoring water materials)
-		-- Note: this is my old GMod buggy implementation. In the future I can use it if this is closed:
-		-- https://github.com/Facepunch/garrysmod-issues/issues/3216
-		for k, v in pairs (game.GetWorld():GetMaterials()) do 
-			local data = MR.Data:Create(ply)
-			
-			-- Ignore water
-			if not string.find(v, "water") then
-				data.oldMaterial = v
-				data.newMaterial = material
-
-				table.insert(map, data)
-			end
-		end
-		]]
-
-		-- Apply the fake load
-		MR.Duplicator:Start(ply, nil, newTable, "changeAll")
-	end)
-end
-if SERVER then
-	util.AddNetworkString("MapMaterials:SetAll")
-
-	net.Receive("MapMaterials:SetAll", function(_,ply)
-		MapMaterials:SetAll(ply)
-	end)
-end
-
--- Remove a modified model material
+-- Clean map and displacements materials
 function MapMaterials:Remove(oldMaterial)
 	if not oldMaterial then
 		return false
 	end
 
+	-- Get a material table for displacements or map
 	local materialTable = MR.Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
 
 	if MR.MML:Count(materialTable) > 0 then
+		-- Get the element to clean from the table
 		local element = MR.MML:GetElement(materialTable, oldMaterial)
 
 		if element then
+			-- Run the element backup
 			if CLIENT then
-				MapMaterials:SetAux(element.backup)
+				MapMaterials:Set_CL(element.backup)
 			end
 
+			-- Change the state of the element to disabled
 			MR.MML:DisableElement(element)
 
+			-- Update the duplicator
 			if SERVER then
 				if IsValid(MR.Duplicator:GetEnt()) then
 					if MR.MML:Count(map.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Maps")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
 					end
 
 					if MR.MML:Count(map.displacements.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Displacements")
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
 					end
 				end
 			end
 
+			-- Run the remotion on every client
 			if SERVER then
 				net.Start("MapMaterials:Remove")
 					net.WriteString(oldMaterial)
@@ -428,13 +350,6 @@ function MapMaterials:Remove(oldMaterial)
 
 	return false
 end
-if SERVER then
-	util.AddNetworkString("MapMaterials:Remove")
-elseif CLIENT then
-	net.Receive("MapMaterials:Remove", function()
-		MapMaterials:Remove(net.ReadString())
-	end)
-end
 
 -- Remove all modified map materials
 function MapMaterials:RemoveAll(ply)
@@ -446,7 +361,7 @@ function MapMaterials:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop()
+	MR.Duplicator:ForceStop_SV()
 
 	-- Remove
 	if MR.MML:Count(map.list) > 0 then
@@ -457,18 +372,12 @@ function MapMaterials:RemoveAll(ply)
 		end
 	end
 end
-if SERVER then
-	util.AddNetworkString("MapMaterials:RemoveAll")
-
-	net.Receive("MapMaterials:RemoveAll", function(_,ply)
-		MapMaterials:RemoveAll(ply)
-	end)
-end
 
 --------------------------------
---- MATERIALS (MAPS/DISPLACEMENTS)
+--- MATERIALS (DISPLACEMENTS ONLY)
 --------------------------------
 
+-- Generate map displacements list
 function MapMaterials.Displacements:Init()
 	local map_data = MR_OpenBSP()
 	local found = map_data:ReadLumpTextDataStringData()
@@ -485,54 +394,22 @@ function MapMaterials.Displacements:Init()
 	end
 end
 
+-- Get map displacements list
 function MapMaterials.Displacements:GetDetected()
 	return map.displacements.detected
 end
 
+-- Get displacement modifications
 function MapMaterials.Displacements:GetList()
 	return map.displacements.list
 end
 
--- Change the displacements
-function MapMaterials.Displacements:Start(displacement, newMaterial, newMaterial2)
-	if SERVER then return; end
-
-	local delay = 0
-
-	-- Don't use the tool in the middle of a loading
-	if MR.Duplicator:IsRunning(LocalPlayer()) then
-		return false
-	end
-
-	-- Dirty hack: I reapply the displacement materials because they get darker when modified by the tool
-	if map.displacements.hack then
-		for k,v in pairs(map.displacements.detected) do
-			net.Start("MRDisplacements")
-				net.WriteString(k)
-				net.WriteString("dev/graygrid")
-				net.WriteString("dev/graygrid")
-			net.SendToServer()
-
-			timer.Create("MRDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
-				MapMaterials:Remove(k)
-			end)
-		end
-
-		delay = 0.3
-		map.displacements.hack = false
-	end
-
-	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay, 1, function()
-		net.Start("MRDisplacements")
-			net.WriteString(displacement)
-			net.WriteString(newMaterial and newMaterial or "")
-			net.WriteString(newMaterial2 and newMaterial2 or "")
-		net.SendToServer()
-	end)
-end
-
-
-function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMaterial2)
+-- Change the displacements: server
+--
+-- displacement = displacement detected name
+-- newMaterial = new material for $basetexture
+-- newMaterial2 = new material for $basetexture2
+function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2)
 	if CLIENT then return; end
 
 	-- Check if there is a displacement selected
@@ -540,42 +417,46 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 		return
 	end
 
-	-- Check upper limit
-	if MR.MML:IsFull(map.list, map.displacements.limit) then
-		return false
+	-- To identify and apply a displacement default material we default it to "nil" here
+	if newMaterial == "" then
+		newMaterial = nil
 	end
 
-	-- Correct the material values
-	for k,v in pairs(map.displacements.detected) do -- Don't apply default  materials directly
-		if k == displacement then
-			if v[1] == newMaterial then
-				newMaterial = nil
-			end
-			if v[2] == newMaterial2 then
-				newMaterial2 = nil
+	if newMaterial2 == "" then
+		newMaterial2 = nil
+	end
+
+	if newMaterial or newMaterial2 then
+		for k,v in pairs(map.displacements.detected) do 
+			if k == displacement then
+				if newMaterial and v[1] == newMaterial then
+					newMaterial = nil
+				end
+
+				if newMaterial2 and v[2] == newMaterial2 then
+					newMaterial2 = nil
+				end
+
+				break
 			end
 		end
 	end
 
-	-- Check if the materials are valid
-	if newMaterial and newMaterial ~= "" and not MR.Materials:IsValid(newMaterial) or 
-		newMaterial2 and newMaterial2 ~= "" and not MR.Materials:IsValid(newMaterial2) then
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(ply, false, newMaterial, newMaterial2) then
 		return
 	end
 
-	-- Create the duplicator entity if it's necessary
-	MR.Duplicator:CreateEnt()
+	-- Check if the backup table is full
+	if MR.MML:IsFull(map.displacements.list, map.displacements.limit) then
+		return false
+	end
 
 	-- Create the data table
 	local data = MR.Data:CreateFromMaterial({ name = displacement, filename = map.filename }, MR.Materials:GetDetailList(), nil, { filename = map.displacements.filename })
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2
-
-	-- Register that the map is modified
-	if not MR.Base:GetInitialized() then
-		MR.Base:SetInitialized()
-	end
 
 	-- Apply the changes
 	MapMaterials:Set(ply, data)
@@ -591,15 +472,76 @@ function MapMaterials.Displacements:Set(ply, displacement, newMaterial, newMater
 		undo.SetCustomUndoText("Undone Material")
 	undo.Finish()
 end
-if SERVER then
-	util.AddNetworkString("MRDisplacements")
 
-	net.Receive("MRDisplacements", function(_, ply)
-		MapMaterials.Displacements:Set(ply, net.ReadString(), net.ReadString(), net.ReadString())
+-- Change the displacements: client
+--
+-- displacement = displacement detected name
+-- newMaterial = new material for $basetexture
+-- newMaterial2 = new material for $basetexture2
+function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMaterial2)
+	if SERVER then return; end
+
+	local displacement, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
+	local newMaterial = MR.GUI:GetDisplacementsText1():GetValue()
+	local newMaterial2 = MR.GUI:GetDisplacementsText2():GetValue()
+	local delay = 0
+
+	-- No displacement selected
+	if not MR.MapMaterials.Displacements:GetDetected() or not displacement or displacement == "" then
+		return false
+	end
+
+	-- Validate empty fields
+	if newMaterial == "" then
+		newMaterial = MR.MapMaterials.Displacements:GetDetected()[displacement][1]
+
+		timer.Create("MRText1Update", 0.5, 1, function()
+			MR.GUI:GetDisplacementsText1():SetValue(MR.MapMaterials.Displacements:GetDetected()[displacement][1])
+		end)
+	end
+
+	if newMaterial2 == "" then
+		newMaterial2 = MR.MapMaterials.Displacements:GetDetected()[displacement][2]
+
+		timer.Create("MRText2Update", 0.5, 1, function()
+			MR.GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[displacement][2])
+		end)
+	end
+
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), false, newMaterial, newMaterial2) then
+		return false
+	end
+
+	-- Dirty hack: I reapply all the displacement materials because they get darker when modified by the tool
+	if map.displacements.hack then
+		for k,v in pairs(map.displacements.detected) do
+			net.Start("MapMaterials.Displacements:Set_SV")
+				net.WriteString(k)
+				net.WriteString("dev/graygrid")
+				net.WriteString("dev/graygrid")
+			net.SendToServer()
+
+			timer.Create("MRDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
+				MapMaterials:Remove(k)
+			end)
+		end
+
+		delay = 0.3
+		map.displacements.hack = false
+	end
+
+	-- Start the change
+	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay, 1, function() -- Wait for the initialization hack above
+		net.Start("MapMaterials.Displacements:Set_SV")
+			net.WriteString(displacement)
+			net.WriteString(newMaterial or "")
+			net.WriteString(newMaterial2 or "")
+		net.SendToServer()
 	end)
 end
 
--- Remove displacements
+-- Remove all displacements materials
 function MapMaterials.Displacements:RemoveAll(ply)
 	if CLIENT then return; end
 
@@ -609,7 +551,7 @@ function MapMaterials.Displacements:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop()
+	MR.Duplicator:ForceStop_SV()
 
 	-- Remove
 	if MR.MML:Count(map.displacements.list) > 0 then
@@ -619,11 +561,4 @@ function MapMaterials.Displacements:RemoveAll(ply)
 			end
 		end
 	end
-end
-if SERVER then
-	util.AddNetworkString("MapMaterials.Displacements:RemoveAll")
-
-	net.Receive("MapMaterials.Displacements:RemoveAll", function(_, ply)
-		MapMaterials.Displacements:RemoveAll(ply)
-	end)
 end

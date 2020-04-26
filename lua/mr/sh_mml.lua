@@ -17,9 +17,9 @@ end
 
 -- Check if the table is full
 function MML:IsFull(list, limit)
-	-- Check upper limit
+	-- Check if the backup table is full
 	if MML:Count(list) == limit then
-		-- Limit reached! Try to open new spaces in the map.list table checking if the player removed something and cleaning the entry for real
+		-- Limit reached! Try to open new spaces in the list removing disabled entries
 		MML:Clean(list)
 
 		-- Check again
@@ -66,7 +66,7 @@ function MML:GetElement(list, oldMaterial)
 	return nil
 end
 
--- Table count
+-- Number of active elements in the table 
 function MML:Count(list)
 	local i = 0
 

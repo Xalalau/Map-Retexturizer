@@ -2,63 +2,55 @@
 --- PREVIEW
 --------------------------------
 
+local Preview = {}
+Preview.__index = Preview
+MR.Preview = Preview
+
 local preview
 
 if CLIENT then
 	preview = {
-		-- I have to use this extra entry to store the real newMaterial that the preview material is using
+		-- Store the newMaterial that the preview is using
 		newMaterial = "",
 		-- For some reason the materials don't set their angles perfectly, so I have troubles comparing the values. This is a workaround
 		rotationHack = -1
 	}
 end
 
-local Preview = {}
-Preview.__index = Preview
-MR.Preview = Preview
+-- Decal rendering hook
+if CLIENT then
+	hook.Add("PostDrawOpaqueRenderables", "MRPreview", function()
+		local ply = LocalPlayer()
+	
+		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
+			if MR.Ply:GetPreviewMode(LocalPlayer()) and MR.Ply:GetDecalMode(ply) then
+				Preview:Render(ply)
+			end
+		end
+	end)
+end
 
+-- Create the material file
 function Preview:Init()
 	if SERVER then return; end
 
-	CreateMaterial("MatRetPreviewMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+	MR.Materials:Create("MatRetPreviewMaterial", "UnlitGeneric", "")
 end
 
 -- Toogle the preview mode for a player
-function Preview:Toogle(ply, state, setOnClient, setOnServer)
-	if CLIENT then
-		if setOnClient then
-			MR.Ply:SetPreviewMode(ply, state)
-		end
+function Preview:Toogle(ply, state)
+	if SERVER then return; end
 
-		if setOnServer then
-			net.Start("MRTooglePreview")
-				net.WriteBool(state)
-			net.SendToServer()
-		end
-	else
-		if setOnServer then
-			MR.Ply:SetPreviewMode(ply, state)
-		end
+	MR.Ply:SetPreviewMode(ply, state)
 
-		if setOnClient then
-			net.Start("MRTooglePreview")
-				net.WriteBool(state)
-			net.Send(ply)
-		end
-	end
+	net.Start("Ply:SetPreviewMode")
+		net.WriteBool(state)
+	net.SendToServer()
 end
-if SERVER then
-	util.AddNetworkString("MRTooglePreview")
-end
-net.Receive("MRTooglePreview", function(_, ply)
-	if CLIENT then ply = LocalPlayer(); end
-
-	MR.Ply:SetPreviewMode(ply, net.ReadBool())
-end)
 
 -- Material rendering
 if CLIENT then
-	function Preview:Render(ply, mapMatMode)
+	function Preview:Render(ply)
 		-- Don't render if there is a loading or the material browser is open
 		if MR.Duplicator:IsRunning(ply) or MR.Ply:GetInMatBrowser(ply) then
 			return
@@ -67,7 +59,7 @@ if CLIENT then
 		-- Start...
 		local tr = ply:GetEyeTrace()
 		local oldData = MR.Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
-		local newData = mapMatMode and MR.Data:Create(ply, tr) or MR.Data:CreateDefaults(ply, tr)
+		local newData = MR.Ply:GetDecalMode(ply) and MR.Data:CreateDefaults(ply, tr) or MR.Data:Create(ply, tr)
 
 		-- Adjustments for skybox materials
 		if MR.Skybox:IsValidFullSky(newData.newMaterial) then
@@ -78,7 +70,7 @@ if CLIENT then
 		end
 
 		-- Don't render decal materials over the skybox
-		if not mapMatMode and MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
+		if MR.Ply:GetDecalMode(ply) and MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 			return
 		end
 
@@ -91,18 +83,18 @@ if CLIENT then
 
 		-- Update the material if necessary
 		if not MR.Data:IsEqual(oldData, newData) then
-			MR.MapMaterials:SetAux(newData)
+			MR.MapMaterials:Set_CL(newData)
 			preview.rotationHack = newData.rotation
 			preview.newMaterial = newData.newMaterial
 		end
-				
+
 		-- Get the properties
 		local preview = Material("MatRetPreviewMaterial")
 		local width = preview:Width()
 		local height = preview:Height()
 
-		-- Map material
-		if mapMatMode then
+		-- Map material rendering:
+		if not MR.Ply:GetDecalMode(ply) then
 			-- Resize material to a max size keeping the proportions
 			local maxSize = 200 * ScrH() / 768 -- Current screen height / 720p screen height = good resizing up to 4k
 
@@ -124,11 +116,10 @@ if CLIENT then
 			texture["width"] = texture["width"] * proportion
 			texture["height"] = texture["height"] * proportion
 
-			-- Render map material
 			surface.SetDrawColor(255, 255, 255, 255)
 			surface.SetMaterial(preview)
 			surface.DrawTexturedRect( 20, 230, texture["width"], texture["height"])
-		-- Decal
+		-- Decal renderind:
 		else
 			local ang = tr.HitNormal:Angle()
 
@@ -155,21 +146,4 @@ if CLIENT then
 			cam.End3D2D()
 		end
 	end
-
-	-- Start decals preview
-	function Preview:Render_Decals(ply)
-		--self.Mode and self.Mode == "mr"
-
-		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			local tool = ply:GetTool()
-
-			if tool and tool.Mode and tool.Mode == "mr" and MR.Ply:GetPreviewMode(ply) and MR.Ply:GetDecalMode(ply) then
-				Preview:Render(ply, false)
-			end
-		end
-	end
-	hook.Add("PostDrawOpaqueRenderables", "MRPreview", function()
-		Preview:Render_Decals(LocalPlayer())
-	end)
-
 end

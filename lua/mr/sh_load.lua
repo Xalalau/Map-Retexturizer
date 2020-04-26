@@ -2,14 +2,63 @@
 --- LOAD
 -------------------------------------
 
+local Load = {}
+Load.__index = Load
+MR.Load = Load
+
 -- List of save names
 local load = {
 	list = {}
 }
 
-local Load = {}
-Load.__index = Load
-MR.Load = Load
+-- Networking
+if SERVER then
+	util.AddNetworkString("Load:Start")
+	util.AddNetworkString("Load:SetList")
+	util.AddNetworkString("Load:Delete_SV")
+	util.AddNetworkString("Load:Delete_CL2")
+	util.AddNetworkString("Load:SetAuto")
+
+	net.Receive("Load:SetAuto", function(_, ply)
+		Load:SetAuto(ply, net.ReadString())
+	end)
+
+	net.Receive("Load:Start", function(_, ply)
+		Load:Start(MR.Ply:GetFakeHostPly(), net.ReadString())
+	end)
+
+	net.Receive("Load:Delete_SV", function(_, ply)
+		Load:Delete_SV(ply, net.ReadString())
+	end)
+elseif CLIENT then
+	net.Receive("Load:SetList", function()
+		 Load:SetList(net.ReadTable())
+	end)
+
+	net.Receive("Load:Delete_CL2", function()
+		Load:Delete_CL2(net.ReadString())
+	end)
+end
+
+-- First spawn hook
+if SERVER then	-- Wait until the player fully loads (https://github.com/Facepunch/garrysmod-requests/issues/718)
+	hook.Add("PlayerInitialSpawn", "MRPlyfirstSpawn", function(ply)
+		-- Load tool modifications BEFORE the player is fully ready
+		Load:PlayerJoined(ply)
+
+		-- Load tool modifications AFTER the player is fully ready
+		hook.Add("SetupMove", ply, function(self, ply, _, cmd)
+			if self == ply and not cmd:IsForced() then
+				-- Wait just a bit more for players with weaker hardware
+				timer.Create("MRFirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
+					Load:FirstSpawn(ply);
+				end)
+
+				hook.Remove("SetupMove",self)
+			end
+		end)
+	end)
+end
 
 function Load:Init()
 	if CLIENT then return; end
@@ -32,26 +81,43 @@ function Load:Init()
 	end
 end
 
-function Load:Set(saveName, saveFile)
+-- Get the laod list
+function Load:GetList()
+	return load.list
+end
+
+-- Receive the full load list after the first spawn
+function Load:SetList(list)
+	load.list = list
+end
+
+-- Set a new load on the list
+function Load:SetOption(saveName, saveFile)
 	load.list[saveName] = saveFile
+end
+
+-- Print the load list in the console
+function Load:PrintList()
+	if CLIENT then return; end
+
+	print("----------------------------")
+	print("[Map Retexturizer] Saves:")
+	print("----------------------------")
+	for k,v in pairs(load.list) do
+		print(k)
+	end
+	print("----------------------------")
 end
 
 -- Load modifications
 function Load:Start(ply, loadName)
 	if CLIENT then return; end
 
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return false
-	end
+	-- General first steps
+	MR.Materials:SetFirstSteps(ply)
 
 	-- Check if there is a load name
 	if not loadName or loadName == "" then
-		return false
-	end
-
-	-- Don't start a loading if we are stopping one
-	if MR.Duplicator:IsStopping() then
 		return false
 	end
 
@@ -66,12 +132,6 @@ function Load:Start(ply, loadName)
 	-- Get the its contents
 	loadTable = util.JSONToTable(file.Read(loadFile, "Data"))
 
-	-- Extra: remove all the disabled elements (Compatibility with the saving format 1.0)
-	if not loadTable.savingFormat then
-		MR.MML:Clean(loadTable.decals)
-		MR.MML:Clean(loadTable.map)
-	end
-
 	-- Start the loading
 	if loadTable then
 		MR.Duplicator:Start(ply, nil, loadTable, loadName)
@@ -81,26 +141,20 @@ function Load:Start(ply, loadName)
 
 	return false
 end
-if SERVER then
-	util.AddNetworkString("MRLoad")
 
-	net.Receive("MRLoad", function(_, ply)
-		Load:Start(MR.Ply:GetFakeHostPly(), net.ReadString())
-	end)
-end
-
-function Load:GetList()
-	return load.list
-end
-
--- Load the server modifications on the first spawn (start)
-function Load:FirstSpawn(ply)
+-- Load tool modifications BEFORE the player is fully ready
+function Load:PlayerJoined(ply)
 	if CLIENT then return; end
 
-	-- Fill up the player load list
-	net.Start("MRLoadFillList")
+	-- Set the player load list
+	net.Start("Load:SetList")
 		net.WriteTable(load.list)
 	net.Send(ply)
+end
+
+-- Load tool modifications AFTER the player is fully ready
+function Load:FirstSpawn(ply)
+	if CLIENT then return; end
 
 	-- Index the player control
 	MR.Ply:Set(ply)
@@ -113,74 +167,22 @@ function Load:FirstSpawn(ply)
 		MR.Duplicator:Start(ply)
 	-- Run an autoload
 	elseif GetConVar("mr_autoload"):GetString() ~= "" then
+		-- Set the spawn as done since The fakeHostPly will take care of this load
 		MR.Ply:SetFirstSpawn(ply)
-		net.Start("MRPlyfirstSpawnEnd")
+		net.Start("Ply:SetFirstSpawn")
 		net.Send(ply)
 
 		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("mr_autoload"):GetString())
 	-- Nothing to send, finish the joining process
 	else
 		MR.Ply:SetFirstSpawn(ply)
-		net.Start("MRPlyfirstSpawnEnd")
+		net.Start("Ply:SetFirstSpawn")
 		net.Send(ply)
 	end
 end
-if SERVER then
-	util.AddNetworkString("MRPlyfirstSpawnEnd")
 
-	-- Wait until the player fully loads (https://github.com/Facepunch/garrysmod-requests/issues/718)
-	hook.Add("PlayerInitialSpawn", "MRPlyfirstSpawn", function(ply)
-		hook.Add("SetupMove", ply, function(self, ply, _, cmd)
-			if self == ply and not cmd:IsForced() then
-				-- Wait just a bit more for players with weaker hardware
-				timer.Create("MRfirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
-					Load:FirstSpawn(ply);
-				end)
-
-				hook.Remove("SetupMove",self)
-			end
-		end)
-	end)
-elseif CLIENT then
-	net.Receive("MRPlyfirstSpawnEnd", function()
-		MR.Ply:SetFirstSpawn(LocalPlayer())
-	end)
-end
-
--- Fill the clients load combobox with saves
-function Load:FillList(mr)
-	if SERVER then return; end
-
-	MR.GUI:GetLoadText():AddChoice("")
-
-	for k,v in pairs(load.list) do
-		MR.GUI:GetLoadText():AddChoice(k)
-	end
-end
-if SERVER then
-	util.AddNetworkString("MRLoadFillList")
-end
-if CLIENT then
-	net.Receive("MRLoadFillList", function()
-		load.list = net.ReadTable()
-	end)
-end
-
--- Prints the load list in the console
-function Load:ShowList()
-	if CLIENT then return; end
-
-	print("----------------------------")
-	print("[Map Retexturizer] Saves:")
-	print("----------------------------")
-	for k,v in pairs(load.list) do
-		print(k)
-	end
-	print("----------------------------")
-end
-
--- Delete a saved file and reload the menu
-function Load:Delete_Start(ply)
+-- Delete a saved file: client
+function Load:Delete_CL(ply)
 	if SERVER then return; end
 
 	-- Get the load name and check if it's no empty
@@ -216,7 +218,7 @@ function Load:Delete_Start(ply)
 		buttonYes.DoClick = function()
 			-- Remove the load on every client
 			qPanel:Close()
-			net.Start("MRLoadDeleteSV")
+			net.Start("Load:Delete_SV")
 				net.WriteString(loadName)
 			net.SendToServer()
 		end
@@ -229,7 +231,9 @@ function Load:Delete_Start(ply)
 			qPanel:Close()
 		end
 end
-function Load:Delete_Set(ply, loadName)
+
+-- Delete a saved file: server
+function Load:Delete_SV(ply, loadName)
 	if CLIENT then return; end
 
 	-- Admin only
@@ -249,42 +253,32 @@ function Load:Delete_Set(ply, loadName)
 
 	-- Unset autoload if needed
 	if GetConVar("mr_autoload"):GetString() == loadName then
-		Load:Auto_Set(ply, "")
+		Load:SetAuto(ply, "")
 	end
 
 	-- Delete the file
 	file.Delete(loadFile)
 
 	-- Updates the load list on every client
-	net.Start("MRLoadDeleteCL")
+	net.Start("Load:Delete_CL2")
 		net.WriteString(loadName)
 	net.Broadcast()
 	
 	return true
 end
-if SERVER then
-	util.AddNetworkString("MRLoadDeleteSV")
-	util.AddNetworkString("MRLoadDeleteCL")
 
-	net.Receive("MRLoadDeleteSV", function(_, ply)
-		Load:Delete_Set(ply, net.ReadString())
-	end)
-end
-if CLIENT then
-	net.Receive("MRLoadDeleteCL", function()
-		local loadName = net.ReadString()
+-- Delete a saved file: client part 2
+function Load:Delete_CL2(loadName)
+	load.list[loadName] = nil
+	MR.GUI:GetLoadText():Clear()
 
-		load.list[loadName] = nil
-		MR.GUI:GetLoadText():Clear()
-
-		for k,v in pairs(load.list) do
-			MR.GUI:GetLoadText():AddChoice(k)
-		end
-	end)
+	for k,v in pairs(load.list) do
+		MR.GUI:GetLoadText():AddChoice(k)
+	end
 end
 
--- Set autoloading for the map
-function Load:Auto_Set(ply, loadName)
+-- Set an auto load for the map
+function Load:SetAuto(ply, loadName)
 	if CLIENT then return; end
 
 	-- Admin only
@@ -298,18 +292,11 @@ function Load:Auto_Set(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	MR.CVars:Replicate(ply, "mr_autoload", loadName, "load", "autoloadtext")
+	MR.CVars:Replicate_SV(ply, "mr_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MRWaitToSave", 0.3, 1, function()
 		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("mr_autoload"):GetString())
 	end)
 
 	return true
-end
-if SERVER then
-	util.AddNetworkString("MRAutoLoadSet")
-
-	net.Receive("MRAutoLoadSet", function(_, ply)
-		Load:Auto_Set(ply, net.ReadString())
-	end)
 end

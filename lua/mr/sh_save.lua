@@ -2,14 +2,33 @@
 --- SAVE
 --------------------------------
 
+local Save = {}
+Save.__index = Save
+MR.Save = Save
+
 -- A table to join all the information about the modified materials to be saved
 local save = {
 	list = {}
 }
 
-local Save = {}
-Save.__index = Save
-MR.Save = Save
+-- Networking
+if SERVER then
+	util.AddNetworkString("Save:Set_SV")
+	util.AddNetworkString("Save:Set_CL2")
+	util.AddNetworkString("Save:SetAuto")
+
+	net.Receive("Save:SetAuto", function(_, ply)
+		Save:SetAuto(ply, net.ReadBool(value))
+	end)
+
+	net.Receive("Save:Set_SV", function(_, ply)
+		Save:Set_SV(ply, net.ReadString())
+	end)
+elseif CLIENT then
+	net.Receive("Save:Set_CL2", function()
+		Save:Set_CL2(net.ReadString())
+	end)
+end
 
 function Save:Init()
 	if SERVER then return; end
@@ -18,32 +37,43 @@ function Save:Init()
 	RunConsoleCommand("mr_savename", MR.Base:GetSaveDefaultName())
 end
 
--- Save the modifications to a file and reload the menu
-function Save:Start(ply, forceName)
+-- Save the modifications to a file: client
+function Save:Set_CL(ply)
 	if SERVER then return; end
 
 	-- Don't use the tool in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) then
+	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
 		return false
 	end
 
+	-- Send the save name to the sever
 	local saveName = GetConVar("mr_savename"):GetString()
 
 	if saveName == "" then
 		return
 	end
 
-	net.Start("MRSave")
+	net.Start("Save:Set_SV")
 		net.WriteString(saveName)
 	net.SendToServer()
 end
-function Save:Set(saveName, saveFile)
+
+-- Save the modifications to a file: server
+function Save:Set_SV(ply, saveName)
 	if CLIENT then return; end
 
-	-- Don't save in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) then
+	-- Admin only
+	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
 	end
+
+	-- Don't save in the middle of a loading
+	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
+		return false
+	end
+
+	-- Get the save full path
+	local saveFile = saveName and MR.Base:GetMapFolder()..saveName..".txt" or MR.Base:GetAutoSaveFile()
 
 	-- Create a save table
 	save.list[saveName] = {
@@ -65,51 +95,26 @@ function Save:Set(saveName, saveFile)
 	-- Server alert
 	print("[Map Retexturizer] Saved the current materials as \""..saveName.."\".")
 
-	-- Associte a name with the saved file
-	MR.Load:Set(saveName, saveFile)
+	-- Associate a name with the saved file
+	MR.Load:SetOption(saveName, saveFile)
 
 	-- Update the load list on every client
-	net.Start("MRSaveAddToLoadList")
+	net.Start("Save:Set_CL2")
 		net.WriteString(saveName)
 	net.Broadcast()
 end
-if SERVER then
-	util.AddNetworkString("MRSave")
-	util.AddNetworkString("MRSaveAddToLoadList")
 
-	net.Receive("MRSave", function(_, ply)
-		-- Admin only
-		if not MR.Utils:PlyIsAdmin(ply) then
-			return false
-		end
-
-		local saveName = net.ReadString()
-
-		Save:Set(saveName, MR.Base:GetMapFolder()..saveName..".txt")
-	end)
-end
-if CLIENT then
-	net.Receive("MRSaveAddToLoadList", function()
-		local saveName = net.ReadString()
-		local saveFile = MR.Base:GetMapFolder()..saveName..".txt"
-
-		if MR.Load:GetList()[saveName] == nil then
-			MR.GUI:GetLoadText():AddChoice(saveName)
-			MR.Load:Set(saveName, saveFile)
-		end
-	end)
+-- Save the modifications to a file: client part 2
+function Save:Set_CL2(saveName)
+	-- Add the save as an option in the player's menu
+	if MR.Load:GetList()[saveName] == nil then
+		MR.GUI:GetLoadText():AddChoice(saveName)
+		MR.Load:SetOption(saveName, MR.Base:GetMapFolder()..saveName..".txt")
+	end
 end
 
 -- Set autoLoading for the map
-function Save:Auto_Start(ply, value)
-	if SERVER then return; end
-
-	-- Set the autoSave option on every client
-	net.Start("MRAutoSaveSet")
-		net.WriteBool(value)
-	net.SendToServer()
-end
-function Save:Auto_Set(ply, value)
+function Save:SetAuto(ply, value)
 	if CLIENT then return; end
 
 	-- Admin only
@@ -125,12 +130,5 @@ function Save:Auto_Set(ply, value)
 	end
  
 	-- Apply the change on clients
-	MR.CVars:Replicate(ply, "mr_autosave", value and "1" or "0", "save", "box")
-end
-if SERVER then
-	util.AddNetworkString("MRAutoSaveSet")
-
-	net.Receive("MRAutoSaveSet", function(_, ply)
-		Save:Auto_Set(ply, net.ReadBool(value))
-	end)
+	MR.CVars:Replicate_SV(ply, "mr_autosave", value and "1" or "0", "save", "box")
 end

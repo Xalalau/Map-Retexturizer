@@ -2,6 +2,10 @@
 --- MATERIALS (SKYBOX)
 --------------------------------
 
+local Skybox = {}
+Skybox.__index = Skybox
+MR.Skybox = Skybox
+
 -- HL2 sky list
 local skybox = {
 	name = "skybox/"..GetConVar("sv_skyname"):GetString(),
@@ -44,9 +48,31 @@ local skybox = {
 	}
 }
 
-local Skybox = {}
-Skybox.__index = Skybox
-MR.Skybox = Skybox
+-- Networking
+if SERVER then
+	util.AddNetworkString("Skybox:Set_SV")
+	util.AddNetworkString("Skybox:Set_CL")
+	util.AddNetworkString("Skybox:Remove")
+
+	net.Receive("Skybox:Set_SV", function(_, ply)
+		Skybox:Set_SV(ply, net.ReadString())
+	end)
+
+	net.Receive("Skybox:Remove", function(_, ply)
+		Skybox:Remove(ply)
+	end)
+elseif CLIENT then
+	net.Receive("Skybox:Set_CL", function()
+		Skybox:Set_CL(net.ReadString(), net.ReadBool())
+	end)
+end
+
+-- Skybox rendering hook
+if CLIENT then
+	hook.Add("PostDraw2DSkyBox", "Skybox:Render", function()
+		Skybox:Render()
+	end)
+end
 
 -- Get HL2 skies list
 function Skybox:GetList()
@@ -62,80 +88,56 @@ function Skybox:IsValidFullSky(material)
 	end
 end
 
--- Fix the material name for the preview mode
+-- Fix the material name for tool usage
 function Skybox:FixValidFullSkyName(material)
 	return material..skybox.suffixes[3]
 end
 
--- Change the skybox
-function Skybox:Start(ply, value)
-	if SERVER then return; end
-
-	-- Don't use the tool in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) then
-		return false
-	end
-
-	net.Start("MRSkybox")
-		net.WriteString(value)
-	net.SendToServer()
-end
-function Skybox:Set(ply, mat)
+-- Change the skybox: server
+function Skybox:Set_SV(ply, mat, isBroadcasted)
 	if CLIENT then return; end
-	
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return false
+
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, mat) then
+		if mat ~= "" then
+			return false
+		end
 	end
 
-	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
+	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
-		-- Create the duplicator entity if it's necessary
-		MR.Duplicator:CreateEnt()
-
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Skybox", { skybox = mat })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
-		MR.CVars:Replicate(ply, "mr_skybox", mat, "skybox", "text")
-	end
-
-	-- Register that the map is modified
-	if not MR.Base:GetInitialized() then
-		MR.Base:SetInitialized()
+		MR.CVars:Replicate_SV(ply, "mr_skybox", mat, "skybox", "text")
 	end
 
 	-- Send the change to everyone
-	net.Start("MRSkyboxCl")
+	net.Start("Skybox:Set_CL")
 		net.WriteString(mat)
+		net.WriteBool(isBroadcasted or false)
 	net.Broadcast()
+
+	-- General final steps
+	MR.Materials:SetFinalSteps()
 
 	return true
 end
-if SERVER then
-	util.AddNetworkString("MRSkybox")
-	util.AddNetworkString("MRSkyboxCl")
 
-	net.Receive("MRSkybox", function(_, ply)
-		Skybox:Set(ply, net.ReadString())
-	end)
-else
-	net.Receive("MRSkyboxCl", function()
-		Skybox:Apply(net.ReadString())
-	end)
-end
-
-function Skybox:Apply(newMaterial)
-	-- If the map has an env_skypainted this code will only serve as a backup for the material name
-	-- So the rendering will be done in Skybox:RenderEnvPainted()
+-- Handle the skybox materials backup
+-- Render simple textures on maps withou env_skypainted
+function Skybox:Set_CL(newMaterial, isBroadcasted)
 	if SERVER then return; end
 
 	local suffixes = { "", "", "", "", "", "" }
 	local i
 
-	-- Block nil names
-	if not newMaterial then
-		return
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, newMaterial) then
+		if newMaterial ~= "" then
+			return false
+		end
 	end
 
 	-- Set the original skybox backup
@@ -146,7 +148,7 @@ function Skybox:Apply(newMaterial)
 		end
 	end
 
-	-- If we aren't using a HL2 sky or applying a backup...
+	-- If it's not a HL2 sky or we're applying a backup...
 	if newMaterial ~= "" and not skybox.HL2List[newMaterial] then
 		if not MR.Materials:IsValid(newMaterial) then
 			-- It's a full skybox
@@ -159,6 +161,7 @@ function Skybox:Apply(newMaterial)
 		end
 		-- It's a single material
 	else
+		-- It's a full HL2 skybox
 		suffixes = skybox.suffixes
 	end
 
@@ -174,20 +177,20 @@ function Skybox:Apply(newMaterial)
 end
 
 if CLIENT then
-	-- Skybox rendering for maps with env_skypainted entity
-	function Skybox:RenderEnvPainted()
+	-- Render 6 side skybox materials on every map or simple materials on the skybox on maps with env_skypainted entity
+	function Skybox:Render()
 		local distance = 200
 		local width = distance * 2.01
 		local height = distance * 2.01
 		local newMaterial = GetConVar("mr_skybox"):GetString()
 		local suffixes = { "", "", "", "", "", "" }
 
-		-- Stop renderind if it's empty
+		-- Stop renderind if there is no material
 		if newMaterial == "" then
 			return
 		end
 
-		-- If we aren't using a HL2 sky...
+		-- If it's not a HL2 sky...
 		if not skybox.HL2List[newMaterial] then
 			if not MR.Materials:IsValid(newMaterial) then
 				-- It's a full skybox
@@ -204,34 +207,32 @@ if CLIENT then
 				end
 			end
 		else
+			-- It's a full HL2 skybox
 			suffixes = skybox.suffixes
 		end
 
-		-- Render our sky layer
+		-- Render our sky box around the player
 		render.OverrideDepthEnable(true, false)
 		render.SetLightingMode(2)
+
 		cam.Start3D(Vector(0, 0, 0), EyeAngles())
-			render.SetMaterial(Material(newMaterial..suffixes[1]))
-			render.DrawQuadEasy(Vector(-distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
-			render.SetMaterial(Material(newMaterial..suffixes[2]))
-			render.DrawQuadEasy(Vector(distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
-			render.SetMaterial(Material(newMaterial..suffixes[3]))
-			render.DrawQuadEasy(Vector(0,distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
-			render.SetMaterial(Material(newMaterial..suffixes[4]))
-			render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
-			render.SetMaterial(Material(newMaterial..suffixes[5]))
-			render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,1), width, height, Color(255,255,255,255), 90)
-			render.SetMaterial(Material(newMaterial..suffixes[6]))
-			render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[1])) -- ft
+			render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[2])) -- bk
+			render.DrawQuadEasy(Vector(0,distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[3])) -- lf
+			render.DrawQuadEasy(Vector(-distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[4])) -- rt
+			render.DrawQuadEasy(Vector(distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
+			render.SetMaterial(Material(newMaterial..suffixes[5])) -- up
+			render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 0)
+			render.SetMaterial(Material(newMaterial..suffixes[6])) -- dn
+			render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,1), width, height, Color(255,255,255,255), 0)
 		cam.End3D()
+
 		render.OverrideDepthEnable(false, false)
 		render.SetLightingMode(0)
 	end
-
-	-- Hook the rendering
-	hook.Add("PostDraw2DSkyBox", "MRSkyboxLayer", function()
-		Skybox:RenderEnvPainted()
-	end)
 end
 
 -- Remove all decals
@@ -244,19 +245,12 @@ function Skybox:Remove(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop()
+	MR.Duplicator:ForceStop_SV()
 
 	-- Cleanup
-	Skybox:Set(ply, "")
+	Skybox:Set_SV(ply, "")
 
 	if IsValid(MR.Duplicator:GetEnt()) then
-		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Skybox")
+		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox")
 	end
-end
-if SERVER then
-	util.AddNetworkString("Skybox:Remove")
-
-	net.Receive("Skybox:Remove", function(_, ply)
-		Skybox:Remove(ply)
-	end)
 end

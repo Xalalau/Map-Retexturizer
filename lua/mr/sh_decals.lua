@@ -2,83 +2,109 @@
 --- MATERIALS (DECALS)
 --------------------------------
 
+local Decals = {}
+Decals.__index = Decals
+MR.Decals = Decals
+
 -- ID = String, all the modifications
 local decal = {
 	list = {}
 }
 
-local Decals = {}
-Decals.__index = Decals
-MR.Decals = Decals
+-- Networking 
+if SERVER then
+	util.AddNetworkString("Decals:Toogle_SV")
+	util.AddNetworkString("Decals:Set_CL")
+	util.AddNetworkString("Decals:RemoveAll")
 
+	net.Receive("Decals:Toogle_SV", function(_, ply)
+		Decals:Toogle_SV(ply, net.ReadBool())
+	end)
+
+	net.Receive("Decals:RemoveAll", function(_, ply)
+		Decals:RemoveAll(ply)
+	end)
+elseif CLIENT then
+	net.Receive("Decals:Set_CL", function()
+		Decals:Set_CL(net.ReadString(), net.ReadEntity(), net.ReadVector(), net.ReadVector(), net.ReadBool())
+	end)
+end
+
+-- Get the decals list
 function Decals:GetList()
 	return decal.list
 end
 
--- Toogle the decal mode for a player
+-- Toogle the decal mode for a player: server
 function Decals:Toogle(ply, value)
 	if SERVER then return; end
 
 	MR.Ply:SetDecalMode(ply, value)
 
-	net.Start("MRToogleDecal")
+	net.Start("Ply:SetDecalMode")
 		net.WriteBool(value)
 	net.SendToServer()
 end
-if SERVER then
-	util.AddNetworkString("MRToogleDecal")
 
-	net.Receive("MRToogleDecal", function(_, ply)
-		MR.Ply:SetDecalMode(ply, net.ReadBool())
-	end)
-end
-
--- Apply decal materials:::
-function Decals:Start(ply, tr, duplicatorData)
+-- Apply decal materials: server
+function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	if CLIENT then return; end
 
-	local mat = tr and MR.Materials:GetNew(ply) or duplicatorData.mat
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData.mat or MR.Materials:GetNew(ply)) then
+		return false
+	end
 
 	-- Get the basic properties
+	local mat = tr and MR.Materials:GetNew(ply) or duplicatorData.mat
 	local ent = tr and tr.Entity or duplicatorData.ent
 	local pos = tr and tr.HitPos or duplicatorData.pos
 	local hit = tr and tr.HitNormal or duplicatorData.hit
 
-	-- If we are loading a file, a player must initialize the materials on the serverside and everybody must apply them on the clientsite
+	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+		-- Set the duplicator
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = decal.list })
+
 		-- Index the data
 		table.insert(decal.list, {ent = ent, pos = pos, hit = hit, mat = mat})
-
-		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Decals", { decals = decal.list })
 	end
 
 	-- Send to...
-	net.Start("Decals:Set")
+	net.Start("Decals:Set_CL")
 		net.WriteString(mat)
 		net.WriteEntity(ent)
 		net.WriteVector(pos)
 		net.WriteVector(hit)
+		net.WriteBool(isBroadcasted or false)
 	-- all players
-	if not MR.Ply:GetFirstSpawn(ply) or ply == fakeHostPly then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		net.WriteBool(true)
 		net.Broadcast()
-	-- a single player
+	-- the player
 	else
 		net.WriteBool(false)
 		net.Send(ply)
 	end
+
+	-- General final steps
+	MR.Materials:SetFinalSteps()
 end
 
--- Create decal materials
-function Decals:Set(materialPath, ent, pos, normal)
+-- Apply decal materials: client
+function Decals:Set_CL(materialPath, ent, pos, normal, isBroadcasted)
 	if SERVER then return; end
+
+	-- General first steps
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, materialPath) then
+		return false
+	end
 
 	-- Create the material
 	local decalMaterial = decal.list[materialPath.."2"]
 
 	if not decalMaterial then
-		decalMaterial = CreateMaterial(materialPath.."2", "LightmappedGeneric", {["$basetexture"] = materialPath})
+		decalMaterial = MR.Materials:Create(materialPath.."2", "LightmappedGeneric", materialPath)
 		decalMaterial:SetInt("$decal", 1)
 		decalMaterial:SetInt("$translucent", 1)
 		decalMaterial:SetFloat("$decalscale", 1.00)
@@ -91,27 +117,6 @@ function Decals:Set(materialPath, ent, pos, normal)
 	-- Resizing doesn't work (width x height)
 	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), decalMaterial:Width(), decalMaterial:Height())
 end
-if SERVER then
-	util.AddNetworkString("Decals:Set")
-end
-if CLIENT then
-	net.Receive("Decals:Set", function()
-		local ply = LocalPlayer()
-		local material = net.ReadString()
-		local entity = net.ReadEntity()
-		local position = net.ReadVector()
-		local normal = net.ReadVector()
-		local isBroadcasted = net.ReadBool()
-
-		-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-		if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
-			return
-		end
-
-		-- Material, entity, position, normal, color, width and height
-		Decals:Set(material, entity, position, normal)
-	end)
-end
 
 -- Remove all decals
 function Decals:RemoveAll(ply)
@@ -123,7 +128,7 @@ function Decals:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop()
+	MR.Duplicator:ForceStop_SV()
 
 	-- Cleanup
 	for k,v in pairs(player.GetAll()) do
@@ -132,12 +137,5 @@ function Decals:RemoveAll(ply)
 		end
 	end
 	table.Empty(decal.list)
-	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MRexturizer_Decals")
-end
-if SERVER then
-	util.AddNetworkString("Decals:RemoveAll")
-
-	net.Receive("Decals:RemoveAll", function(_, ply)
-		Decals:RemoveAll(ply)
-	end)
+	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals")
 end

@@ -56,6 +56,7 @@ local function UpdateMaterialBox(Window, MatRetMaterial, defaults)
 	]]
 end
 
+-- Load the contents of a directory
 local function ParseDir(t, dir, ext, MatRetMaterial)
 	local files, dirs = file.Find(dir.."*", "GAME")
 
@@ -84,28 +85,28 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 		if isValidExt then
 			local arq = string.sub(dir..v, 11, -5)
 
-			if not Material(arq):IsError() and Material(arq):GetTexture("$basetexture") then
+			if Material(arq):GetTexture("$basetexture") then
 				local n = t:AddNode(v)
 
 				n.Icon:SetImage("icon16/picture.png")
 				n.DoClick = function()
 					RunConsoleCommand("mr_material", arq)
 					MatRetMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"));
-					net.Start("Materials:SetValid")
-						net.WriteString(arq)
-					net.SendToServer()
 				end
 			end
 		end
 	end
 end
 
-local Window
+-- Create the window preview material
 local MatRetMaterial
 
 if CLIENT then
 	MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
 end
+
+-- Create the material browser window
+local Window
 
 function CreateMaterialBrowser(mr)
 	if SERVER then return; end
@@ -156,7 +157,7 @@ function CreateMaterialBrowser(mr)
 		local function FillList()
 			local node = List:AddNode("Materials!")
 
-			--ParseDir(node, "materials/", { ".vmt", ".png", ".jpg" }, MaterialBox)
+			--ParseDir(node, "materials/", { ".vmt", ".png", ".jpg" }, MatRetMaterial)
 			ParseDir(node, "materials/", { ".vmt" }, MatRetMaterial)
 			node:SetExpanded(true)
 		end

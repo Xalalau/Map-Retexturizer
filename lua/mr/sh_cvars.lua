@@ -7,8 +7,13 @@ CVars.__index = CVars
 MR.CVars = CVars
 
 local cvars = {
-	-- When I sync a field it triggers and tries to sync itself again, entering a loop. This is a control to block it
-	blockSyncLoop = false
+	loop = {
+		-- When I sync a field it triggers itself again and tries to resync, entering a loop. I have to block it
+		block = false,
+		-- If we are dealing with a slider, it doesn't update to the last value correctly on the other players,
+		-- so I have to run the sync twice
+		sliderUpdate = false
+	 }
 }
 
 -- Networking
@@ -30,18 +35,32 @@ elseif CLIENT then
 	end)
 end
 
--- Get if a sync loop block is enable
+-- Get if a sync loop block is enabled
 function CVars:GetSynced()
 	if SERVER then return; end
 
-	return cvars.blockSyncLoop
+	return cvars.loop.block
 end
 
 -- Set a sync loop block
 function CVars:SetSynced(value)
 	if SERVER then return; end
 
-	cvars.blockSyncLoop = value
+	cvars.loop.block = value
+end
+
+-- Get if a slider value fix is enabled
+function CVars:GetSliderUpdate()
+	if SERVER then return; end
+
+	return cvars.loop.sliderUpdate
+end
+
+-- Set a slider value fix
+function CVars:SetSliderUpdate(value)
+	if SERVER then return; end
+
+	cvars.loop.sliderUpdate = value
 end
 
 -- Replicate menu field: server

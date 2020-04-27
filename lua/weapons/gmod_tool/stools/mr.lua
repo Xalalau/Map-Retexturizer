@@ -742,11 +742,17 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetSynced() then
+					-- Force the field to update (2 times, slider fix) and disable a sync loop block
+					if MR.CVars:GetSliderUpdate() then
+						MR.CVars:SetSliderUpdate(false)
+
+						return
+					elseif MR.CVars:GetSynced() then
 						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
+
+						MR.CVars:SetSliderUpdate(true)
 
 						MR.CVars:SetSynced(false)
 
@@ -758,13 +764,18 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					-- Start syncing
-					net.Start("CVars:Replicate_SV")
-						net.WriteString("mr_delay")
-						net.WriteString(string.format("%0.3f", val))
-						net.WriteString("load")
-						net.WriteString("slider")
-					net.SendToServer()
+					-- Start syncing (don't overflow the channel with tons of slider values)
+					if timer.Exists("MRSliderSend") then
+						timer.Destroy("MRSliderSend")
+					end
+					timer.Create("MRSliderSend", 0.1, 1, function()
+						net.Start("CVars:Replicate_SV")
+							net.WriteString("mr_delay")
+							net.WriteString(string.format("%0.3f", val))
+							net.WriteString("load")
+							net.WriteString("slider")
+						net.SendToServer()
+					end)
 				end
 
 			MR.GUI:Set("load", "box", CPanel:CheckBox("Cleanup the map before loading"))

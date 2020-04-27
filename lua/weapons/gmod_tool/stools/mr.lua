@@ -445,7 +445,7 @@ function TOOL.BuildCPanel(CPanel)
 	net.Start("CVars:ReplicateFirstSpawn")
 	net.SendToServer()
 
-	-- Finesh to sync some menu fields
+	-- Finish to sync some menu fields
 	timer.Create("MRMenuOpenned1stimeDelay1", 2, 1, function()
 		MR.CVars:SetLoopBlock(false)
 	end)

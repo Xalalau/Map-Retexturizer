@@ -445,11 +445,13 @@ function TOOL.BuildCPanel(CPanel)
 	net.Start("CVars:ReplicateFirstSpawn")
 	net.SendToServer()
 
-	timer.Create("MRMenuOpenned1stimeDelay", 0.3, 1, function()
-		-- Finesh to sync some menu fields
+	-- Finesh to sync some menu fields
+	timer.Create("MRMenuOpenned1stimeDelay1", 2, 1, function()
 		MR.CVars:SetLoopBlock(false)
+	end)
 
-		-- Force mr_detail to use the right value
+	-- Force mr_detail to use the right value
+	timer.Create("MRMenuOpenned1stimeDelay2", 0.3, 1, function()
 		MR.CVars:SetPropertiesToDefaults(LocalPlayer())
 	end)
 

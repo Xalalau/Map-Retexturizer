@@ -563,7 +563,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			MR.Base:SetInitialized()
 		end
 
-		timer.Create("MRDuplicatorFinish"..tostring(ply), 1, 1, function()
+		timer.Create("MRDuplicatorFinish"..tostring(ply), 0.4, 1, function()
 			-- Reset the progress bar
 			MR.Ply:SetDupTotal(ply, 0)
 			MR.Ply:SetDupCurrent(ply, 0)

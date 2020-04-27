@@ -51,7 +51,7 @@ function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	if CLIENT then return; end
 
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData.mat or MR.Materials:GetNew(ply)) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData and duplicatorData.mat or MR.Materials:GetNew(ply)) then
 		return false
 	end
 

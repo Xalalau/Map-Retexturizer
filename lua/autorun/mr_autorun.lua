@@ -26,17 +26,19 @@ local function HandleFile(dir, file)
 	end
 end
 
+-- Note: start with the files, so the shared code code will be available everywhere
 local function ParseDir(dir)
 	local files, dirs = file.Find(dir.."*", "LUA")
 
-	for _, subDir in pairs(dirs) do
-		ParseDir(dir..subDir.."/")
-	end
 
 	for _, file in pairs(files) do
 		if string.sub(file, -4) == ".lua" then
 			HandleFile(dir, file)
 		end
+	end
+
+	for _, subDir in pairs(dirs) do
+		ParseDir(dir..subDir.."/")
 	end
 end
 

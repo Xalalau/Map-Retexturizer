@@ -4,12 +4,26 @@
 
 -- ---------------------------------------------------------
 -- mr_remote_cleanup
-concommand.Add("mr_remote_cleanup", function ()
-	MR.Materials:RemoveAll(MR.Ply:GetFakeHostPly())
+concommand.Add("mr_help", function ()
 
-	local message = "[Map Retexturizer] Console: cleaning modifications..."
-	
-	PrintMessage(HUD_PRINTTALK, message)
+	local message = [[
+
+-------------------------
+Map Retexturizer commands
+-------------------------
+
+mr_admin               1/0    =  Turn on/off the admin protections;
+mr_remote_delay               =  The delay between each materiall application on a load;
+mr_remote_list                =  List the saved game names;
+mr_remote_load        "name"  =  Load the saved game called "name";
+mr_remote_autoload    "name"  =  Set a saved game called "name" to load when the server starts;
+mr_remote_save        "name"  =  Save the current tool modifications into a file called "name";
+mr_remote_autosave     1/0    =  Enable/Disable the autosaving;
+mr_remote_delete      "name"  =  Delete the save called "name";
+mr_remote_dup_cleanup  1/0    =  Enable/Disable cleanup before starting a load;
+mr_remote_cleanup             =  Clean all the modifications.
+]]
+
 	print(message)
 end)
 
@@ -25,28 +39,13 @@ concommand.Add("mr_remote_delay", function (_1, _2, _3, value)
 end)
 
 -- ---------------------------------------------------------
--- mr_remote_duplicator_cleanup
-concommand.Add("mr_remote_duplicator_cleanup", function (_1, _2, _3, value)
-	if value ~= "1" and value ~= "0" then
-		print("[Map Retexturizer] Invalid value. Choose 1 or 0.")
-
-		return
-	end
-
-	MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "mr_duplicator_clean", value, "load", "box")
-
-	local message = "[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. "."
-	
-	PrintMessage(HUD_PRINTTALK, message)
-	print(message)
-end)
-
--- ---------------------------------------------------------
 -- mr_remote_list
 concommand.Add("mr_remote_list", function (_1, _2, _3, loadName)
 	MR.Load:PrintList()
 end)
 
+-- ---------------------------------------------------------
+-- mr_remote_load
 concommand.Add("mr_remote_load", function (_1, _2, _3, loadName)
 	if MR.Load:Start(MR.Ply:GetFakeHostPly(), loadName) then
 		PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..loadName.."\"...")
@@ -110,4 +109,32 @@ concommand.Add("mr_remote_delete", function (_1, _2, _3, loadName)
 	else
 		print("[Map Retexturizer] File not found.")
 	end
+end)
+
+-- ---------------------------------------------------------
+-- mr_remote_dup_cleanup
+concommand.Add("mr_remote_dup_cleanup", function (_1, _2, _3, value)
+	if value ~= "1" and value ~= "0" then
+		print("[Map Retexturizer] Invalid value. Choose 1 or 0.")
+
+		return
+	end
+
+	MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "mr_duplicator_clean", value, "load", "box")
+
+	local message = "[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. "."
+	
+	PrintMessage(HUD_PRINTTALK, message)
+	print(message)
+end)
+
+-- ---------------------------------------------------------
+-- mr_remote_cleanup
+concommand.Add("mr_remote_cleanup", function ()
+	MR.Materials:RemoveAll(MR.Ply:GetFakeHostPly())
+
+	local message = "[Map Retexturizer] Console: cleaning modifications..."
+	
+	PrintMessage(HUD_PRINTTALK, message)
+	print(message)
 end)

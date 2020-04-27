@@ -448,7 +448,7 @@ function TOOL.BuildCPanel(CPanel)
 	net.Start("CVars:ReplicateFirstSpawn")
 	net.SendToServer()
 	timer.Create("MRReplicateFirstSpawn", 0.3, 1, function()
-		MR.CVars:SetSynced(false)
+		MR.CVars:SetLoopBlock(false)
 	end)
 
 	-- HACK: force mr_detail to use the right value
@@ -553,7 +553,7 @@ function TOOL.BuildCPanel(CPanel)
 
 					-- This field doesn't have problems with a sync loop, so disable the block
 					timer.Create("MRDisableSyncLoolBlock", 0.3, 1, function()
-						MR.CVars:SetSynced(false)
+						MR.CVars:SetLoopBlock(false)
 					end)
 
 					-- Admin only
@@ -593,9 +593,9 @@ function TOOL.BuildCPanel(CPanel)
 				element = MR.GUI:Get("skybox", "box")
 					function element:OnChange(val)
 						-- Force the field to update and disable a sync loop block
-						if MR.CVars:GetSynced() then
+						if MR.CVars:GetLoopBlock() then
 							MR.GUI:Get("skybox", "box"):SetChecked(val)
-							MR.CVars:SetSynced(false)
+							MR.CVars:SetLoopBlock(false)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
@@ -683,9 +683,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetSynced() then
+					if MR.CVars:GetLoopBlock() then
 						MR.GUI:Get("save", "box"):SetChecked(val)
-						MR.CVars:SetSynced(false)
+						MR.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -747,14 +747,14 @@ function TOOL.BuildCPanel(CPanel)
 						MR.CVars:SetSliderUpdate(false)
 
 						return
-					elseif MR.CVars:GetSynced() then
+					elseif MR.CVars:GetLoopBlock() then
 						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
 						MR.CVars:SetSliderUpdate(true)
 
-						MR.CVars:SetSynced(false)
+						MR.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -784,9 +784,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetSynced() then
+					if MR.CVars:GetLoopBlock() then
 						MR.GUI:Get("load", "box"):SetChecked(val)
-						MR.CVars:SetSynced(false)
+						MR.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return

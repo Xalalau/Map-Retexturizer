@@ -22,7 +22,7 @@ function MR.Utils:PlyIsAdmin(ply)
 	if not ply:IsAdmin() and GetConVar("mr_admin"):GetString() == "1" then
 		if CLIENT then
 			if not timer.Exists("MRNotAdminPrint") then
-				if not MR.CVars:GetSynced() then -- Don't print the message if we are checking a syncing
+				if not MR.CVars:GetLoopBlock() then -- Don't print the message if we are checking a syncing
 					timer.Create("MRNotAdminPrint", 2, 1, function() end)
 				
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")

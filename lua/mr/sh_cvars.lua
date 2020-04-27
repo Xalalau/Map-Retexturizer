@@ -36,14 +36,14 @@ elseif CLIENT then
 end
 
 -- Get if a sync loop block is enabled
-function CVars:GetSynced()
+function CVars:GetLoopBlock()
 	if SERVER then return; end
 
 	return cvars.loop.block
 end
 
 -- Set a sync loop block
-function CVars:SetSynced(value)
+function CVars:SetLoopBlock(value)
 	if SERVER then return; end
 
 	cvars.loop.block = value
@@ -109,7 +109,7 @@ function CVars:Replicate_CL(ply, value, field1, field2)
 	if SERVER then return; end
 
 	-- Enable a sync loop block
-	CVars:SetSynced(true)
+	CVars:SetLoopBlock(true)
 
 	-- Replicate
 	if field1 and field2 and not isstring(MR.GUI:Get(field1, field2)) and IsValid(MR.GUI:Get(field1, field2)) then

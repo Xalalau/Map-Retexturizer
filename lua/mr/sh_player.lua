@@ -6,9 +6,6 @@ local Ply = {}
 Ply.__index = Ply
 MR.Ply = Ply
 
--- Fake client for server usage
-local fakeHostPly = {}
-
 local MRPlayer = {
 	-- Tells if the player is spawning for the first time, using preview mode and/or decal mode
 	state = {
@@ -32,51 +29,37 @@ local MRPlayer = {
 	}
 }
 
-if CLIENT then
-	-- Tells if the player is with the material browser openned
-	MRPlayer.state.inMatBrowser = false
-end
-
 -- Networking
-if SERVER then
-	util.AddNetworkString("Ply:Set")
-	util.AddNetworkString("Ply:SetDupRunning")
-	util.AddNetworkString("Ply:SetFirstSpawn")
-	util.AddNetworkString("Ply:SetPreviewMode")
-	util.AddNetworkString("Ply:SetDecalMode")
-elseif CLIENT then
-	net.Receive("Ply:Set", function()
-		Ply:Set(LocalPlayer())
-	end)
-end
 net.Receive("Ply:SetDupRunning", function(_, ply)
 	Ply:SetDupRunning(ply or LocalPlayer(), net.ReadString())
 end)
+
 net.Receive("Ply:SetFirstSpawn", function(_, ply)
 	if Ply:GetFirstSpawn(ply or LocalPlayer()) then
 		Ply:SetFirstSpawn(ply or LocalPlayer())
 	end
 end)
+
 net.Receive("Ply:SetPreviewMode", function(_, ply)
 	Ply:SetPreviewMode(ply or LocalPlayer(), net.ReadBool())
 end)
+
 net.Receive("Ply:SetDecalMode", function(_, ply)
 	Ply:SetDecalMode(ply or LocalPlayer(), net.ReadBool())
 end)
 
-function Ply:Init()
-	if CLIENT then return; end
+net.Receive("Ply:Set", function()
+	if SERVER then return; end
 
-	-- Set the fake player
-	Ply:Set(fakeHostPly)
-end
+	Ply:Set(LocalPlayer())
+end)
 
 -- Set some new values in the player entity
 function Ply:Set(ply)
 	ply.mr = table.Copy(MRPlayer)
 
 	if SERVER then
-		if ply ~= fakeHostPly then
+		if ply ~= Ply:GetFakeHostPly() then
 			net.Start("Ply:Set")
 			net.Send(ply)
 		end
@@ -85,10 +68,6 @@ end
 
 function Ply:IsInitialized(ply)
 	return ply.mr and true or false
-end
-
-function Ply:GetFakeHostPly()
-	return fakeHostPly
 end
 
 function Ply:GetFirstSpawn(ply)
@@ -113,18 +92,6 @@ end
 
 function Ply:SetDecalMode(ply, value)
 	ply.mr.state.decalMode = value
-end
-
-function Ply:GetInMatBrowser(ply)
-	if SERVER then return; end
-
-	return ply.mr.state.inMatBrowser
-end
-
-function Ply:SetInMatBrowser(ply, value)
-	if SERVER then return; end
-
-	ply.mr.state.inMatBrowser = value
 end
 
 function Ply:GetDupRunning(ply)

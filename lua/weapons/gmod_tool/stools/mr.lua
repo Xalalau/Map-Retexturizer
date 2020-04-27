@@ -143,18 +143,16 @@ end
 			return false
 		end
 
-		-- Apply the new skybox
 		if SERVER then
+			-- Apply the new skybox
 			MR.Skybox:Set_SV(ply, selectedMaterial)
-		end
 
-		-- Register that the map is modified
-		if not MR.Base:GetInitialized() then
-			MR.Base:SetInitialized()
-		end
+			-- Register that the map is modified
+			if not MR.Base:GetInitialized() then
+				MR.Base:SetInitialized()
+			end
 
-		-- Set the Undo
-		if SERVER then
+			-- Set the Undo
 			undo.Create("Material")
 				undo.SetPlayer(ply)
 				undo.AddFunction(function(tab)
@@ -217,7 +215,7 @@ end
 	end
 
 	-- Register that the map is modified
-	if not MR.Base:GetInitialized() then
+	if SERVER and not MR.Base:GetInitialized() then
 		MR.Base:SetInitialized()
 	end
 
@@ -409,7 +407,7 @@ end
 -- Map materials preview
 function TOOL:DrawHUD()
 	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		MR.Preview:Render(LocalPlayer())
+		MR.Preview:Render()
 	end
 end
 
@@ -440,18 +438,18 @@ function TOOL.BuildCPanel(CPanel)
 			else
 				v:Show()
 			end
-		end	
+		end
 	end
 
 	-- Sync some menu fields
 	net.Start("CVars:ReplicateFirstSpawn")
 	net.SendToServer()
-	timer.Create("MRReplicateFirstSpawn", 0.3, 1, function()
-		MR.CVars:SetLoopBlock(false)
-	end)
 
-	-- HACK: force mr_detail to use the right value
-	timer.Create("MRDetailHack", 0.3, 1, function()
+	timer.Create("MRMenuOpenned1stimeDelay", 0.3, 1, function()
+		-- Finesh to sync some menu fields
+		MR.CVars:SetLoopBlock(false)
+
+		-- Force mr_detail to use the right value
 		MR.CVars:SetPropertiesToDefaults(LocalPlayer())
 	end)
 
@@ -474,7 +472,7 @@ function TOOL.BuildCPanel(CPanel)
 					previewBox:SetChecked(true)
 
 					function previewBox:OnChange(val)
-						MR.Preview:Toogle(ply, val)
+						MR.Preview:Toogle(val)
 					end
 
 				local previewDLabel = vgui.Create("DLabel", generalPanel)
@@ -497,21 +495,21 @@ function TOOL.BuildCPanel(CPanel)
 					if not MR.Ply:IsInitialized(ply) then
 						timer.Create("MRDecalFixDelaw", 1.5, 1, function()
 							Properties_Toogle(val)
-							MR.Decals:Toogle(ply, val)
+							MR.Decals:Toogle(val)
 						end)
 
 						return
 					end
 
 					Properties_Toogle(val)
-					MR.Decals:Toogle(ply, val)
+					MR.Decals:Toogle(val)
 				end
 
 			CPanel:Button("Change all map materials","mr_changeall")
 
 			local openMaterialBrowser = CPanel:Button("Open Material Browser")
 				function openMaterialBrowser:DoClick()				
-					MR.Ply:SetInMatBrowser(ply, true)
+					MR.Ply:SetInMatBrowser(true)
 					CreateMaterialBrowser(mr)
 				end
 	end
@@ -600,6 +598,7 @@ function TOOL.BuildCPanel(CPanel)
 				MR.GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the toolgun"))
 				element = MR.GUI:Get("skybox", "box")
 					function element:OnChange(val)
+
 						-- Force the field to update and disable a sync loop block
 						if MR.CVars:GetLoopBlock() then
 							MR.GUI:Get("skybox", "box"):SetChecked(val)
@@ -710,7 +709,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local saveChanges = CPanel:Button("Save")
 				function saveChanges:DoClick()
-					MR.Save:Set_CL(ply)
+					MR.Save:Set_CL()
 				end
 	end
 
@@ -833,7 +832,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			local delSave = CPanel:Button("Delete Load")
 				function delSave:DoClick()
-					MR.Load:Delete_CL(ply)
+					MR.Load:Delete_CL()
 				end
 	end
 

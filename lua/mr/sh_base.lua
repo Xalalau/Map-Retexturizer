@@ -29,11 +29,6 @@ local base = {
 	}
 }
 
-if SERVER then
-	-- Tell if any material change was made
-	base.initialized = false
-end
-
 function Base:Init()
 	-- Set paths
 	base.mapFolder = base.mainFolder..base.mapFolder
@@ -53,18 +48,6 @@ function Base:Init()
 		CreateDir(base.mapFolder)
 		CreateDir(base.autoLoad.folder)
 	end
-end
-
-function Base:GetInitialized()
-	if CLIENT then return; end
-
-	return base.initialized
-end
-
-function Base:SetInitialized()
-	if CLIENT then return; end
-
-	base.initialized = true
 end
 
 function Base:GetMapFolder()

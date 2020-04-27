@@ -12,23 +12,18 @@ local model = {
 }
 
 -- Networking
-if SERVER then
-	util.AddNetworkString("ModelMaterials:Remove")
-	util.AddNetworkString("ModelMaterials:Set")
-	util.AddNetworkString("ModelMaterials:RemoveAll")
+net.Receive("ModelMaterials:Set", function(_, ply)
+	if SERVER then return; end
 
-	net.Receive("ModelMaterials:RemoveAll", function(_, ply)
-		ModelMaterials:RemoveAll(ply)
-	end)
-elseif CLIENT then
-	net.Receive("ModelMaterials:Set", function(_, ply)
-		ModelMaterials:Set(LocalPlayer(), net.ReadTable())
-	end)
+	ModelMaterials:Set(LocalPlayer(), net.ReadTable())
+end)
 
-	net.Receive("ModelMaterials:Remove", function()
-		ModelMaterials:Remove(net.ReadEntity())
-	end)
-end
+net.Receive("ModelMaterials:Remove", function()
+	if SERVER then return; end
+
+	ModelMaterials:Remove(net.ReadEntity())
+end)
+
 
 -- Get the original material full path
 function ModelMaterials:GetNew(ent)
@@ -256,24 +251,4 @@ function ModelMaterials:Remove(ent)
 	end
 
 	return true
-end
-
--- Remove all modified model materials
-function ModelMaterials:RemoveAll(ply)
-	if CLIENT then return; end
-
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return false
-	end
-
-	-- Stop the duplicator
-	MR.Duplicator:ForceStop_SV()
-
-	-- Cleanup
-	for k,v in pairs(ents.GetAll()) do
-		if IsValid(v) then
-			ModelMaterials:Remove(v)
-		end
-	end
 end

@@ -66,9 +66,13 @@ end
 
 -- Initialization
 MR.Base:Init()
-MR.Ply:Init()
-MR.Preview:Init()
-MR.Save:Init()
-MR.Load:Init()
-MR.Materials:Init()
 MR.MapMaterials.Displacements:Init()
+
+if SERVER then
+	MR.Ply:Init()
+	MR.Load:Init()
+else
+	MR.Materials:Init()
+	MR.Preview:Init()
+	MR.Save:Init()
+end

@@ -1,3 +1,8 @@
+-- Material browser window
+local Window
+-- Preview material
+local MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+
 local function UpdateMaterialBox(Window, MatRetMaterial, defaults)
 	-- Check if the draw is valid
 	if not Window or not MatRetMaterial then
@@ -98,19 +103,7 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 	end
 end
 
--- Create the window preview material
-local MatRetMaterial
-
-if CLIENT then
-	MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
-end
-
--- Create the material browser window
-local Window
-
 function CreateMaterialBrowser(mr)
-	if SERVER then return; end
-
 	local topBar = 25
 	local border = 5
 	local buttonsHeight = 25
@@ -137,7 +130,7 @@ function CreateMaterialBrowser(mr)
 			end
 			Window.Close = function()
 				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				MR.Ply:SetInMatBrowser(LocalPlayer(), false)
+				MR.Ply:SetInMatBrowser(false)
 				Window:SetVisible(false)
 			end
 

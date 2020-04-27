@@ -493,7 +493,16 @@ function TOOL.BuildCPanel(CPanel)
 				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
 
 				function decalBox:OnChange(val)
-					if not ply then return; end
+					-- This option starts disabled, so if the player opens the menu too
+					-- fast I have to add a delay here
+					if not MR.Ply:IsInitialized(ply) then
+						timer.Create("MRDecalFixDelaw", 1.5, 1, function()
+							Properties_Toogle(val)
+							MR.Decals:Toogle(ply, val)
+						end)
+
+						return
+					end
 
 					Properties_Toogle(val)
 					MR.Decals:Toogle(ply, val)

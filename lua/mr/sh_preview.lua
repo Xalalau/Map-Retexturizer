@@ -23,7 +23,7 @@ if CLIENT then
 		local ply = LocalPlayer()
 	
 		if ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
-			if MR.Ply:GetPreviewMode(LocalPlayer()) and MR.Ply:GetDecalMode(ply) then
+			if MR.Ply:IsInitialized(ply) and MR.Ply:GetPreviewMode(LocalPlayer()) and MR.Ply:GetDecalMode(ply) then
 				Preview:Render(ply)
 			end
 		end

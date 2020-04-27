@@ -745,7 +745,9 @@ function TOOL.BuildCPanel(CPanel)
 				function element:OnValueChanged(val)
 					-- Hack to initialize the field
 					if MR.GUI:Get("load", "slider"):GetValue() == 0 then
-						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
+						timer.Create("MRSliderValueHack", 1, 1, function()
+							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
+						end)
 
 						return
 					end

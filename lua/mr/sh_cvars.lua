@@ -112,9 +112,9 @@ function CVars:Replicate_CL(ply, value, field1, field2)
 	CVars:SetLoopBlock(true)
 
 	-- Replicate
-	if field1 and field2 and not isstring(MR.GUI:Get(field1, field2)) and IsValid(MR.GUI:Get(field1, field2)) then
+	if field1 and field2 and MR.GUI:Get(field1, field2) ~= "" and IsValid(MR.GUI:Get(field1, field2)) then
 		MR.GUI:Get(field1, field2):SetValue(value)
-	elseif field1 and not isstring(MR.GUI:Get(field1)) and IsValid(MR.GUI:Get(field1)) then
+	elseif field1 and MR.GUI:Get(field1) ~= "" and IsValid(MR.GUI:Get(field1)) then
 		MR.GUI:Get(field1):SetValue(value)
 	end
 end

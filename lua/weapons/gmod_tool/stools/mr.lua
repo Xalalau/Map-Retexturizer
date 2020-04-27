@@ -43,7 +43,6 @@ if CLIENT then
 	language.Add("tool.mr.desc", "Change the look of your map any way you want!")
 end
 
--- Note: if you modify a default here, chante it also on sh_gui.lua and cl_gui.lua
 CreateConVar("mr_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
 CreateConVar("mr_autosave", "1", { FCVAR_REPLICATED })
 CreateConVar("mr_autoload", "", { FCVAR_REPLICATED })
@@ -322,17 +321,17 @@ function TOOL:RightClick(tr)
 
 		-- Set the detail element to the right position
 		if CLIENT then
-			local i = 1
+			if MR.GUI:GetDetail() ~= "" then
+				local i = 1
 
-			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
-				if k == newData.detail then
-					break
-				else
-					i = i + 1
+				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
+					if k == newData.detail then
+						break
+					else
+						i = i + 1
+					end
 				end
-			end
 
-			if MR.GUI:GetDetail() then
 				MR.GUI:GetDetail():ChooseOptionID(i)
 			end
 			

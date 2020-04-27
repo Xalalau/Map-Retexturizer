@@ -7,20 +7,18 @@ GUI.__index = GUI
 MR.GUI = GUI
 
 -- Menu elements
--- Note: string indexed elements are replicated when modified
--- Note: if you modify a default here, chante it also on mr.lua
 local gui = {
 	["save"] = {
-		["box"] = "1"
+		["box"] = ""
 	},
 	["load"] = {
-		["slider"] = "0.035",
-		["box"] = "1",
+		["slider"] = "",
+		["box"] = "",
 		["autoloadtext"] = ""
 	},
 	["skybox"] = {
 		["text"] = "",
-		["box"] = "1"
+		["box"] = ""
 	}
 }
 

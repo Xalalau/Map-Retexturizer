@@ -37,3 +37,14 @@ end
 function Load:SetOption(saveName, saveFile)
 	load.list[saveName] = saveFile
 end
+
+-- Print the load list in the console
+function Load:PrintList()
+	print("----------------------------")
+	print("[Map Retexturizer] Saves:")
+	print("----------------------------")
+	for k,v in pairs(Load:GetList()) do
+		print(k)
+	end
+	print("----------------------------")
+end

@@ -32,7 +32,7 @@ function Skybox:Set_SV(ply, mat, isBroadcasted)
 		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
 
 		-- Apply the material to every client
-		MR.CVars:Replicate_SV(ply, "mr_skybox", mat, "skybox", "text")
+		MR.CVars:Replicate_SV(ply, "internal_mr_skybox", mat, "skybox", "text")
 	end
 
 	-- Send the change to everyone

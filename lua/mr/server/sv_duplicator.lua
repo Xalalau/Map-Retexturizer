@@ -165,7 +165,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Cleanup
-		if GetConVar("mr_duplicator_clean"):GetInt() == 1 then
+		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
 			MR.Materials:RemoveAll(ply)
 		end
 
@@ -181,7 +181,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or MR.Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
-		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("mr_skybox"):GetString() } or { skybox = "" }
+		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("internal_mr_skybox"):GetString() } or { skybox = "" }
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
 		-- Get the changed models for new players
@@ -369,7 +369,7 @@ function Duplicator:LoadModelMaterials(ply, savedTable, position)
 	MR.ModelMaterials:Set(ply, savedTable[position], true)
 
 	-- Next material
-	timer.Create("MRDuplicatorModelsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorModelsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadModelMaterials(ply, savedTable, position + 1)
 	end)
 end
@@ -414,7 +414,7 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	MR.Decals:Set_SV(ply, nil, savedTable[position], true)
 
 	-- Next material
-	timer.Create("MRDuplicatorDecalsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorDecalsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadDecals(ply, nil, savedTable, position + 1 )
 	end)
 end
@@ -495,7 +495,7 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	MR.MapMaterials:Set(ply, materialTable[position], true)
 
 	-- Next material
-	timer.Create("MRDuplicatorMapMatsDelay"..tostring(ply), GetConVar("mr_delay"):GetFloat(), 1, function()
+	timer.Create("MRDuplicatorMapMatsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
 		Duplicator:LoadMapMaterials(ply, nil, savedTable, position + 1)
 	end)
 end

@@ -44,23 +44,23 @@ if CLIENT then
 end
 
 CreateConVar("mr_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
-CreateConVar("mr_autosave", "1", { FCVAR_REPLICATED })
-CreateConVar("mr_autoload", "", { FCVAR_REPLICATED })
-CreateConVar("mr_skybox", "", { FCVAR_REPLICATED })
-CreateConVar("mr_delay", "0.035", { FCVAR_REPLICATED })
-CreateConVar("mr_duplicator_clean", "1", { FCVAR_REPLICATED })
-CreateConVar("mr_skybox_toolgun", "1", { FCVAR_REPLICATED })
-TOOL.ClientConVar["decal"] = "0"
-TOOL.ClientConVar["displacement"] = ""
-TOOL.ClientConVar["savename"] = ""
-TOOL.ClientConVar["material"] = "dev/dev_blendmeasure"
-TOOL.ClientConVar["detail"] = "None"
-TOOL.ClientConVar["alpha"] = "1"
-TOOL.ClientConVar["offsetx"] = "0"
-TOOL.ClientConVar["offsety"] = "0"
-TOOL.ClientConVar["scalex"] = "1"
-TOOL.ClientConVar["scaley"] = "1"
-TOOL.ClientConVar["rotation"] = "0"
+CreateConVar("internal_mr_autosave", "1", { FCVAR_REPLICATED })
+CreateConVar("internal_mr_autoload", "", { FCVAR_REPLICATED })
+CreateConVar("internal_mr_skybox", "", { FCVAR_REPLICATED })
+CreateConVar("internal_mr_delay", "0.035", { FCVAR_REPLICATED })
+CreateConVar("internal_mr_duplicator_cleanup", "1", { FCVAR_REPLICATED })
+CreateConVar("internal_mr_skybox_toolgun", "1", { FCVAR_REPLICATED })
+CreateClientConVar("internal_mr_decal", "0", false, true)
+CreateClientConVar("internal_mr_displacement", "", false, true)
+CreateClientConVar("internal_mr_savename", "", false, true)
+CreateClientConVar("internal_mr_material", "dev/dev_blendmeasure", false, true)
+CreateClientConVar("internal_mr_detail", "None", false, true)
+CreateClientConVar("internal_mr_alpha", "1", false, true)
+CreateClientConVar("internal_mr_offsetx", "0", false, true)
+CreateClientConVar("internal_mr_offsety", "0", false, true)
+CreateClientConVar("internal_mr_scalex", "1", false, true)
+CreateClientConVar("internal_mr_scaley", "1", false, true)
+CreateClientConVar("internal_mr_rotation", "0", false, true)
 
 --------------------------------
 --- TOOL
@@ -115,7 +115,7 @@ end
 	-- Skybox modification
 	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 		-- Check if it's allowed
-		if GetConVar("mr_skybox_toolgun"):GetInt() == 0 then
+		if GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
 				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
@@ -126,8 +126,8 @@ end
 		end
 
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or MR.Materials:GetOriginal(tr)
-		local selectedMaterial = ply:GetInfo("mr_material")
+		local skyboxMaterial = GetConVar("internal_mr_skybox"):GetString() ~= "" and GetConVar("internal_mr_skybox"):GetString() or MR.Materials:GetOriginal(tr)
+		local selectedMaterial = ply:GetInfo("internal_mr_material")
 
 		-- Check if the copy isn't necessary
 		if skyboxMaterial == selectedMaterial then
@@ -224,7 +224,7 @@ end
 	end
 
 	-- Auto save
-	if GetConVar("mr_autosave"):GetString() == "1" then
+	if GetConVar("internal_mr_autosave"):GetString() == "1" then
 		if not timer.Exists("MRAutoSave") then
 			timer.Create("MRAutoSave", 60, 1, function()
 				if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
@@ -279,8 +279,8 @@ function TOOL:RightClick(tr)
 	-- Skybox
 	if originalMaterial == "tools/toolsskybox" then
 		-- Get the materials
-		local skyboxMaterial = GetConVar("mr_skybox"):GetString() ~= "" and GetConVar("mr_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
-		local selectedMaterial = ply:GetInfo("mr_material")
+		local skyboxMaterial = GetConVar("internal_mr_skybox"):GetString() ~= "" and GetConVar("internal_mr_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
+		local selectedMaterial = ply:GetInfo("internal_mr_material")
 
 		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material (that is a missing texture)
 		if skyboxMaterial == "skybox/painted" then
@@ -293,7 +293,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Copy the material
-		ply:ConCommand("mr_material "..skyboxMaterial)
+		ply:ConCommand("internal_mr_material "..skyboxMaterial)
 	-- Normal materials
 	else
 		-- Get data tables with the future and current materials
@@ -337,7 +337,7 @@ function TOOL:RightClick(tr)
 		end
 
 		-- Copy the material
-		ply:ConCommand("mr_material "..MR.Materials:GetCurrent(tr))
+		ply:ConCommand("internal_mr_material "..MR.Materials:GetCurrent(tr))
 
 		-- Set the cvars to data values or to default values
 		if oldData then
@@ -362,7 +362,7 @@ function TOOL:Reload(tr)
 	-- Skybox cleanup
 	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
 		-- Check if it's allowed
-		if GetConVar("mr_skybox_toolgun"):GetInt() == 0 then
+		if GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 			if SERVER then
 				if not MR.Ply:GetDecalMode(ply) then
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
@@ -373,7 +373,7 @@ function TOOL:Reload(tr)
 		end
 
 		-- Clean
-		if GetConVar("mr_skybox"):GetString() ~= "" then
+		if GetConVar("internal_mr_skybox"):GetString() ~= "" then
 			if SERVER then
 				MR.Skybox:Remove(ply)
 			end
@@ -464,7 +464,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionGeneral)
 
-			local materialValue = CPanel:TextEntry("Material path", "mr_material")
+			local materialValue = CPanel:TextEntry("Material path", "internal_mr_material")
 
 			local generalPanel = vgui.Create("DPanel")
 				generalPanel:SetHeight(20)
@@ -487,7 +487,7 @@ function TOOL.BuildCPanel(CPanel)
 			
 			CPanel:ControlHelp("It's not accurate with decals (GMod bugs).")
 
-			local decalBox = CPanel:CheckBox("Use as Decal", "mr_decal")
+			local decalBox = CPanel:CheckBox("Use as Decal", "internal_mr_decal")
 
 				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
 
@@ -507,7 +507,7 @@ function TOOL.BuildCPanel(CPanel)
 					MR.Decals:Toogle(val)
 				end
 
-			CPanel:Button("Change all map materials","mr_changeall")
+			CPanel:Button("Change all map materials","internal_mr_changeall")
 
 			local openMaterialBrowser = CPanel:Button("Open Material Browser")
 				function openMaterialBrowser:DoClick()				
@@ -525,19 +525,19 @@ function TOOL.BuildCPanel(CPanel)
 
 		CPanel:AddItem(sectionProperties)
 
-		local detail, label = CPanel:ComboBox("Detail", "mr_detail")
+		local detail, label = CPanel:ComboBox("Detail", "internal_mr_detail")
 		MR.GUI:SetDetail(detail)
 		properties.label = label
 			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 				MR.GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
-			properties.a = CPanel:NumSlider("Alpha", "mr_alpha", 0, 1, 2)
-			properties.b = CPanel:NumSlider("Horizontal Translation", "mr_offsetx", -1, 1, 2)
-			properties.c = CPanel:NumSlider("Vertical Translation", "mr_offsety", -1, 1, 2)
-			properties.d = CPanel:NumSlider("Width Magnification", "mr_scalex", 0.01, 6, 2)
-			properties.e = CPanel:NumSlider("Height Magnification", "mr_scaley", 0.01, 6, 2)
-			properties.f = CPanel:NumSlider("Rotation", "mr_rotation", 0, 179, 0)
+			properties.a = CPanel:NumSlider("Alpha", "internal_mr_alpha", 0, 1, 2)
+			properties.b = CPanel:NumSlider("Horizontal Translation", "internal_mr_offsetx", -1, 1, 2)
+			properties.c = CPanel:NumSlider("Vertical Translation", "internal_mr_offsety", -1, 1, 2)
+			properties.d = CPanel:NumSlider("Width Magnification", "internal_mr_scalex", 0.01, 6, 2)
+			properties.e = CPanel:NumSlider("Height Magnification", "internal_mr_scaley", 0.01, 6, 2)
+			properties.f = CPanel:NumSlider("Rotation", "internal_mr_rotation", 0, 179, 0)
 			properties.baseMaterialReset = CPanel:Button("Reset")			
 
 			function properties.baseMaterialReset:DoClick()
@@ -566,7 +566,7 @@ function TOOL.BuildCPanel(CPanel)
 
 					-- Admin only
 					if not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("mr_skybox"):GetString())
+						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("internal_mr_skybox"):GetString())
 
 						return
 					end
@@ -609,13 +609,13 @@ function TOOL.BuildCPanel(CPanel)
 							return
 						-- Admin only: reset the option if it's not being synced and return
 						elseif not MR.Utils:PlyIsAdmin(ply) then
-							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("mr_skybox_toolgun"):GetBool())
+							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("internal_mr_skybox_toolgun"):GetBool())
 
 							return
 						end
 
 						net.Start("CVars:Replicate_SV")
-							net.WriteString("mr_skybox_toolgun")
+							net.WriteString("internal_mr_skybox_toolgun")
 							net.WriteString(val and "1" or "0")
 							net.WriteString("skybox")
 							net.WriteString("box")
@@ -682,7 +682,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSave)
 
-			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "mr_savename"))
+			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "internal_mr_savename"))
 				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
@@ -699,7 +699,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("save", "box"):SetChecked(GetConVar("mr_autosave"):GetBool())
+						MR.GUI:Get("save", "box"):SetChecked(GetConVar("internal_mr_autosave"):GetBool())
 
 						return
 					end
@@ -747,7 +747,7 @@ function TOOL.BuildCPanel(CPanel)
 					-- Hack to initialize the field
 					if MR.GUI:Get("load", "slider"):GetValue() == 0 then
 						timer.Create("MRSliderValueHack", 1, 1, function()
-							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
+							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("internal_mr_delay"):GetFloat()))
 						end)
 
 						return
@@ -770,7 +770,7 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("mr_delay"):GetFloat()))
+						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("internal_mr_delay"):GetFloat()))
 
 						return
 					end
@@ -781,7 +781,7 @@ function TOOL.BuildCPanel(CPanel)
 					end
 					timer.Create("MRSliderSend", 0.1, 1, function()
 						net.Start("CVars:Replicate_SV")
-							net.WriteString("mr_delay")
+							net.WriteString("internal_mr_delay")
 							net.WriteString(string.format("%0.3f", val))
 							net.WriteString("load")
 							net.WriteString("slider")
@@ -802,14 +802,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					-- Admin only: reset the option if it's not being synced and return
 					elseif not MR.Utils:PlyIsAdmin(ply) then
-						MR.GUI:Get("load", "box"):SetChecked(GetConVar("mr_duplicator_clean"):GetBool())
+						MR.GUI:Get("load", "box"):SetChecked(GetConVar("internal_mr_duplicator_cleanup"):GetBool())
 
 						return
 					end
 
 					-- Start syncing
 					net.Start("CVars:Replicate_SV")
-						net.WriteString("mr_duplicator_clean")
+						net.WriteString("internal_mr_duplicator_cleanup")
 						net.WriteString(val and "1" or "0")
 						net.WriteString("load")
 						net.WriteString("box")

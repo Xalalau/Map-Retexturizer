@@ -2,8 +2,20 @@
 --- CONCOMMANDS
 -------------------------------------
 
+local Concommand = MR.Concommand
+
+-- Run a console command on server
+function Concommand:RunOnSV(command, value)
+	if MR.Utils:PlyIsAdmin(LocalPlayer()) then
+		net.Start("Concommand:Run")
+			net.WriteString(command)
+			net.WriteString(value)
+		net.SendToServer()
+	end
+end
+
 -- mr_changeall
-concommand.Add("mr_changeall", function ()
+concommand.Add("internal_mr_changeall", function ()
 	-- Note: this window code is used more than once but I can't put it inside
 	-- a function because the buttons never return true or false on time.
 	local qPanel = vgui.Create( "DFrame" )

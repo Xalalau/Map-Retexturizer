@@ -15,7 +15,7 @@ end)
 -- Change all the materials to a single one
 function Materials:SetAll(ply)
 	-- Get the material
-	local material = ply:GetInfo("mr_material")
+	local material = ply:GetInfo("internal_mr_material")
 
 	-- General first steps
 	if not Materials:SetFirstSteps(ply, isBroadcasted, material) then -- Note: we don't need this check on clientside in this function

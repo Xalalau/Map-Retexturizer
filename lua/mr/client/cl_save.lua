@@ -13,7 +13,7 @@ end)
 
 function Save:Init()
 	-- Default save location
-	RunConsoleCommand("mr_savename", MR.Base:GetSaveDefaultName())
+	RunConsoleCommand("internal_mr_savename", MR.Base:GetSaveDefaultName())
 end
 
 -- Save the modifications to a file: client
@@ -24,7 +24,7 @@ function Save:Set_CL()
 	end
 
 	-- Send the save name to the sever
-	local saveName = GetConVar("mr_savename"):GetString()
+	local saveName = GetConVar("internal_mr_savename"):GetString()
 
 	if saveName == "" then
 		return

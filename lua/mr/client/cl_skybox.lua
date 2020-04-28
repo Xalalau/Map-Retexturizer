@@ -77,7 +77,7 @@ function Skybox:Render()
 	local distance = 200
 	local width = distance * 2.01
 	local height = distance * 2.01
-	local newMaterial = GetConVar("mr_skybox"):GetString()
+	local newMaterial = GetConVar("internal_mr_skybox"):GetString()
 	local suffixes = { "", "", "", "", "", "" }
 
 	-- Stop renderind if there is no material

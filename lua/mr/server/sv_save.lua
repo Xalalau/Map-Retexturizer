@@ -39,7 +39,7 @@ function Save:Set_SV(ply, saveName)
 		decals = MR.Decals:GetList(),
 		map = MR.MapMaterials:GetList(),
 		displacements = MR.MapMaterials.Displacements:GetList(),
-		skybox = GetConVar("mr_skybox"):GetString(),
+		skybox = GetConVar("internal_mr_skybox"):GetString(),
 		savingFormat = "2.0"
 	}
 
@@ -78,5 +78,5 @@ function Save:SetAuto(ply, value)
 	end
  
 	-- Apply the change on clients
-	MR.CVars:Replicate_SV(ply, "mr_autosave", value and "1" or "0", "save", "box")
+	MR.CVars:Replicate_SV(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
 end

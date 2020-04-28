@@ -54,10 +54,10 @@ function Load:Init()
 	local value = file.Read(MR.Base:GetAutoLoadFile(), "Data")
 
 	if value then
-		RunConsoleCommand("mr_autoload", value)
+		RunConsoleCommand("internal_mr_autoload", value)
 		MR.GUI:Set("load", "autoloadtext", value)
 	else
-		RunConsoleCommand("mr_autoload", "")
+		RunConsoleCommand("internal_mr_autoload", "")
 	end
 end
 
@@ -123,13 +123,13 @@ function Load:FirstSpawn(ply)
 	elseif MR.Base:GetInitialized() then
 		MR.Duplicator:Start(ply)
 	-- Run an autoload
-	elseif GetConVar("mr_autoload"):GetString() ~= "" then
+	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
 		-- Set the spawn as done since The fakeHostPly will take care of this load
 		MR.Ply:SetFirstSpawn(ply)
 		net.Start("Ply:SetFirstSpawn")
 		net.Send(ply)
 
-		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("mr_autoload"):GetString())
+		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
 	-- Nothing to send, finish the joining process
 	else
 		MR.Ply:SetFirstSpawn(ply)
@@ -156,7 +156,7 @@ function Load:Delete_SV(ply, loadName)
 	Load:SetOption(loadName, nil)
 
 	-- Unset autoload if needed
-	if GetConVar("mr_autoload"):GetString() == loadName then
+	if GetConVar("internal_mr_autoload"):GetString() == loadName then
 		Load:SetAuto(ply, "")
 	end
 
@@ -184,10 +184,10 @@ function Load:SetAuto(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	MR.CVars:Replicate_SV(ply, "mr_autoload", loadName, "load", "autoloadtext")
+	MR.CVars:Replicate_SV(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MRWaitToSave", 0.3, 1, function()
-		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("mr_autoload"):GetString())
+		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("internal_mr_autoload"):GetString())
 	end)
 
 	return true

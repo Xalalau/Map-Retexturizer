@@ -95,7 +95,7 @@ end
 
 -- Get the new material from mr_material cvar
 function Materials:GetNew(ply)
-	return ply:GetInfo("mr_material")
+	return ply:GetInfo("internal_mr_material")
 end
 
 -- Set a material as (in)valid

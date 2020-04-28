@@ -43,24 +43,35 @@ if CLIENT then
 	language.Add("tool.mr.desc", "Change the look of your map any way you want!")
 end
 
-CreateConVar("mr_admin", "1", { FCVAR_NOTIFY, FCVAR_REPLICATED })
-CreateConVar("internal_mr_autosave", "1", { FCVAR_REPLICATED })
-CreateConVar("internal_mr_autoload", "", { FCVAR_REPLICATED })
-CreateConVar("internal_mr_skybox", "", { FCVAR_REPLICATED })
-CreateConVar("internal_mr_delay", "0.035", { FCVAR_REPLICATED })
-CreateConVar("internal_mr_duplicator_cleanup", "1", { FCVAR_REPLICATED })
-CreateConVar("internal_mr_skybox_toolgun", "1", { FCVAR_REPLICATED })
-CreateClientConVar("internal_mr_decal", "0", false, true)
-CreateClientConVar("internal_mr_displacement", "", false, true)
-CreateClientConVar("internal_mr_savename", "", false, true)
-CreateClientConVar("internal_mr_material", "dev/dev_blendmeasure", false, true)
-CreateClientConVar("internal_mr_detail", "None", false, true)
-CreateClientConVar("internal_mr_alpha", "1", false, true)
-CreateClientConVar("internal_mr_offsetx", "0", false, true)
-CreateClientConVar("internal_mr_offsety", "0", false, true)
-CreateClientConVar("internal_mr_scalex", "1", false, true)
-CreateClientConVar("internal_mr_scaley", "1", false, true)
-CreateClientConVar("internal_mr_rotation", "0", false, true)
+do
+	local sh_flags_report = { FCVAR_REPLICATED, FCVAR_NOTIFY }
+	local sh_flags = { FCVAR_REPLICATED, FCVAR_UNREGISTERED }
+
+	CreateConVar("mr_admin", "1", sh_flags_report)
+
+	CreateConVar("internal_mr_autosave", "1", sh_flags)
+	CreateConVar("internal_mr_autoload", "", sh_flags)
+	CreateConVar("internal_mr_skybox", "", sh_flags)
+	CreateConVar("internal_mr_delay", "0.035", sh_flags)
+	CreateConVar("internal_mr_duplicator_cleanup", "1", sh_flags)
+	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags)
+end
+
+do
+	local cl_flags = { FCVAR_CLIENTDLL, FCVAR_USERINFO, FCVAR_UNREGISTERED }
+
+	CreateConVar("internal_mr_decal", "0", cl_flags)
+	CreateConVar("internal_mr_displacement", "", cl_flags)
+	CreateConVar("internal_mr_savename", "", cl_flags)
+	CreateConVar("internal_mr_material", "dev/dev_blendmeasure", cl_flags)
+	CreateConVar("internal_mr_detail", "None", cl_flags)
+	CreateConVar("internal_mr_alpha", "1", cl_flags)
+	CreateConVar("internal_mr_offsetx", "0", cl_flags)
+	CreateConVar("internal_mr_offsety", "0", cl_flags)
+	CreateConVar("internal_mr_scalex", "1", cl_flags)
+	CreateConVar("internal_mr_scaley", "1", cl_flags)
+	CreateConVar("internal_mr_rotation", "0", cl_flags)
+end
 
 --------------------------------
 --- TOOL

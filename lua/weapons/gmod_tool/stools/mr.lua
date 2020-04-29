@@ -475,7 +475,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionGeneral)
 
-			local materialValue = CPanel:TextEntry("Material path", "internal_mr_material")
+			local materialValue = CPanel:TextEntry("Material Path", "internal_mr_material")
 
 			local generalPanel = vgui.Create("DPanel")
 				generalPanel:SetHeight(20)
@@ -565,7 +565,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSkybox)
 
-			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path"))
+			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox Path"))
 			element = MR.GUI:Get("skybox", "text")
 				element.OnEnter = function(self)
 					local value = MR.GUI:Get("skybox", "text"):GetValue()
@@ -670,12 +670,12 @@ function TOOL.BuildCPanel(CPanel)
 						MR.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
-				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture path 1", ""))
+				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
 					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
 						MR.MapMaterials.Displacements:Set_CL()
 					end
 
-				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture path 2", ""))
+				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
 					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
 						MR.MapMaterials.Displacements:Set_CL()
 					end
@@ -744,7 +744,7 @@ function TOOL.BuildCPanel(CPanel)
 				element:SetEnabled(false)
 				element:SetText("")
 
-			MR.GUI:SetLoadText(CPanel:ComboBox("Saved file"))
+			MR.GUI:SetLoadText(CPanel:ComboBox("Saved File"))
 			element = MR.GUI:GetLoadText()
 				element:AddChoice("")
 
@@ -754,6 +754,8 @@ function TOOL.BuildCPanel(CPanel)
 
 			MR.GUI:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
 			element = MR.GUI:Get("load", "slider")
+				CPanel:ControlHelp("Delay between the application of each material")
+
 				function element:OnValueChanged(val)
 					-- Hack to initialize the field
 					if MR.GUI:Get("load", "slider"):GetValue() == 0 then

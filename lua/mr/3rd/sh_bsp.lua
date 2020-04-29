@@ -4,8 +4,7 @@
 -- http://steamcommunity.com/profiles/76561197967919092
 -- which I copied for Map Retexturizer from
 -- https://github.com/CapsAdmin/tod/blob/master/lua/tod/bsp.lua
-
-AddCSLuaFile()
+-- Xalalau Xubilozo
 
 local SIZEOF_INT = 4
 local SIZEOF_SHORT = 2
@@ -70,7 +69,7 @@ function meta:__tostring()
 	return str
 end
 methods.MetaName = "Bsp"
-function MR_OpenBSP(fName)
+function MR.OpenBSP(fName)
 	fName = fName || ("maps/" .. game.GetMap() .. ".bsp")
 	local f = file.Open(fName,"rb","GAME")
 	if(!f) then return false end

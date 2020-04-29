@@ -15,8 +15,23 @@ if SERVER then
 	end)
 end
 
+-- Printing
+function MR.Concommand:PrintSuccess(message)
+	if CLIENT then return; end
+
+	print(message)
+	PrintMessage(HUD_PRINTTALK, message)
+end
+
+function MR.Concommand:PrintFail(message)
+	if CLIENT then return; end
+
+	print(message)
+	PrintMessage(HUD_PRINTCONSOLE, message)
+end
+
 -- ---------------------------------------------------------
--- mr_cleanup
+-- mr_help
 concommand.Add("mr_help", function ()
 	local message = [[
 
@@ -50,12 +65,11 @@ concommand.Add("mr_delay", function (_1, _2, _3, value)
 		return
 	end
 
-	MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider")
-
-	local message = "[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. "."
-	
-	PrintMessage(HUD_PRINTTALK, message)
-	print(message)
+	if MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
+	else
+		MR.Concommand:PrintFail("[Map Retexturizer] Error synchronizing the value.")
+	end
 end)
 
 -- ---------------------------------------------------------
@@ -76,9 +90,9 @@ concommand.Add("mr_load", function (_1, _2, _3, loadName)
 	end
 
 	if MR.Load:Start(MR.Ply:GetFakeHostPly(), loadName) then
-		PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: loading \""..loadName.."\"...")
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: loading \""..loadName.."\"...")
 	else
-		print("[Map Retexturizer] File not found.")
+		MR.Concommand:PrintFail("[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -94,12 +108,9 @@ concommand.Add("mr_autoload", function (_1, _2, _3, loadName)
 	end
 
 	if MR.Load:SetAuto(MR.Ply:GetFakeHostPly(), loadName) then
-		local message = "[Map Retexturizer] Console: autoload set to \""..loadName.."\"."
-
-		PrintMessage(HUD_PRINTTALK, message)
-		print(message)
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: autoload set to \""..loadName.."\".")
 	else
-		print("[Map Retexturizer] File not found.")
+		MR.Concommand:PrintFail("[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -115,10 +126,16 @@ concommand.Add("mr_save", function (_1, _2, _3, saveName)
 	end
 
 	if saveName == "" then
+		MR.Concommand:PrintFail("[Map Retexturizer] Failed to save because the name is empty.")
+
 		return
 	end
 
-	MR.Save:Set_SV(MR.Ply:GetFakeHostPly(), saveName)
+	if MR.Save:Set_SV(MR.Ply:GetFakeHostPly(), saveName, true) then
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \""..saveName.."\".")
+	else
+		MR.Concommand:PrintFail("[Map Retexturizer] Failed to save.")
+	end
 end)
 
 -- ---------------------------------------------------------
@@ -137,17 +154,16 @@ concommand.Add("mr_autosave", function (_1, _2, _3, value)
 	elseif value == "0" then
 		value = false
 	else
-		print("[Map Retexturizer] Invalid value. Choose 1 or 0.")
+		MR.Concommand:PrintFail("[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
-	MR.Save:SetAuto(MR.Ply:GetFakeHostPly(), value)
-
-	local message = "[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled").."."
-
-	PrintMessage(HUD_PRINTTALK, message)
-	print(message)
+	if MR.Save:SetAuto(MR.Ply:GetFakeHostPly(), value) then
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled")..".")
+	else
+		MR.Concommand:PrintFail("[Map Retexturizer] Failed to set the option.")
+	end
 end)
 
 -- ---------------------------------------------------------
@@ -162,10 +178,9 @@ concommand.Add("mr_delete", function (_1, _2, _3, loadName)
 	end
 
 	if MR.Load:Delete_SV(MR.Ply:GetFakeHostPly(), loadName) then
-		PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
-		print("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 	else
-		print("[Map Retexturizer] File not found.")
+		MR.Concommand:PrintFail("[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -181,17 +196,16 @@ concommand.Add("mr_dup_cleanup", function (_1, _2, _3, value)
 	end
 
 	if value ~= "1" and value ~= "0" then
-		print("[Map Retexturizer] Invalid value. Choose 1 or 0.")
+		MR.Concommand:PrintFail("[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
-	MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box")
-
-	local message = "[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. "."
-	
-	PrintMessage(HUD_PRINTTALK, message)
-	print(message)
+	if MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
+	else
+		MR.Concommand:PrintFail("[Map Retexturizer] Error synchronizing the value.")
+	end
 end)
 
 -- ---------------------------------------------------------
@@ -203,10 +217,9 @@ concommand.Add("mr_cleanup", function ()
 		return
 	end
 
-	MR.Materials:RemoveAll(MR.Ply:GetFakeHostPly())
-
-	local message = "[Map Retexturizer] Console: cleaning modifications..."
-	
-	PrintMessage(HUD_PRINTTALK, message)
-	print(message)
+	if MR.Materials:RemoveAll(MR.Ply:GetFakeHostPly()) then
+		MR.Concommand:PrintSuccess("[Map Retexturizer] Console: cleaning modifications...")
+	else
+		MR.Concommand:PrintFail("[Map Retexturizer] Failed to run the cleanup.")
+	end
 end)

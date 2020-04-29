@@ -38,6 +38,8 @@ function CVars:Replicate_SV(ply, command, value, field1, field2)
 		MR.GUI:Set(field1, field2, value)
 	elseif field1 then
 		MR.GUI:Set(field1, nil, value)
+	else
+		return false
 	end
 
 	-- Change field values on clients
@@ -48,6 +50,8 @@ function CVars:Replicate_SV(ply, command, value, field1, field2)
 			net.WriteString(field2 or "")
 		net.Broadcast()
 	end
+
+	return true
 end
 
 -- Sync menu fields once after first spawn

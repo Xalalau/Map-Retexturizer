@@ -20,7 +20,7 @@ net.Receive("Save:Set_SV", function(_, ply)
 end)
 
 -- Save the modifications to a file: server
-function Save:Set_SV(ply, saveName)
+function Save:Set_SV(ply, saveName, blcokAlert)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
@@ -52,7 +52,9 @@ function Save:Set_SV(ply, saveName)
 	file.Write(saveFile, util.TableToJSON(save))
 
 	-- Server alert
-	print("[Map Retexturizer] Saved the current materials as \""..saveName.."\".")
+	if not blcokAlert then
+		print("[Map Retexturizer] Saved the current materials as \""..saveName.."\".")
+	end
 
 	-- Associate a name with the saved file
 	MR.Load:SetOption(saveName, saveFile)
@@ -61,6 +63,8 @@ function Save:Set_SV(ply, saveName)
 	net.Start("Save:Set_CL2")
 		net.WriteString(saveName)
 	net.Broadcast()
+
+	return true
 end
 
 -- Set autoLoading for the map
@@ -79,4 +83,6 @@ function Save:SetAuto(ply, value)
  
 	-- Apply the change on clients
 	MR.CVars:Replicate_SV(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
+
+	return true
 end

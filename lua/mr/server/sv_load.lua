@@ -61,17 +61,6 @@ function Load:Init()
 	end
 end
 
--- Print the load list in the console
-function Load:PrintList()
-	print("----------------------------")
-	print("[Map Retexturizer] Saves:")
-	print("----------------------------")
-	for k,v in pairs(Load:GetList()) do
-		print(k)
-	end
-	print("----------------------------")
-end
-
 -- Load modifications
 function Load:Start(ply, loadName)
 	-- General first steps

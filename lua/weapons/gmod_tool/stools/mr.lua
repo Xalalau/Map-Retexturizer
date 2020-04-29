@@ -565,7 +565,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSkybox)
 
-			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path:"))
+			MR.GUI:Set("skybox", "text", CPanel:TextEntry("Skybox path"))
 			element = MR.GUI:Get("skybox", "text")
 				element.OnEnter = function(self)
 					local value = MR.GUI:Get("skybox", "text"):GetValue()
@@ -587,7 +587,7 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
-			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2:"))
+			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2"))
 			element = MR.GUI:GetSkyboxCombo()
 				function element:OnSelect(index, value, data)
 					-- Admin only
@@ -648,7 +648,7 @@ function TOOL.BuildCPanel(CPanel)
 
 				CPanel:AddItem(sectionDisplacements)
 
-				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected:"))
+				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected"))
 				element = MR.GUI:GetDisplacementsCombo()
 					function element:OnSelect(index, value, data)
 						if value ~= "" then
@@ -670,12 +670,12 @@ function TOOL.BuildCPanel(CPanel)
 						MR.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
-				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture 1:", ""))
+				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture path 1", ""))
 					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
 						MR.MapMaterials.Displacements:Set_CL()
 					end
 
-				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture 2:", ""))
+				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture path 2", ""))
 					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
 						MR.MapMaterials.Displacements:Set_CL()
 					end
@@ -693,7 +693,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSave)
 
-			MR.GUI:SetSaveText(CPanel:TextEntry("Filename:", "internal_mr_savename"))
+			MR.GUI:SetSaveText(CPanel:TextEntry("Filename", "internal_mr_savename"))
 				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
@@ -735,16 +735,16 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionLoad)
 
-			local currentMap = CPanel:TextEntry("Map:")
+			local currentMap = CPanel:TextEntry("Map")
 				currentMap:SetEnabled(false)
 				currentMap:SetText(game.GetMap())
 
-			MR.GUI:Set("load", "autoloadtext", CPanel:TextEntry("Autoload:"))
+			MR.GUI:Set("load", "autoloadtext", CPanel:TextEntry("Autoload"))
 			element = MR.GUI:Get("load", "autoloadtext")
 				element:SetEnabled(false)
 				element:SetText("")
 
-			MR.GUI:SetLoadText(CPanel:ComboBox("Saved file:"))
+			MR.GUI:SetLoadText(CPanel:ComboBox("Saved file"))
 			element = MR.GUI:GetLoadText()
 				element:AddChoice("")
 
@@ -827,6 +827,13 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
+			local setAutoload = CPanel:Button("Set")
+				function setAutoload:DoClick()
+					net.Start("Load:SetAuto")
+						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
+					net.SendToServer()
+				end
+
 			local loadSave = CPanel:Button("Load")
 				function loadSave:DoClick()
 					net.Start("Load:Start")
@@ -834,16 +841,7 @@ function TOOL.BuildCPanel(CPanel)
 					net.SendToServer()
 				end
 
-			local setAutoload = CPanel:Button("Set Autoload")
-				function setAutoload:DoClick()
-					net.Start("Load:SetAuto")
-						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
-					net.SendToServer()
-				end
-
-			CPanel:Help(" ")
-
-			local delSave = CPanel:Button("Delete Load")
+			local delSave = CPanel:Button("Delete")
 				function delSave:DoClick()
 					MR.Load:Delete_CL()
 				end
@@ -858,7 +856,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionCleanup)
 
-			local cleanupCombobox = CPanel:ComboBox("Select:")
+			local cleanupCombobox = CPanel:ComboBox("Select")
 				cleanupCombobox:AddChoice("All","Materials:RemoveAll", true)
 				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
 				cleanupCombobox:AddChoice("Displacements","MapMaterials.Displacements:RemoveAll")

@@ -42,7 +42,7 @@ function Materials:SetAll(ply)
 		-- Fill the fake save table with the correct structures (ignoring water materials)
 		newTable.skybox = material
 
-		local map_data = MR_OpenBSP()
+		local map_data = MR.OpenBSP()
 		local found = map_data:ReadLumpTextDataStringData()
 		
 		for k,v in pairs(found) do

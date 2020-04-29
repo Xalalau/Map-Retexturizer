@@ -240,7 +240,7 @@ end
 
 -- Generate map displacements list
 function MapMaterials.Displacements:Init()
-	local map_data = MR_OpenBSP()
+	local map_data = MR.OpenBSP()
 	local found = map_data:ReadLumpTextDataStringData()
 	
 	for k,v in pairs(found) do

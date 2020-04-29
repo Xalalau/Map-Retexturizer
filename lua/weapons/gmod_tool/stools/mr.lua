@@ -608,7 +608,7 @@ function TOOL.BuildCPanel(CPanel)
 					MR.GUI:GetSkyboxCombo():SetValue("")
 				end)
 
-				MR.GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the toolgun"))
+				MR.GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the tool gun"))
 				element = MR.GUI:Get("skybox", "box")
 					function element:OnChange(val)
 

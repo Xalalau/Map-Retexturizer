@@ -110,7 +110,7 @@ concommand.Add("mr_save", function (_1, _2, _3, saveName)
 		return
 	end
 
-	MR.Save:Set_SV(ply, saveName)
+	MR.Save:Set_SV(MR.Ply:GetFakeHostPly(), saveName)
 end)
 
 -- ---------------------------------------------------------

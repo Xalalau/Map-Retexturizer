@@ -9,7 +9,7 @@ function Concommand:RunOnSV(command, value)
 	if MR.Utils:PlyIsAdmin(LocalPlayer()) then
 		net.Start("Concommand:Run")
 			net.WriteString(command)
-			net.WriteString(value)
+			net.WriteString(isstring(value) and value or tostring(value))
 		net.SendToServer()
 	end
 end

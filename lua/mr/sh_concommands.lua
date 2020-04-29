@@ -42,9 +42,11 @@ end)
 -- ---------------------------------------------------------
 -- mr_delay
 concommand.Add("mr_delay", function (_1, _2, _3, value)
+	value = value:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_delay", value)
-		
+
 		return
 	end
 
@@ -58,13 +60,15 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_list
-concommand.Add("mr_list", function (_1, _2, _3, loadName)
+concommand.Add("mr_list", function ()
 	MR.Load:PrintList()
 end)
 
 -- ---------------------------------------------------------
 -- mr_load
 concommand.Add("mr_load", function (_1, _2, _3, loadName)
+	loadName = loadName:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_load", loadName)
 		
@@ -81,6 +85,8 @@ end)
 -- ---------------------------------------------------------
 -- mr_autoload
 concommand.Add("mr_autoload", function (_1, _2, _3, loadName)
+	loadName = loadName:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_autoload", loadName)
 		
@@ -100,6 +106,8 @@ end)
 -- ---------------------------------------------------------
 -- mr_save
 concommand.Add("mr_save", function (_1, _2, _3, saveName)
+	saveName = saveName:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_save", saveName)
 		
@@ -116,6 +124,8 @@ end)
 -- ---------------------------------------------------------
 -- mr_autosave
 concommand.Add("mr_autosave", function (_1, _2, _3, value)
+	value = value:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_autosave", value)
 		
@@ -143,6 +153,8 @@ end)
 -- ---------------------------------------------------------
 -- mr_delete
 concommand.Add("mr_delete", function (_1, _2, _3, loadName)
+	loadName = loadName:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_delete", loadName)
 		
@@ -160,6 +172,8 @@ end)
 -- ---------------------------------------------------------
 -- mr_dup_cleanup
 concommand.Add("mr_dup_cleanup", function (_1, _2, _3, value)
+	value = value:gsub('"','')
+
 	if CLIENT then
 		Concommand:RunOnSV("mr_dup_cleanup", value)
 		

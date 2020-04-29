@@ -40,7 +40,7 @@ if CLIENT then
 	language.Add("tool.mr.left", "Set material")
 	language.Add("tool.mr.right", "Copy material")
 	language.Add("tool.mr.reload", "Remove material")
-	language.Add("tool.mr.desc", "Change the look of your map any way you want!")
+	language.Add("tool.mr.desc", "Change the look of a map any way you want!")
 end
 
 do

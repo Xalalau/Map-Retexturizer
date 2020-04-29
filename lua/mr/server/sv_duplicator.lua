@@ -108,34 +108,37 @@ end
 function Duplicator:UpgradeSaveFormat(savedTable)
 	-- 1.0 to 2.0
 	if savedTable and not savedTable.savingFormat then
-		-- Update map materials structure
+		-- Rebuild map materials structure from GMod saves
 		if savedTable[1] and savedTable[1].oldMaterial then
-			savedTable.map = savedTable
-		-- Update decals structure
+			local aux = table.Copy(savedTable)
+
+			savedTable = {}
+			savedTable.map = aux
+		-- Rebuild decals structure from GMod saves
 		elseif savedTable[1] and savedTable[1].mat then
-			savedTable.decals = savedTable
+			local aux = table.Copy(savedTable)
+
+			savedTable = {}
+			savedTable.decals = aux
 		end
 
-		-- Remove all the disabled elements
-		if savedTable.decals then
-			MR.MML:Clean(savedTable.decals)
-		end
-		
+		-- Map materials table from saved files and rebuilt GMod saves:
 		if savedTable.map then
+			-- Remove all the disabled elements
 			MR.MML:Clean(savedTable.map)
-		end
 
-		-- Change "mapretexturizer" to "mr" on map materials table
-		if savedTable.map then
+			-- Change "mapretexturizer" to "mr"
 			local i
 
 			for i = 1,#savedTable.map do		
 				savedTable.map[i].backup.newMaterial, _ = string.gsub(savedTable.map[i].backup.newMaterial, "%mapretexturizer", "mr")
 			end
 		end
-		
-		-- Set a format number
-		savedTable.savingFormat = "2.0"
+
+		-- Set a format number when 
+		if savedTable == dup.recreatedTable then
+			savedTable.savingFormat = "2.0"
+		end
 	end
 
 	return savedTable
@@ -157,10 +160,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 			dup.recreatedTable.models = {}
 		end)
 		dup.recreatedTable.initialized = false
-	else
-		-- Upgrade the format if it's necessary
-		Duplicator:UpgradeSaveFormat(savedTable)
 	end
+
+	-- Finish upgrading the format if it's necessary
+	Duplicator:UpgradeSaveFormat(savedTable)
 
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then

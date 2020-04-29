@@ -19,6 +19,7 @@
  [*] Matsilagi
  [*] NickMBR
  [*] Nerdy
+ [*] twitch.tv/deekzzyy
  
  Valeu, pessoal!!
 ]]

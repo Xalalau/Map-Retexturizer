@@ -39,7 +39,7 @@ end
 function Duplicator:RecreateTable(ply, ent, savedTable)
 	-- Note: it has to start after the Duplicator:Start() timer and after the first model entry
 
-	local notModelDelay
+	local notModelDelay = 0.1
 
 	-- Upgrade the format if it's necessary
 	Duplicator:UpgradeSaveFormat(savedTable)

@@ -144,18 +144,14 @@ concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if value == "1" then
-		value = true
-	elseif value == "0" then
-		value = false
-	else
+	if value ~= "1" and value ~= "0" then
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
 	if MR.Save:SetAuto(MR.Ply:GetFakeHostPly(), value) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value and "enabled" or "disabled")..".")
+		Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value == "1" and "enabled" or "disabled")..".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
 	end

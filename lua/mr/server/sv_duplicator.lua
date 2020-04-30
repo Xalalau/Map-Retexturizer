@@ -187,6 +187,13 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("internal_mr_skybox"):GetString() } or { skybox = "" }
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
+		-- Remove all the disabled elements from the map materials tables
+		-- if we are sending the current modifications to a new player
+		if not savedTable then
+			MR.MML:Clean(mapTable.map)
+			MR.MML:Clean(mapTable.displacements)
+		end
+
 		-- Get the changed models for new players
 		if modelsTable.list and modelsTable.list == "" then
 			local newList = {}

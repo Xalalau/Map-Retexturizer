@@ -81,6 +81,12 @@ concommand.Add("mr_delay", function (_1, _2, _3, arguments)
 		return
 	end
 
+	if not value or not tonumber(value) then
+		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose a number.")
+
+		return
+	end
+
 	if MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
 	else

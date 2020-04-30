@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "MAP. RET. Pre.rev.13 - GitHub" --[[
+ =3 ]]  local mr_revision = "Version 13" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |

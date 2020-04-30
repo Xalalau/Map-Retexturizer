@@ -17,7 +17,7 @@ local preview = {
 hook.Add("PostDrawOpaqueRenderables", "MRPreview", function()
 	local ply = LocalPlayer()
 
-	if ply and ply:HasWeapon("gmod_tool") and ply:GetActiveWeapon():GetClass() == "gmod_tool" then
+	if ply and IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon():GetClass() == "gmod_tool" and ply:GetActiveWeapon():GetMode() == "mr" then
 		if MR.Ply:IsInitialized(ply) and MR.Ply:GetPreviewMode(LocalPlayer()) and MR.Ply:GetDecalMode(ply) then
 			Preview:Render()
 		end

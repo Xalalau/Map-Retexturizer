@@ -105,25 +105,28 @@ function Load:FirstSpawn(ply)
 	-- Index the player control
 	MR.Ply:Set(ply)
 
-	-- Start an ongoing load from the beggining
-	if MR.Duplicator:IsRunning() then
-		Load:Start(ply, MR.Duplicator:IsRunning())
-	-- Send the current modifications
-	elseif MR.Base:GetInitialized() then
-		MR.Duplicator:Start(ply)
-	-- Run an autoload
-	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
-		-- Set the spawn as done since The fakeHostPly will take care of this load
-		MR.Ply:SetFirstSpawn(ply)
-		net.Start("Ply:SetFirstSpawn")
-		net.Send(ply)
+	-- wait until the player has our table attached to him
+	timer.Create("MRWaitToSave", 0.1, 1, function()
+		-- Start an ongoing load from the beggining
+		if MR.Duplicator:IsRunning() then
+			Load:Start(ply, MR.Duplicator:IsRunning())
+		-- Send the current modifications
+		elseif MR.Base:GetInitialized() then
+			MR.Duplicator:Start(ply)
+		-- Run an autoload
+		elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
+			-- Set the spawn as done since The fakeHostPly will take care of this load
+			MR.Ply:SetFirstSpawn(ply)
+			net.Start("Ply:SetFirstSpawn")
+			net.Send(ply)
 
-		Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
-	-- Nothing to send, finish the joining process
-	else
-		MR.Ply:SetFirstSpawn(ply)
-		net.Start("Ply:SetFirstSpawn")
-		net.Send(ply)
+			Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
+		-- Nothing to send, finish the joining process
+		else
+			MR.Ply:SetFirstSpawn(ply)
+			net.Start("Ply:SetFirstSpawn")
+			net.Send(ply)
+		end
 	end
 end
 

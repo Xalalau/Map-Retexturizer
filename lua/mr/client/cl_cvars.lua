@@ -6,10 +6,12 @@ local CVars = MR.CVars
 
 local cvars = {
 	loop = {
-		-- When I sync a field it triggers itself again and tries to resync, entering a loop. I have to block it
+		-- When I sync a field it SOMETIMES triggers itself again and tries to
+		-- resync, entering a loop. I have to control it
 		block = false,
-		-- If we are dealing with a slider, it doesn't update to the last value correctly on the other players,
-		-- so I have to run the sync twice
+		-- If we are dealing with a slider, it ALSO doesn't update to the last value
+		-- correctly on the other players, so I have to run the sync twice.
+		-- Note: when we select the max or min value, it nevers triggers itself again
 		sliderUpdate = false
 	 }
 }
@@ -24,14 +26,29 @@ function CVars:GetLoopBlock()
 	return cvars.loop.block
 end
 
--- Set a sync loop block
-function CVars:SetLoopBlock(value)
-	cvars.loop.block = value
-end
-
 -- Get if a slider value fix is enabled
 function CVars:GetSliderUpdate()
 	return cvars.loop.sliderUpdate
+end
+
+-- Set a sync loop block
+function CVars:SetLoopBlock(value)
+	cvars.loop.block = value
+
+	-- Set an auto unblock
+	if value then
+		CVars:SetAutoLoopUnblock()
+	end
+end
+
+-- Sometimes a field auto triggers itself again, sometimes not... Since menu option values
+-- change very quickly, I can and have to finish the sync disabling the block after a short time.
+function CVars:SetAutoLoopUnblock()
+	if not timer.Exists("MRAutoUnlock") then
+		timer.Create("MRAutoUnlock", 0.2, 1, function()
+			CVars:SetLoopBlock(false)
+		end)
+	end
 end
 
 -- Set a slider value fix

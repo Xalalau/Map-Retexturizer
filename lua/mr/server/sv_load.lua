@@ -127,7 +127,7 @@ function Load:FirstSpawn(ply)
 			net.Start("Ply:SetFirstSpawn")
 			net.Send(ply)
 		end
-	end
+	end)
 end
 
 -- Delete a saved file: server

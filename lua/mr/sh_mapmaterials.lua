@@ -113,14 +113,16 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 		-- Set the backup:
 		-- If we are modifying an already modified material
 		if element then
-			-- Create an entry in the material Data poiting to the backup data
+			-- Update the backup data
 			data.backup = element.backup
 
-			-- Cleanup
-			MR.MML:DisableElement(element)
+			-- Run the element backup
 			if CLIENT then
-				MapMaterials:Set_CL(data.backup)
+				MapMaterials:Set_CL(element.backup)
 			end
+
+			-- Change the state of the element to disabled
+			MR.MML:DisableElement(element)
 
 			-- Get a map.list free index
 			i = MR.MML:GetFreeIndex(materialTable)

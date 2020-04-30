@@ -150,7 +150,7 @@ function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMateria
 
 	if map.displacements.hack then
 		for k,v in pairs(MapMaterials.Displacements:GetDetected()) do
-			timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()			
+			timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()
 				net.Start("MapMaterials.Displacements:Set_SV")
 					net.WriteString(k)
 					net.WriteString(Material(k):GetTexture("$basetexture"):GetName())

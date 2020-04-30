@@ -44,6 +44,34 @@ mr_cleanup             =  Clean all the modifications.
 end)
 
 -- ---------------------------------------------------------
+-- mr_admin
+concommand.Add("mr_admin", function (_1, _2, _3, arguments)
+	local value, plyIndex = Concommand:ExplodeArguments(arguments)
+
+	if CLIENT then
+		Concommand:RunOnSV("mr_admin", value)
+
+		return
+	end
+
+	if value ~= "1" and value ~= "0" then
+		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
+
+		return
+	end
+
+	if not MR.Utils:PlyIsAdmin(player.GetAll()[tonumber(plyIndex)]) then
+		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
+
+		return
+	end
+
+	RunConsoleCommand("internal_mr_admin", value)
+
+	Concommand:PrintSuccess("[Map Retexturizer] Console: setting admin mode to " .. tostring(value) .. ".")
+end)
+
+-- ---------------------------------------------------------
 -- mr_delay
 concommand.Add("mr_delay", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommand:ExplodeArguments(arguments)

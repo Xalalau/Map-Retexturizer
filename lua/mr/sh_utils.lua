@@ -19,7 +19,7 @@ function Utils:PlyIsAdmin(ply)
 	end
 
 	-- General admin check
-	if not ply:IsAdmin() and GetConVar("mr_admin"):GetString() == "1" then
+	if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
 		if CLIENT then
 			if not timer.Exists("MRNotAdminPrint") then
 				if not MR.CVars:GetLoopBlock() then -- Don't print the message if we are checking a syncing

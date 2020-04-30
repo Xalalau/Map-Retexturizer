@@ -45,11 +45,9 @@ if CLIENT then
 end
 
 do
-	local sh_flags_report = { FCVAR_REPLICATED, FCVAR_NOTIFY }
 	local sh_flags = { FCVAR_REPLICATED, FCVAR_UNREGISTERED }
 
-	CreateConVar("mr_admin", "1", sh_flags_report)
-
+	CreateConVar("internal_mr_admin", "1", sh_flags)
 	CreateConVar("internal_mr_autosave", "1", sh_flags)
 	CreateConVar("internal_mr_autoload", "", sh_flags)
 	CreateConVar("internal_mr_skybox", "", sh_flags)

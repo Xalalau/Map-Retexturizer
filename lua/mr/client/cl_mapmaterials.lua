@@ -117,7 +117,6 @@ function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMateria
 	local displacement, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
 	local newMaterial = MR.GUI:GetDisplacementsText1():GetValue()
 	local newMaterial2 = MR.GUI:GetDisplacementsText2():GetValue()
-	local delay = 0
 
 	-- No displacement selected
 	if not MR.MapMaterials.Displacements:GetDetected() or not displacement or displacement == "" then
@@ -147,25 +146,26 @@ function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMateria
 	end
 
 	-- Dirty hack: I reapply all the displacement materials because they get darker when modified by the tool
+	local delay = 0
+
 	if map.displacements.hack then
 		for k,v in pairs(MapMaterials.Displacements:GetDetected()) do
-			net.Start("MapMaterials.Displacements:Set_SV")
-				net.WriteString(k)
-				net.WriteString("dev/graygrid")
-				net.WriteString("dev/graygrid")
-			net.SendToServer()
-
-			timer.Create("MRDiscplamentsDirtyHackCleanup"..k, 0.2, 1, function()
-				MapMaterials:Remove(k)
+			timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()			
+				net.Start("MapMaterials.Displacements:Set_SV")
+					net.WriteString(k)
+					net.WriteString(Material(k):GetTexture("$basetexture"):GetName())
+					net.WriteString(Material(k):GetTexture("$basetexture2"):GetName())
+				net.SendToServer()
 			end)
+			
+			delay = delay + 0.1
 		end
 
-		delay = 0.3
 		map.displacements.hack = false
 	end
 
 	-- Start the change
-	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay, 1, function() -- Wait for the initialization hack above
+	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay + 0.1, 1, function() -- Wait for the initialization hack above
 		net.Start("MapMaterials.Displacements:Set_SV")
 			net.WriteString(displacement)
 			net.WriteString(newMaterial or "")

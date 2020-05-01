@@ -540,12 +540,12 @@ function TOOL.BuildCPanel(CPanel)
 				MR.GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
-			properties.a = CPanel:NumSlider("Alpha", "internal_mr_alpha", 0, 1, 2)
+			CPanel:NumSlider("Width Magnification", "internal_mr_scalex", 0.01, 6, 2)
+			CPanel:NumSlider("Height Magnification", "internal_mr_scaley", 0.01, 6, 2)
 			properties.b = CPanel:NumSlider("Horizontal Translation", "internal_mr_offsetx", -1, 1, 2)
 			properties.c = CPanel:NumSlider("Vertical Translation", "internal_mr_offsety", -1, 1, 2)
-			properties.d = CPanel:NumSlider("Width Magnification", "internal_mr_scalex", 0.01, 6, 2)
-			properties.e = CPanel:NumSlider("Height Magnification", "internal_mr_scaley", 0.01, 6, 2)
 			properties.f = CPanel:NumSlider("Rotation", "internal_mr_rotation", 0, 179, 0)
+			properties.a = CPanel:NumSlider("Alpha", "internal_mr_alpha", 0, 1, 2)
 			properties.baseMaterialReset = CPanel:Button("Reset")			
 
 			function properties.baseMaterialReset:DoClick()

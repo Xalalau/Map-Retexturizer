@@ -40,5 +40,8 @@ function Decals:Set_CL(materialPath, ent, pos, normal, isBroadcasted)
 
 	-- Apply the decal
 	-- HACK!!! For some reason when I divide the width and height by 32, it renders correctly. I'm going to report this.
-	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), decalMaterial:Width()/32, decalMaterial:Height()/32)
+	local width = decalMaterial:Width()/32 * LocalPlayer():GetInfo("internal_mr_scalex")
+	local height = decalMaterial:Height()/32 * LocalPlayer():GetInfo("internal_mr_scaley")
+	
+	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), width, height)
 end

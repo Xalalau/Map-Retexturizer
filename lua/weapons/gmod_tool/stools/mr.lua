@@ -495,11 +495,9 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(generalPanel)
 			
-			CPanel:ControlHelp("It's not accurate with decals (GMod bugs).")
-
 			local decalBox = CPanel:CheckBox("Use as Decal", "internal_mr_decal")
 
-				CPanel:ControlHelp("Decals are not working properly (GMod bugs).")
+				CPanel:ControlHelp("Decals are slightly buggy in GMod.")
 
 				function decalBox:OnChange(val)
 					-- This option starts disabled, so if the player opens the menu too

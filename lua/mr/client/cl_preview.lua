@@ -114,26 +114,8 @@ function Preview:Render()
 	else
 		local ang = tr.HitNormal:Angle()
 
-		-- Render decal (It's imprecise because util.DecalEx() is buggy)
+		-- Render decal
 		render.SetMaterial(preview)
-		render.DrawQuadEasy(tr.HitPos, tr.HitNormal, width, height, Color(255,255,255), 180)
-
-		-- Render imprecision alert
-		local corretion = 51
-		
-		if height <= 32 then
-			corretion = 70
-		elseif height <= 64 then
-			corretion = 60
-		elseif height <= 128 then
-			corretion = 53
-		end
-
-		cam.Start3D2D(Vector(tr.HitPos.x, tr.HitPos.y, tr.HitPos.z + (height*corretion)/100), Angle(ang.x, ang.y + 90, ang.z + 90), 0.09)
-			surface.SetFont("CloseCaption_Normal")
-			surface.SetTextColor(255, 255, 255, 255)
-			surface.SetTextPos(0, 0)
-			surface.DrawText("Decals preview may be inaccurate.")
-		cam.End3D2D()
+		render.DrawQuadEasy(tr.HitPos, tr.HitNormal, width, height, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
 	end
 end

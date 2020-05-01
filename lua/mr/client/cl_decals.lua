@@ -39,8 +39,6 @@ function Decals:Set_CL(materialPath, ent, pos, normal, isBroadcasted)
 	end
 
 	-- Apply the decal
-	-- Notes:
-	-- Vertical normals don't work
-	-- Resizing doesn't work (width x height)
-	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), decalMaterial:Width(), decalMaterial:Height())
+	-- HACK!!! For some reason when I divide the width and height by 32, it renders correctly. I'm going to report this.
+	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), decalMaterial:Width()/32, decalMaterial:Height()/32)
 end

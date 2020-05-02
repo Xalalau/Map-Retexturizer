@@ -62,18 +62,26 @@ function MapMaterials:Set_CL(data)
 	end
 
 	-- Change the alpha channel
-	oldMaterial:SetString("$translucent", "1")
 	if data.alpha then
+		oldMaterial:SetString("$translucent", "1")
 		oldMaterial:SetString("$alpha", data.alpha)
 	end
 
 	-- Change the matrix
 	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
 
-	textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
-	textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
-	textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
-	oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
+	if data.rotation then
+		textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
+	end
+
+	if data.scalex and data.scaley then
+		textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
+	end
+
+	if data.offsetx and data.offsety then
+		textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
+		oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
+	end
 
 	-- Change the detail
 	if data.detail then

@@ -40,9 +40,9 @@ function MapMaterials:RemoveAll(ply)
 	MR.Duplicator:ForceStop_SV()
 
 	-- Remove
-	if MR.MML:Count(MapMaterials:GetList()) > 0 then
+	if MR.Data.list:Count(MapMaterials:GetList()) > 0 then
 		for k,v in pairs(MapMaterials:GetList()) do
-			if MR.MML:IsActive(v) then
+			if MR.Data.list:IsActive(v) then
 				MapMaterials:Remove(v.oldMaterial)
 			end
 		end
@@ -95,7 +95,7 @@ function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMa
 	end
 
 	-- Check if the backup table is full
-	if MR.MML:IsFull(MapMaterials.Displacements:GetList(), MapMaterials.Displacements:GetLimit()) then
+	if MR.Data.list:IsFull(MapMaterials.Displacements:GetList(), MapMaterials.Displacements:GetLimit()) then
 		return false
 	end
 
@@ -131,9 +131,9 @@ function MapMaterials.Displacements:RemoveAll(ply)
 	MR.Duplicator:ForceStop_SV()
 
 	-- Remove
-	if MR.MML:Count(MapMaterials.Displacements:GetList()) > 0 then
+	if MR.Data.list:Count(MapMaterials.Displacements:GetList()) > 0 then
 		for k,v in pairs(MapMaterials.Displacements:GetList()) do
-			if MR.MML:IsActive(v) then
+			if MR.Data.list:IsActive(v) then
 				MapMaterials:Remove(v.oldMaterial)
 			end
 		end

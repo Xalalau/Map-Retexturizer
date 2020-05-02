@@ -189,7 +189,7 @@ end
 	-- If we are dealing with map or model materials:
 
 	-- Check if the backup table is full
-	if MR.MML:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
+	if MR.Data.list:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
 		return false
 	end
 

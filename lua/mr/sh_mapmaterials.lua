@@ -78,7 +78,7 @@ function MapMaterials:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local path = ""
 
-		local element = MR.MML:GetElement(map.list, MR.Materials:GetOriginal(tr))
+		local element = MR.Data.list:GetElement(map.list, MR.Materials:GetOriginal(tr))
 
 		if element then
 			path = element.newMaterial
@@ -107,7 +107,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 	-- run once serverside and once on every player clientside
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		local materialTable = isDisplacement and map.displacements.list or map.list
-		local element = MR.MML:GetElement(materialTable, data.oldMaterial)
+		local element = MR.Data.list:GetElement(materialTable, data.oldMaterial)
 		local i
 
 		-- Set the backup:
@@ -122,14 +122,14 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 			end
 
 			-- Change the state of the element to disabled
-			MR.MML:DisableElement(element)
+			MR.Data.list:DisableElement(element)
 
 			-- Get a map.list free index
-			i = MR.MML:GetFreeIndex(materialTable)
+			i = MR.Data.list:GetFreeIndex(materialTable)
 		-- If the material is untouched
 		else
 			-- Get a map.list free index
-			i = MR.MML:GetFreeIndex(materialTable)
+			i = MR.Data.list:GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
 			local dataBackup = data.backup or MR.Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
@@ -149,7 +149,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 		end
 
 		-- Index the Data
-		MR.MML:InsertElement(materialTable, data, i)
+		MR.Data.list:InsertElement(materialTable, data, i)
 
 		-- Apply the new state to the map material
 		if CLIENT then
@@ -196,9 +196,9 @@ function MapMaterials:Remove(oldMaterial)
 	-- Get a material table for displacements or map
 	local materialTable = MR.Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
 
-	if MR.MML:Count(materialTable) > 0 then
+	if MR.Data.list:Count(materialTable) > 0 then
 		-- Get the element to clean from the table
-		local element = MR.MML:GetElement(materialTable, oldMaterial)
+		local element = MR.Data.list:GetElement(materialTable, oldMaterial)
 
 		if element then
 			-- Run the element backup
@@ -207,16 +207,16 @@ function MapMaterials:Remove(oldMaterial)
 			end
 
 			-- Change the state of the element to disabled
-			MR.MML:DisableElement(element)
+			MR.Data.list:DisableElement(element)
 
 			-- Update the duplicator
 			if SERVER then
 				if IsValid(MR.Duplicator:GetEnt()) then
-					if MR.MML:Count(map.list) == 0 then
+					if MR.Data.list:Count(map.list) == 0 then
 						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
 					end
 
-					if MR.MML:Count(map.displacements.list) == 0 then
+					if MR.Data.list:Count(map.displacements.list) == 0 then
 						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
 					end
 				end

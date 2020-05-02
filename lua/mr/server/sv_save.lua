@@ -44,9 +44,9 @@ function Save:Set_SV(ply, saveName, blcokAlert)
 	}
 
 	-- Remove all the disabled elements
-	MR.MML:Clean(save.decals)
-	MR.MML:Clean(save.map)
-	MR.MML:Clean(save.displacements)
+	MR.Data.list:Clean(save.decals)
+	MR.Data.list:Clean(save.map)
+	MR.Data.list:Clean(save.displacements)
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save))

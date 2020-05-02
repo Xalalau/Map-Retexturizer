@@ -6,6 +6,9 @@ local Data = {}
 Data.__index = Data
 MR.Data = Data
 
+Data.list = {}
+Data.list.__index = Data.list
+
 --[[
 
 Labels:
@@ -61,7 +64,7 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
+	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.Data.list:GetElement(list, MR.Materials:GetOriginal(tr))
 end
 
 -- Set a data table
@@ -122,3 +125,123 @@ function Data:CreateFromMaterial(materialInfo, details, i, displacement)
 
 	return data
 end
+
+-- Set a data table to default properties values
+function Data:CreateDefaults(ply, tr)
+	local data = {
+		ent = game.GetWorld(),
+		oldMaterial = MR.Materials:GetCurrent(tr),
+		newMaterial = ply:GetInfo("internal_mr_material"),
+		offsetx = "0.00",
+		offsety = "0.00",
+		scalex = "1.00",
+		scaley = "1.00",
+		rotation = "0",
+		alpha = "1.00",
+		detail = "None",
+	}
+
+	return data
+end
+
+-------------------------------------
+--- Data TABLE LIST MANAGEMENT
+-------------------------------------
+
+-- Check if the element is active
+function Data.list:IsActive(element)
+	if element and istable(element) and (element.oldMaterial ~=nil or element.mat ~= nil) then
+		return true
+	end
+	
+	return false
+end
+
+-- Check if the table is full
+function Data.list:IsFull(list, limit)
+	-- Check if the backup table is full
+	if Data.list:Count(list) == limit then
+		-- Limit reached! Try to open new spaces in the list removing disabled entries
+		Data.list:Clean(list)
+
+		-- Check again
+		if Data.list:Count(list) == limit then
+			if SERVER then
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..limit..")! Notify the developer for more space.")
+			end
+
+			return true
+		end
+	end
+	
+	return false
+end
+
+-- Get a free index
+function Data.list:GetFreeIndex(list)
+	local i = 1
+
+	for k,v in pairs(list) do
+		if not Data.list:IsActive(v) then
+			break
+		end
+
+		i = i + 1
+	end
+
+	return i
+end
+
+-- Insert an element
+function Data.list:InsertElement(list, data, position)
+	list[position or Data.list:GetFreeIndex(list)] = data
+end
+
+-- Get an element and its index
+function Data.list:GetElement(list, oldMaterial)
+	for k,v in pairs(list) do
+		if v.oldMaterial == oldMaterial then
+			return v, k
+		end
+	end
+
+	return nil
+end
+
+-- Number of active elements in the table 
+function Data.list:Count(list)
+	local i = 0
+
+	for k,v in pairs(list) do
+		if Data.list:IsActive(v) then
+			i = i + 1
+		end
+	end
+
+	return i
+end
+
+-- Disable an element
+function Data.list:DisableElement(element)
+	for m,n in pairs(element) do
+		element[m] = nil
+	end
+end
+
+-- Remove all the disabled elements
+function Data.list:Clean(list)
+	if not list then
+		return
+	end
+
+	local i = 1
+
+	while list[i] do
+		if not Data.list:IsActive(list[i]) then
+			list[i] = nil
+		end
+
+		i = i + 1
+	end
+end
+ 

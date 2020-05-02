@@ -22,7 +22,7 @@ function MapMaterials:Set_CL(data)
 		local newMaterial = nil
 
 		-- Get the correct material
-		local element = MR.MML:GetElement(MapMaterials:GetList(), data.newMaterial)
+		local element = MR.Data.list:GetElement(MapMaterials:GetList(), data.newMaterial)
 		
 		if element and element.backup then
 			newMaterial = Material(element.backup.newMaterial)
@@ -49,7 +49,7 @@ function MapMaterials:Set_CL(data)
 		end
 
 		-- Get the correct material
-		local element = MR.MML:GetElement(MapMaterials:GetList(), data.newMaterial2)
+		local element = MR.Data.list:GetElement(MapMaterials:GetList(), data.newMaterial2)
 
 		if element and element.backup then
 			newMaterial2 = Material(element.backup.newMaterial2)

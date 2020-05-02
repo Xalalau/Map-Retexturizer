@@ -40,7 +40,7 @@ function Save:Set_SV(ply, saveName, blcokAlert)
 		map = MR.MapMaterials:GetList(),
 		displacements = MR.MapMaterials.Displacements:GetList(),
 		skybox = GetConVar("internal_mr_skybox"):GetString(),
-		savingFormat = "2.0"
+		savingFormat = "3.0"
 	}
 
 	-- Remove all the disabled elements

@@ -6,7 +6,7 @@ local Decals = MR.Decals
 
 -- Networking 
 net.Receive("Decals:Set_CL", function()
-	Decals:Set_CL(net.ReadString(), net.ReadEntity(), net.ReadVector(), net.ReadVector(), net.ReadBool())
+	Decals:Set_CL(net.ReadTable(), net.ReadBool())
 end)
 
 -- Toogle the decal mode for a player: server
@@ -21,27 +21,30 @@ function Decals:Toogle(value)
 end
 
 -- Apply decal materials: client
-function Decals:Set_CL(materialPath, ent, pos, normal, isBroadcasted)
+function Decals:Set_CL(data, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, materialPath) then
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, data.newMaterial) then
 		return false
 	end
 
 	-- Create the material
-	local decalMaterial = Decals:GetList()[materialPath.."2"]
+	local decalMaterial = Decals:GetList()[data.newMaterial.."2"]
 
 	if not decalMaterial then
-		decalMaterial = MR.Materials:Create(materialPath.."2", "LightmappedGeneric", materialPath)
+		decalMaterial = MR.Materials:Create(data.newMaterial.."2", "LightmappedGeneric", data.newMaterial)
 		decalMaterial:SetInt("$decal", 1)
 		decalMaterial:SetInt("$translucent", 1)
 		decalMaterial:SetFloat("$decalscale", 1.00)
-		decalMaterial:SetTexture("$basetexture", Material(materialPath):GetTexture("$basetexture"))
+		decalMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
 	end
 
 	-- Apply the decal
 	-- HACK!!! For some reason when I divide the width and height by 32, it renders correctly. I'm going to report this.
-	local width = decalMaterial:Width()/32 * LocalPlayer():GetInfo("internal_mr_scalex")
-	local height = decalMaterial:Height()/32 * LocalPlayer():GetInfo("internal_mr_scaley")
-	
-	util.DecalEx(decalMaterial, ent, pos, normal, Color(255,255,255,255), width, height)
+	local width = decalMaterial:Width()/32 * data.scalex
+	local height = decalMaterial:Height()/32 * data.scaley
+
+	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), width, height)
+
+	-- Save modification on our list
+	table.insert(Decals:GetList(), data)
 end

@@ -15,15 +15,12 @@ end)
 -- Apply decal materials: server
 function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData and duplicatorData.mat or MR.Materials:GetNew(ply)) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply)) then
 		return false
 	end
 
 	-- Get the basic properties
-	local mat = tr and MR.Materials:GetNew(ply) or duplicatorData.mat
-	local ent = tr and tr.Entity or duplicatorData.ent
-	local pos = tr and tr.HitPos or duplicatorData.pos
-	local hit = tr and tr.HitNormal or duplicatorData.hit
+	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
 
 	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
@@ -31,16 +28,12 @@ function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = Decals:GetList() })
 
 		-- Index the data
-		table.insert(Decals:GetList(), {ent = ent, pos = pos, hit = hit, mat = mat})
+		table.insert(Decals:GetList(), data)
 	end
 
 	-- Send to...
 	net.Start("Decals:Set_CL")
-		net.WriteString(mat)
-		net.WriteEntity(ent)
-		net.WriteVector(pos)
-		net.WriteVector(hit)
-		net.WriteBool(isBroadcasted or false)
+		net.WriteTable(data)
 	-- all players
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		net.WriteBool(true)

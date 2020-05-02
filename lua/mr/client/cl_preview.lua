@@ -113,9 +113,10 @@ function Preview:Render()
 	-- Decal renderind:
 	else
 		local ang = tr.HitNormal:Angle()
-		local scale = ply:GetInfo("internal_mr_scalex")
+		local scalex = ply:GetInfo("internal_mr_scalex")
+		local scaley = ply:GetInfo("internal_mr_scaley")
 
 		render.SetMaterial(preview)
-		render.DrawQuadEasy(tr.HitPos, tr.HitNormal, width * scale, height * scale, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
+		render.DrawQuadEasy(tr.HitPos, tr.HitNormal, width * scalex, height * scaley, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
 	end
 end

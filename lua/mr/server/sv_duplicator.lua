@@ -135,9 +135,31 @@ function Duplicator:UpgradeSaveFormat(savedTable)
 			end
 		end
 
-		-- Set a format number when 
+		-- Set the new format number 
 		if savedTable == dup.recreatedTable then
 			savedTable.savingFormat = "2.0"
+		end
+	end
+
+	-- 2.0 to 3.0
+	if savedTable.savingFormat == "2.0" then
+		-- Update decals structure
+		if savedTable.decals then
+			for k,v in pairs(savedTable.decals) do
+				v = {
+					oldMaterial = v.mat,
+					newMaterial = v.mat,
+					scalex = "0.01",
+					scaley = "0.01",
+					position = v.pos,
+					normal = v.hit
+				}
+			end
+		end
+
+		-- Set the new format number 
+		if savedTable == dup.recreatedTable then
+			savedTable.savingFormat = "3.0"
 		end
 	end
 
@@ -399,10 +421,10 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	-- If the entry exists and duplicator is not stopping...
 	if savedTable[position] and not Duplicator:IsStopping() then
 		-- Check if we have a valid material
-		if not MR.Materials:IsValid(savedTable[position].mat) then
+		if not MR.Materials:IsValid(savedTable[position].newMaterial) then
 			-- Register the error
 			MR.Ply:IncrementDupErrorsN(ply)
-			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), "Decal, $basetexture: " .. (savedTable[position].mat or "nil"))
+			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), "Decal, $basetexture: " .. (savedTable[position].newMaterial or "nil"))
 
 			-- Let's check the next entry
 			Duplicator:LoadDecals(ply, nil, savedTable, position + 1)
@@ -412,13 +434,16 @@ function Duplicator:LoadDecals(ply, ent, savedTable, position)
 	-- If there are no more entries or duplicator is stopping...
 	else
 		Duplicator:Finish(ply)
-		
+
 		return
 	end
 
 	-- Count
 	MR.Ply:IncrementDupCurrent(ply)
 	Duplicator:SetProgress_SV(ply, MR.Ply:GetDupCurrent(ply))
+
+	-- Change the stored entity to world
+	savedTable[position].ent = game.GetWorld()
 
 	-- Apply decal
 	MR.Decals:Set_SV(ply, nil, savedTable[position], true)

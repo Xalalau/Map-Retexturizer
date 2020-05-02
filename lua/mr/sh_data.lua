@@ -6,6 +6,32 @@ local Data = {}
 Data.__index = Data
 MR.Data = Data
 
+--[[
+
+Labels:
+	- map
+	- models
+	- decals
+	- * [All]
+
+Data = {
+	ent = *
+	oldMaterial = map and models
+	newMaterial = *
+	newMaterial2 = map
+	offsetx = map and models
+	offsety = map and models
+	scalex = *
+	scaley = *
+	rotation = map and models
+	alpha = map and models
+	detail = map and models
+	position = decals
+	normal = decals
+}
+
+]]
+
 -- Check if the tables are the same
 function Data:IsEqual(Data1, Data2)
 	local isDifferent = false
@@ -33,46 +59,34 @@ function Data:IsEqual(Data1, Data2)
 	return true
 end
 
--- Set a data table
-function Data:Create(ply, tr)
-	local data = {
-		ent = tr and tr.Entity or game.GetWorld(),
-		oldMaterial = tr and MR.Materials:GetOriginal(tr) or "",
-		newMaterial = ply:GetInfo("internal_mr_material"),
-		newMaterial2 = nil,
-		offsetx = ply:GetInfo("internal_mr_offsetx"),
-		offsety = ply:GetInfo("internal_mr_offsety"),
-		scalex = ply:GetInfo("internal_mr_scalex") ~= "0" and ply:GetInfo("internal_mr_scalex") or "0.01",
-		scaley = ply:GetInfo("internal_mr_scaley") ~= "0" and ply:GetInfo("internal_mr_scaley") or "0.01",
-		rotation = ply:GetInfo("internal_mr_rotation"),
-		alpha = ply:GetInfo("internal_mr_alpha"),
-		detail = ply:GetInfo("internal_mr_detail"),
-	}
-
-	return data
+-- Get the data table if it exists or return nil
+function Data:Get(tr, list)
+	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
 end
 
--- Set a data table to default properties values
-function Data:CreateDefaults(ply, tr)
+-- Set a data table
+function Data:Create(ply, tr, decalInfo)
 	local data = {
-		ent = game.GetWorld(),
-		oldMaterial = MR.Materials:GetCurrent(tr),
+		ent = tr and tr.Entity or game.GetWorld(),
+		oldMaterial = decalInfo and ply:GetInfo("internal_mr_material") or tr and MR.Materials:GetOriginal(tr) or "",
 		newMaterial = ply:GetInfo("internal_mr_material"),
-		offsetx = "0.00",
-		offsety = "0.00",
-		scalex = "1.00",
-		scaley = "1.00",
-		rotation = "0",
-		alpha = "1.00",
-		detail = "None",
+		offsetx = not decalInfo and ply:GetInfo("internal_mr_offsetx") or nil,
+		offsety = not decalInfo and ply:GetInfo("internal_mr_offsety") or nil,
+		scalex = ply:GetInfo("internal_mr_scalex") ~= "0" and ply:GetInfo("internal_mr_scalex") or "0.01",
+		scaley = ply:GetInfo("internal_mr_scaley") ~= "0" and ply:GetInfo("internal_mr_scaley") or "0.01",
+		rotation = not decalInfo and ply:GetInfo("internal_mr_rotation") or nil,
+		alpha = not decalInfo and ply:GetInfo("internal_mr_alpha") or nil,
+		detail = not decalInfo and ply:GetInfo("internal_mr_detail") or nil,
+		position = decalInfo and decalInfo.pos,
+		normal = decalInfo and decalInfo.normal
 	}
 
 	return data
 end
 
 -- Convert a map material into a data table
-function Data:CreateFromMaterial(material, details, i, displacement)
-	local theMaterial = Material(material.name)
+function Data:CreateFromMaterial(materialInfo, details, i, displacement)
+	local theMaterial = Material(materialInfo.name)
 
 	local scalex = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
 	local scaley = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
@@ -81,8 +95,8 @@ function Data:CreateFromMaterial(material, details, i, displacement)
 
 	local data = {
 		ent = game.GetWorld(),
-		oldMaterial = material.name,
-		newMaterial = displacement and displacement.filename..tostring(i) or i and material.filename..tostring(i) or "",
+		oldMaterial = materialInfo.name,
+		newMaterial = displacement and displacement.filename..tostring(i) or i and materialInfo.filename..tostring(i) or "",
 		newMaterial2 = displacement and displacement.filename..tostring(i) or nil,
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
@@ -109,7 +123,20 @@ function Data:CreateFromMaterial(material, details, i, displacement)
 	return data
 end
 
--- Get the data table if it exists or return nil
-function Data:Get(tr, list)
-	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.MML:GetElement(list, MR.Materials:GetOriginal(tr))
+-- Set a data table to default properties values
+function Data:CreateDefaults(ply, tr)
+	local data = {
+		ent = game.GetWorld(),
+		oldMaterial = MR.Materials:GetCurrent(tr),
+		newMaterial = ply:GetInfo("internal_mr_material"),
+		offsetx = "0.00",
+		offsety = "0.00",
+		scalex = "1.00",
+		scaley = "1.00",
+		rotation = "0",
+		alpha = "1.00",
+		detail = "None",
+	}
+
+	return data
 end

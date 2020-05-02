@@ -39,11 +39,7 @@ function Decals:Set_CL(data, isBroadcasted)
 	end
 
 	-- Apply the decal
-	-- HACK!!! For some reason when I divide the width and height by 32, it renders correctly. I'm going to report this.
-	local width = decalMaterial:Width()/32 * data.scalex
-	local height = decalMaterial:Height()/32 * data.scaley
-
-	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), width, height)
+	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scalex, data.scaley)
 
 	-- Save modification on our list
 	table.insert(Decals:GetList(), data)

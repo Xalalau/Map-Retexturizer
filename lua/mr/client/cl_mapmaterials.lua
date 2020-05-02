@@ -63,7 +63,9 @@ function MapMaterials:Set_CL(data)
 
 	-- Change the alpha channel
 	oldMaterial:SetString("$translucent", "1")
-	oldMaterial:SetString("$alpha", data.alpha)
+	if data.alpha then
+		oldMaterial:SetString("$alpha", data.alpha)
+	end
 
 	-- Change the matrix
 	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
@@ -74,13 +76,15 @@ function MapMaterials:Set_CL(data)
 	oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
 
 	-- Change the detail
-	if data.detail ~= "None" then
-		oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
-		oldMaterial:SetString("$detailblendfactor", "1")
-	else
-		oldMaterial:SetString("$detailblendfactor", "0")
-		oldMaterial:SetString("$detail", "")
-		oldMaterial:Recompute()
+	if data.detail then
+		if data.detail ~= "None" then
+			oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
+			oldMaterial:SetString("$detailblendfactor", "1")
+		else
+			oldMaterial:SetString("$detailblendfactor", "0")
+			oldMaterial:SetString("$detail", "")
+			oldMaterial:Recompute()
+		end
 	end
 
 	--[[

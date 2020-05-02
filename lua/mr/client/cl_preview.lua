@@ -50,7 +50,7 @@ function Preview:Render()
 	-- Start...
 	local tr = ply:GetEyeTrace()
 	local oldData = MR.Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
-	local newData = MR.Ply:GetDecalMode(ply) and MR.Data:CreateDefaults(ply, tr) or MR.Data:Create(ply, tr)
+	local newData = MR.Data:Create(ply, tr, MR.Ply:GetDecalMode(ply) and {} )
 
 	-- Adjustments for skybox materials
 	if MR.Skybox:IsValidFullSky(newData.newMaterial) then

@@ -342,18 +342,12 @@ function TOOL:RightClick(tr)
 
 				MR.GUI:GetDetail():ChooseOptionID(i)
 			end
-			
-			return true
-		end
 
-		-- Copy the material
-		ply:ConCommand("internal_mr_material "..MR.Materials:GetCurrent(tr))
+			-- Copy the material
+			RunConsoleCommand("internal_mr_material", MR.Materials:GetCurrent(tr))
 
-		-- Set the cvars to data values or to default values
-		if oldData then
+			-- Set the cvars to data values or to default values
 			MR.CVars:SetPropertiesToData(ply, oldData)
-		else
-			MR.CVars:SetPropertiesToDefaults(ply)
 		end
 	end
 

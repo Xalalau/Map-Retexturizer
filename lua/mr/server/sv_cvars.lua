@@ -73,14 +73,3 @@ function CVars:ReplicateFirstSpawn(ply)
 		end
 	end
 end
-
--- Set propertie cvars based on some data table
-function CVars:SetPropertiesToData(ply, data)
-	ply:ConCommand("internal_mr_detail "..data.detail)
-	ply:ConCommand("internal_mr_offsetx "..data.offsetx)
-	ply:ConCommand("internal_mr_offsety "..data.offsety)
-	ply:ConCommand("internal_mr_scalex "..data.scalex)
-	ply:ConCommand("internal_mr_scaley "..data.scaley)
-	ply:ConCommand("internal_mr_rotation "..data.rotation)
-	ply:ConCommand("internal_mr_alpha "..data.alpha)
-end

@@ -99,7 +99,12 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 	-- General first steps
 	if not isDisplacement or isBroadcasted then
-		if not MR.Materials:SetFirstSteps(ply, isBroadcasted, data.newMaterial, data.newMaterial2) then
+		local check = {
+			material = data.newMaterial,
+			material2 = data.newMaterial2
+		}
+	
+		if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 			return
 		end
 	end

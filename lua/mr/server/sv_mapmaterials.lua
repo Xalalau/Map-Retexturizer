@@ -90,13 +90,15 @@ function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMa
 	end
 
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, false, newMaterial, newMaterial2) then
-		return
-	end
+	local check = {
+		material = newMaterial,
+		material2 = newMaterial2,
+		list = MapMaterials.Displacements:GetList(),
+		limit = MapMaterials.Displacements:GetLimit()
+	}
 
-	-- Check if the backup table is full
-	if MR.Data.list:IsFull(MapMaterials.Displacements:GetList(), MapMaterials.Displacements:GetLimit()) then
-		return false
+	if not MR.Materials:SetFirstSteps(ply, false, check) then
+		return
 	end
 
 	-- Create the data table

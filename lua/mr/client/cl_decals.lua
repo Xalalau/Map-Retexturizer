@@ -23,7 +23,11 @@ end
 -- Apply decal materials: client
 function Decals:Set_CL(data, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, data.newMaterial) then
+	local check = {
+		material = data and data.newMaterial or MR.Materials:GetNew(ply)
+	}
+
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check) then
 		return false
 	end
 
@@ -41,6 +45,6 @@ function Decals:Set_CL(data, isBroadcasted)
 	-- Apply the decal
 	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scalex, data.scaley)
 
-	-- Save modification on our list
-	table.insert(Decals:GetList(), data)
+	-- Index the Data
+	MR.Data.list:InsertElement(Decals:GetList(), data)
 end

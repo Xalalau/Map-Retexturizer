@@ -64,7 +64,9 @@ end
 -- Load modifications
 function Load:Start(ply, loadName)
 	-- General first steps
-	MR.Materials:SetFirstSteps(ply)
+	if not MR.Materials:SetFirstSteps(ply) then
+		return false
+	end
 
 	-- Check if there is a load name
 	if not loadName or loadName == "" then

@@ -166,10 +166,6 @@ function Data.list:IsFull(list, limit)
 
 		-- Check again
 		if Data.list:Count(list) == limit then
-			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Tool's material limit reached ("..limit..")! Notify the developer for more space.")
-			end
-
 			return true
 		end
 	end

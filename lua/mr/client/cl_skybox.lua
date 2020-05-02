@@ -30,7 +30,11 @@ function Skybox:Set_CL(newMaterial, isBroadcasted)
 	local i
 
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, newMaterial) then
+	local check = {
+		material = newMaterial
+	}
+
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check) then
 		if newMaterial ~= "" then
 			return false
 		end

@@ -18,10 +18,14 @@ net.Receive("Skybox:Remove", function(_, ply)
 end)
 
 -- Change the skybox: server
-function Skybox:Set_SV(ply, mat, isBroadcasted)
+function Skybox:Set_SV(ply, material, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, mat) then
-		if mat ~= "" then
+	local check = {
+		material = material
+	}
+	
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+		if material ~= "" then
 			return false
 		end
 	end
@@ -29,15 +33,15 @@ function Skybox:Set_SV(ply, mat, isBroadcasted)
 	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = mat })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = material })
 
 		-- Apply the material to every client
-		MR.CVars:Replicate_SV(ply, "internal_mr_skybox", mat, "skybox", "text")
+		MR.CVars:Replicate_SV(ply, "internal_mr_skybox", material, "skybox", "text")
 	end
 
 	-- Send the change to everyone
 	net.Start("Skybox:Set_CL")
-		net.WriteString(mat)
+		net.WriteString(material)
 		net.WriteBool(isBroadcasted or false)
 	net.Broadcast()
 

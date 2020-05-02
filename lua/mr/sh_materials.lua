@@ -103,9 +103,21 @@ function Materials:SetValid(material, value)
 	materials.valid[material] = value
 end
 
--- Many initial important checks and adjustments for functions that apply material changes
--- Must be clientside, serverside and at the top
-function Materials:SetFirstSteps(ply, isBroadcasted, material, material2)
+--[[
+	Many initial important checks and adjustments for functions that apply material changes
+	Must be clientside and serverside - on the top
+
+	ply = player
+	isBroadcasted = true if the modification is being made on all clients
+	check = {
+		material = data.newMaterial
+		material2 = data.newMaterial2
+		ent = data.ent
+		list = a data materials list
+		limit = limit for the above list
+	}
+]]
+function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	-- Admin only
 	if SERVER then
 		if not MR.Utils:PlyIsAdmin(ply) then
@@ -125,12 +137,33 @@ function Materials:SetFirstSteps(ply, isBroadcasted, material, material2)
 		return false
 	end
 
-	-- Don't apply bad materials
-	if material and not Materials:IsValid(material) and not MR.Skybox:IsValidFullSky(material) then
-		return false
-	end
-	if material2 and not Materials:IsValid(material2) then
-		return false
+	if check then
+		-- Don't apply bad materials
+		if check.material and not Materials:IsValid(check.material) and not MR.Skybox:IsValidFullSky(check.material) then
+			print("[Map Retexturizer] Bad material blocked.")
+
+			return false
+		end
+
+		if check.material2 and not Materials:IsValid(check.material2) then
+			return false
+		end
+
+		-- Don't modify bad entities
+		if check.ent and isstring(check.ent) and not IsValid(check.ent) then
+			print("[Map Retexturizer] Bad entity blocked.")
+
+			return false
+		end
+
+		-- Check if the modifications table is full
+		if check.list and check.limit and MR.Data.list:IsFull(check.list, check.limit) then
+			if SERVER then
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Material limit reached ("..limit..")! Notify the developer for more space.")
+			end
+
+			return false
+		end
 	end
 
 	-- Set the duplicator entity

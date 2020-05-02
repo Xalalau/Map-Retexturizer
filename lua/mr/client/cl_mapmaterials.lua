@@ -145,7 +145,12 @@ function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMateria
 	end
 
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), false, newMaterial, newMaterial2) then
+	local check = {
+		material = newMaterial,
+		material2 = newMaterial2
+	}
+	
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), false, check) then
 		return false
 	end
 

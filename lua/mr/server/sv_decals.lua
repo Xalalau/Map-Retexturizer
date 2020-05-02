@@ -15,7 +15,11 @@ end)
 -- Apply decal materials: server
 function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply)) then
+	local check = {
+		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply)
+	}
+
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		return false
 	end
 
@@ -27,8 +31,8 @@ function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 		-- Set the duplicator
 		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = Decals:GetList() })
 
-		-- Index the data
-		table.insert(Decals:GetList(), data)
+		-- Index the Data
+		MR.Data.list:InsertElement(Decals:GetList(), data)
 	end
 
 	-- Send to...

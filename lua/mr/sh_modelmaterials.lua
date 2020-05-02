@@ -172,14 +172,12 @@ end
 -- Set model material
 function ModelMaterials:Set(ply, data, isBroadcasted)
 	-- General first steps
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, data.newMaterial) then
-		return
-	end
+	local check = {
+		material = data.newMaterial,
+		ent = data.ent or ""
+	}
 
-	-- Check the entity
-	if not IsValid(data.ent) then
-		print("[MAP RETEXTURIZER] ModelMaterials:Set() received a invalid entity. Skipping it...")
-	
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		return false
 	end
 

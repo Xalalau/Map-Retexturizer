@@ -62,7 +62,7 @@ function Skybox:Remove(ply)
 	MR.Duplicator:ForceStop_SV()
 
 	-- Cleanup
-	Skybox:Set_SV(ply, "")
+	Skybox:Set_SV(ply, Skybox:GetName())
 
 	if IsValid(MR.Duplicator:GetEnt()) then
 		duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox")

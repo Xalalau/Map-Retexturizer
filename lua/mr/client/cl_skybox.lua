@@ -5,8 +5,6 @@
 local Skybox = MR.Skybox
 
 local skybox = {
-	-- Skybox path
-	name = "skybox/"..GetConVar("sv_skyname"):GetString(),
 	-- Skybox material backup files
 	backupName = "mr/backup",
 	-- True if the map has a env_skypainted entity
@@ -35,16 +33,19 @@ function Skybox:Set_CL(newMaterial, isBroadcasted)
 	}
 
 	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check) then
-		if newMaterial ~= "" then
-			return false
-		end
+		return false
+	end
+
+	-- Stop rendering if we selected the default map sky
+	if newMaterial == Skybox:GetName() then
+		return false
 	end
 
 	-- Set the original skybox backup
 	-- Note: it's done once and here because it's a safe place (the game textures will be loaded for sure)
 	if not Material(skybox.backupName..Skybox:GetSuffixes()[1]):GetTexture("$basetexture") then
 		for i = 1,6 do
-			Material(skybox.backupName..Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(skybox.name..Skybox:GetSuffixes()[i]):GetTexture("$basetexture"))
+			Material(skybox.backupName..Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetName()..Skybox:GetSuffixes()[i]):GetTexture("$basetexture"))
 		end
 	end
 
@@ -66,13 +67,13 @@ function Skybox:Set_CL(newMaterial, isBroadcasted)
 	end
 
 	-- Set to use the backup if the material name is empty
-	if newMaterial == "" or newMaterial == skybox.name then 
+	if newMaterial == "" or newMaterial == Skybox:GetName() then 
 		newMaterial = skybox.backupName
 	end
 
 	-- Change the sky material
 	for i = 1,6 do 
-		Material(skybox.name..Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(newMaterial..suffixes[i]):GetTexture("$basetexture"))
+		Material(Skybox:GetName()..Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(newMaterial..suffixes[i]):GetTexture("$basetexture"))
 	end
 end
 

@@ -7,6 +7,8 @@ Skybox.__index = Skybox
 MR.Skybox = Skybox
 
 local skybox = {
+	-- Skybox path
+	name = "skybox/"..GetConVar("sv_skyname"):GetString(),
 	-- 6 side skybox suffixes
 	suffixes = {
 		"ft", -- front
@@ -54,6 +56,11 @@ end
 -- Get sky suffixes
 function Skybox:GetSuffixes()
 	return skybox.suffixes
+end
+
+-- Get sky name
+function Skybox:GetName()
+	return skybox.name
 end
 
 -- Check if the skybox is a valid 6 side setup

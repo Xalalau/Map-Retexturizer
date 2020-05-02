@@ -112,7 +112,7 @@ function Skybox:Render()
 
 	-- Render our sky box around the player
 	render.OverrideDepthEnable(true, false)
-	render.SetLightingMode(1)
+	render.SetLightingMode(suffixes[1] == "" and 1 or 2)
 
 	cam.Start3D(Vector(0, 0, 0), EyeAngles())
 		render.SetMaterial(Material(newMaterial..suffixes[1])) -- ft

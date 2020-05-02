@@ -41,7 +41,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 
 	local notModelDelay = 0.1
 
-	-- Upgrade the format if it's necessary
+	-- Start upgrading the format (if it's necessary)
 	Duplicator:UpgradeSaveFormat(savedTable)
 
 	-- Models
@@ -104,8 +104,8 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 end
 
 -- Format upgrading
--- Note: the table will come in parts if we are receiving inputs from a GMod save, otherwise it'll be full
-function Duplicator:UpgradeSaveFormat(savedTable)
+-- Note: the table will come in parts if we are receiving a GMod save, otherwise it'll be full
+function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 	-- 1.0 to 2.0
 	if savedTable and not savedTable.savingFormat then
 		-- Rebuild map materials structure from GMod saves
@@ -135,39 +135,40 @@ function Duplicator:UpgradeSaveFormat(savedTable)
 			end
 		end
 
-		-- Set the new format number 
-		if savedTable == dup.recreatedTable then
+		-- Set the new format number before fully loading the table in the duplicator
+		if isDupStarting then
 			savedTable.savingFormat = "2.0"
 		end
 	end
 
 	-- 2.0 to 3.0
-	if savedTable.savingFormat == "2.0" then
+	if savedTable and savedTable.savingFormat == "2.0" then
 		-- Update decals structure
 		if savedTable.decals then
 			for k,v in pairs(savedTable.decals) do
 				v = {
 					oldMaterial = v.mat,
 					newMaterial = v.mat,
-					scalex = "0.01",
-					scaley = "0.01",
+					scalex = "1",
+					scaley = "1",
 					position = v.pos,
 					normal = v.hit
 				}
 			end
 		end
 
-		-- Set the new format number 
-		if savedTable == dup.recreatedTable then
+		-- Set the new format number before fully loading the table in the duplicator
+		if isDupStarting then
 			savedTable.savingFormat = "3.0"
 		end
 	end
-
-	return savedTable
 end
 
 -- Duplicator start
 function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
+	-- Finish upgrading the format (if it's necessary)
+	Duplicator:UpgradeSaveFormat(savedTable, true)
+
 	-- Deal with GMod saves
 	if dup.recreatedTable.initialized then
 		-- FORCE to cease ongoing duplications
@@ -183,9 +184,6 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end)
 		dup.recreatedTable.initialized = false
 	end
-
-	-- Finish upgrading the format if it's necessary
-	Duplicator:UpgradeSaveFormat(savedTable)
 
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then

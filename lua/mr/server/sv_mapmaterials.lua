@@ -10,6 +10,8 @@ util.AddNetworkString("MapMaterials:Set")
 util.AddNetworkString("MapMaterials:SetAll")
 util.AddNetworkString("MapMaterials:Remove")
 util.AddNetworkString("MapMaterials:RemoveAll")
+util.AddNetworkString("MapMaterials:FixDetail_CL")
+util.AddNetworkString("MapMaterials:FixDetail_SV")
 util.AddNetworkString("MapMaterials.Displacements:Set_SV")
 util.AddNetworkString("MapMaterials.Displacements:RemoveAll")
 
@@ -28,6 +30,19 @@ end)
 net.Receive("MapMaterials.Displacements:RemoveAll", function(_, ply)
 	MapMaterials.Displacements:RemoveAll(ply)
 end)
+
+net.Receive("MapMaterials:FixDetail_SV", function()
+	MapMaterials:FixDetail_SV(net.ReadString(), net.ReadBool(), net.ReadString())
+end)
+
+-- Fix the detail name on the server backup
+function MapMaterials:FixDetail_SV(oldMaterial, isDisplacement, detail)
+	local element = MR.Data.list:GetElement(isDisplacement and MapMaterials.Displacements:GetList() or MapMaterials:GetList(), oldMaterial)
+	
+	if element then
+		element.backup.detail = detail
+	end
+end
 
 -- Remove all modified map materials
 function MapMaterials:RemoveAll(ply)

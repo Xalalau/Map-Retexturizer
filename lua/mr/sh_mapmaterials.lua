@@ -109,6 +109,32 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 		end
 	end
 
+	-- Send the modification to...
+	if SERVER then
+		net.Start("MapMaterials:Set")
+			-- Note: I have to send this before a backup is created on the server, otherwise clients will
+			-- keep the saved values and later, after a cleanup, reload details as "None". This happens
+			-- because materials don't have their $detail keyvalue correctly configured in this scope.
+			net.WriteTable(data) 
+		-- every player
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+			net.WriteBool(true)
+			net.Broadcast()
+		-- the player
+		else
+			net.WriteBool(false)
+			net.Send(ply)
+		end
+
+		-- Fix the detail name on the server backup (explained just above)
+		if ply ~= MR.Ply:GetFakeHostPly() and not data.backup then
+			net.Start("MapMaterials:FixDetail_CL")
+				net.WriteString(data.oldMaterial)
+				net.WriteBool(isDisplacement)
+			net.Send(ply)
+		end
+	end
+
 	-- run once serverside and once on every player clientside
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
 		local materialTable = isDisplacement and map.displacements.list or map.list
@@ -172,19 +198,6 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 	end
 
 	if SERVER then
-		-- Send the modification to...
-		net.Start("MapMaterials:Set")
-			net.WriteTable(data)
-		-- every player
-		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
-			net.WriteBool(true)
-			net.Broadcast()
-		-- the player
-		else
-			net.WriteBool(false)
-			net.Send(ply)
-		end
-
 		-- General final steps
 		MR.Materials:SetFinalSteps()
 	end

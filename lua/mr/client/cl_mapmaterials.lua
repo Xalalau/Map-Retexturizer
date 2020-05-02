@@ -12,6 +12,24 @@ local map = {
 	}
 }
 
+-- Networking
+net.Receive("MapMaterials:FixDetail_CL", function()
+	MapMaterials:FixDetail_CL(net.ReadString(), net.ReadBool())
+end)
+
+-- Fix the detail name on the server backup
+function MapMaterials:FixDetail_CL(oldMaterial, isDisplacement)
+	local element = MR.Data.list:GetElement(isDisplacement and MapMaterials.Displacements:GetList() or MapMaterials:GetList(), oldMaterial)
+
+	if element then
+		net.Start("MapMaterials:FixDetail_SV")
+			net.WriteString(oldMaterial)
+			net.WriteBool(isDisplacement)
+			net.WriteString(element.detail)
+		net.SendToServer()
+	end
+end
+
 -- Set map material: client
 function MapMaterials:Set_CL(data)
 	-- Get the material to be modified

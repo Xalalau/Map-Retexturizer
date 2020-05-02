@@ -62,7 +62,7 @@ do
 	CreateConVar("internal_mr_decal", "0", cl_flags)
 	CreateConVar("internal_mr_displacement", "", cl_flags)
 	CreateConVar("internal_mr_savename", "", cl_flags)
-	CreateConVar("internal_mr_material", "dev/dev_blendmeasure", cl_flags)
+	CreateConVar("internal_mr_material", "dev/dev_measuregeneric01b", cl_flags)
 	CreateConVar("internal_mr_detail", "None", cl_flags)
 	CreateConVar("internal_mr_alpha", "1", cl_flags)
 	CreateConVar("internal_mr_offsetx", "0", cl_flags)

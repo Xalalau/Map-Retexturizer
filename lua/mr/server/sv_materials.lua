@@ -18,8 +18,12 @@ function Materials:SetAll(ply)
 	local material = ply:GetInfo("internal_mr_material")
 
 	-- General first steps
-	if not Materials:SetFirstSteps(ply, isBroadcasted, material) then -- Note: we don't need this check on clientside in this function
-		return false
+	local check = {
+		material = material
+	}
+
+	if not Materials:SetFirstSteps(ply, isBroadcasted, check) then
+		return
 	end
 
 	-- Adjustments for skybox materials

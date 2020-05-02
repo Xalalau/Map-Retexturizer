@@ -146,7 +146,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 		-- Update decals structure
 		if savedTable.decals then
 			for k,v in pairs(savedTable.decals) do
-				v = {
+				local new = {
 					oldMaterial = v.mat,
 					newMaterial = v.mat,
 					scalex = "1",
@@ -154,6 +154,8 @@ function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 					position = v.pos,
 					normal = v.hit
 				}
+			
+				savedTable.decals[k] = new
 			end
 		end
 

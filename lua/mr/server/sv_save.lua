@@ -39,7 +39,11 @@ function Save:Set_SV(ply, saveName, blcokAlert)
 		decals = MR.Decals:GetList(),
 		map = MR.MapMaterials:GetList(),
 		displacements = MR.MapMaterials.Displacements:GetList(),
-		skybox = GetConVar("internal_mr_skybox"):GetString(),
+		skybox = {
+			[1] = {
+				newMaterial = GetConVar("internal_mr_skybox"):GetString()
+			}
+		},
 		savingFormat = "3.0"
 	}
 

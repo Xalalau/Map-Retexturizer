@@ -104,7 +104,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 end
 
 -- Format upgrading
--- Note: the table will come in parts if we are receiving a GMod save, otherwise it'll be full
+-- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
 function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 	-- 1.0 to 2.0
 	if savedTable and not savedTable.savingFormat then
@@ -159,6 +159,15 @@ function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 			end
 		end
 
+		-- Update skybox structure
+		if savedTable.skybox then
+			savedTable.skybox = {
+				[1] = {
+					newMaterial = savedTable.skybox
+				}
+			}
+		end
+
 		-- Set the new format number before fully loading the table in the duplicator
 		if isDupStarting then
 			savedTable.savingFormat = "3.0"
@@ -205,8 +214,9 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	-- Note: it has to start after the Duplicator:ForceStop_SV() timer
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
-		local mapTable = savedTable and savedTable.map and { map = savedTable.map, displacements = savedTable.displacements } or MR.Ply:GetFirstSpawn(ply) and { map = MR.MapMaterials:GetList(), displacements = MR.MapMaterials.Displacements:GetList() } or nil
-		local skyboxTable = savedTable and savedTable.skybox and savedTable or MR.Ply:GetFirstSpawn(ply) and { skybox = GetConVar("internal_mr_skybox"):GetString() } or { skybox = "" }
+		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials:GetList() or nil
+		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials.Displacements:GetList() or nil
+		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { [1] = { newMaterial = GetConVar("internal_mr_skybox"):GetString() } } or nil
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
 		-- Remove all the disabled elements from the map materials tables
@@ -240,13 +250,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 
 		-- Get the total modifications to do
 		local decalsTotal = decalsTable and table.Count(decalsTable) or 0
-		local mapMaterialsTotal = mapTable and mapTable.map and MR.Data.list:Count(mapTable.map) or 0
-		local displacementsTotal = mapTable and mapTable.displacements and MR.Data.list:Count(mapTable.displacements) or 0
-		local total = decalsTotal + mapMaterialsTotal + displacementsTotal + modelsTable.count
-
-		if skyboxTable.skybox ~= "" then
-			total = total + 1
-		end
+		local mapMaterialsTotal = mapTable and MR.Data.list:Count(mapTable) or 0
+		local displacementsTotal = displacementsTable and MR.Data.list:Count(displacementsTable) or 0
+		local skyboxTotal = skyboxTable.newMaterial ~= "" and 1 or 0
+		local total = decalsTotal + mapMaterialsTotal + displacementsTotal + modelsTable.count + skyboxTotal
 
 		-- Print server alert
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
@@ -280,22 +287,27 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 
 		-- Apply model materials
 		if modelsTable.count > 0 then		
-			Duplicator:LoadModelMaterials(ply, modelsTable.list)
+			Duplicator:LoadMaterials(ply, modelsTable.list, 1, "model")
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadDecals(ply, nil, decalsTable)
+			Duplicator:LoadMaterials(ply, nil, decalsTable, 1, "decal")
 		end
 
 		-- Apply map materials
-		if mapMaterialsTotal > 0 or displacementsTotal > 0 then
-			Duplicator:LoadMapMaterials(ply, nil, mapTable)
+		if mapMaterialsTotal > 0 then
+			Duplicator:LoadMaterials(ply, nil, mapTable, 1, "map")
+		end
+
+		-- Apply displacements
+		if displacementsTotal > 0 then
+			Duplicator:LoadMaterials(ply, nil, displacementsTable, 1, "displacements")
 		end
 
 		-- Apply the skybox
-		if skyboxTable.skybox ~= "" then
-			Duplicator:LoadSkybox(ply, nil, skyboxTable)
+		if skyboxTotal > 0 then
+			Duplicator:LoadMaterials(ply, nil, skyboxTable, 1, "skybox")
 		end
 	end)
 end
@@ -360,127 +372,28 @@ function Duplicator:SetErrorProgress_SV(ply, count, material)
 	end
 end
 
--- Load model materials from saves
-function Duplicator:LoadModelMaterials(ply, savedTable, position)
+-- Load map materials from saves
+function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return
-	end
-
-	-- Set the first position
-	if not position then
-		position = 1
 	end
 
 	-- If the entry exists and duplicator is not stopping...
 	if savedTable[position] and not Duplicator:IsStopping() then
 		-- Check if we have a valid material
-		if not MR.Materials:IsValid(savedTable[position].newMaterial) then
-
-			-- Register the error
-			MR.Ply:IncrementDupErrorsN(ply)
-			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), "Model, $basetexture: " .. (savedTable[position].newMaterial or "nil"))
-
-			-- Let's check the next entry
-			Duplicator:LoadModelMaterials(ply, savedTable, position + 1)
-
-			return
-		end
-	-- If there are no more entries or duplicator is stopping...
-	else
-		Duplicator:Finish(ply)
-
-		return
-	end
-
-	-- Count
-	MR.Ply:IncrementDupCurrent(ply)
-	Duplicator:SetProgress_SV(ply, MR.Ply:GetDupCurrent(ply))
-
-	-- Apply the map material
-	MR.ModelMaterials:Set(ply, savedTable[position], true)
-
-	-- Next material
-	timer.Create("MRDuplicatorModelsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
-		Duplicator:LoadModelMaterials(ply, savedTable, position + 1)
-	end)
-end
-
--- Load map materials from saves
-function Duplicator:LoadDecals(ply, ent, savedTable, position)
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return
-	end
-
-	-- Set the first position
-	if not position then
-		position = 1
-	end
-
-	-- If the entry exists and duplicator is not stopping...
-	if savedTable[position] and not Duplicator:IsStopping() then
-		-- Check if we have a valid material
-		if not MR.Materials:IsValid(savedTable[position].newMaterial) then
-			-- Register the error
-			MR.Ply:IncrementDupErrorsN(ply)
-			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), "Decal, $basetexture: " .. (savedTable[position].newMaterial or "nil"))
-
-			-- Let's check the next entry
-			Duplicator:LoadDecals(ply, nil, savedTable, position + 1)
-			
-			return
-		end
-	-- If there are no more entries or duplicator is stopping...
-	else
-		Duplicator:Finish(ply)
-
-		return
-	end
-
-	-- Count
-	MR.Ply:IncrementDupCurrent(ply)
-	Duplicator:SetProgress_SV(ply, MR.Ply:GetDupCurrent(ply))
-
-	-- Change the stored entity to world
-	savedTable[position].ent = game.GetWorld()
-
-	-- Apply decal
-	MR.Decals:Set_SV(ply, nil, savedTable[position], true)
-
-	-- Next material
-	timer.Create("MRDuplicatorDecalsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
-		Duplicator:LoadDecals(ply, nil, savedTable, position + 1 )
-	end)
-end
-
--- Load map materials from saves
-function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return
-	end
-
-	-- Get the correct materials table
-	materialTable = savedTable.map or savedTable.displacements
-
-	-- Set the first position
-	if not position then
-		position = 1
-	end
-
-	-- If the entry exists and duplicator is not stopping...
-	if materialTable[position] and not Duplicator:IsStopping() then
-		-- Check if we have a valid material
-		local newMaterial = materialTable[position].newMaterial
-		local newMaterial2 = materialTable[position].newMaterial2
+		local newMaterial = savedTable[position].newMaterial
+		local newMaterial2 = savedTable[position].newMaterial2
 		local isError = false
 		local msg
 
 		if not newMaterial then
 			msg = "Map Material, entry is nil"
 			isError = true
-		elseif newMaterial and not newMaterial2 and not MR.Materials:IsValid(newMaterial) then -- Single material
+		elseif newMaterial and -- Single material
+		       not newMaterial2 and
+		       not MR.Materials:IsValid(newMaterial) and
+		       not MR.Skybox:IsValidFullSky(newMaterial) then
 			msg = "Map Material, $basetexture: " .. newMaterial
 			isError = true
 		elseif newMaterial2 then -- Two materials (displacement)
@@ -502,21 +415,12 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 			MR.Ply:IncrementDupErrorsN(ply)
 			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), msg)
 
-			Duplicator:LoadMapMaterials(ply, nil, savedTable, position + 1)
+			Duplicator:LoadMaterials(ply, nil, savedTable, position + 1, section)
 
 			return
 		end
-	-- If there are no more entries or duplicator is stopping...
+	-- If there are no more entries or duplicator is stopping, finish
 	else
-		-- If we still have the displacements to apply
-		if savedTable.map and savedTable.displacements and not Duplicator:IsStopping() then
-			savedTable.map = nil
-			Duplicator:LoadMapMaterials(ply, nil, savedTable, nil)
-			
-			return
-		end
-
-		-- Else finish	
 		Duplicator:Finish(ply)
 
 		return
@@ -526,50 +430,26 @@ function Duplicator:LoadMapMaterials(ply, ent, savedTable, position)
 	MR.Ply:IncrementDupCurrent(ply)
 	Duplicator:SetProgress_SV(ply, MR.Ply:GetDupCurrent(ply))
 
-	-- Apply the map material
-	MR.MapMaterials:Set(ply, materialTable[position], true)
+	-- Apply map material
+	if section == "map" or section == "displacements" then
+		MR.MapMaterials:Set(ply, savedTable[position], true)
+	-- Apply model material
+	elseif section == "model" then
+		MR.ModelMaterials:Set(ply, savedTable[position], true)
+	-- Change the stored entity to world and apply decal
+	elseif section == "decal" then
+		savedTable[position].ent = game.GetWorld()
+
+		MR.Decals:Set_SV(ply, nil, savedTable[position], true)
+	-- Apply skybox
+	elseif section == "skybox" then
+		MR.Skybox:Set_SV(ply, savedTable[position].newMaterial, true)
+	end
 
 	-- Next material
-	timer.Create("MRDuplicatorMapMatsDelay"..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
-		Duplicator:LoadMapMaterials(ply, nil, savedTable, position + 1)
+	timer.Create("MRDuplicatorDelay"..section..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
+		Duplicator:LoadMaterials(ply, nil, savedTable, position + 1, section)
 	end)
-end
-
--- Load the skybox
-function Duplicator:LoadSkybox(ply, ent, savedTable)
-	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
-		return
-	end
-
-	-- If the entry exists and duplicator is not stopping...
-	if not Duplicator:IsStopping() then
-		-- Check if we have a valid material
-		if not MR.Materials:IsValid(savedTable.skybox) and not MR.Materials:IsValid(savedTable.skybox.."ft") then
-			-- Register the error
-			MR.Ply:IncrementDupErrorsN(ply)
-			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), "Skybox, name: " .. (savedTable.skybox or "nil"))
-
-			Duplicator:Finish(ply)
-
-			return
-		end
-	-- If there are no more entries or duplicator is stopping...
-	else
-		Duplicator:Finish(ply)
-
-		return
-	end
-
-	-- Count
-	MR.Ply:IncrementDupCurrent(ply)
-	Duplicator:SetProgress_SV(ply, MR.Ply:GetDupCurrent(ply))
-
-	-- Apply skybox
-	MR.Skybox:Set_SV(ply, savedTable.skybox, true)
-
-	-- Finish
-	Duplicator:Finish(ply)
 end
 
 -- Force to stop the duplicator: server

@@ -126,24 +126,6 @@ function Data:CreateFromMaterial(materialInfo, details, i, displacement)
 	return data
 end
 
--- Set a data table to default properties values
-function Data:CreateDefaults(ply, tr)
-	local data = {
-		ent = game.GetWorld(),
-		oldMaterial = MR.Materials:GetCurrent(tr),
-		newMaterial = ply:GetInfo("internal_mr_material"),
-		offsetx = "0.00",
-		offsety = "0.00",
-		scalex = "1.00",
-		scaley = "1.00",
-		rotation = "0",
-		alpha = "1.00",
-		detail = "None",
-	}
-
-	return data
-end
-
 -------------------------------------
 --- Data TABLE LIST MANAGEMENT
 -------------------------------------

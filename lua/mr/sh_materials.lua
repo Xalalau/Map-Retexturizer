@@ -150,7 +150,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 		end
 
 		-- Don't modify bad entities
-		if check.ent and isstring(check.ent) and not IsValid(check.ent) then
+		if check.ent and (isstring(check.ent) or not IsValid(check.ent)) then
 			print("[Map Retexturizer] Bad entity blocked.")
 
 			return false

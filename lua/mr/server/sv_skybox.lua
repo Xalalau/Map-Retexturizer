@@ -33,7 +33,7 @@ function Skybox:Set_SV(ply, material, isBroadcasted)
 	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { skybox = material })
+		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Skybox", { [1] = { newmaterial = material } })
 
 		-- Apply the material to every client
 		MR.CVars:Replicate_SV(ply, "internal_mr_skybox", material, "skybox", "text")

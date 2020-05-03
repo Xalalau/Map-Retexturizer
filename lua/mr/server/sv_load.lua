@@ -47,7 +47,7 @@ function Load:Init()
 	local files = file.Find(MR.Base:GetMapFolder().."*", "Data")
 
 	for k,v in pairs(files) do
-		Load:SetOption(v:sub(1, -5), MR.Base:GetMapFolder()..v)
+		Load:SetOption(string.lower(v):sub(1, -5), MR.Base:GetMapFolder()) -- lowercase to adjust old save names
 	end
 
 	-- Set the autoLoad command

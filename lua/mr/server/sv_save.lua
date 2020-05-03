@@ -32,7 +32,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 	end
 
 	-- Get the save full path
-	local saveFile = saveName and MR.Base:GetMapFolder()..saveName..".txt" or MR.Base:GetAutoSaveFile()
+	local saveFile = saveName and MR.Base:GetMapFolder()..string.lower(saveName)..".txt" or MR.Base:GetAutoSaveFile()
 
 	-- Create a save table
 	local save = {

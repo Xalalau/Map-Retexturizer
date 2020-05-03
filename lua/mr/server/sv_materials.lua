@@ -97,7 +97,7 @@ function Materials:SetAll(ply)
 		]]
 
 		-- Apply the fake save
-		MR.Duplicator:Start(ply, nil, newTable, "changeAll")
+		MR.Duplicator:Start(ply, nil, newTable, "noMrLoadFile")
 
 
 		-- General final steps

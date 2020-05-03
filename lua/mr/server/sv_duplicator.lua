@@ -69,7 +69,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 
 			-- No more entries, call our duplicator
 			if dup.models.startTime == dup.models.delay then
-				Duplicator:Start(MR.Ply:GetFakeHostPly(), nil, dup.recreatedTable, "dupTranslation")
+				Duplicator:Start(MR.Ply:GetFakeHostPly(), nil, dup.recreatedTable, "noMrLoadFile")
 			else
 				dup.models.startTime = dup.models.startTime + 0.05
 			end
@@ -98,7 +98,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	timer.Create("MRDuplicatorWaiting2"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
 		if not dup.recreatedTable.initialized then
 			dup.recreatedTable.initialized = true
-			Duplicator:Start(MR.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "dupTranslation")
+			Duplicator:Start(MR.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "noMrLoadFile")
 		end
 	end)
 end
@@ -181,7 +181,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 	end
 
 	-- If the table was upgraded, create a file backup for the old format and save the new
-	if savedTableOld and loadName ~= "changeall" ( -- Don't try to create a file for the change all function (in case I forget to uprade the save format there)
+	if savedTableOld and ( -- noMrLoadFile means this duplication didn't start from oppening a save file on the disk or the file wasn't directly created by the tool
 	   not savedTableOld.savingFormat or 
 	   savedTableOld.savingFormat ~= savedTable.savingFormat
 	   ) then

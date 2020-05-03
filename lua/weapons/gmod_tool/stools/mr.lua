@@ -199,7 +199,7 @@ end
 
 	if not oldData then
 		-- If there isn't a saved data, create one from the material and adjust the material name
-		oldData = MR.Data:CreateFromMaterial({ name = MR.Materials:GetOriginal(tr), filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 		oldData.newMaterial = oldData.oldMaterial 
 	elseif IsValid(tr.Entity) then
 		-- If it's a model, adjust the material name
@@ -312,7 +312,7 @@ function TOOL:RightClick(tr)
 
 		if not oldData then
 			-- If there isn't a saved data, create one from the material and adjust the material name
-			oldData = MR.Data:CreateFromMaterial({ name = originalMaterial, filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+			oldData = MR.Data:CreateFromMaterial(originalMaterial)
 			oldData.newMaterial = oldData.oldMaterial 
 		elseif IsValid(tr.Entity) then
 			-- If it's a model, adjust the material name

@@ -88,38 +88,38 @@ function Data:Create(ply, tr, decalInfo)
 end
 
 -- Convert a map material into a data table
-function Data:CreateFromMaterial(materialInfo, details, i, displacement)
-	local theMaterial = Material(materialInfo.name)
+function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2)
+	local oldMaterial = Material(oldMaterialIn)
 
-	local scalex = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
-	local scaley = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetScale() and theMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
-	local offsetx = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1] or "0.00"
-	local offsety = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and theMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2] or "0.00"
+	local scalex = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetScale() and oldMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
+	local scaley = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetScale() and oldMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
+	local offsetx = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1] or "0.00"
+	local offsety = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[2] or "0.00"
 
 	local data = {
 		ent = game.GetWorld(),
-		oldMaterial = materialInfo.name,
-		newMaterial = displacement and displacement.filename..tostring(i) or i and materialInfo.filename..tostring(i) or "",
-		newMaterial2 = displacement and displacement.filename..tostring(i) or nil,
+		oldMaterial = oldMaterialIn,
+		newMaterial = newMaterial2 or newMaterial or "",
+		newMaterial2 = newMaterial2 or nil,
 		offsetx = string.format("%.2f", math.floor((offsetx)*100)/100),
 		offsety = string.format("%.2f", math.floor((offsety)*100)/100),
 		scalex = string.format("%.2f", math.ceil((1/scalex)*1000)/1000),
 		scaley = string.format("%.2f", math.ceil((1/scaley)*1000)/1000),
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
-		rotation = theMaterial:GetMatrix("$basetexturetransform") and theMaterial:GetMatrix("$basetexturetransform"):GetAngles() and theMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
-		alpha = string.format("%.2f", theMaterial:GetString("$alpha") or "1.00"),
-		detail = theMaterial:GetString("$detail") and theMaterial:GetTexture("$detail"):GetName() or "None",
+		rotation = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
+		alpha = string.format("%.2f", oldMaterial:GetString("$alpha") or "1.00"),
+		detail = oldMaterial:GetString("$detail") and oldMaterial:GetTexture("$detail"):GetName() or "None",
 	}
 
 	-- Get a valid detail key
-	for k,v in pairs(details) do
+	for k,v in pairs(MR.Materials:GetDetailList()) do
 		if not isbool(v) then
 			if v:GetTexture("$basetexture"):GetName() == data.detail then
 				data.detail = k
 			end
 		end
 	end
-	if not details[data.detail] then
+	if not MR.Materials:GetDetailList()[data.detail] then
 		data.detail = "None"
 	end
 

@@ -117,7 +117,7 @@ function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMa
 	end
 
 	-- Create the data table
-	local data = MR.Data:CreateFromMaterial({ name = displacement, filename = MapMaterials:GetFilename() }, MR.Materials:GetDetailList(), nil, { filename = MapMaterials.Displacements:GetFilename() })
+	local data = MR.Data:CreateFromMaterial(displacement)
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2

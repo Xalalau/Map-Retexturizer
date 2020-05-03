@@ -49,7 +49,7 @@ function Preview:Render()
 
 	-- Start...
 	local tr = ply:GetEyeTrace()
-	local oldData = MR.Data:CreateFromMaterial({ name = "MatRetPreviewMaterial", filename = MR.MapMaterials:GetFilename() }, MR.Materials:GetDetailList())
+	local oldData = MR.Data:CreateFromMaterial("MatRetPreviewMaterial")
 	local newData = MR.Data:Create(ply, tr, MR.Ply:GetDecalMode(ply) and {} )
 
 	-- Adjustments for skybox materials

@@ -163,7 +163,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 			i = MR.Data.list:GetFreeIndex(materialTable)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or MR.Data:CreateFromMaterial({ name = data.oldMaterial, filename = map.filename }, MR.Materials:GetDetailList(), i, isDisplacement and { filename = map.displacements.filename } or nil)
+			local dataBackup = data.backup or MR.Data:CreateFromMaterial(data.oldMaterial, map.filename..tostring(i), isDisplacement and map.displacements.filename..tostring(i))
 
 			-- Save the material texture
 			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))

@@ -77,6 +77,34 @@ function MapMaterials:Set_CL(data)
 		oldMaterial:SetString("$alpha", data.alpha)
 	end
 
+	-- Change the matrix
+	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
+
+	if data.rotation then
+		textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
+	end
+
+	if data.scalex and data.scalex then
+		textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
+	end
+
+	if data.offsetx and data.offsety then
+		textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
+		oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
+	end
+
+	-- Change the detail
+	if data.detail then
+		if data.detail ~= "None" then
+			oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
+			oldMaterial:SetString("$detailblendfactor", "1")
+		else
+			oldMaterial:SetString("$detailblendfactor", "0")
+			oldMaterial:SetString("$detail", "")
+			oldMaterial:Recompute()
+		end
+	end
+
 	--[[
 	-- Old tests that I want to keep here
 	mapMaterial:SetTexture("$bumpmap", Material(data.newMaterial):GetTexture("$basetexture"))

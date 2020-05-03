@@ -12,9 +12,13 @@ function Materials:Init()
 	Materials:GetDetailList()["Rock"] = Materials:Create("detail/rock_detail_01")
 end
 
--- Create a material
+-- Create a material if it doesn't exist
 function Materials:Create(name, matType, path)
-	return CreateMaterial(name, matType or "VertexLitGeneric", {["$basetexture"] = name or path})
+	if Material(name):IsError() then
+		return CreateMaterial(name, matType or "VertexLitGeneric", {["$basetexture"] = name or path})
+	else
+		return Material(name)
+	end
 end
 
 -- Set a material as (in)valid

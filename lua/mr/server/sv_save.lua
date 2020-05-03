@@ -20,7 +20,7 @@ net.Receive("Save:Set_SV", function(_, ply)
 end)
 
 -- Save the modifications to a file: server
-function Save:Set_SV(ply, saveName, blcokAlert)
+function Save:Set_SV(ply, saveName, blockAlert)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
@@ -56,7 +56,7 @@ function Save:Set_SV(ply, saveName, blcokAlert)
 	file.Write(saveFile, util.TableToJSON(save))
 
 	-- Server alert
-	if not blcokAlert then
+	if not blockAlert then
 		print("[Map Retexturizer] Saved the current materials as \""..saveName.."\".")
 	end
 

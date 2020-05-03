@@ -7,34 +7,43 @@ Base.__index = Base
 MR.Base = Base
 
 local base = {
-	-- Our folder inside data
-	mainFolder = "mapret/",
-	-- Map folders are inside the main folder
-	mapFolder = game.GetMap().."/",
-	-- Save default name
-	save = {
-		defaultName = game.GetMap().."_save"
-	},
-	autoSave = {
-		-- Autosave default name
-		name = "[autosave]",
-		-- Autosave default file name
-		file = "[autosave].txt"
-	},
-	autoLoad = {
-		-- Autoload folder inside the a map folder
-		folder = "autoload/",
-		-- Autoload default file name
-		file = "autoload.txt"
+	data = {
+		-- Our folder inside data
+		folder = "mapret/",
+		save = {
+			-- Save files main folder
+			folder = game.GetMap().."/",
+			-- Save default name
+			defaultName = game.GetMap().."_save",
+			-- Backup folder for save files with older formats
+			converted = {
+				folder = "converted_old"
+			},
+			auto = {
+				save = {
+					-- Autosave default name
+					name = "[autosave]",
+					-- Autosave default file name
+					file = "[autosave].txt"
+				},
+				load = {
+					-- Autoload folder inside the save folder
+					folder = "autoload/",
+					-- Autoload default file name
+					file = "autoload.txt"
+				}
+			}
+		}
 	}
 }
 
 function Base:Init()
 	-- Set paths
-	base.mapFolder = base.mainFolder..base.mapFolder
-	base.autoLoad.folder = base.mapFolder..base.autoLoad.folder
-	base.autoSave.file = base.mapFolder..base.autoSave.file
-	base.autoLoad.file = base.autoLoad.folder..base.autoLoad.file
+	base.data.save.folder = base.data.folder..base.data.save.folder
+	base.data.save.converted.folder = base.data.save.folder..base.data.save.converted.folder
+	base.data.save.auto.load.folder = base.data.save.folder..base.data.save.auto.load.folder
+	base.data.save.auto.save.file = base.data.save.folder..base.data.save.auto.save.file
+	base.data.save.auto.load.file = base.data.save.auto.load.folder..base.data.save.auto.load.file
 
 	-- Create the folders
 	if SERVER then
@@ -44,32 +53,37 @@ function Base:Init()
 			end
 		end
 
-		CreateDir(base.mainFolder)
-		CreateDir(base.mapFolder)
-		CreateDir(base.autoLoad.folder)
+		CreateDir(base.data.folder)
+		CreateDir(base.data.save.folder)
+		CreateDir(base.data.save.converted.folder)
+		CreateDir(base.data.save.auto.load.folder)
 	end
 end
 
 function Base:GetMapFolder()
-	return base.mapFolder
+	return base.data.save.folder
 end
 
 function Base:GetSaveDefaultName()
-	return base.save.defaultName
+	return base.data.save.defaultName
+end
+
+function Base:GetConvertedFolder()
+	return base.data.save.converted.folder
 end
 
 function Base:GetAutoSaveName()
-	return base.autoSave.name
+	return base.data.save.auto.save.name
 end
 
 function Base:GetAutoSaveFile()
-	return base.autoSave.file
+	return base.data.save.auto.save.file
 end
 
 function Base:GetAutoLoadFolder()
-	return base.autoLoad.folder
+	return base.data.save.auto.load.folder
 end
 
 function Base:GetAutoLoadFile()
-	return base.autoLoad.file
+	return base.data.save.auto.load.file
 end

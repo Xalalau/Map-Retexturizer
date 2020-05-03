@@ -105,7 +105,13 @@ end
 
 -- Format upgrading
 -- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
-function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
+function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
+	local savedTableOld
+
+	if savedTable then 
+		savedTableOld = table.Copy(savedTable)
+	end
+
 	-- 1.0 to 2.0
 	if savedTable and not savedTable.savingFormat then
 		-- Rebuild map materials structure from GMod saves
@@ -173,12 +179,25 @@ function Duplicator:UpgradeSaveFormat(savedTable, isDupStarting)
 			savedTable.savingFormat = "3.0"
 		end
 	end
+
+	-- If the table was upgraded, create a file backup for the old format and save the new
+	if savedTableOld and (
+	   not savedTableOld.savingFormat or 
+	   savedTableOld.savingFormat ~= savedTable.savingFormat
+	   ) then
+
+		local pathCurrent = MR.Base:GetMapFolder()..loadName..".txt"
+		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
+
+		file.Rename(pathCurrent, pathBackup)
+		file.Write(pathCurrent, util.TableToJSON(savedTable))
+	end
 end
 
 -- Duplicator start
 function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
 	-- Finish upgrading the format (if it's necessary)
-	Duplicator:UpgradeSaveFormat(savedTable, true)
+	Duplicator:UpgradeSaveFormat(savedTable, loadName, true)
 
 	-- Deal with GMod saves
 	if dup.recreatedTable.initialized then

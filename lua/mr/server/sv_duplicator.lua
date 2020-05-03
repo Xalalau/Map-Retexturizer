@@ -181,7 +181,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 	end
 
 	-- If the table was upgraded, create a file backup for the old format and save the new
-	if savedTableOld and (
+	if savedTableOld and loadName ~= "changeall" ( -- Don't try to create a file for the change all function (in case I forget to uprade the save format there)
 	   not savedTableOld.savingFormat or 
 	   savedTableOld.savingFormat ~= savedTable.savingFormat
 	   ) then

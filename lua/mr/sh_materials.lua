@@ -137,8 +137,6 @@ function Materials:GetFlags(sumOfPowersOfTwo)
 	local flags = {}
 
 	local function recursiveSeparationOfFlags(sumOfPowersOfTwo)
-		sumOfPowersOfTwo = tonumber(sumOfPowersOfTwo)
-
 		if sumOfPowersOfTwo == 0 then
 			return false
 		elseif math.mod(sumOfPowersOfTwo, 2) == 1 then
@@ -201,6 +199,29 @@ function Materials:GetFlags(sumOfPowersOfTwo)
 	end
 
 	return flags
+end
+
+-- Resize a material inside a square keeping the proportions
+function Materials:ResizeInABox(boxSize, width, height)
+	local texture = {
+		["width"] = width,
+		["height"] = height
+	}
+
+	local dimension
+
+	if texture["width"] > texture["height"] then
+		dimension = "width"
+	else
+		dimension = "height"
+	end
+
+	local proportion = boxSize / texture[dimension]
+
+	texture["width"] = texture["width"] * proportion
+	texture["height"] = texture["height"] * proportion
+
+	return texture["width"], texture["height"]
 end
 
 --[[

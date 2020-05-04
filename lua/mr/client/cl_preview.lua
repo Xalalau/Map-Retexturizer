@@ -87,29 +87,13 @@ function Preview:Render()
 	-- Map material rendering:
 	if not MR.Ply:GetDecalMode(ply) then
 		-- Resize material to a max size keeping the proportions
-		local maxSize = 200 * ScrH() / 768 -- Current screen height / 720p screen height = good resizing up to 4k
+		local boxSize = 200 * ScrH() / 768 -- Current screen height / 720p screen height = good resizing up to 4k
 
-		local texture = {
-			["width"] = preview:Width(),
-			["height"] = preview:Height()
-		}
-
-		local dimension
-
-		if texture["width"] > texture["height"] then
-			dimension = "width"
-		else
-			dimension = "height"
-		end
-
-		local proportion = maxSize / texture[dimension]
-
-		texture["width"] = texture["width"] * proportion
-		texture["height"] = texture["height"] * proportion
+		width, height = MR.Materials:ResizeInABox(boxSize, width, height)
 
 		surface.SetDrawColor(255, 255, 255, 255)
 		surface.SetMaterial(preview)
-		surface.DrawTexturedRect( 20, 230, texture["width"], texture["height"])
+		surface.DrawTexturedRect( 20, 230, width, height)
 	-- Decal renderind:
 	else
 		local ang = tr.HitNormal:Angle()

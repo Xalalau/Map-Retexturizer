@@ -104,6 +104,106 @@ function Materials:SetValid(material, value)
 end
 
 --[[
+Get material flags
+It returns a table with the flags and their values or {}
+
+flags = {
+	"power of two" = "$keyvalue",
+	...
+}
+
+---------
+Function:
+---------
+If 0
+	f(x) = 0
+Else if odd
+	f(x) = 1 + f(x-1)
+Else if even
+	f(x) = 2(f(x/2))
+
+---------
+Example:
+---------
+f(42) = 2(1 + 2(2(1 + 2(2(1)))))
+
+last 1 multiplied by 2 5 times
+second 1 multiplied by 2 3 times
+first 1 multiplied by 2 1 time
+= 2^1 + 2^3 + 2^5 = 42
+]]
+function Materials:GetFlags(sumOfPowersOfTwo)
+	-- Get the key values
+	local flags = {}
+
+	local function recursiveSeparationOfFlags(sumOfPowersOfTwo)
+		sumOfPowersOfTwo = tonumber(sumOfPowersOfTwo)
+
+		if sumOfPowersOfTwo == 0 then
+			return false
+		elseif math.mod(sumOfPowersOfTwo, 2) == 1 then
+			if recursiveSeparationOfFlags(sumOfPowersOfTwo - 1) then
+				table.insert(flags, "1")
+			end
+		else
+			recursiveSeparationOfFlags(sumOfPowersOfTwo / 2)
+
+			for k,v in pairs (flags) do
+				flags[k] = tonumber(v) * 2
+			end
+
+			return true
+		end
+	end
+
+	-- Associate the key name
+	-- From: https://github.com/ValveSoftware/source-sdk-2013/blob/master/mp/src/public/materialsystem/imaterial.h#L353
+	if recursiveSeparationOfFlags(sumOfPowersOfTwo) then
+		local sourceFlagValues = {
+			[1] = "$debug",
+			[2] = "$no_fullbright",
+			[4] = "$no_draw",
+			[8] = "$use_in_fillrate_mode",
+			[16] = "$vertexcolor",
+			[32] = "$vertexalpha",
+			[64] = "$selfillum",
+			[128] = "$additive",
+			[256] = "$alphatest",
+			[512] = "$multipass",
+			[1024] = "$znearer",
+			[2048] = "$model",
+			[4096] = "$flat",
+			[8192] = "$nocull",
+			[16384] = "$nofog",
+			[32768] = "$ignorez",
+			[65536] = "$decal",
+			[131072] = "$envmapsphere",
+			[262144] = "$noalphamod",
+			[524288] = "$envmapcameraspace",
+			[1048576] = "$basealphaenvmapmask",
+			[2097152] = "$translucent",
+			[4194304] = "$normalmapalphaenvmapmask",
+			[8388608] = "$softwareskin",
+			[16777216] = "$opaquetexture",
+			[33554432] = "$envmapmode",
+			[67108864] = "$nodecal",
+			[134217728] = "$halflambert",
+			[268435456] = "$wireframe",
+			[536870912] = "$allowalphatocoverage"
+		}
+
+		for k,v in pairs(flags) do
+			flags[k] = {
+				keyName = sourceFlagValues[v],
+				keyValue = v
+			}
+		end
+	end
+
+	return flags
+end
+
+--[[
 	Many initial important checks and adjustments for functions that apply material changes
 	Must be clientside and serverside - on the top
 

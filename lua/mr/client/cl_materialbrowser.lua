@@ -287,11 +287,9 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 					icon:SetTooltip(arq)
 
 				local iconOverlay = (vgui.Create("DPanel", iconBackground))
-					iconOverlay:SetPos(0, 0)
 					iconOverlay:SetSize(maxSize, maxSize)
 					iconOverlay:SetBackgroundColor(Color(255, 255, 255, 0))
 					iconOverlay:Hide()
-
 
 					--[[ Note: BUTTON_CODE Enums
 
@@ -333,7 +331,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 
 							local copiedMsgBackground = vgui.Create("DPanel", iconOverlay)
 								copiedMsgBackground:SetSize(maxSize - 26, 25)
-								copiedMsgBackground:SetPos(pos.x + 13, pos.y + height/2 - 25/2)
+								copiedMsgBackground:SetPos(iconOverlay:GetWide()/2 - copiedMsgBackground:GetWide()/2, iconOverlay:GetTall()/2 - copiedMsgBackground:GetTall()/2)
 								copiedMsgBackground:SetBackgroundColor(Color(0, 0, 0, 255))
 
 								local copiedMsgBackground2 = vgui.Create("DPanel", copiedMsgBackground)

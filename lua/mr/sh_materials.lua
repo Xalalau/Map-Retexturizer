@@ -32,17 +32,6 @@ net.Receive("Materials:SetValid", function()
 	Materials:SetValid(net.ReadString(), net.ReadBool())
 end)
 
--- Check if a given material path is a displacement
-function Materials:IsDisplacement(material)
-	for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
-		if k == material then
-			return true
-		end
-	end
-
-	return false
-end
-
 -- Check if a given material path is valid
 function Materials:IsValid(material)
 

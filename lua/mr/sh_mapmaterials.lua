@@ -49,6 +49,17 @@ net.Receive("MapMaterials:Remove", function()
 	MapMaterials:Remove(net.ReadString())
 end)
 
+-- Check if a given material path is a displacement
+function MapMaterials:IsDisplacement(material)
+	for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
+		if k == material then
+			return true
+		end
+	end
+
+	return false
+end
+
 -- Get map modifications
 function MapMaterials:GetList()
 	return map.list
@@ -95,7 +106,7 @@ end
 -- Set map material
 function MapMaterials:Set(ply, data, isBroadcasted)
 	-- Handle displacements
-	local isDisplacement = MR.Materials:IsDisplacement(data.oldMaterial)
+	local isDisplacement = MR.MapMaterials:IsDisplacement(data.oldMaterial)
 
 	-- General first steps
 	if not isDisplacement or isBroadcasted then
@@ -212,7 +223,7 @@ function MapMaterials:Remove(oldMaterial)
 	end
 
 	-- Get a material table for displacements or map
-	local materialTable = MR.Materials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
+	local materialTable = MR.MapMaterials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
 
 	if MR.Data.list:Count(materialTable) > 0 then
 		-- Get the element to clean from the table

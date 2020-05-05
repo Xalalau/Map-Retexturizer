@@ -312,8 +312,8 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 					-- Set pressed effect
 					local function SetEffect(color)
 						iconBackground:SetBackgroundColor(color)						
-						icon:SetSize(width - 4, height - 4)
-						icon:SetPos(pos.x + 2, pos.y + 2)
+						icon:SetSize(width - 8, height - 8)
+						icon:SetPos(pos.x + 4, pos.y + 4)
 					end
 
 					-- Unset pressed effect

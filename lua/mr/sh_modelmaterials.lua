@@ -27,8 +27,8 @@ end)
 
 -- Get the original material full path
 function ModelMaterials:GetNew(ent)
-	if IsValid(ent) then
-		return ent.modifiedMaterial
+	if IsValid(ent) and not ent:IsPlayer(ent) then
+		return ent.mr
 	end
 
 	return nil
@@ -45,8 +45,8 @@ end
 
 -- Get the current material full path
 function ModelMaterials:GetCurrent(tr)
-	if IsValid(tr.Entity) then
-		local data = tr.Entity.modifiedMaterial
+	if IsValid(tr.Entity) and not ent:IsPlayer(ent) then
+		local data = tr.Entity.mr
 		local material = ""
 
 		-- Get a material generated for the model
@@ -205,7 +205,7 @@ function ModelMaterials:Set(ply, data, isBroadcasted)
 		data.newMaterial = ModelMaterials:Create(data)
 
 		-- Save the Data table inside the model
-		data.ent.modifiedMaterial = data
+		data.ent.mr = data
 
 		-- Set the alpha
 		if SERVER then
@@ -226,12 +226,12 @@ end
 -- Remove model material
 function ModelMaterials:Remove(ent)
 	-- Check if there is a modification
-	if not ent or not IsValid(ent) or not ent.modifiedMaterial then
+	if not ent or not IsValid(ent) or ent:IsPlayer() or not ent.mr then
 		return false
 	end
 
 	-- Delete the Data table
-	ent.modifiedMaterial = nil
+	ent.mr = nil
 
 	if SERVER then
 		-- Clear the duplicator

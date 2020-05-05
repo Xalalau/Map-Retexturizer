@@ -340,7 +340,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 									copiedMsg:SetText(message)
 									copiedMsg:SetColor(Color(0, 0, 0, 255))
 									
-									timer.Create(tostring(pressed)..arq, 0.5, 1, function()
+									timer.Create(tostring(pressed)..arq, 0.7, 1, function()
 										iconOverlay:Hide()
 										copiedMsg:Remove()
 										copiedMsgBackground:Remove()

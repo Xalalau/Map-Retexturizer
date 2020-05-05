@@ -54,7 +54,7 @@ function Preview:Render()
 
 	-- Adjustments for skybox materials
 	if MR.Skybox:IsValidFullSky(newData.newMaterial) then
-		newData.newMaterial = MR.Skybox:FixValidFullSkyName(newData.newMaterial)
+		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
 	-- Don't apply bad materials
 	elseif not MR.Materials:IsValid(newData.newMaterial) then
 		return

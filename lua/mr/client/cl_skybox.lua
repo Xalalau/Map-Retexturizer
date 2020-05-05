@@ -44,8 +44,8 @@ function Skybox:Set_CL(newMaterial, isBroadcasted)
 		newMaterial = skybox.backupName
 		suffixes = Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox
-	elseif Skybox:IsValidFullSky(newMaterial:sub(1, -3)) then
-		newMaterial = newMaterial:sub(1, -3) -- Clean the name suffix
+	elseif Skybox:IsValidFullSky(Skybox:RemoveSuffix(newMaterial)) then
+		newMaterial = Skybox:RemoveSuffix(newMaterial)
 		suffixes = Skybox:GetSuffixes()
 	-- It's an invalid material
 	elseif MR.Materials:IsValid(newMaterial) then
@@ -82,8 +82,8 @@ function Skybox:Render()
 	elseif Skybox:GetList()[newMaterial] then
 		suffixes = Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox
-	elseif Skybox:IsValidFullSky(newMaterial:sub(1, -3)) then
-		newMaterial = newMaterial:sub(1, -3)
+	elseif Skybox:IsValidFullSky(Skybox:RemoveSuffix(newMaterial)) then
+		newMaterial = Skybox:RemoveSuffix(newMaterial)
 		suffixes = Skybox:GetSuffixes()
 	-- It's an invalid material
 	elseif not MR.Materials:IsValid(newMaterial) then

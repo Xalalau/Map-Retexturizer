@@ -28,7 +28,7 @@ function Materials:SetAll(ply)
 
 	-- Adjustments for skybox materials
 	if MR.Skybox:IsValidFullSky(material) then
-		material = MR.Skybox:FixValidFullSkyName(material)
+		material = MR.Skybox:SetSuffix(material)
 	end
 
 	-- Clean the map

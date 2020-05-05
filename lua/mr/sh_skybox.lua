@@ -72,7 +72,12 @@ function Skybox:IsValidFullSky(material)
 	end
 end
 
--- Fix the material name for tool usage
-function Skybox:FixValidFullSkyName(material)
+-- Insert a sky material suffix
+function Skybox:SetSuffix(material)
 	return material..skybox.suffixes[3]
+end
+
+-- Remove a sky material suffix
+function Skybox:RemoveSuffix(material)
+	return material:sub(1, -3)
 end

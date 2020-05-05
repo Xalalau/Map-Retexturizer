@@ -332,8 +332,8 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							iconOverlay:Show()
 
 							local copiedMsgBackground = vgui.Create("DPanel", iconOverlay)
-								copiedMsgBackground:SetSize(maxSize - 6, 25)
-								copiedMsgBackground:SetPos(pos.x + 3, pos.y + height/2 - 25/2)
+								copiedMsgBackground:SetSize(maxSize - 26, 25)
+								copiedMsgBackground:SetPos(pos.x + 13, pos.y + height/2 - 25/2)
 
 								local copiedMsg = vgui.Create("DLabel", copiedMsgBackground)
 									copiedMsg:SetPos(marginLeft, 3)
@@ -359,13 +359,13 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							pressed = 108
 							SetClipboardText(arq)
 							SetEffect(color.right)
-							PrintOverlayMessage(19, "Path copied")
+							PrintOverlayMessage(9, "Path copied")
 						-- Use the material with the tool gun (MOUSE_MIDDLE)
 						elseif input.IsMouseDown(109) then
 							pressed = 109
 							RunConsoleCommand("internal_mr_material", arq)
 							SetEffect(color.middle)
-							PrintOverlayMessage(25, "Tool gun")
+							PrintOverlayMessage(17, "Tool gun")
 						end
 					end
 

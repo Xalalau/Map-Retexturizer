@@ -36,39 +36,29 @@ function Skybox:Set_CL(newMaterial, isBroadcasted)
 		return false
 	end
 
-	-- Stop rendering if we selected the default map sky
+	-- It's the default map sky
 	if newMaterial == Skybox:GetName() then
 		return false
+	-- It's empty or it's a HL2 sky
+	elseif newMaterial == "" or Skybox:GetList()[newMaterial] then
+		newMaterial = skybox.backupName
+		suffixes = Skybox:GetSuffixes()
+	-- It's a full 6-sided skybox
+	elseif Skybox:IsValidFullSky(newMaterial:sub(1, -3)) then
+		newMaterial = newMaterial:sub(1, -3) -- Clean the name suffix
+		suffixes = Skybox:GetSuffixes()
+	-- It's an invalid material
+	elseif MR.Materials:IsValid(newMaterial) then
+		return
 	end
-
+	-- if nothing above is true, it's a valid single material
+	
 	-- Set the original skybox backup
 	-- Note: it's done once and here because it's a safe place (the game textures will be loaded for sure)
 	if not Material(skybox.backupName..Skybox:GetSuffixes()[1]):GetTexture("$basetexture") then
 		for i = 1,6 do
 			Material(skybox.backupName..Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetName()..Skybox:GetSuffixes()[i]):GetTexture("$basetexture"))
 		end
-	end
-
-	-- If it's not a HL2 sky or we're applying a backup...
-	if newMaterial ~= "" and not Skybox:GetList()[newMaterial] then
-		if not MR.Materials:IsValid(newMaterial) then
-			-- It's a full skybox
-			if Skybox:IsValidFullSky(newMaterial) then
-				suffixes = Skybox:GetSuffixes()
-			-- It's an invalid material
-			else
-				return
-			end
-		end
-		-- It's a single material
-	else
-		-- It's a full HL2 skybox
-		suffixes = Skybox:GetSuffixes()
-	end
-
-	-- Set to use the backup if the material name is empty
-	if newMaterial == "" or newMaterial == Skybox:GetName() then 
-		newMaterial = skybox.backupName
 	end
 
 	-- Change the sky material
@@ -88,27 +78,20 @@ function Skybox:Render()
 	-- Stop renderind if there is no material
 	if newMaterial == "" then
 		return
-	end
-
-	-- If it's not a HL2 sky...
-	if not Skybox:GetList()[newMaterial] then
-		if not MR.Materials:IsValid(newMaterial) then
-			-- It's a full skybox
-			if Skybox:IsValidFullSky(newMaterial) then
-				suffixes = Skybox:GetSuffixes()
-			-- It's an invalid material
-			else
-				return
-			end
-		-- It's a single material (don't need to render our box on simpler maps without env_)
-		else
-			if not skybox.painted then
-				return
-			end
-		end
-	else
-		-- It's a full HL2 skybox
+	-- It's a full HL2 skybox
+	elseif Skybox:GetList()[newMaterial] then
 		suffixes = Skybox:GetSuffixes()
+	-- It's a full 6-sided skybox
+	elseif Skybox:IsValidFullSky(newMaterial:sub(1, -3)) then
+		newMaterial = newMaterial:sub(1, -3)
+		suffixes = Skybox:GetSuffixes()
+	-- It's an invalid material
+	elseif not MR.Materials:IsValid(newMaterial) then
+		return
+	-- It's a single material
+	-- we don't need to render it here if there isn't an env_skypainted in the map
+	elseif not skybox.painted then
+		return
 	end
 
 	-- Render our sky box around the player

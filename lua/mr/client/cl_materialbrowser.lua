@@ -1,80 +1,248 @@
--- Material browser window
-local Window
--- Preview material
-local MatRetMaterial = CreateMaterial("MatRetMaterial", "UnlitGeneric", {["$basetexture"] = ""})
+--------------------------------
+--- MATERIAL BROWSER
+--------------------------------
 
-local function UpdateMaterialBox(Window, MatRetMaterial, defaults)
-	-- Check if the draw is valid
-	if not Window or not MatRetMaterial then
-		return
-	end
+local Browser = {}
+Browser.__index = Browser
+MR.Browser = Browser
 
-	-- Resize material to the MaterialBox max size keeping the proportions
-	local texture = {
-		preview = {
-			["width"] = MatRetMaterial:Width(),
-			["height"] = MatRetMaterial:Height()
-		},
-		window = {
-			["width"] = defaults.materialBoxSize,
-			["height"] = defaults.materialBoxSize
+local browser = {
+	Window,
+	SelectedMaterial
+}
+
+-- Create a new window if it doesn't exit
+function Browser:Run()
+	-- Preview material
+	local browserPreviewMaterial = MR.Materials:Create("browserPreviewMaterial", "UnlitGeneric", "")
+
+	-- Basic setup
+	local topBar = 25
+	local border = 5
+	local buttonsHeight = 25
+
+	local windowWidth = 1000
+	local windowHeight = 4 * windowWidth/10 + buttonsHeight + topBar + border
+
+	local materialBoxSize = 4 * windowWidth/10 - border * 2
+	local materialDefault = "color"
+
+	if not browser.Window then
+		-- Initialize the preview material
+		browserPreviewMaterial:SetTexture("$basetexture", Material(materialDefault):GetTexture("$basetexture"))
+
+		-- Base window
+		browser.Window = vgui.Create("DFrame")
+			browser.Window:SetTitle("Map Retexturizer Material Browser")
+			browser.Window:SetSize(windowWidth, windowHeight)
+			browser.Window:SetDeleteOnClose(false)
+			browser.Window:SetIcon("icon16/picture.png")
+			browser.Window:SetBackgroundBlur(true)
+			browser.Window:Center()
+			browser.Window:SetPaintBackgroundEnabled(false)
+			browser.Window:SetVisible(true)
+			browser.Window:MakePopup()
+			browser.Window.Paint = function() end
+			browser.Window.Close = function()
+				MR.Ply:SetInMatBrowser(false)
+				browser.Window:SetVisible(false)
+			end
+
+		hook.Add("HUDPaint", "MRBrowserPaint", function()
+			if not browser.Window:IsVisible() then return; end
+		
+			-- Get current Window position
+			local windowX, windowY = browser.Window:GetPos()
+
+			-- Draw Window background
+			draw.RoundedBox(8, windowX, windowY, browser.Window:GetWide(), browser.Window:GetTall(), Color(0, 0, 0, 252))
+
+			-- Draw title bar background
+			draw.RoundedBox(8, windowX, windowY, browser.Window:GetWide(), 25, Color(255, 255, 255, 20))
+
+			-- Draw material preview box background
+			draw.RoundedBox(0, windowX + border, windowY + border + topBar, materialBoxSize, materialBoxSize, Color(255, 255, 255, 10))
+
+			-- Draw the material preview centered and resized (keeping the proportions) in the box
+			local materialWidth, materialHeight = MR.Materials:ResizeInABox(materialBoxSize, browserPreviewMaterial:Width(), browserPreviewMaterial:Height())
+			local materialX = windowX + (materialBoxSize - materialWidth) / 2 + border
+			local materialY = windowY + (materialBoxSize - materialHeight) / 2 + border + topBar
+
+			surface.SetDrawColor(255, 255, 255, 255)
+			surface.SetMaterial(browserPreviewMaterial)
+			surface.DrawTexturedRect(materialX, materialY, materialWidth, materialHeight)
+		end)
+
+		-- Element measures
+		local treeListInfo = {
+			width = browser.Window:GetWide() - materialBoxSize - (browser.Window:GetWide() - materialBoxSize)/1.8 - border * 3,
+			height = materialBoxSize,
+			x = materialBoxSize + border * 2,
+			y = buttonsHeight + topBar + border * 2
 		}
-	}
 
-	local dimension
+		local textPanelInfo = {
+			width = treeListInfo.width,
+			height = buttonsHeight,
+			x = treeListInfo.x,
+			y = topBar + border
+		}
 
-	if texture.preview["width"] > texture.preview["height"] then
-		dimension = "width"
+
+
+		local sendButtonInfo = {
+			width = materialBoxSize/3 - border,
+			height = buttonsHeight,
+			x = border,
+			y = materialBoxSize + border * 2 + topBar
+		}
+
+		local copyButtonInfo = {
+			width = materialBoxSize/3 - border,
+			height = buttonsHeight,
+			x = materialBoxSize/3 + border,
+			y = sendButtonInfo.y
+		}
+
+		local reloadButtonInfo = {
+			width = materialBoxSize/3,
+			height = buttonsHeight,
+			x = 2 * materialBoxSize/3 + border,
+			y = sendButtonInfo.y
+		}
+
+		local scrollPanelInfo = {
+			width = browser.Window:GetWide() - materialBoxSize - treeListInfo.width - border * 4,
+			height = browser.Window:GetTall() - topBar - border * 2,
+			x = materialBoxSize + treeListInfo.width + border * 3,
+			y = border + topBar
+		}
+
+		-- DTree view
+		local TreeList = Browser:Run_CreateDTreePanel(treeListInfo)
+
+		-- Icons view
+		local Scroll = Browser:Run_CreateIconsPanel(scrollPanelInfo)
+
+		-- Selected material
+		browser.SelectedMaterial = vgui.Create("DTextEntry", browser.Window)
+			browser.SelectedMaterial:SetPos(textPanelInfo.x, textPanelInfo.y)
+			browser.SelectedMaterial:SetSize(textPanelInfo.width, textPanelInfo.height)
+			browser.SelectedMaterial:SetValue(materialDefault)
+			browser.SelectedMaterial.OnEnter = function(self)
+				local arq = self:GetText()
+
+				if not Material(arq):IsError() then -- I have to block all bad entries here
+					Browser:SelectMaterial(arq, browserPreviewMaterial)
+				end
+			end
+
+		-- Send button
+		local Send = vgui.Create("DButton", browser.Window)
+			Send:SetSize(sendButtonInfo.width, sendButtonInfo.height)
+			Send:SetPos(sendButtonInfo.x, sendButtonInfo.y)
+			Send:SetText("Tool Gun")
+			Send.DoClick = function()
+				RunConsoleCommand("internal_mr_material", browser.SelectedMaterial:GetText())
+			end
+
+		-- Copy to clipboard button
+		local Copy = vgui.Create("DButton", browser.Window)
+			Copy:SetSize(copyButtonInfo.width, copyButtonInfo.height)
+			Copy:SetPos(copyButtonInfo.x, copyButtonInfo.y)
+			Copy:SetText("Copy to Clipboard")
+			Copy.DoClick = function()
+				SetClipboardText(browserPreviewMaterial:GetTexture("$basetexture"):GetName())
+			end
+
+		-- Reload button
+		local Reload = vgui.Create("DButton", browser.Window)
+			Reload:SetSize(reloadButtonInfo.width, reloadButtonInfo.height)
+			Reload:SetPos(reloadButtonInfo.x, reloadButtonInfo.y)
+			Reload:SetText("Reload Lists")
+			Reload.DoClick = function()
+				Scroll:Remove()
+				TreeList:Remove()
+
+				timer.Create("MRWaitDeletionReload", 0.1, 1, function()
+					Scroll = Browser:Run_CreateIconsPanel(scrollPanelInfo)
+					TreeList = Browser:Run_CreateDTreePanel(treeListInfo)
+
+					Browser:Run_PopulateLists(TreeList, Scroll, browserPreviewMaterial)
+				end)
+			end
+
+		-- Load the first files, folders and icons
+		Browser:Run_PopulateLists(TreeList, Scroll, browserPreviewMaterial)
+
+	-- If the window exists, show it
 	else
-		dimension = "height"
+		browser.Window:SetVisible(true)
 	end
+end
 
-	local proportion = texture.window[dimension] / texture.preview[dimension]
+-- (Re)Create the tree view menu
+-- I recreate it using the reload button
+function Browser:Run_CreateDTreePanel(treeListInfo)
+	-- DTree view
+	local TreeList = vgui.Create("DTree", browser.Window)
+		TreeList:SetSize(treeListInfo.width, treeListInfo.height)
+		TreeList:SetPos(treeListInfo.x, treeListInfo.y)
+		TreeList:SetShowIcons(true)
+			
+	return TreeList
+end
 
-	texture.preview["width"] = texture.preview["width"] * proportion
-	texture.preview["height"] = texture.preview["height"] * proportion
+-- Create the icons view menu
+function Browser:Run_CreateIconsPanel(scrollPanelInfo)
+	local Scroll = vgui.Create("DScrollPanel", browser.Window)
+		Scroll:SetSize(scrollPanelInfo.width, scrollPanelInfo.height)
+		Scroll:SetPos(scrollPanelInfo.x, scrollPanelInfo.y)
 
-	-- Get the window position
-	local positionX, positionY
-	positionX, positionY = Window:GetPos()
+		Scroll.IconsList = vgui.Create("DIconLayout", Scroll)
+			Scroll.IconsList:Dock(FILL)
+			Scroll.IconsList:SetSpaceY(5)
+			Scroll.IconsList:SetSpaceX(5)
+			Scroll.IconsList:IsHovered()
 
-	-- Draw Window background
-	draw.RoundedBox(8, positionX, positionY, Window:GetWide(), Window:GetTall(), Color(0, 0, 0, 200))
+	return Scroll
+end
 
-	-- Draw MaterialBox background
-	draw.RoundedBox(0, positionX + defaults.border, positionY + defaults.border + defaults.topBar, defaults.materialBoxSize, defaults.materialBoxSize, Color(255, 255, 255, 150))
+-- Populate the tree and icon lists
+function Browser:Run_PopulateLists(TreeList, Scroll, browserPreviewMaterial)
+	local node = TreeList:AddNode("Materials!")
+		node:SetExpanded(true)
 
-	-- Get the relative image position
-	positionX = positionX + (defaults.materialBoxSize - texture.preview["width"]) / 2 + defaults.border
-	positionY = positionY + (defaults.materialBoxSize - texture.preview["height"]) / 2 + defaults.border + defaults.topBar
+	Browser:ParseDir(node, "materials/", { ".vmt" }, browserPreviewMaterial, Scroll)
+end
 
-	-- Draw image
-	surface.SetDrawColor(255, 255, 255, 255)
-	surface.SetMaterial(MatRetMaterial)
-	surface.DrawTexturedRect(positionX, positionY, texture.preview["width"], texture.preview["height"])
-
-	--[[
-	-- Note: old way to draw the preview. (Sadly it doesn't work with every texture)
-	MaterialBox:SetPos(positionX, positionY)
-	MaterialBox:SetMaterial(MatRetMaterial)
-	MaterialBox:SetSize(width, height)
-	]]
+-- Mouse left click on materials
+function Browser:SelectMaterial(arq, browserPreviewMaterial)
+	browser.SelectedMaterial:SetText(arq)
+	browserPreviewMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"))
 end
 
 -- Load the contents of a directory
-local function ParseDir(t, dir, ext, MatRetMaterial)
+function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 	local files, dirs = file.Find(dir.."*", "GAME")
 
+	-- Folders
 	for _, fdir in pairs(dirs) do
-		local n = t:AddNode(fdir)
+		if not Scroll.IconsList.only then
+			local n = node:AddNode(fdir)
 
-		n:SetExpanded(true)
-		n.DoClick = function()
-			ParseDir(n, dir..fdir.."/", ext, MatRetMaterial)
-			n.DoClick = function() end
+			n:SetExpanded(true)
+			n.DoClick = function()
+				Browser:ParseDir_ResetIconsPanel(Scroll, false, n, dir, fdir, ext, browserPreviewMaterial)
+
+				n.DoClick = function()
+					Browser:ParseDir_ResetIconsPanel(Scroll, true, n, dir, fdir, ext, browserPreviewMaterial)
+				end
+			end
 		end
 	end
 
+	-- Files
 	for k,v in pairs(files) do
 		local pathExt = string.sub(v, -4)
 		local isValidExt = false
@@ -87,98 +255,197 @@ local function ParseDir(t, dir, ext, MatRetMaterial)
 			end
 		end
 
+		-- If they are valid
 		if isValidExt then
 			local arq = string.sub(dir..v, 11, -5)
 
 			if Material(arq):GetTexture("$basetexture") then
-				local n = t:AddNode(v)
+				-- Remove our fake element (if it exists) since the folder is not empty
+				if Scroll.IconsList.dummy then
+					Scroll.IconsList.dummy:Remove()
+				end
 
-				n.Icon:SetImage("icon16/picture.png")
-				n.DoClick = function()
-					RunConsoleCommand("internal_mr_material", arq)
-					MatRetMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"));
+				-- Element measures
+				local maxSize = 100
+				local width, height = MR.Materials:ResizeInABox(maxSize, Material(arq):Width(), Material(arq):Height())
+				local pos = {
+					x = maxSize/2 - width/2,
+					y = maxSize/2 - height/2
+				}
+
+				-- Draw a simple background
+				local iconBackground = Scroll.IconsList:Add(vgui.Create("DPanel"))
+					iconBackground:SetSize(maxSize, maxSize)
+					iconBackground:SetBackgroundColor(Color(255, 255, 255, 10))
+
+				-- Use a DImageButton to render the material
+				-- Note: this is the ONLY panel that rendered the materials correctly
+				-- for me. Anyway, it isn't perfect... Maybe my video card is too old.
+				local icon = vgui.Create("DImageButton", iconBackground)
+					icon:SetImage(arq)
+					icon:SetSize(width, height)
+					icon:SetPos(pos.x, pos.y)
+					icon:SetTooltip(arq)
+
+				local iconOverlay = (vgui.Create("DPanel", iconBackground))
+					iconOverlay:SetPos(0, 0)
+					iconOverlay:SetSize(maxSize, maxSize)
+					iconOverlay:SetBackgroundColor(Color(255, 255, 255, 0))
+					iconOverlay:Hide()
+
+
+					--[[ Note: BUTTON_CODE Enums
+
+							107 = MOUSE_LEFT
+							108 = MOUSE_RIGHT
+							109 = MOUSE_MIDDLE
+					]]
+
+					local pressed
+					local selected = false
+					local color = {
+						none = Color(255, 255, 255, 10),
+						left = Color(102, 204, 255, 255),
+						right = Color(255, 26, 26, 255),
+						middle = Color(253, 253, 0, 255)
+					}
+
+					-- Set pressed effect
+					local function SetEffect(color)
+						iconBackground:SetBackgroundColor(color)						
+						icon:SetSize(width - 4, height - 4)
+						icon:SetPos(pos.x + 2, pos.y + 2)
+					end
+
+					-- Unset pressed effect
+					local function RemoveEffect()
+						iconBackground:SetBackgroundColor(selected and color.left or color.none)
+
+						if not selected then
+							icon:SetSize(width, height)
+							icon:SetPos(pos.x, pos.y)
+						end
+					end
+
+					-- Print a temporary overlay message
+					local function PrintOverlayMessage(marginLeft, message)
+						if not timer.Exists(tostring(pressed)..arq) then
+							iconOverlay:Show()
+
+							local copiedMsgBackground = vgui.Create("DPanel", iconOverlay)
+								copiedMsgBackground:SetSize(maxSize - 6, 25)
+								copiedMsgBackground:SetPos(pos.x + 3, pos.y + height/2 - 25/2)
+
+								local copiedMsg = vgui.Create("DLabel", copiedMsgBackground)
+									copiedMsg:SetPos(marginLeft, 3)
+									copiedMsg:SetText(message)
+									copiedMsg:SetColor(Color(0, 0, 0, 255))
+									
+									timer.Create(tostring(pressed)..arq, 0.5, 1, function()
+										iconOverlay:Hide()
+										copiedMsg:Remove()
+										copiedMsgBackground:Remove()
+									end)
+						end
+					end
+
+					-- Icon pressed
+					icon.OnDepressed = function()
+						-- Select material (MOUSE_LEFT)
+						if input.IsMouseDown(107) then
+							pressed = 107
+							Browser:SelectMaterial(arq, browserPreviewMaterial)
+						-- Copy material path to clipboard (MOUSE_RIGHT)
+						elseif input.IsMouseDown(108) then
+							pressed = 108
+							SetClipboardText(arq)
+							SetEffect(color.right)
+							PrintOverlayMessage(19, "Path copied")
+						-- Use the material with the tool gun (MOUSE_MIDDLE)
+						elseif input.IsMouseDown(109) then
+							pressed = 109
+							RunConsoleCommand("internal_mr_material", arq)
+							SetEffect(color.middle)
+							PrintOverlayMessage(25, "Tool gun")
+						end
+					end
+
+					-- Icon released
+					icon.OnReleased = function()
+						-- Remove right or middle click momentary effects
+						if pressed == 108 or pressed == 109 then
+							RemoveEffect()
+						end
+
+						pressed = nil
+					end
+
+					icon.Think = function ()
+						-- Draw a selection around the selected material
+						if browser.SelectedMaterial:GetText() == arq then
+							if not selected then
+								SetEffect(color.left)
+								selected = true
+							end
+						elseif selected then
+							selected = false
+							RemoveEffect()
+						end
+					end
+
+				-- Add a node on the DTree panel
+				if not Scroll.IconsList.only then
+					local n = node:AddNode(v)
+
+					n.Icon:SetImage("icon16/picture.png")
+
+					n.DoClick = function()
+						Browser:SelectMaterial(arq, browserPreviewMaterial)
+					end
 				end
 			end
 		end
 	end
+
+	return true
 end
 
-function CreateMaterialBrowser(mr)
-	local topBar = 25
-	local border = 5
-	local buttonsHeight = 25
+-- Recreate the icons view menu
+function Browser:ParseDir_ResetIconsPanel(Scroll, setOnly, n, dir, fdir, ext, browserPreviewMaterial)
+	-- Clear the list
+	Scroll.IconsList:Clear()
 
-	local windowWidth = 700
-	local windowHeight = 4 * windowWidth/7 + buttonsHeight + topBar + border
+	-- Insert at least one fake element to avoid the scroll getting disabled if a folder is empty
+	Scroll.IconsList.dummy = Scroll.IconsList:Add(vgui.Create("DImageButton", MatBackground))
 
-	local materialBoxSize = 4 * windowWidth/7 - border * 2
+	-- Set true if we'll change the dtree nodes
+	Scroll.IconsList.only = setOnly
 
-	if not Window then
-		MatRetMaterial:SetTexture("$basetexture", Material("color"):GetTexture("$basetexture"));
-	
-		Window = vgui.Create("DFrame")
-			Window:SetTitle("Map Retexturizer Material Browser")
-			Window:SetSize(windowWidth, windowHeight)
-			Window:SetDeleteOnClose(false)
-			Window:SetIcon("icon16/picture.png")
-			Window:SetBackgroundBlur(true)
-			Window:Center()
-			Window:SetPaintBackgroundEnabled(false)
-			Window:SetVisible(true)
-			Window:MakePopup()
-			Window.Paint = function()
-			end
-			Window.Close = function()
-				hook.Remove("HUDPaint", "HUDPaint_MaterialBrowser")
-				MR.Ply:SetInMatBrowser(false)
-				Window:SetVisible(false)
-			end
-
-		local MaterialBox = vgui.Create("DImage", Window)
-			MaterialBox:SetSize(materialBoxSize, materialBoxSize)
-			MaterialBox:SetPos(border, border + topBar)
-
-		local function CreateList()
-			List = vgui.Create("DTree", Window)
-				List:SetSize(Window:GetWide() - materialBoxSize - border * 3, Window:GetTall() - topBar - border * 2)
-				List:SetPos(materialBoxSize + border * 2, border + topBar)
-				List:SetShowIcons(true)
-		end
-
-		CreateList()
-
-		local function FillList()
-			local node = List:AddNode("Materials!")
-
-			--ParseDir(node, "materials/", { ".vmt", ".png", ".jpg" }, MatRetMaterial)
-			ParseDir(node, "materials/", { ".vmt" }, MatRetMaterial)
-			node:SetExpanded(true)
-		end
-
-		local Reload = vgui.Create("DButton", Window)
-			Reload:SetSize(materialBoxSize/2 - border/2, buttonsHeight)
-			Reload:SetPos(border, materialBoxSize + border * 2 + topBar)
-			Reload:SetText("Reload List")
-			Reload.DoClick = function()
-				List:Remove()
-				CreateList()
-				FillList()
-			end
-
-		local Copy = vgui.Create("DButton", Window)
-			Copy:SetSize(materialBoxSize/2, buttonsHeight)
-			Copy:SetPos(border + materialBoxSize/2, materialBoxSize + border * 2 + topBar)
-			Copy:SetText("Copy to Clipboard")
-			Copy.DoClick = function()
-				SetClipboardText(MatRetMaterial:GetTexture("$basetexture"):GetName())
-			end
-
-		FillList()
-	else
-		Window:SetVisible(true)
+	-- Disable the decals warning if it's on
+	if Scroll.IconsList.warning then
+		Scroll.IconsList.warning:Remove()
 	end
 
-	hook.Add("HUDPaint", "HUDPaint_MaterialBrowser", function()
-		UpdateMaterialBox(Window, MatRetMaterial, {materialBoxSize = materialBoxSize, topBar = topBar, border = border})
+	-- Block folders that crash the game (at least on my computer, try it yourself)
+	if dir..fdir == "materials/mr" then
+		Scroll.IconsList.warning = vgui.Create("DLabel", Scroll)
+			Scroll.IconsList.warning:SetText("This is our generic materials folder.\nNothing to see here.")
+			Scroll.IconsList.warning:SetSize(300, 75)
+			Scroll.IconsList.warning:SetPos(5, 5)
+	elseif dir..fdir == "materials/decals" or
+		   dir..fdir == "materials/effects" or
+		   dir..fdir == "materials/sprites" then
+		Scroll.IconsList.warning = vgui.Create("DLabel", Scroll)
+			Scroll.IconsList.warning:SetText("BLOCKED!\n\nRendering this folder crashes the game.")
+			Scroll.IconsList.warning:SetSize(300, 75)
+			Scroll.IconsList.warning:SetPos(5, 5)
+	-- Fill the list(s)
+	else
+		Browser:ParseDir(n, dir..fdir.."/", ext, browserPreviewMaterial, Scroll)
+	end
+
+	-- Restart the scroll after some time
+	timer.Create("MRWaitScrollRebuild", 0.12, 1, function()
+		Scroll:Rebuild()
 	end)
 end

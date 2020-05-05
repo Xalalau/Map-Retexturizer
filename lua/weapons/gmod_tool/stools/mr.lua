@@ -377,7 +377,8 @@ function TOOL:Reload(tr)
 		end
 
 		-- Clean
-		if GetConVar("internal_mr_skybox"):GetString() ~= "" then
+		if GetConVar("internal_mr_skybox"):GetString() ~= "" and
+		   GetConVar("internal_mr_skybox"):GetString() ~= MR.Skybox:GetName() then
 			if SERVER then
 				MR.Skybox:Remove(ply)
 			end

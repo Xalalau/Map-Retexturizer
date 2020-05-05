@@ -43,7 +43,7 @@ function Preview:Render()
 	local ply = LocalPlayer()
 
 	-- Don't render if there is a loading or the material browser is open
-	if MR.Duplicator:IsRunning(ply) or MR.Ply:GetInMatBrowser() then
+	if MR.Duplicator:IsRunning(ply) then
 		return
 	end
 

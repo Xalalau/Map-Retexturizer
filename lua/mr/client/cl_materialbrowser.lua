@@ -44,7 +44,6 @@ function Browser:Run()
 			browser.Window:MakePopup()
 			browser.Window.Paint = function() end
 			browser.Window.Close = function()
-				MR.Ply:SetInMatBrowser(false)
 				browser.Window:SetVisible(false)
 			end
 

@@ -513,7 +513,6 @@ function TOOL.BuildCPanel(CPanel)
 
 			local openMaterialBrowser = CPanel:Button("Open Material Browser")
 				function openMaterialBrowser:DoClick()				
-					MR.Ply:SetInMatBrowser(true)
 					MR.Browser:Run()
 				end
 	end

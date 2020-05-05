@@ -65,10 +65,12 @@ end
 
 -- Check if the skybox is a valid 6 side setup
 function Skybox:IsValidFullSky(material)
-	if MR.Materials:IsValid(material..skybox.suffixes[1]) then
-		return true
-	else
-		return false
+	for k,v in pairs(skybox.suffixes) do
+		if MR.Materials:IsValid(material..v) then
+			return true
+		else
+			return false
+		end
 	end
 end
 

@@ -334,17 +334,22 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							local copiedMsgBackground = vgui.Create("DPanel", iconOverlay)
 								copiedMsgBackground:SetSize(maxSize - 26, 25)
 								copiedMsgBackground:SetPos(pos.x + 13, pos.y + height/2 - 25/2)
+								copiedMsgBackground:SetBackgroundColor(Color(0, 0, 0, 255))
 
-								local copiedMsg = vgui.Create("DLabel", copiedMsgBackground)
-									copiedMsg:SetPos(marginLeft, 3)
-									copiedMsg:SetText(message)
-									copiedMsg:SetColor(Color(0, 0, 0, 255))
-									
-									timer.Create(tostring(pressed)..arq, 0.7, 1, function()
-										iconOverlay:Hide()
-										copiedMsg:Remove()
-										copiedMsgBackground:Remove()
-									end)
+								local copiedMsgBackground2 = vgui.Create("DPanel", copiedMsgBackground)
+									copiedMsgBackground2:SetSize(copiedMsgBackground:GetWide() - 4, copiedMsgBackground:GetTall() - 4)
+									copiedMsgBackground2:SetPos(2, 2)
+								
+									local copiedMsg = vgui.Create("DLabel", copiedMsgBackground2)
+										copiedMsg:SetPos(marginLeft, 1)
+										copiedMsg:SetText(message)
+										copiedMsg:SetColor(Color(0, 0, 0, 255))
+										
+										timer.Create(tostring(pressed)..arq, 0.7, 1, function()
+											iconOverlay:Hide()
+											copiedMsg:Remove()
+											copiedMsgBackground:Remove()
+										end)
 						end
 					end
 
@@ -359,13 +364,13 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							pressed = 108
 							SetClipboardText(arq)
 							SetEffect(color.right)
-							PrintOverlayMessage(9, "Path copied")
+							PrintOverlayMessage(8, "Path copied")
 						-- Use the material with the tool gun (MOUSE_MIDDLE)
 						elseif input.IsMouseDown(109) then
 							pressed = 109
 							RunConsoleCommand("internal_mr_material", arq)
 							SetEffect(color.middle)
-							PrintOverlayMessage(17, "Tool gun")
+							PrintOverlayMessage(16, "Tool gun")
 						end
 					end
 

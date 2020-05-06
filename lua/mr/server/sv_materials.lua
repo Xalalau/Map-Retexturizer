@@ -27,7 +27,7 @@ function Materials:SetAll(ply)
 	end
 
 	-- Adjustments for skybox materials
-	if MR.Skybox:IsValidFullSky(material) then
+	if MR.Skybox:IsFullSkybox(material) then
 		material = MR.Skybox:SetSuffix(material)
 	end
 
@@ -45,10 +45,10 @@ function Materials:SetAll(ply)
 
 		-- Fill the fake save table with the correct structures (ignoring water materials)
 		newTable.skybox = {
-			[1] = {
-				newMaterial = material
-			}
+			MR.Data:Create(ply)
 		}
+
+		newTable.skybox[1].oldMaterial = MR.Skybox:GetGenericName()
 
 		local map_data = MR.OpenBSP()
 		local found = map_data:ReadLumpTextDataStringData()

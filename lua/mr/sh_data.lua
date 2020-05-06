@@ -64,7 +64,10 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or MR.Data.list:GetElement(list, MR.Materials:GetOriginal(tr))
+	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or
+	       MR.Data.list:GetElement(list, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
+										 MR.Skybox:GetValidName() or
+										 MR.Materials:GetOriginal(tr))
 end
 
 -- Set a data table
@@ -77,7 +80,7 @@ function Data:Create(ply, tr, decalInfo)
 		offsety = not decalInfo and ply:GetInfo("internal_mr_offsety") or nil,
 		scalex = ply:GetInfo("internal_mr_scalex") ~= "0" and ply:GetInfo("internal_mr_scalex") or "0.01",
 		scaley = ply:GetInfo("internal_mr_scaley") ~= "0" and ply:GetInfo("internal_mr_scaley") or "0.01",
-		rotation = not decalInfo and ply:GetInfo("internal_mr_rotation") or nil,
+		rotation = not decalInfo and math.ceil(ply:GetInfo("internal_mr_rotation")) or nil,
 		alpha = not decalInfo and ply:GetInfo("internal_mr_alpha") or nil,
 		detail = not decalInfo and ply:GetInfo("internal_mr_detail") or nil,
 		position = decalInfo and decalInfo.pos,
@@ -132,10 +135,10 @@ end
 
 -- Check if the element is active
 function Data.list:IsActive(element)
-	if element and istable(element) and (element.oldMaterial ~=nil or element.mat ~= nil) then
+	if element and istable(element) and element.oldMaterial ~=nil then
 		return true
 	end
-	
+
 	return false
 end
 

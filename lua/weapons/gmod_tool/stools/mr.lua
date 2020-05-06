@@ -110,75 +110,32 @@ function TOOL_BasicChecks(ply, tr)
 		return false
 	end
 
+	--Check if we can interact with the skybox
+	if MR.Skybox:IsSkybox(material) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
+		if SERVER then
+			if not MR.Ply:GetDecalMode(ply) then
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+			end
+		end
+
+		return false
+	end
+
 	return true
 end
 
 -- Apply materials
  function TOOL:LeftClick(tr)
-	local ply = self:GetOwner() or LocalPlayer()	
+	local ply = self:GetOwner() or LocalPlayer()
+	local isDecal = MR.Ply:GetDecalMode(ply)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
-	-- Skybox modification
-	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
-		-- Check if it's allowed
-		if GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
-			if SERVER then
-				if not MR.Ply:GetDecalMode(ply) then
-					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
-				end
-			end
-
-			return false
-		end
-
-		-- Get the materials
-		local skyboxMaterial = GetConVar("internal_mr_skybox"):GetString() ~= "" and GetConVar("internal_mr_skybox"):GetString() or MR.Materials:GetOriginal(tr)
-		local selectedMaterial = ply:GetInfo("internal_mr_material")
-
-		-- Check if the copy isn't necessary
-		if skyboxMaterial == selectedMaterial then
-			return false
-		end
-
-		-- Don't apply bad materials
-		if not MR.Materials:IsValid(skyboxMaterial) and not MR.Skybox:IsValidFullSky(skyboxMaterial) then
-			if SERVER then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
-			end
-
-			return false
-		end
-
-		if SERVER then
-			-- Apply the new skybox
-			MR.Skybox:Set_SV(ply, selectedMaterial)
-
-			-- Register that the map is modified
-			if not MR.Base:GetInitialized() then
-				MR.Base:SetInitialized()
-			end
-
-			-- Set the Undo
-			undo.Create("Material")
-				undo.SetPlayer(ply)
-				undo.AddFunction(function(tab)
-					if SERVER then
-						MR.Skybox:Set_SV(ply, "")
-					end
-				end)
-				undo.SetCustomUndoText("Undone Material")
-			undo.Finish()
-		end
-
-		return true
-	end
-
 	-- If we are dealing with decals, apply it
-	if MR.Ply:GetDecalMode(ply) then
+	if isDecal then
 		if SERVER then
 			MR.Decals:Set_SV(ply, tr)
 		end
@@ -186,29 +143,36 @@ end
 		return true
 	end
 
-	-- If we are dealing with map or model materials:
-
-	-- Check if the backup table is full
-	if MR.Data.list:IsFull(MR.MapMaterials:GetList(), MR.MapMaterials:GetLimit()) then
-		return false
-	end
-
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
+	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
+												MR.Skybox:GetList() or
+												MR.MapMaterials:GetList())) or
+												MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 
+	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
-		-- If there isn't a saved data, create one from the material and adjust the material name
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 		oldData.newMaterial = oldData.oldMaterial 
+	-- If it's a model, adjust the material name
 	elseif IsValid(tr.Entity) then
-		-- If it's a model, adjust the material name
 		oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
 	end	
 
-	-- Adjustments for skybox materials
-	if MR.Skybox:IsValidFullSky(newData.newMaterial) then
-		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
+	-- Adjustment for skybox materials
+	if MR.Skybox:IsSkybox(newData.oldMaterial) then
+		newData.oldMaterial = oldData.oldMaterial
+
+		oldData.newMaterial = MR.Skybox:RemoveSuffix(oldData.newMaterial)
+		newData.newMaterial = MR.Skybox:RemoveSuffix(newData.newMaterial)
+
+		if newData.newMaterial == MR.Skybox:GetName() and oldData.newMaterial == "" then
+			return false
+		end
+
+		if MR.Skybox:IsPainted() then
+			oldData.newMaterial = MR.Materials:GetCurrent(tr)
+		end
 	-- Don't apply bad materials
 	elseif not MR.Materials:IsValid(newData.newMaterial) then
 		if SERVER then
@@ -247,31 +211,17 @@ end
 
 	-- Set the material
 	timer.Create("MRLeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
-		-- model material
-		if IsValid(tr.Entity) then
+		-- Skybox
+		if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+			MR.Skybox:Set(ply, newData)
+		-- model
+		elseif IsValid(tr.Entity) then
 			MR.ModelMaterials:Set(ply, newData)
-		-- or map/displacement material
+		-- map/displacement
 		elseif tr.Entity:IsWorld() then
 			MR.MapMaterials:Set(ply, newData)
 		end
 	end)
-
-	-- Set the Undo
-	undo.Create("Material")
-		undo.SetPlayer(ply)
-		undo.AddFunction(function(tab, data)
-			if data.oldMaterial then
-				-- model material
-				if IsValid(tr.Entity) then
-					MR.ModelMaterials:Remove(tr.Entity)
-				-- or map/displacement material
-				elseif tr.Entity:IsWorld() then
-					MR.MapMaterials:Remove(data.oldMaterial)
-				end
-			end
-		end, newData)
-		undo.SetCustomUndoText("Undone Material")
-	undo.Finish()
 
 	return true
 end
@@ -279,76 +229,66 @@ end
 -- Copy materials
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
-	-- Skybox
-	if originalMaterial == "tools/toolsskybox" then
-		-- Get the materials
-		local skyboxMaterial = GetConVar("internal_mr_skybox"):GetString() ~= "" and GetConVar("internal_mr_skybox"):GetString() or "skybox/"..GetConVar("sv_skyname"):GetString()
-		local selectedMaterial = ply:GetInfo("internal_mr_material")
+	-- Get data tables with the future and current materials
+	local newData = MR.Data:Create(ply, tr)
+	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.MapMaterials:GetList()))
 
-		-- With the map has "env_skypainted", use hammer skybox texture, not the "painted" material (that is a missing texture)
-		if skyboxMaterial == "skybox/painted" then
-			skyboxMaterial = originalMaterial
+	-- If there isn't a saved data, create one from the material and adjust the material name
+	if not oldData then
+		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
+		oldData.newMaterial = oldData.oldMaterial 
+	-- If it's a model, adjust the material name
+	elseif IsValid(tr.Entity) then
+		oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
+	end
+
+	-- Adjustment for skybox materials
+	if MR.Skybox:IsSkybox(newData.oldMaterial) then
+		newData.oldMaterial = oldData.oldMaterial
+
+		if newData.oldMaterial == MR.Skybox:GetGenericName() and
+		   oldData.newMaterial == MR.Skybox:GetGenericName() then
+			oldData.newMaterial = MR.Skybox:GetValidName()
 		end
 
-		-- Check if the copy isn't necessary
-		if skyboxMaterial == selectedMaterial then
-			return false
+		if MR.Skybox:IsPainted() then
+			oldData.newMaterial = MR.Materials:GetCurrent(tr)
+		end
+	end
+
+	-- Do not apply the material if it's not necessary
+	if MR.Data:IsEqual(oldData, newData) then
+
+		return false
+	end
+
+	-- Set the detail element to the right position
+	if CLIENT then
+		if MR.GUI:GetDetail() ~= "" then
+			local i = 1
+
+			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
+				if k == newData.detail then
+					break
+				else
+					i = i + 1
+				end
+			end
+
+			MR.GUI:GetDetail():ChooseOptionID(i)
 		end
 
 		-- Copy the material
-		ply:ConCommand("internal_mr_material "..skyboxMaterial)
-	-- Normal materials
-	else
-		-- Get data tables with the future and current materials
-		local newData = MR.Data:Create(ply, tr)
-		local oldData = table.Copy(MR.Data:Get(tr, MR.MapMaterials:GetList()))
+		RunConsoleCommand("internal_mr_material", MR.Materials:GetCurrent(tr))
 
-		if not oldData then
-			-- If there isn't a saved data, create one from the material and adjust the material name
-			oldData = MR.Data:CreateFromMaterial(originalMaterial)
-			oldData.newMaterial = oldData.oldMaterial 
-		elseif IsValid(tr.Entity) then
-			-- If it's a model, adjust the material name
-			oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
-		end
-
-		-- Check if the copy isn't necessary
-		if MR.Materials:GetCurrent(tr) == MR.Materials:GetNew(ply) then
-			if MR.Data:IsEqual(oldData, newData) then
-
-				return false
-			end
-		end
-
-		-- Set the detail element to the right position
-		if CLIENT then
-			if MR.GUI:GetDetail() ~= "" then
-				local i = 1
-
-				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
-					if k == newData.detail then
-						break
-					else
-						i = i + 1
-					end
-				end
-
-				MR.GUI:GetDetail():ChooseOptionID(i)
-			end
-
-			-- Copy the material
-			RunConsoleCommand("internal_mr_material", MR.Materials:GetCurrent(tr))
-
-			-- Set the cvars to data values or to default values
-			MR.CVars:SetPropertiesToData(ply, oldData)
-		end
+		-- Set the cvars to data values or to default values
+		MR.CVars:SetPropertiesToData(ply, oldData)
 	end
 
 	return true
@@ -363,40 +303,17 @@ function TOOL:Reload(tr)
 		return false
 	end
 
-	-- Skybox cleanup
-	if MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
-		-- Check if it's allowed
-		if GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
-			if SERVER then
-				if not MR.Ply:GetDecalMode(ply) then
-					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
-				end
-			end
-
-			return false
-		end
-
-		-- Clean
-		if GetConVar("internal_mr_skybox"):GetString() ~= "" and
-		   GetConVar("internal_mr_skybox"):GetString() ~= MR.Skybox:GetName() then
-			if SERVER then
-				MR.Skybox:Remove(ply)
-			end
-
-			return true
-		end
-
-		return false
-	end
-
 	-- Normal materials cleanup
-	if MR.Data:Get(tr, MR.MapMaterials:GetList()) then
+	if MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.MapMaterials:GetList()) then
 		if SERVER then
 			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
-				-- model material
-				if IsValid(tr.Entity) then
+				-- Skybox
+				if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+					MR.Skybox:Remove(ply)
+				-- model
+				elseif IsValid(tr.Entity) then
 					MR.ModelMaterials:Remove(tr.Entity)
-				-- or map/displacement material
+				-- map/displacement
 				elseif tr.Entity:IsWorld() then
 					MR.MapMaterials:Remove(MR.Materials:GetOriginal(tr))
 				end
@@ -540,7 +457,7 @@ function TOOL.BuildCPanel(CPanel)
 			properties.c = CPanel:NumSlider("Vertical Translation", "internal_mr_offsety", -1, 1, 2)
 			properties.f = CPanel:NumSlider("Rotation", "internal_mr_rotation", 0, 179, 0)
 			properties.a = CPanel:NumSlider("Alpha", "internal_mr_alpha", 0, 1, 2)
-			properties.baseMaterialReset = CPanel:Button("Reset")			
+			properties.baseMaterialReset = CPanel:Button("Reset")
 
 			function properties.baseMaterialReset:DoClick()
 				MR.CVars:SetPropertiesToDefaults(ply)
@@ -573,9 +490,15 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					net.Start("Skybox:Set_SV")
-						net.WriteString(value or "")
-					net.SendToServer()
+					if MR.Materials:IsValid(value) or MR.Skybox:IsFullSkybox(value) or value == "" then
+						if MR.Skybox:IsFullSkybox(value) then
+							value = MR.Skybox:SetSuffix(value)
+						end
+
+						net.Start("Skybox:Set")
+							net.WriteTable(MR.Data:CreateFromMaterial(MR.Skybox:GetGenericName(), value == "" and MR.Skybox:GetName() or value))
+						net.SendToServer()
+					end
 				end
 
 			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2"))
@@ -586,12 +509,12 @@ function TOOL.BuildCPanel(CPanel)
 						return false
 					end
 
-					net.Start("Skybox:Set_SV")
-						net.WriteString(value)
+					net.Start("Skybox:Set")
+						net.WriteTable(MR.Data:CreateFromMaterial(MR.Skybox:GetGenericName(), MR.Skybox:SetSuffix(value == "" and MR.Skybox:GetName() or value)))
 					net.SendToServer()
 				end
 
-				for k,v in pairs(MR.Skybox:GetList()) do
+				for k,v in pairs(MR.Skybox:GetHL2List()) do
 					MR.GUI:GetSkyboxCombo():AddChoice(k, k)
 				end	
 
@@ -685,7 +608,7 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionSave)
 
 			MR.GUI:SetSaveText(CPanel:TextEntry("Filename", "internal_mr_savename"))
-				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetMapFolder().."\"")
+				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetSaveFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
 			MR.GUI:Set("save", "box", CPanel:CheckBox("Autosave"))

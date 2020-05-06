@@ -7,6 +7,9 @@ Base.__index = Base
 MR.Base = Base
 
 local base = {
+	materials = {
+		folder = "mr/"
+	},
 	data = {
 		-- Our folder inside data
 		folder = "mapret/",
@@ -60,7 +63,11 @@ function Base:Init()
 	end
 end
 
-function Base:GetMapFolder()
+function Base:GetMaterialsFolder()
+	return base.materials.folder
+end
+
+function Base:GetSaveFolder()
 	return base.data.save.folder
 end
 

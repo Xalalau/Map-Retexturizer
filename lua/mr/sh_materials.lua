@@ -34,7 +34,6 @@ end)
 
 -- Check if a given material path is valid
 function Materials:IsValid(material)
-
 	-- Empty
 	if not material or material == "" then
 		return false
@@ -79,7 +78,10 @@ end
 
 -- Get the current material full path
 function Materials:GetCurrent(tr)
-	return MR.ModelMaterials:GetCurrent(tr) or MR.MapMaterials:GetCurrent(tr) or ""
+	return MR.ModelMaterials:GetCurrent(tr) or
+			MR.Skybox:IsPainted(MR.MapMaterials:GetCurrent(tr)) and MR.Skybox:GetGenericName() or
+			MR.MapMaterials:GetCurrent(tr) or
+			""
 end
 
 -- Get the new material from mr_material cvar
@@ -249,7 +251,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 	if check then
 		-- Don't apply bad materials
-		if check.material and not Materials:IsValid(check.material) and not MR.Skybox:IsValidFullSky(check.material) then
+		if check.material and not Materials:IsValid(check.material) and not MR.Skybox:IsSkybox(check.material) then
 			print("[Map Retexturizer] Bad material blocked.")
 
 			return false
@@ -269,7 +271,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 		-- Check if the modifications table is full
 		if check.list and check.limit and MR.Data.list:IsFull(check.list, check.limit) then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Material limit reached ("..limit..")! Notify the developer for more space.")
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
 			end
 
 			return false

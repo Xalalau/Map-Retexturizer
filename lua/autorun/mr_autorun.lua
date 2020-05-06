@@ -67,6 +67,7 @@ end
 -- Initialization
 MR.Base:Init()
 MR.MapMaterials.Displacements:Init()
+MR.Skybox:Init()
 
 if SERVER then
 	MR.Ply:Init()

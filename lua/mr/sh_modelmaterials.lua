@@ -217,6 +217,17 @@ function ModelMaterials:Set(ply, data, isBroadcasted)
 		end	
 	end
 
+	-- Set the Undo
+	undo.Create("Material")
+		undo.SetPlayer(ply)
+		undo.AddFunction(function(tab, ent)
+			if IsValid(ent) and ent.mr then
+				MR.ModelMaterials:Remove(ent)
+			end
+		end, data.ent)
+		undo.SetCustomUndoText("Undone Material")
+	undo.Finish()
+
 	-- General final steps
 	MR.Materials:SetFinalSteps()
 

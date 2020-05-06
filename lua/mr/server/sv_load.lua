@@ -44,10 +44,10 @@ end)
 
 function Load:Init()
 	-- Fill the load list on the server
-	local files = file.Find(MR.Base:GetMapFolder().."*", "Data")
+	local files = file.Find(MR.Base:GetSaveFolder().."*", "Data")
 
 	for k,v in pairs(files) do
-		Load:SetOption(string.lower(v):sub(1, -5), MR.Base:GetMapFolder()..string.lower(v):sub(1, -5)..".txt") -- lowercase to adjust old save names
+		Load:SetOption(string.lower(v):sub(1, -5), MR.Base:GetSaveFolder()..string.lower(v):sub(1, -5)..".txt") -- lowercase to adjust old save names
 	end
 
 	-- Set the autoLoad command
@@ -74,7 +74,7 @@ function Load:Start(ply, loadName)
 	end
 
 	-- Get the load file
-	local loadFile = Load:GetOption(loadName) or MR.Base:GetMapFolder() .. loadName .. ".txt"
+	local loadFile = Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"
 
 	-- Check if it exists
 	if !file.Exists(loadFile, "Data") then

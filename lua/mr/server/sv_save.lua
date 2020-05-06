@@ -32,18 +32,14 @@ function Save:Set_SV(ply, saveName, blockAlert)
 	end
 
 	-- Get the save full path
-	local saveFile = saveName and MR.Base:GetMapFolder()..string.lower(saveName)..".txt" or MR.Base:GetAutoSaveFile()
+	local saveFile = saveName and MR.Base:GetSaveFolder()..string.lower(saveName)..".txt" or MR.Base:GetAutoSaveFile()
 
 	-- Create a save table
 	local save = {
 		decals = MR.Decals:GetList(),
 		map = MR.MapMaterials:GetList(),
 		displacements = MR.MapMaterials.Displacements:GetList(),
-		skybox = {
-			[1] = {
-				newMaterial = GetConVar("internal_mr_skybox"):GetString()
-			}
-		},
+		skybox = { MR.Skybox:GetList()[1] } ,
 		savingFormat = "3.0"
 	}
 
@@ -51,6 +47,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 	MR.Data.list:Clean(save.decals)
 	MR.Data.list:Clean(save.map)
 	MR.Data.list:Clean(save.displacements)
+	MR.Data.list:Clean(save.skybox)
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save))

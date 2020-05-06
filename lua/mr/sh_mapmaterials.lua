@@ -16,7 +16,7 @@ MR.MapMaterials.Displacements = MapMaterials.Displacements
 
 local map = {
 	-- The name of our backup map material files. They are file1, file2, file3...
-	filename = "mr/file",
+	filename = MR.Base:GetMaterialsFolder().."file",
 	-- 1512 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
 	limit = 1512,
 	-- Table of "Data" structures = all the material modifications and backups
@@ -25,7 +25,7 @@ local map = {
 	displacements = {
 		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
 		-- Note: this is the same type of list as map.list, but it's separated because these files never get "clean" for reuse
-		filename = "mr/disp_file",
+		filename = MR.Base:GetMaterialsFolder().."disp_file",
 		-- 24 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
 		limit = 24,
 		-- List of detected displacements on the map
@@ -87,14 +87,24 @@ end
 -- Get the current material full path
 function MapMaterials:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
+		local selected = {}
+
+		if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+			selected.list = MR.Skybox:GetList()
+			selected.oldMaterial = MR.Skybox:GetValidName()
+		else
+			selected.list = MapMaterials:GetList()
+			selected.oldMaterial = MR.Materials:GetOriginal(tr)
+		end
+
 		local path = ""
 
-		local element = MR.Data.list:GetElement(map.list, MR.Materials:GetOriginal(tr))
+		local element = MR.Data.list:GetElement(selected.list, selected.oldMaterial)
 
 		if element then
 			path = element.newMaterial
 		else
-			path = MR.Materials:GetOriginal(tr)
+			path = selected.oldMaterial
 		end
 
 		return path
@@ -108,16 +118,43 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 	-- Handle displacements
 	local isDisplacement = MR.MapMaterials:IsDisplacement(data.oldMaterial)
 
-	-- General first steps
-	if not isDisplacement or isBroadcasted then
-		local check = {
-			material = data.newMaterial,
-			material2 = data.newMaterial2
-		}
-	
-		if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
-			return
+	-- Select the correct type
+	local selected = {}
+
+	if MR.MapMaterials:IsDisplacement(data.oldMaterial) then
+		selected.isDisplacement = true
+		selected.list = MapMaterials.Displacements:GetList()
+		selected.limit = MapMaterials.Displacements:GetLimit()
+		selected.filename = MapMaterials:GetFilename()
+		selected.filename2 = MapMaterials.Displacements:GetFilename()
+		if SERVER then
+			selected.dupName = MapMaterials.Displacements:GetDupName()
 		end
+	elseif MR.Skybox:IsSkybox(data.oldMaterial) then	
+		selected.isSkybox = true
+		selected.list = MR.Skybox:GetList()
+		selected.limit = MR.Skybox:GetLimit()
+		selected.filename = MR.Skybox:GetFilename()
+		if SERVER then
+			selected.dupName = MR.Skybox:GetDupName()
+		end
+	else
+		selected.list = MapMaterials:GetList()
+		selected.limit = MapMaterials:GetLimit()
+		selected.filename = MapMaterials:GetFilename()
+		if SERVER then
+			selected.dupName = MapMaterials:GetDupName()
+		end
+	end
+
+	-- General first steps (part 1)
+	local check = {
+		material = data.newMaterial,
+		material2 = data.newMaterial2
+	}
+
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+		return
 	end
 
 	-- Send the modification to...
@@ -141,15 +178,14 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 		if ply ~= MR.Ply:GetFakeHostPly() and not data.backup then
 			net.Start("MapMaterials:FixDetail_CL")
 				net.WriteString(data.oldMaterial)
-				net.WriteBool(isDisplacement)
+				net.WriteBool(selected.isDisplacement or false)
 			net.Send(ply)
 		end
 	end
 
 	-- run once serverside and once on every player clientside
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
-		local materialTable = isDisplacement and map.displacements.list or map.list
-		local element = MR.Data.list:GetElement(materialTable, data.oldMaterial)
+		local element = MR.Data.list:GetElement(selected.list, data.oldMaterial)
 		local i
 
 		-- Set the backup:
@@ -167,20 +203,30 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 			MR.Data.list:DisableElement(element)
 
 			-- Get a map.list free index
-			i = MR.Data.list:GetFreeIndex(materialTable)
+			i = MR.Data.list:GetFreeIndex(selected.list)
 		-- If the material is untouched
 		else
+			-- General first steps (part 2)
+			local check = {
+				list = selected.list,
+				limit = selected.limit
+			}
+
+			if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+				return
+			end
+
 			-- Get a map.list free index
-			i = MR.Data.list:GetFreeIndex(materialTable)
+			i = MR.Data.list:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or MR.Data:CreateFromMaterial(data.oldMaterial, map.filename..tostring(i), isDisplacement and map.displacements.filename..tostring(i))
+			local dataBackup = data.backup or MR.Data:CreateFromMaterial(data.oldMaterial, selected.filename..tostring(i), selected.isDisplacement and selected.filename2..tostring(i))
 
 			-- Save the material texture
 			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
 
 			-- Save the second material texture (if it's a displacement)
-			if isDisplacement then
+			if selected.isDisplacement then
 				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
 			end
 
@@ -191,7 +237,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 		end
 
 		-- Index the Data
-		MR.Data.list:InsertElement(materialTable, data, i)
+		MR.Data.list:InsertElement(selected.list, data, i)
 
 		-- Apply the new state to the map material
 		if CLIENT then
@@ -200,20 +246,29 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 		if SERVER then
 			-- Set the duplicator
-			if not isDisplacement then
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps", { map = map.list })
-			else
-				duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements", { displacements = map.displacements.list })
-			end
+			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), selected.dupName, selected.isSkybox and { selected.list[1] } or selected.list)
 		end
 	end
 
 	if SERVER then
+		-- Set the Undo
+		undo.Create("Material")
+			undo.SetPlayer(ply)
+			undo.AddFunction(function(tab, oldMaterial)
+				-- Skybox
+				if MR.Skybox:IsSkybox(oldMaterial) then
+					MR.Skybox:Remove(ply)
+				-- map/displacement
+				else
+					MR.MapMaterials:Remove(data.oldMaterial)
+				end
+			end, data.oldMaterial)
+			undo.SetCustomUndoText("Undone Material")
+		undo.Finish()
+
 		-- General final steps
 		MR.Materials:SetFinalSteps()
 	end
-
-	return true
 end
 
 -- Clean map and displacements materials
@@ -222,12 +277,29 @@ function MapMaterials:Remove(oldMaterial)
 		return false
 	end
 
-	-- Get a material table for displacements or map
-	local materialTable = MR.MapMaterials:IsDisplacement(oldMaterial) and map.displacements.list or map.list
+	-- Select the correct type
+	local selected = {}
 
-	if MR.Data.list:Count(materialTable) > 0 then
+	if MR.MapMaterials:IsDisplacement(oldMaterial) then
+		selected.list = MapMaterials.Displacements:GetList()
+		if SERVER then
+			selected.dupName = MapMaterials.Displacements:GetDupName()
+		end
+	elseif MR.Skybox:IsSkybox(oldMaterial) then
+		selected.list = MR.Skybox:GetList()
+		if SERVER then
+			selected.dupName = MR.Skybox:GetDupName()
+		end
+	else
+		selected.list = MapMaterials:GetList()
+		if SERVER then
+			selected.dupName = MapMaterials:GetDupName()
+		end
+	end
+
+	if MR.Data.list:Count(selected.list) > 0 then
 		-- Get the element to clean from the table
-		local element = MR.Data.list:GetElement(materialTable, oldMaterial)
+		local element = MR.Data.list:GetElement(selected.list, oldMaterial)
 
 		if element then
 			-- Run the element backup
@@ -241,12 +313,8 @@ function MapMaterials:Remove(oldMaterial)
 			-- Update the duplicator
 			if SERVER then
 				if IsValid(MR.Duplicator:GetEnt()) then
-					if MR.Data.list:Count(map.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Maps")
-					end
-
-					if MR.Data.list:Count(map.displacements.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Displacements")
+					if MR.Data.list:Count(selected.list) == 0 then
+						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), selected.dupName)
 					end
 				end
 			end
@@ -276,7 +344,7 @@ function MapMaterials.Displacements:Init()
 	
 	for k,v in pairs(found) do
 		if Material(v):GetString("$surfaceprop2") then
-			v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
+			v = v:sub(1, #v - 1) -- Remove last char (line break?)
 
 			map.displacements.detected[v] = {
 				Material(v):GetTexture("$basetexture"):GetName(),

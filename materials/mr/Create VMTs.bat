@@ -7,8 +7,7 @@ echo.
 pause
 
 :: Skybox
-set list=lf ft rt bk dn up
-for %%x in (%list%) do (
+for /l %%x in (1, 1, 6) do (
 	echo "UnlitGeneric" >> backup%%x.vmt
 	echo { >> backup%%x.vmt
 	echo 	"$basetexture" "mr/backup%%x" >> backup%%x.vmt
@@ -16,6 +15,19 @@ for %%x in (%list%) do (
 	echo 	"$ignorez" 1 >> backup%%x.vmt
 	echo } >> backup%%x.vmt
 	echo backup%%x.vmt
+)
+
+echo.
+
+:: Skybox auxiliar
+for /l %%x in (1, 1, 6) do (
+	echo "UnlitGeneric" >> backup_aux%%x.vmt
+	echo { >> backup_aux%%x.vmt
+	echo 	"$basetexture" "mr/backup_aux%%x" >> backup_aux%%x.vmt
+	echo 	"$nofog" 1 >> backup_aux%%x.vmt
+	echo 	"$ignorez" 1 >> backup_aux%%x.vmt
+	echo } >> backup_aux%%x.vmt
+	echo backup_aux%%x.vmt
 )
 
 echo.

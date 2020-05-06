@@ -53,7 +53,7 @@ function Preview:Render()
 	local newData = MR.Data:Create(ply, tr, MR.Ply:GetDecalMode(ply) and {} )
 
 	-- Adjustments for skybox materials
-	if MR.Skybox:IsValidFullSky(newData.newMaterial) then
+	if MR.Skybox:IsFullSkybox(newData.newMaterial) then
 		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
 	-- Don't apply bad materials
 	elseif not MR.Materials:IsValid(newData.newMaterial) then
@@ -61,7 +61,7 @@ function Preview:Render()
 	end
 
 	-- Don't render decal materials over the skybox
-	if MR.Ply:GetDecalMode(ply) and MR.Materials:GetOriginal(tr) == "tools/toolsskybox" then
+	if MR.Ply:GetDecalMode(ply) and MR.Materials:GetOriginal(tr) == MR.Skybox:GetGenericName() then
 		return
 	end
 

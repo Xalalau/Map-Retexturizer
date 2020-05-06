@@ -17,6 +17,10 @@ net.Receive("MapMaterials:FixDetail_CL", function()
 	MapMaterials:FixDetail_CL(net.ReadString(), net.ReadBool())
 end)
 
+net.Receive("MapMaterials:Set_CL", function()
+	MapMaterials:Set_CL(net.ReadTable())
+end)
+
 -- Fix the detail name on the server backup
 function MapMaterials:FixDetail_CL(oldMaterial, isDisplacement)
 	local element = MR.Data.list:GetElement(isDisplacement and MapMaterials.Displacements:GetList() or MapMaterials:GetList(), oldMaterial)
@@ -168,16 +172,6 @@ function MapMaterials.Displacements:Set_CL(displacement, newMaterial, newMateria
 		timer.Create("MRText2Update", 0.5, 1, function()
 			MR.GUI:GetDisplacementsText2():SetValue(MR.MapMaterials.Displacements:GetDetected()[displacement][2])
 		end)
-	end
-
-	-- General first steps
-	local check = {
-		material = newMaterial,
-		material2 = newMaterial2
-	}
-	
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), false, check) then
-		return false
 	end
 
 	-- Dirty hack: I reapply all the displacement materials because they get darker when modified by the tool

@@ -40,6 +40,6 @@ function Save:Set_CL2(saveName)
 	-- Add the save as an option in the player's menu
 	if MR.Load:GetList()[saveName] == nil then
 		MR.GUI:GetLoadText():AddChoice(saveName)
-		MR.Load:SetOption(saveName, MR.Base:GetMapFolder()..saveName..".txt")
+		MR.Load:SetOption(saveName, MR.Base:GetSaveFolder()..saveName..".txt")
 	end
 end

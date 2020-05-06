@@ -5,11 +5,21 @@
 
 local MapMaterials = MR.MapMaterials
 
+local map = {
+	-- Name used in duplicator
+	dupName = "MapRetexturizer_Maps",
+	displacements = {
+		-- Name used in duplicator
+		dupName = "MapRetexturizer_Displacements"
+	}
+}
+
 -- Networking
 util.AddNetworkString("MapMaterials:Set")
 util.AddNetworkString("MapMaterials:SetAll")
 util.AddNetworkString("MapMaterials:Remove")
 util.AddNetworkString("MapMaterials:RemoveAll")
+util.AddNetworkString("MapMaterials:Set_CL")
 util.AddNetworkString("MapMaterials:FixDetail_CL")
 util.AddNetworkString("MapMaterials:FixDetail_SV")
 util.AddNetworkString("MapMaterials.Displacements:Set_SV")
@@ -34,6 +44,11 @@ end)
 net.Receive("MapMaterials:FixDetail_SV", function()
 	MapMaterials:FixDetail_SV(net.ReadString(), net.ReadBool(), net.ReadString())
 end)
+
+-- Get duplicator name
+function MapMaterials:GetDupName()
+	return map.dupName
+end
 
 -- Fix the detail name on the server backup
 function MapMaterials:FixDetail_SV(oldMaterial, isDisplacement, detail)
@@ -67,6 +82,11 @@ end
 --------------------------------
 --- MATERIALS (DISPLACEMENTS ONLY)
 --------------------------------
+
+-- Get duplicator name
+function MapMaterials.Displacements:GetDupName()
+	return map.displacements.dupName
+end
 
 -- Change the displacements: server
 --
@@ -104,18 +124,6 @@ function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMa
 		end
 	end
 
-	-- General first steps
-	local check = {
-		material = newMaterial,
-		material2 = newMaterial2,
-		list = MapMaterials.Displacements:GetList(),
-		limit = MapMaterials.Displacements:GetLimit()
-	}
-
-	if not MR.Materials:SetFirstSteps(ply, false, check) then
-		return
-	end
-
 	-- Create the data table
 	local data = MR.Data:CreateFromMaterial(displacement)
 
@@ -124,17 +132,6 @@ function MapMaterials.Displacements:Set_SV(ply, displacement, newMaterial, newMa
 
 	-- Apply the changes
 	MapMaterials:Set(ply, data)
-
-	-- Set the Undo
-	undo.Create("Material")
-		undo.SetPlayer(ply)
-		undo.AddFunction(function(tab, data)
-			if data.oldMaterial then
-				MapMaterials:Remove(data.oldMaterial)
-			end
-		end, data)
-		undo.SetCustomUndoText("Undone Material")
-	undo.Finish()
 end
 
 -- Remove all displacements materials

@@ -166,12 +166,13 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		end
 
 		-- Update skybox structure
-		if savedTable.skybox then
+		if savedTable.skybox and savedTable.skybox ~= "" then
 			savedTable.skybox = {
-				[1] = {
-					newMaterial = savedTable.skybox
-				}
+				MR.Data:CreateFromMaterial(savedTable.skybox)
 			}
+
+			savedTable.skybox[1].newMaterial = savedTable.skybox[1].oldMaterial
+			savedTable.skybox[1].oldMaterial = MR.Skybox:GetGenericName()
 		end
 
 		-- Set the new format number before fully loading the table in the duplicator
@@ -186,7 +187,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 	   savedTableOld.savingFormat ~= savedTable.savingFormat
 	   ) then
 
-		local pathCurrent = MR.Base:GetMapFolder()..loadName..".txt"
+		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
 		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
 
 		file.Rename(pathCurrent, pathBackup)
@@ -235,7 +236,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials:GetList() or nil
 		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials.Displacements:GetList() or nil
-		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { [1] = { newMaterial = GetConVar("internal_mr_skybox"):GetString() } } or nil
+		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { MR.Skybox:GetList()[1] } or nil
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
 		-- Remove all the disabled elements from the map materials tables
@@ -268,10 +269,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end
 
 		-- Get the total modifications to do
-		local decalsTotal = decalsTable and table.Count(decalsTable) or 0
-		local mapMaterialsTotal = mapTable and MR.Data.list:Count(mapTable) or 0
-		local displacementsTotal = displacementsTable and MR.Data.list:Count(displacementsTable) or 0
-		local skyboxTotal = skyboxTable.newMaterial ~= "" and 1 or 0
+		local decalsTotal = decalsTable and istable(decalsTable) and table.Count(decalsTable) or 0
+		local mapMaterialsTotal = mapTable and istable(mapTable) and MR.Data.list:Count(mapTable) or 0
+		local displacementsTotal = displacementsTable and istable(displacementsTable) and MR.Data.list:Count(displacementsTable) or 0
+		local skyboxTotal = skyboxTable and istable(skyboxTable) and MR.Data.list:Count(skyboxTable) or 0
 		local total = decalsTotal + mapMaterialsTotal + displacementsTotal + modelsTable.count + skyboxTotal
 
 		-- Print server alert
@@ -412,7 +413,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 		elseif newMaterial and -- Single material
 		       not newMaterial2 and
 		       not MR.Materials:IsValid(newMaterial) and
-		       not MR.Skybox:IsValidFullSky(newMaterial) then
+		       not MR.Skybox:IsSkybox(newMaterial) then
 			msg = "Map Material, $basetexture: " .. newMaterial
 			isError = true
 		elseif newMaterial2 then -- Two materials (displacement)
@@ -462,7 +463,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 		MR.Decals:Set_SV(ply, nil, savedTable[position], true)
 	-- Apply skybox
 	elseif section == "skybox" then
-		MR.Skybox:Set_SV(ply, savedTable[position].newMaterial, true)
+		MR.Skybox:Set(ply, savedTable[position], true)
 	end
 
 	-- Next material

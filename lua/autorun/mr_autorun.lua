@@ -4,7 +4,7 @@
 		files = tool files extracted into the addons folder with the necessary materials
 		hybrid = tool files extracted into the addons folder using materials from an extra gma and from files
 ]]
-local mode = "gma"
+local mode = "hybrid"
 
 -- Global tool functions
 MR = {}

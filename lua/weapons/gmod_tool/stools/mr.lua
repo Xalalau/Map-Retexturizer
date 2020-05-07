@@ -396,9 +396,6 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(generalPanel)
 			
 			local decalBox = CPanel:CheckBox("Use as Decal", "internal_mr_decal")
-
-				CPanel:ControlHelp("Decals are slightly buggy in GMod.")
-
 				function decalBox:OnChange(val)
 					-- This option starts disabled, so if the player opens the menu too
 					-- fast I have to add a delay here

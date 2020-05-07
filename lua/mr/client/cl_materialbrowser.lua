@@ -357,18 +357,18 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 						if input.IsMouseDown(107) then
 							pressed = 107
 							Browser:SelectMaterial(arq, browserPreviewMaterial)
-						-- Copy material path to clipboard (MOUSE_RIGHT)
+						-- Use the material with the tool gun (MOUSE_RIGHT)
 						elseif input.IsMouseDown(108) then
 							pressed = 108
-							SetClipboardText(arq)
-							SetEffect(color.right)
-							PrintOverlayMessage(7, "Path copied")
-						-- Use the material with the tool gun (MOUSE_MIDDLE)
-						elseif input.IsMouseDown(109) then
-							pressed = 109
 							RunConsoleCommand("internal_mr_material", arq)
 							SetEffect(color.middle)
 							PrintOverlayMessage(14, "Tool gun")
+						-- Copy material path to clipboard (MOUSE_MIDDLE)
+						elseif input.IsMouseDown(109) then
+							pressed = 109
+							SetClipboardText(arq)
+							SetEffect(color.right)
+							PrintOverlayMessage(7, "Path copied")
 						end
 					end
 

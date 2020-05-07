@@ -99,9 +99,6 @@ end
 
 -- Set map material
 function Map:Set(ply, data, isBroadcasted)
-	-- Handle displacements
-	local isDisplacement = MR.Map:IsDisplacement(data.oldMaterial)
-
 	-- Select the correct type
 	local selected = {}
 
@@ -228,9 +225,13 @@ function Map:Set(ply, data, isBroadcasted)
 			Map:Set_CL(data)
 		end
 
+		-- Set the duplicator
 		if SERVER then
-			-- Set the duplicator
-			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), selected.dupName, selected.isSkybox and { selected.list[1] } or selected.list)
+			local dataTable = selected.isSkybox and { skybox = { selected.list[1] } } or
+							  selected.isDisplacement and { displacements = selected.list } or
+							  { map = selected.list }
+
+			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), selected.dupName, dataTable)
 		end
 	end
 

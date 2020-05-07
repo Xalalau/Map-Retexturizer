@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "Version 14" --[[
+ =3 ]]  local mr_revision = "Version 14.1" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -156,7 +156,9 @@ end
 		oldData.newMaterial = oldData.oldMaterial 
 	-- If it's a model, adjust the material name
 	elseif IsValid(tr.Entity) then
-		oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
+		if oldData.newMaterial ~= "" then
+			oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
+		end
 	end	
 
 	-- Adjustment for skybox materials
@@ -186,11 +188,6 @@ end
 	if MR.Data:IsEqual(oldData, newData) then
 
 		return false
-	end
-
-	-- Register that the map is modified
-	if SERVER and not MR.Base:GetInitialized() then
-		MR.Base:SetInitialized()
 	end
 
 	if CLIENT then
@@ -256,27 +253,17 @@ function TOOL:RightClick(tr)
 		return false
 	end
 
-	-- Set the detail element to the right position
-	if CLIENT then
-		if MR.GUI:GetDetail() ~= "" then
-			local i = 1
+	-- Copy the material
+	ply:ConCommand("internal_mr_material "..MR.Materials:GetCurrent(tr))
 
-			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
-				if k == newData.detail then
-					break
-				else
-					i = i + 1
-				end
-			end
+	-- Set the cvars to data values or to default values
+	MR.CVars:SetPropertiesToData(ply, oldData)
 
-			MR.GUI:GetDetail():ChooseOptionID(i)
-		end
-
-		-- Copy the material
-		RunConsoleCommand("internal_mr_material", MR.Materials:GetCurrent(tr))
-
-		-- Set the cvars to data values or to default values
-		MR.CVars:SetPropertiesToData(ply, oldData)
+	-- Set the detail material on the client menu
+	if SERVER then
+		net.Start("GUI:SetDetail")
+			net.WriteString(newData.oldMaterial)
+		net.Send(ply)
 	end
 
 	return true

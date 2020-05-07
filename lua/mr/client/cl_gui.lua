@@ -22,6 +22,11 @@ local gui = {
 	}
 }
 
+-- Networking
+net.Receive("GUI:SetDetail", function()
+	GUI:SetDetailValue(net.ReadString())
+end)
+
 -- Merge the above table in the shared one
 table.Merge(GUI:GetTable(), gui) 
 
@@ -81,4 +86,23 @@ end
 
 function GUI:SetDisplacementsCombo(value)
 	gui.displacements.combo = value
+end
+
+-- Set the detail material
+function GUI:SetDetailValue(oldMaterial)
+	local detail = MR.Materials:GetDetailFromMaterial(oldMaterial)
+
+	if GUI:GetDetail() ~= "" then
+		local i = 1
+
+		for k,v in SortedPairs(MR.Materials:GetDetailList()) do
+			if k == detail then
+				break
+			else
+				i = i + 1
+			end
+		end
+
+		GUI:GetDetail():ChooseOptionID(i)
+	end
 end

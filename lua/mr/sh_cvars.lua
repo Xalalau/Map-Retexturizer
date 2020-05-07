@@ -16,3 +16,14 @@ function CVars:SetPropertiesToDefaults(ply)
 	ply:ConCommand("internal_mr_rotation 0.00")
 	ply:ConCommand("internal_mr_alpha 1.00")
 end
+
+-- Set propertie cvars based on some data table
+function CVars:SetPropertiesToData(ply, data)
+	RunConsoleCommand("internal_mr_detail", data.detail)
+	RunConsoleCommand("internal_mr_offsetx", data.offsetx)
+	RunConsoleCommand("internal_mr_offsety", data.offsety)
+	RunConsoleCommand("internal_mr_scalex", data.scalex)
+	RunConsoleCommand("internal_mr_scaley", data.scaley)
+	RunConsoleCommand("internal_mr_rotation", data.rotation)
+	RunConsoleCommand("internal_mr_alpha", data.alpha)
+end

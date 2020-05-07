@@ -4,11 +4,27 @@
 
 local Displacements = MR.Displacements
 
-local displacements = {
-	-- I reapply the grass materials before the first usage because they get darker after modified (Tool bug)
-	-- !!! Fix and remove it in the future !!!
-	hack = true
-}
+-- Networking
+net.Receive("Displacements:InitHack_CL", function()
+	Displacements:InitHack_CL()
+end)
+
+-- It's a dirty hack to make all the displacements darker, since the tool does it with these materials
+function Displacements:InitHack_CL()
+	local delay = 0
+
+	for k,v in pairs(Displacements:GetDetected()) do
+		timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()
+			net.Start("Displacements:Set_SV")
+				net.WriteString(k)
+				net.WriteString(Material(k):GetTexture("$basetexture"):GetName())
+				net.WriteString(Material(k):GetTexture("$basetexture2"):GetName())
+			net.SendToServer()
+		end)
+		
+		delay = delay + 0.05
+	end
+end
 
 -- Change the displacements: client
 --
@@ -42,31 +58,10 @@ function Displacements:Set_CL(displacement, newMaterial, newMaterial2)
 		end)
 	end
 
-	-- Dirty hack: I reapply all the displacement materials because they get darker when modified by the tool
-	local delay = 0
-
-	if displacements.hack then
-		for k,v in pairs(Displacements:GetDetected()) do
-			timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()
-				net.Start("Displacements:Set_SV")
-					net.WriteString(k)
-					net.WriteString(Material(k):GetTexture("$basetexture"):GetName())
-					net.WriteString(Material(k):GetTexture("$basetexture2"):GetName())
-				net.SendToServer()
-			end)
-			
-			delay = delay + 0.1
-		end
-
-		displacements.hack = false
-	end
-
 	-- Start the change
-	timer.Create("MRDiscplamentsDirtyHackAdjustment", delay + 0.1, 1, function() -- Wait for the initialization hack above
-		net.Start("Displacements:Set_SV")
-			net.WriteString(displacement)
-			net.WriteString(newMaterial or "")
-			net.WriteString(newMaterial2 or "")
-		net.SendToServer()
-	end)
+	net.Start("Displacements:Set_SV")
+		net.WriteString(displacement)
+		net.WriteString(newMaterial or "")
+		net.WriteString(newMaterial2 or "")
+	net.SendToServer()
 end

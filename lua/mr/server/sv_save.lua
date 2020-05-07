@@ -6,6 +6,11 @@ local Save = {}
 Save.__index = Save
 MR.Save = Save
 
+local save = {
+	-- The current save formating
+	currentVersion = 3.0
+}
+
 -- Networking
 util.AddNetworkString("Save:Set_SV")
 util.AddNetworkString("Save:Set_CL2")
@@ -18,6 +23,11 @@ end)
 net.Receive("Save:Set_SV", function(_, ply)
 	Save:Set_SV(ply, net.ReadString())
 end)
+
+-- Get the current save formating
+function Save:GetCurrentVersion()
+	return save.currentVersion
+end
 
 -- Save the modifications to a file: server
 function Save:Set_SV(ply, saveName, blockAlert)
@@ -40,7 +50,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 		map = MR.Map:GetList(),
 		displacements = MR.Displacements:GetList(),
 		skybox = { MR.Skybox:GetList()[1] } ,
-		savingFormat = "3.0"
+		savingFormat = MR.Save:GetCurrentVersion()
 	}
 
 	-- Remove all the disabled elements

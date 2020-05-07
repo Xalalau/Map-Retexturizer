@@ -4,14 +4,6 @@
 
 local Materials = MR.Materials
 
-function Materials:Init()
-	-- Detail init
-	Materials:GetDetailList()["Concrete"] = Materials:Create("detail/noise_detail_01")
-	Materials:GetDetailList()["Metal"] = Materials:Create("detail/metal_detail_01")
-	Materials:GetDetailList()["Plaster"] = Materials:Create("detail/plaster_detail_01")
-	Materials:GetDetailList()["Rock"] = Materials:Create("detail/rock_detail_01")
-end
-
 -- Create a material if it doesn't exist
 function Materials:Create(name, matType, path)
 	if Material(name):IsError() then

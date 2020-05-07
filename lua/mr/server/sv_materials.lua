@@ -40,7 +40,7 @@ function Materials:SetAll(ply)
 			map = {},
 			displacements = {},
 			skybox = {},
-			savingFormat = "3.0"
+			savingFormat = MR.Save:GetCurrentVersion()
 		}
 
 		-- Fill the fake save table with the correct structures (ignoring water materials)

@@ -111,20 +111,8 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2)
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
 		rotation = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
 		alpha = string.format("%.2f", oldMaterial:GetString("$alpha") or "1.00"),
-		detail = oldMaterial:GetString("$detail") and oldMaterial:GetTexture("$detail"):GetName() or "None",
+		detail = MR.Materials:GetDetailFromMaterial(oldMaterialIn)
 	}
-
-	-- Get a valid detail key
-	for k,v in pairs(MR.Materials:GetDetailList()) do
-		if not isbool(v) then
-			if v:GetTexture("$basetexture"):GetName() == data.detail then
-				data.detail = k
-			end
-		end
-	end
-	if not MR.Materials:GetDetailList()[data.detail] then
-		data.detail = "None"
-	end
 
 	return data
 end

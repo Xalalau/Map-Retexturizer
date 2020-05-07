@@ -32,6 +32,21 @@ net.Receive("Materials:SetValid", function()
 	Materials:SetValid(net.ReadString(), net.ReadBool())
 end)
 
+function Materials:Init()
+	-- Detail init
+	if CLIENT then
+		Materials:GetDetailList()["Concrete"] = Materials:Create("detail/noise_detail_01")
+		Materials:GetDetailList()["Metal"] = Materials:Create("detail/metal_detail_01")
+		Materials:GetDetailList()["Plaster"] = Materials:Create("detail/plaster_detail_01")
+		Materials:GetDetailList()["Rock"] = Materials:Create("detail/rock_detail_01")
+	elseif SERVER then
+		Materials:GetDetailList()["Concrete"] = "detail/noise_detail_01"
+		Materials:GetDetailList()["Metal"] = "detail/metal_detail_01"
+		Materials:GetDetailList()["Plaster"] = "detail/plaster_detail_01"
+		Materials:GetDetailList()["Rock"] = "detail/rock_detail_01"
+	end
+end
+
 -- Check if a given material path is valid
 function Materials:IsValid(material)
 	-- Empty
@@ -66,11 +81,6 @@ function Materials:GetValid(material)
 	return materials.valid[material]
 end
 
--- Get the details list
-function Materials:GetDetailList()
-	return materials.detail.list
-end
-
 -- Get the original material full path
 function Materials:GetOriginal(tr)
 	return MR.Models:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
@@ -89,9 +99,32 @@ function Materials:GetNew(ply)
 	return ply:GetInfo("internal_mr_material")
 end
 
--- Set a material as (in)valid
-function Materials:SetValid(material, value)
-	materials.valid[material] = value
+-- Get the details list
+function Materials:GetDetailList()
+	return materials.detail.list
+end
+
+-- Get a material detail name
+function Materials:GetDetailFromMaterial(material)
+	local detail = Material(material):GetString("$detail")
+
+	if material then
+		for k,v in pairs(MR.Materials:GetDetailList()) do
+			if not isbool(v) then
+				if v:GetTexture("$basetexture"):GetName() == detail then
+					detail = k
+					
+					break
+				end
+			end
+		end
+
+		if not MR.Materials:GetDetailList()[detail] then
+			detail = nil
+		end
+	end
+
+	return detail or "None"
 end
 
 --[[
@@ -215,6 +248,11 @@ function Materials:ResizeInABox(boxSize, width, height)
 	return texture["width"], texture["height"]
 end
 
+-- Set a material as (in)valid
+function Materials:SetValid(material, value)
+	materials.valid[material] = value
+end
+
 --[[
 	Many initial important checks and adjustments for functions that apply material changes
 	Must be clientside and serverside - on the top
@@ -289,9 +327,14 @@ end
 -- An important final adjustment for functions that apply material changes
 -- Must be serverside and at the bottom
 function Materials:SetFinalSteps()
-	-- Register that the map is modified
-	if SERVER and not MR.Base:GetInitialized() then
-		MR.Base:SetInitialized()
+	if SERVER then
+		if not MR.Base:GetInitialized() then
+			-- Register that the map is modified
+			MR.Base:SetInitialized()
+
+			-- Register the current save version on the duplicator
+			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.Save:GetCurrentVersion() } )
+		end
 
 		-- Auto save
 		if GetConVar("internal_mr_autosave"):GetString() == "1" then

@@ -38,14 +38,16 @@ end
 -- Create a single loading table with the duplicator calls (GMod save)
 function Duplicator:RecreateTable(ply, ent, savedTable)
 	-- Note: it has to start after the Duplicator:Start() timer and after the first model entry
-
-	local notModelDelay = 0.1
+	local notModelDelay = 0.2
 
 	-- Start upgrading the format (if it's necessary)
-	Duplicator:UpgradeSaveFormat(savedTable)
+	savedTable = Duplicator:UpgradeSaveFormat(savedTable)
 
+	-- Saving format
+	if savedTable.savingFormat and not dup.recreatedTable.savingFormat then
+		dup.recreatedTable.savingFormat = savedTable.savingFormat
 	-- Models
-	if ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
+	elseif ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
 		-- Set the aditive delay time
 		dup.models.delay = dup.models.delay + 0.05 -- It's initialized as 0.3
 
@@ -84,6 +86,16 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	elseif savedTable.displacements then
 		dup.recreatedTable.displacements = savedTable.displacements
 		notModelDelay = 0.38
+
+		for k,v in pairs(dup.recreatedTable.displacements) do
+			if not v.newMaterial then
+				v.newMaterial = Material(v.oldMaterial):GetTexture("$basetexture"):GetName()
+			end
+
+			if not v.newMaterial2 then
+				v.newMaterial2 = Material(v.oldMaterial):GetTexture("$basetexture2"):GetName()
+			end
+		end
 	-- Decals
 	elseif savedTable.decals then
 		dup.recreatedTable.decals = savedTable.decals
@@ -107,6 +119,7 @@ end
 -- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
 function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 	local savedTableOld
+	local currentFormat
 
 	if savedTable then 
 		savedTableOld = table.Copy(savedTable)
@@ -119,7 +132,13 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 			local aux = table.Copy(savedTable)
 
 			savedTable = {}
-			savedTable.map = aux
+
+			if MR.Map:IsDisplacement(aux[1].oldMaterial) then
+				savedTable.displacements = aux
+			else
+				savedTable.map = aux
+			end
+
 		-- Rebuild decals structure from GMod saves
 		elseif savedTable[1] and savedTable[1].mat then
 			local aux = table.Copy(savedTable)
@@ -128,7 +147,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 			savedTable.decals = aux
 		end
 
-		-- Map materials table from saved files and rebuilt GMod saves:
+		-- Map and displacements tables from saved files and rebuilt GMod saves:
 		if savedTable.map then
 			-- Remove all the disabled elements
 			MR.Data.list:Clean(savedTable.map)
@@ -136,8 +155,20 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 			-- Change "mapretexturizer" to "mr"
 			local i
 
-			for i = 1,#savedTable.map do		
+			for i = 1,#savedTable.map do
+
 				savedTable.map[i].backup.newMaterial, _ = string.gsub(savedTable.map[i].backup.newMaterial, "%mapretexturizer", "mr")
+			end
+		end
+
+		if savedTable.displacements then
+			-- Change "mapretexturizer" to "mr"
+			local i
+
+			for i = 1,#savedTable.displacements do
+
+				savedTable.displacements[i].backup.newMaterial, _ = string.gsub(savedTable.displacements[i].backup.newMaterial, "%mapretexturizer", "mr")
+				savedTable.displacements[i].backup.newMaterial2, _ = string.gsub(savedTable.displacements[i].backup.newMaterial2, "%mapretexturizer", "mr")
 			end
 		end
 
@@ -145,10 +176,11 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		if isDupStarting then
 			savedTable.savingFormat = "2.0"
 		end
+		currentFormat = "2.0"
 	end
 
 	-- 2.0 to 3.0
-	if savedTable and savedTable.savingFormat == "2.0" then
+	if savedTable and savedTable.savingFormat == "2.0" or currentFormat == "2.0" then
 		-- Update decals structure
 		if savedTable.decals then
 			for k,v in pairs(savedTable.decals) do
@@ -182,9 +214,9 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 	end
 
 	-- If the table was upgraded, create a file backup for the old format and save the new
-	if savedTableOld and ( -- noMrLoadFile means this duplication didn't start from oppening a save file on the disk or the file wasn't directly created by the tool
+	if isDupStarting and not dup.recreatedTable.initialized and savedTableOld and (
 	   not savedTableOld.savingFormat or 
-	   savedTableOld.savingFormat ~= savedTable.savingFormat
+	   savedTableOld.savingFormat ~= MR.Save:GetCurrentVersion()
 	   ) then
 
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
@@ -193,12 +225,16 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		file.Rename(pathCurrent, pathBackup)
 		file.Write(pathCurrent, util.TableToJSON(savedTable))
 	end
+
+	return savedTable
 end
 
 -- Duplicator start
 function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
 	-- Finish upgrading the format (if it's necessary)
-	Duplicator:UpgradeSaveFormat(savedTable, loadName, true)
+	if not dup.recreatedTable.initialized then
+		savedTable = Duplicator:UpgradeSaveFormat(savedTable, loadName, true)
+	end
 
 	-- Deal with GMod saves
 	if dup.recreatedTable.initialized then
@@ -214,6 +250,11 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 			dup.recreatedTable.models = {}
 		end)
 		dup.recreatedTable.initialized = false
+
+		-- There is no use for it here, but set the version to finish the conversion
+		if not savedTable.savingFormat then
+			savedTable.savingFormat = MR.Save:GetCurrentVersion()
+		end
 	end
 
 	-- Deal with older modifications
@@ -306,28 +347,28 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end
 
 		-- Apply model materials
-		if modelsTable.count > 0 then		
+		if modelsTable.count > 0 then
 			Duplicator:LoadMaterials(ply, modelsTable.list, 1, "model")
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, nil, decalsTable, 1, "decal")
+			Duplicator:LoadMaterials(ply, decalsTable, 1, "decal")
 		end
 
 		-- Apply map materials
 		if mapTotal > 0 then
-			Duplicator:LoadMaterials(ply, nil, mapTable, 1, "map")
+			Duplicator:LoadMaterials(ply, mapTable, 1, "map")
 		end
 
 		-- Apply displacements
-		if displacementsTotal > 0 then
-			Duplicator:LoadMaterials(ply, nil, displacementsTable, 1, "displacements")
+		if displacementsTotal > 0 then		
+			Duplicator:LoadMaterials(ply, displacementsTable, 1, "displacements")
 		end
 
 		-- Apply the skybox
 		if skyboxTotal > 0 then
-			Duplicator:LoadMaterials(ply, nil, skyboxTable, 1, "skybox")
+			Duplicator:LoadMaterials(ply, skyboxTable, 1, "skybox")
 		end
 	end)
 end
@@ -393,7 +434,7 @@ function Duplicator:SetErrorProgress_SV(ply, count, material)
 end
 
 -- Load map materials from saves
-function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
+function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return
@@ -435,7 +476,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 			MR.Ply:IncrementDupErrorsN(ply)
 			Duplicator:SetErrorProgress_SV(ply, MR.Ply:GetDupErrorsN(ply), msg)
 
-			Duplicator:LoadMaterials(ply, nil, savedTable, position + 1, section)
+			Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
 
 			return
 		end
@@ -468,7 +509,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 
 	-- Next material
 	timer.Create("MRDuplicatorDelay"..section..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
-		Duplicator:LoadMaterials(ply, nil, savedTable, position + 1, section)
+		Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
 	end)
 end
 

@@ -108,7 +108,11 @@ function Load:FirstSpawn(ply)
 	MR.Ply:Set(ply)
 
 	-- wait until the player has our table attached to him
-	timer.Create("MRWaitToSave", 0.1, 1, function()
+	timer.Create("MRWaitToSetPly", 0.1, 1, function()
+		-- Initialize the displacements
+		net.Start("Displacements:InitHack_CL")
+		net.Send(ply)
+	
 		-- Start an ongoing load from the beggining
 		if MR.Duplicator:IsRunning() then
 			Load:Start(ply, MR.Duplicator:IsRunning())

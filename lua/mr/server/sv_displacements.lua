@@ -11,6 +11,7 @@ local displacements = {
 -- Networking
 util.AddNetworkString("Displacements:Set_SV")
 util.AddNetworkString("Displacements:RemoveAll")
+util.AddNetworkString("Displacements:InitHack_CL")
 
 net.Receive("Displacements:Set_SV", function(_, ply)
 	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString())

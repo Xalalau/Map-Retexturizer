@@ -39,7 +39,7 @@ concommand.Add("internal_mr_changeall", function ()
 		buttonYes:SetText("Yes")
 		buttonYes:SetSize(120, 30)
 		buttonYes.DoClick = function()
-			net.Start("MapMaterials:SetAll")
+			net.Start("Map:SetAll")
 			net.SendToServer()
 			qPanel:Close()
 		end

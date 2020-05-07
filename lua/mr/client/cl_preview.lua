@@ -74,7 +74,7 @@ function Preview:Render()
 
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
-		MR.MapMaterials:Set_CL(newData)
+		MR.Map:Set_CL(newData)
 		preview.rotationHack = newData.rotation
 		preview.newMaterial = newData.newMaterial
 	end

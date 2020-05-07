@@ -147,7 +147,7 @@ end
 	local newData = MR.Data:Create(ply, tr)
 	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
 												MR.Skybox:GetList() or
-												MR.MapMaterials:GetList())) or
+												MR.Map:GetList())) or
 												MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
@@ -207,7 +207,7 @@ end
 			MR.ModelMaterials:Set(ply, newData)
 		-- map/displacement
 		elseif tr.Entity:IsWorld() then
-			MR.MapMaterials:Set(ply, newData)
+			MR.Map:Set(ply, newData)
 		end
 	end)
 
@@ -225,7 +225,7 @@ function TOOL:RightClick(tr)
 
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.MapMaterials:GetList()))
+	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()))
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -292,7 +292,7 @@ function TOOL:Reload(tr)
 	end
 
 	-- Normal materials cleanup
-	if MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.MapMaterials:GetList()) then
+	if MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()) then
 		if SERVER then
 			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- Skybox
@@ -303,7 +303,7 @@ function TOOL:Reload(tr)
 					MR.ModelMaterials:Remove(tr.Entity)
 				-- map/displacement
 				elseif tr.Entity:IsWorld() then
-					MR.MapMaterials:Remove(MR.Materials:GetOriginal(tr))
+					MR.Map:Remove(MR.Materials:GetOriginal(tr))
 				end
 			end)
 		end
@@ -761,7 +761,7 @@ function TOOL.BuildCPanel(CPanel)
 				cleanupCombobox:AddChoice("All","Materials:RemoveAll", true)
 				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
 				cleanupCombobox:AddChoice("Displacements","Displacements:RemoveAll")
-				cleanupCombobox:AddChoice("Map Materials","MapMaterials:RemoveAll")
+				cleanupCombobox:AddChoice("Map Materials","Map:RemoveAll")
 				cleanupCombobox:AddChoice("Model Materials","ModelMaterials:RemoveAll")
 				cleanupCombobox:AddChoice("Skybox","Skybox:Remove")
 

@@ -56,14 +56,14 @@ function Skybox:Set(ply, data, isBroadcasted)
 		-- Backup information (for all maps) + change the sky (for maps without env_skypainted)
 		data.oldMaterial = Skybox:GetName()..Skybox:GetSuffixes()[i]
 
-		MR.MapMaterials:Set(ply, table.Copy(data), isBroadcasted)
+		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
 
 		-- Change the auxiliar sky material (for maps with env_skypainted)
 		if Skybox:IsPainted() then
 			data.oldMaterial = Skybox:GetFilename2()..tostring(i)
 
 			-- Send to
-			net.Start("MapMaterials:Set_CL")
+			net.Start("Map:Set_CL")
 				net.WriteTable(data) 
 			-- every player
 			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
@@ -87,6 +87,6 @@ function Skybox:Remove(ply)
 	MR.CVars:Replicate_SV(ply, "internal_mr_skybox", "", "skybox", "text")
 
 	for k,v in pairs(Skybox:GetList()) do
-		MR.MapMaterials:Remove(v.oldMaterial)
+		MR.Map:Remove(v.oldMaterial)
 	end
 end

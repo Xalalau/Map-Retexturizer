@@ -68,7 +68,7 @@ function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2)
 	data.newMaterial2 = newMaterial2
 
 	-- Apply the changes
-	MR.MapMaterials:Set(ply, data)
+	MR.Map:Set(ply, data)
 end
 
 -- Remove all displacements materials
@@ -85,7 +85,7 @@ function Displacements:RemoveAll(ply)
 	if MR.Data.list:Count(Displacements:GetList()) > 0 then
 		for k,v in pairs(Displacements:GetList()) do
 			if MR.Data.list:IsActive(v) then
-				MR.MapMaterials:Remove(v.oldMaterial)
+				MR.Map:Remove(v.oldMaterial)
 			end
 		end
 	end

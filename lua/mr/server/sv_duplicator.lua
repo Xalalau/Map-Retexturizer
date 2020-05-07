@@ -234,7 +234,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	-- Note: it has to start after the Duplicator:ForceStop_SV() timer
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
-		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials:GetList() or nil
+		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.Map:GetList() or nil
 		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.Displacements:GetList() or nil
 		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { MR.Skybox:GetList()[1] } or nil
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
@@ -270,10 +270,10 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 
 		-- Get the total modifications to do
 		local decalsTotal = decalsTable and istable(decalsTable) and table.Count(decalsTable) or 0
-		local mapMaterialsTotal = mapTable and istable(mapTable) and MR.Data.list:Count(mapTable) or 0
+		local mapTotal = mapTable and istable(mapTable) and MR.Data.list:Count(mapTable) or 0
 		local displacementsTotal = displacementsTable and istable(displacementsTable) and MR.Data.list:Count(displacementsTable) or 0
 		local skyboxTotal = skyboxTable and istable(skyboxTable) and MR.Data.list:Count(skyboxTable) or 0
-		local total = decalsTotal + mapMaterialsTotal + displacementsTotal + modelsTable.count + skyboxTotal
+		local total = decalsTotal + mapTotal + displacementsTotal + modelsTable.count + skyboxTotal
 
 		-- Print server alert
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
@@ -316,7 +316,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end
 
 		-- Apply map materials
-		if mapMaterialsTotal > 0 then
+		if mapTotal > 0 then
 			Duplicator:LoadMaterials(ply, nil, mapTable, 1, "map")
 		end
 
@@ -452,7 +452,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 
 	-- Apply map material
 	if section == "map" or section == "displacements" then
-		MR.MapMaterials:Set(ply, savedTable[position], true)
+		MR.Map:Set(ply, savedTable[position], true)
 	-- Apply model material
 	elseif section == "model" then
 		MR.ModelMaterials:Set(ply, savedTable[position], true)

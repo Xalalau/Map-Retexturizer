@@ -2,9 +2,9 @@
 --- MAP MATERIALS
 --------------------------------
 
-local MapMaterials = {}
-MapMaterials.__index = MapMaterials
-MR.MapMaterials = MapMaterials
+local Map = {}
+Map.__index = Map
+MR.Map = Map
 
 -- Note: I consider displacements a type of map material because most of the code it needs ends being almost
 -- the same. So the exclusive displacements functions are a effort to have a better/necessary control over them
@@ -21,20 +21,20 @@ local map = {
 }
 
 -- Networking
-net.Receive("MapMaterials:Set", function()
+net.Receive("Map:Set", function()
 	if SERVER then return; end
 
-	MapMaterials:Set(LocalPlayer(), net.ReadTable(), net.ReadBool())
+	Map:Set(LocalPlayer(), net.ReadTable(), net.ReadBool())
 end)
 
-net.Receive("MapMaterials:Remove", function()
+net.Receive("Map:Remove", function()
 	if SERVER then return; end
 
-	MapMaterials:Remove(net.ReadString())
+	Map:Remove(net.ReadString())
 end)
 
 -- Check if a given material path is a displacement
-function MapMaterials:IsDisplacement(material)
+function Map:IsDisplacement(material)
 	for k,v in pairs(MR.Displacements:GetDetected()) do
 		if k == material then
 			return true
@@ -45,22 +45,22 @@ function MapMaterials:IsDisplacement(material)
 end
 
 -- Get map modifications
-function MapMaterials:GetList()
+function Map:GetList()
 	return map.list
 end
 
 -- Get material limit
-function MapMaterials:GetLimit()
+function Map:GetLimit()
 	return map.limit
 end
 
 -- Get backup filenames
-function MapMaterials:GetFilename()
+function Map:GetFilename()
 	return map.filename
 end
 
 -- Get the original material full path
-function MapMaterials:GetOriginal(tr)
+function Map:GetOriginal(tr)
 	if tr.Entity:IsWorld() then
 		return string.Trim(tr.HitTexture):lower()
 	end
@@ -69,7 +69,7 @@ function MapMaterials:GetOriginal(tr)
 end
 
 -- Get the current material full path
-function MapMaterials:GetCurrent(tr)
+function Map:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local selected = {}
 
@@ -77,7 +77,7 @@ function MapMaterials:GetCurrent(tr)
 			selected.list = MR.Skybox:GetList()
 			selected.oldMaterial = MR.Skybox:GetValidName()
 		else
-			selected.list = MapMaterials:GetList()
+			selected.list = Map:GetList()
 			selected.oldMaterial = MR.Materials:GetOriginal(tr)
 		end
 
@@ -98,18 +98,18 @@ function MapMaterials:GetCurrent(tr)
 end
 
 -- Set map material
-function MapMaterials:Set(ply, data, isBroadcasted)
+function Map:Set(ply, data, isBroadcasted)
 	-- Handle displacements
-	local isDisplacement = MR.MapMaterials:IsDisplacement(data.oldMaterial)
+	local isDisplacement = MR.Map:IsDisplacement(data.oldMaterial)
 
 	-- Select the correct type
 	local selected = {}
 
-	if MR.MapMaterials:IsDisplacement(data.oldMaterial) then
+	if MR.Map:IsDisplacement(data.oldMaterial) then
 		selected.isDisplacement = true
 		selected.list = MR.Displacements:GetList()
 		selected.limit = MR.Displacements:GetLimit()
-		selected.filename = MapMaterials:GetFilename()
+		selected.filename = Map:GetFilename()
 		selected.filename2 = MR.Displacements:GetFilename()
 		if SERVER then
 			selected.dupName = MR.Displacements:GetDupName()
@@ -123,11 +123,11 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 			selected.dupName = MR.Skybox:GetDupName()
 		end
 	else
-		selected.list = MapMaterials:GetList()
-		selected.limit = MapMaterials:GetLimit()
-		selected.filename = MapMaterials:GetFilename()
+		selected.list = Map:GetList()
+		selected.limit = Map:GetLimit()
+		selected.filename = Map:GetFilename()
 		if SERVER then
-			selected.dupName = MapMaterials:GetDupName()
+			selected.dupName = Map:GetDupName()
 		end
 	end
 
@@ -143,7 +143,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 	-- Send the modification to...
 	if SERVER then
-		net.Start("MapMaterials:Set")
+		net.Start("Map:Set")
 			-- Note: I have to send this before a backup is created on the server, otherwise clients will
 			-- keep the saved values and later, after a cleanup, reload details as "None". This happens
 			-- because materials don't have their $detail keyvalue correctly configured in this scope.
@@ -160,7 +160,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 		-- Fix the detail name on the server backup (explained just above)
 		if ply ~= MR.Ply:GetFakeHostPly() and not data.backup then
-			net.Start("MapMaterials:FixDetail_CL")
+			net.Start("Map:FixDetail_CL")
 				net.WriteString(data.oldMaterial)
 				net.WriteBool(selected.isDisplacement or false)
 			net.Send(ply)
@@ -180,7 +180,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 			-- Run the element backup
 			if CLIENT then
-				MapMaterials:Set_CL(element.backup)
+				Map:Set_CL(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -225,7 +225,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 		-- Apply the new state to the map material
 		if CLIENT then
-			MapMaterials:Set_CL(data)
+			Map:Set_CL(data)
 		end
 
 		if SERVER then
@@ -245,7 +245,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 						MR.Skybox:Remove(ply)
 					-- map/displacement
 					else
-						MR.MapMaterials:Remove(data.oldMaterial)
+						MR.Map:Remove(data.oldMaterial)
 					end
 				end, data.oldMaterial)
 				undo.SetCustomUndoText("Undone Material")
@@ -258,7 +258,7 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 end
 
 -- Clean map and displacements materials
-function MapMaterials:Remove(oldMaterial)
+function Map:Remove(oldMaterial)
 	if not oldMaterial then
 		return false
 	end
@@ -266,7 +266,7 @@ function MapMaterials:Remove(oldMaterial)
 	-- Select the correct type
 	local selected = {}
 
-	if MR.MapMaterials:IsDisplacement(oldMaterial) then
+	if MR.Map:IsDisplacement(oldMaterial) then
 		selected.list = MR.Displacements:GetList()
 		if SERVER then
 			selected.dupName = MR.Displacements:GetDupName()
@@ -277,9 +277,9 @@ function MapMaterials:Remove(oldMaterial)
 			selected.dupName = MR.Skybox:GetDupName()
 		end
 	else
-		selected.list = MapMaterials:GetList()
+		selected.list = Map:GetList()
 		if SERVER then
-			selected.dupName = MapMaterials:GetDupName()
+			selected.dupName = Map:GetDupName()
 		end
 	end
 
@@ -290,7 +290,7 @@ function MapMaterials:Remove(oldMaterial)
 		if element then
 			-- Run the element backup
 			if CLIENT then
-				MapMaterials:Set_CL(element.backup)
+				Map:Set_CL(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -307,7 +307,7 @@ function MapMaterials:Remove(oldMaterial)
 
 			-- Run the remotion on every client
 			if SERVER then
-				net.Start("MapMaterials:Remove")
+				net.Start("Map:Remove")
 					net.WriteString(oldMaterial)
 				net.Broadcast()
 			end

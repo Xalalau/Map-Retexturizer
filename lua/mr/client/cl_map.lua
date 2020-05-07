@@ -2,23 +2,23 @@
 --- MAP MATERIALS
 --------------------------------
 
-local MapMaterials = MR.MapMaterials
+local Map = MR.Map
 
 -- Networking
-net.Receive("MapMaterials:FixDetail_CL", function()
-	MapMaterials:FixDetail_CL(net.ReadString(), net.ReadBool())
+net.Receive("Map:FixDetail_CL", function()
+	Map:FixDetail_CL(net.ReadString(), net.ReadBool())
 end)
 
-net.Receive("MapMaterials:Set_CL", function()
-	MapMaterials:Set_CL(net.ReadTable())
+net.Receive("Map:Set_CL", function()
+	Map:Set_CL(net.ReadTable())
 end)
 
 -- Fix the detail name on the server backup
-function MapMaterials:FixDetail_CL(oldMaterial, isDisplacement)
-	local element = MR.Data.list:GetElement(isDisplacement and MR.Displacements:GetList() or MapMaterials:GetList(), oldMaterial)
+function Map:FixDetail_CL(oldMaterial, isDisplacement)
+	local element = MR.Data.list:GetElement(isDisplacement and MR.Displacements:GetList() or Map:GetList(), oldMaterial)
 
 	if element then
-		net.Start("MapMaterials:FixDetail_SV")
+		net.Start("Map:FixDetail_SV")
 			net.WriteString(oldMaterial)
 			net.WriteBool(isDisplacement)
 			net.WriteString(element.detail)
@@ -27,7 +27,7 @@ function MapMaterials:FixDetail_CL(oldMaterial, isDisplacement)
 end
 
 -- Set map material: client
-function MapMaterials:Set_CL(data)
+function Map:Set_CL(data)
 	-- Get the material to be modified
 	local oldMaterial = Material(data.oldMaterial)
 
@@ -36,7 +36,7 @@ function MapMaterials:Set_CL(data)
 		local newMaterial = nil
 
 		-- Get the correct material
-		local element = MR.Data.list:GetElement(MapMaterials:GetList(), data.newMaterial)
+		local element = MR.Data.list:GetElement(Map:GetList(), data.newMaterial)
 		
 		if element and element.backup then
 			newMaterial = Material(element.backup.newMaterial)
@@ -63,7 +63,7 @@ function MapMaterials:Set_CL(data)
 		end
 
 		-- Get the correct material
-		local element = MR.Data.list:GetElement(MapMaterials:GetList(), data.newMaterial2)
+		local element = MR.Data.list:GetElement(Map:GetList(), data.newMaterial2)
 
 		if element and element.backup then
 			newMaterial2 = Material(element.backup.newMaterial2)

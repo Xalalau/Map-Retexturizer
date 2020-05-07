@@ -40,7 +40,7 @@ function Data:IsEqual(Data1, Data2)
 	local isDifferent = false
 
 	for k,v in pairs(Data1) do
-		if k ~= "backup" and v ~= Data2[k] then -- Ignore backup field
+		if k ~= "backup" and not IsEntity(v) and v ~= Data2[k] then -- Ignore "backup" and "ent" fields
 			if isnumber(v) then
 				if tonumber(v) ~= tonumber(Data2[k]) then
 					isDifferent = true

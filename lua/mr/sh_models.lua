@@ -218,7 +218,7 @@ function Models:Set(ply, data, isBroadcasted)
 	end
 
 	-- Set the Undo
-	if not isBroadcasted then
+	if SERVER and not isBroadcasted then
 		undo.Create("Material")
 			undo.SetPlayer(ply)
 			undo.AddFunction(function(tab, ent)

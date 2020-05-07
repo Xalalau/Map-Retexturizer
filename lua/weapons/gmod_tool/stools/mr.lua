@@ -445,9 +445,9 @@ function TOOL.BuildCPanel(CPanel)
 			properties.c = CPanel:NumSlider("Vertical Translation", "internal_mr_offsety", -1, 1, 2)
 			properties.f = CPanel:NumSlider("Rotation", "internal_mr_rotation", 0, 179, 0)
 			properties.a = CPanel:NumSlider("Alpha", "internal_mr_alpha", 0, 1, 2)
-			baseMaterialReset = CPanel:Button("Reset")
+			local baseMaterialReset = CPanel:Button("Reset")
 
-			function properties.baseMaterialReset:DoClick()
+			function baseMaterialReset:DoClick()
 				MR.CVars:SetPropertiesToDefaults(ply)
 			end
 	end

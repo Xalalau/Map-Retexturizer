@@ -252,19 +252,21 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 	if SERVER then
 		-- Set the Undo
-		undo.Create("Material")
-			undo.SetPlayer(ply)
-			undo.AddFunction(function(tab, oldMaterial)
-				-- Skybox
-				if MR.Skybox:IsSkybox(oldMaterial) then
-					MR.Skybox:Remove(ply)
-				-- map/displacement
-				else
-					MR.MapMaterials:Remove(data.oldMaterial)
-				end
-			end, data.oldMaterial)
-			undo.SetCustomUndoText("Undone Material")
-		undo.Finish()
+		if not isBroadcasted then
+			undo.Create("Material")
+				undo.SetPlayer(ply)
+				undo.AddFunction(function(tab, oldMaterial)
+					-- Skybox
+					if MR.Skybox:IsSkybox(oldMaterial) then
+						MR.Skybox:Remove(ply)
+					-- map/displacement
+					else
+						MR.MapMaterials:Remove(data.oldMaterial)
+					end
+				end, data.oldMaterial)
+				undo.SetCustomUndoText("Undone Material")
+			undo.Finish()
+		end
 
 		-- General final steps
 		MR.Materials:SetFinalSteps()

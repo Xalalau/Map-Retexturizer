@@ -73,12 +73,12 @@ end
 
 -- Get the original material full path
 function Materials:GetOriginal(tr)
-	return MR.ModelMaterials:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
+	return MR.Models:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
 end
 
 -- Get the current material full path
 function Materials:GetCurrent(tr)
-	return MR.ModelMaterials:GetCurrent(tr) or
+	return MR.Models:GetCurrent(tr) or
 			MR.Skybox:IsPainted(MR.Map:GetCurrent(tr)) and MR.Skybox:GetGenericName() or
 			MR.Map:GetCurrent(tr) or
 			""

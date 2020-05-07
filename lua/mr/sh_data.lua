@@ -64,7 +64,7 @@ end
 
 -- Get the data table if it exists or return nil
 function Data:Get(tr, list)
-	return IsValid(tr.Entity) and MR.ModelMaterials:GetNew(tr.Entity) or
+	return IsValid(tr.Entity) and MR.Models:GetNew(tr.Entity) or
 	       MR.Data.list:GetElement(list, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
 										 MR.Skybox:GetValidName() or
 										 MR.Materials:GetOriginal(tr))

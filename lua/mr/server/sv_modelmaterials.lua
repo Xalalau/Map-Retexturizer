@@ -2,19 +2,19 @@
 --- MATERIALS (MODELS)
 --------------------------------
 
-local ModelMaterials = MR.ModelMaterials
+local Models = MR.Models
 
 -- Networking
-util.AddNetworkString("ModelMaterials:Remove")
-util.AddNetworkString("ModelMaterials:Set")
-util.AddNetworkString("ModelMaterials:RemoveAll")
+util.AddNetworkString("Models:Remove")
+util.AddNetworkString("Models:Set")
+util.AddNetworkString("Models:RemoveAll")
 
-net.Receive("ModelMaterials:RemoveAll", function(_, ply)
-	ModelMaterials:RemoveAll(ply)
+net.Receive("Models:RemoveAll", function(_, ply)
+	Models:RemoveAll(ply)
 end)
 
 -- Remove all modified model materials
-function ModelMaterials:RemoveAll(ply)
+function Models:RemoveAll(ply)
 	-- Admin only
 	if not MR.Utils:PlyIsAdmin(ply) then
 		return false
@@ -26,7 +26,7 @@ function ModelMaterials:RemoveAll(ply)
 	-- Cleanup
 	for k,v in pairs(ents.GetAll()) do
 		if IsValid(v) then
-			ModelMaterials:Remove(v)
+			Models:Remove(v)
 		end
 	end
 end

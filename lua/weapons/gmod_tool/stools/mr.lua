@@ -156,7 +156,7 @@ end
 		oldData.newMaterial = oldData.oldMaterial 
 	-- If it's a model, adjust the material name
 	elseif IsValid(tr.Entity) then
-		oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
+		oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
 	end	
 
 	-- Adjustment for skybox materials
@@ -204,7 +204,7 @@ end
 			MR.Skybox:Set(ply, newData)
 		-- model
 		elseif IsValid(tr.Entity) then
-			MR.ModelMaterials:Set(ply, newData)
+			MR.Models:Set(ply, newData)
 		-- map/displacement
 		elseif tr.Entity:IsWorld() then
 			MR.Map:Set(ply, newData)
@@ -233,7 +233,7 @@ function TOOL:RightClick(tr)
 		oldData.newMaterial = oldData.oldMaterial 
 	-- If it's a model, adjust the material name
 	elseif IsValid(tr.Entity) then
-		oldData.newMaterial = MR.ModelMaterials:RevertID(oldData.newMaterial)
+		oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
 	end
 
 	-- Adjustment for skybox materials
@@ -300,7 +300,7 @@ function TOOL:Reload(tr)
 					MR.Skybox:Remove(ply)
 				-- model
 				elseif IsValid(tr.Entity) then
-					MR.ModelMaterials:Remove(tr.Entity)
+					MR.Models:Remove(tr.Entity)
 				-- map/displacement
 				elseif tr.Entity:IsWorld() then
 					MR.Map:Remove(MR.Materials:GetOriginal(tr))
@@ -762,7 +762,7 @@ function TOOL.BuildCPanel(CPanel)
 				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
 				cleanupCombobox:AddChoice("Displacements","Displacements:RemoveAll")
 				cleanupCombobox:AddChoice("Map Materials","Map:RemoveAll")
-				cleanupCombobox:AddChoice("Model Materials","ModelMaterials:RemoveAll")
+				cleanupCombobox:AddChoice("Model Materials","Models:RemoveAll")
 				cleanupCombobox:AddChoice("Skybox","Skybox:Remove")
 
 			local cleanupButton = CPanel:Button("Cleanup","mr_cleanup_all")

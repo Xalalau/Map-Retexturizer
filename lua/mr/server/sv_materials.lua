@@ -113,7 +113,7 @@ function Materials:RemoveAll(ply)
 	end
 
 	-- Cleanup
-	MR.ModelMaterials:RemoveAll(ply)
+	MR.Models:RemoveAll(ply)
 	MR.Map:RemoveAll(ply)
 	MR.Decals:RemoveAll(ply)
 	MR.Displacements:RemoveAll(ply)

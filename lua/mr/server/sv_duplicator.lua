@@ -251,7 +251,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 			local newList = {}
 
 			for k,v in pairs(ents.GetAll()) do
-				if MR.ModelMaterials:GetNew(v) then
+				if MR.Models:GetNew(v) then
 					table.insert(newList, v)
 				end
 			end
@@ -455,7 +455,7 @@ function Duplicator:LoadMaterials(ply, ent, savedTable, position, section)
 		MR.Map:Set(ply, savedTable[position], true)
 	-- Apply model material
 	elseif section == "model" then
-		MR.ModelMaterials:Set(ply, savedTable[position], true)
+		MR.Models:Set(ply, savedTable[position], true)
 	-- Change the stored entity to world and apply decal
 	elseif section == "decal" then
 		savedTable[position].ent = game.GetWorld()

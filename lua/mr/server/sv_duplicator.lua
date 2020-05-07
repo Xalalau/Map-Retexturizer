@@ -235,7 +235,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
 		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
 		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials:GetList() or nil
-		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.MapMaterials.Displacements:GetList() or nil
+		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.Displacements:GetList() or nil
 		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { MR.Skybox:GetList()[1] } or nil
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 

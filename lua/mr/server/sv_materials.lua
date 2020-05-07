@@ -116,7 +116,7 @@ function Materials:RemoveAll(ply)
 	MR.ModelMaterials:RemoveAll(ply)
 	MR.MapMaterials:RemoveAll(ply)
 	MR.Decals:RemoveAll(ply)
-	MR.MapMaterials.Displacements:RemoveAll(ply)
+	MR.Displacements:RemoveAll(ply)
 	MR.Skybox:Remove(ply)
 
 	return true

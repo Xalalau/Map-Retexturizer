@@ -1,14 +1,10 @@
 --------------------------------
---- MATERIALS (MAP & DISPLACEMENTS)
+--- MAP MATERIALS
 --------------------------------
 
 local MapMaterials = {}
 MapMaterials.__index = MapMaterials
 MR.MapMaterials = MapMaterials
-
-MapMaterials.Displacements = {}
-MapMaterials.Displacements.__index = MapMaterials.Displacements
-MR.MapMaterials.Displacements = MapMaterials.Displacements
 
 -- Note: I consider displacements a type of map material because most of the code it needs ends being almost
 -- the same. So the exclusive displacements functions are a effort to have a better/necessary control over them
@@ -22,18 +18,6 @@ local map = {
 	-- Table of "Data" structures = all the material modifications and backups
 	list = {},
 	-- displacement materials
-	displacements = {
-		-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
-		-- Note: this is the same type of list as map.list, but it's separated because these files never get "clean" for reuse
-		filename = MR.Base:GetMaterialsFolder().."disp_file",
-		-- 24 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
-		limit = 24,
-		-- List of detected displacements on the map
-		-- ["displacement material"] = { [1] = "$basetexture material", [2] = "$basetexture2 material" }
-		detected = {},
-		-- Table of "Data" structures = all the material modifications and backups
-		list = {}
-	}
 }
 
 -- Networking
@@ -51,7 +35,7 @@ end)
 
 -- Check if a given material path is a displacement
 function MapMaterials:IsDisplacement(material)
-	for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
+	for k,v in pairs(MR.Displacements:GetDetected()) do
 		if k == material then
 			return true
 		end
@@ -123,12 +107,12 @@ function MapMaterials:Set(ply, data, isBroadcasted)
 
 	if MR.MapMaterials:IsDisplacement(data.oldMaterial) then
 		selected.isDisplacement = true
-		selected.list = MapMaterials.Displacements:GetList()
-		selected.limit = MapMaterials.Displacements:GetLimit()
+		selected.list = MR.Displacements:GetList()
+		selected.limit = MR.Displacements:GetLimit()
 		selected.filename = MapMaterials:GetFilename()
-		selected.filename2 = MapMaterials.Displacements:GetFilename()
+		selected.filename2 = MR.Displacements:GetFilename()
 		if SERVER then
-			selected.dupName = MapMaterials.Displacements:GetDupName()
+			selected.dupName = MR.Displacements:GetDupName()
 		end
 	elseif MR.Skybox:IsSkybox(data.oldMaterial) then	
 		selected.isSkybox = true
@@ -283,9 +267,9 @@ function MapMaterials:Remove(oldMaterial)
 	local selected = {}
 
 	if MR.MapMaterials:IsDisplacement(oldMaterial) then
-		selected.list = MapMaterials.Displacements:GetList()
+		selected.list = MR.Displacements:GetList()
 		if SERVER then
-			selected.dupName = MapMaterials.Displacements:GetDupName()
+			selected.dupName = MR.Displacements:GetDupName()
 		end
 	elseif MR.Skybox:IsSkybox(oldMaterial) then
 		selected.list = MR.Skybox:GetList()
@@ -333,45 +317,4 @@ function MapMaterials:Remove(oldMaterial)
 	end
 
 	return false
-end
-
---------------------------------
---- MATERIALS (DISPLACEMENTS ONLY)
---------------------------------
-
--- Generate map displacements list
-function MapMaterials.Displacements:Init()
-	local map_data = MR.OpenBSP()
-	local found = map_data:ReadLumpTextDataStringData()
-	
-	for k,v in pairs(found) do
-		if Material(v):GetString("$surfaceprop2") then
-			v = v:sub(1, #v - 1) -- Remove last char (line break?)
-
-			map.displacements.detected[v] = {
-				Material(v):GetTexture("$basetexture"):GetName(),
-				Material(v):GetTexture("$basetexture2"):GetName()
-			}
-		end
-	end
-end
-
--- Get map displacements list
-function MapMaterials.Displacements:GetDetected()
-	return map.displacements.detected
-end
-
--- Get displacement modifications
-function MapMaterials.Displacements:GetList()
-	return map.displacements.list
-end
-
--- Get displacement limit
-function MapMaterials.Displacements:GetLimit()
-	return map.displacements.limit
-end
-
--- Get backup filenames
-function MapMaterials.Displacements:GetFilename()
-	return map.displacements.filename
 end

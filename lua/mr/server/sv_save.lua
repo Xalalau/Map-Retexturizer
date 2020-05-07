@@ -38,7 +38,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 	local save = {
 		decals = MR.Decals:GetList(),
 		map = MR.MapMaterials:GetList(),
-		displacements = MR.MapMaterials.Displacements:GetList(),
+		displacements = MR.Displacements:GetList(),
 		skybox = { MR.Skybox:GetList()[1] } ,
 		savingFormat = "3.0"
 	}

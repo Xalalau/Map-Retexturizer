@@ -1,0 +1,92 @@
+--------------------------------
+--- DISPLACEMENTS
+--------------------------------
+
+local Displacements = MR.Displacements
+
+local displacements = {
+	-- Name used in duplicator
+	dupName = "MapRetexturizer_Displacements"
+}
+-- Networking
+util.AddNetworkString("Displacements:Set_SV")
+util.AddNetworkString("Displacements:RemoveAll")
+
+net.Receive("Displacements:Set_SV", function(_, ply)
+	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString())
+end)
+
+net.Receive("Displacements:RemoveAll", function(_, ply)
+	Displacements:RemoveAll(ply)
+end)
+
+-- Get duplicator name
+function Displacements:GetDupName()
+	return displacements.dupName
+end
+
+-- Change the displacements: server
+--
+-- displacement = displacement detected name
+-- newMaterial = new material for $basetexture
+-- newMaterial2 = new material for $basetexture2
+function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2)
+	-- Check if there is a displacement selected
+	if not displacement then
+		return
+	end
+
+	-- To identify and apply a displacement default material we default it to "nil" here
+	if newMaterial == "" then
+		newMaterial = nil
+	end
+
+	if newMaterial2 == "" then
+		newMaterial2 = nil
+	end
+
+	if newMaterial or newMaterial2 then
+		for k,v in pairs(Displacements:GetDetected()) do 
+			if k == displacement then
+				if newMaterial and v[1] == newMaterial then
+					newMaterial = nil
+				end
+
+				if newMaterial2 and v[2] == newMaterial2 then
+					newMaterial2 = nil
+				end
+
+				break
+			end
+		end
+	end
+
+	-- Create the data table
+	local data = MR.Data:CreateFromMaterial(displacement)
+
+	data.newMaterial = newMaterial
+	data.newMaterial2 = newMaterial2
+
+	-- Apply the changes
+	MR.MapMaterials:Set(ply, data)
+end
+
+-- Remove all displacements materials
+function Displacements:RemoveAll(ply)
+	-- Admin only
+	if not MR.Utils:PlyIsAdmin(ply) then
+		return false
+	end
+
+	-- Stop the duplicator
+	MR.Duplicator:ForceStop_SV()
+
+	-- Remove
+	if MR.Data.list:Count(Displacements:GetList()) > 0 then
+		for k,v in pairs(Displacements:GetList()) do
+			if MR.Data.list:IsActive(v) then
+				MR.MapMaterials:Remove(v.oldMaterial)
+			end
+		end
+	end
+end

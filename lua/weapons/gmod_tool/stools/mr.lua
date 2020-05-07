@@ -538,7 +538,7 @@ function TOOL.BuildCPanel(CPanel)
 	end
 
 	-- Displacements ---------------------------------------------------
-	if (table.Count(MR.MapMaterials.Displacements:GetDetected()) > 0) then
+	if (table.Count(MR.Displacements:GetDetected()) > 0) then
 		CPanel:Help(" ")
 
 		do
@@ -559,7 +559,7 @@ function TOOL.BuildCPanel(CPanel)
 						end					
 					end
 
-					for k,v in pairs(MR.MapMaterials.Displacements:GetDetected()) do
+					for k,v in pairs(MR.Displacements:GetDetected()) do
 						element:AddChoice(k)
 					end
 
@@ -571,12 +571,12 @@ function TOOL.BuildCPanel(CPanel)
 
 				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
 					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
-						MR.MapMaterials.Displacements:Set_CL()
+						MR.Displacements:Set_CL()
 					end
 
 				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
 					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
-						MR.MapMaterials.Displacements:Set_CL()
+						MR.Displacements:Set_CL()
 					end
 
 				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
@@ -760,7 +760,7 @@ function TOOL.BuildCPanel(CPanel)
 			local cleanupCombobox = CPanel:ComboBox("Select")
 				cleanupCombobox:AddChoice("All","Materials:RemoveAll", true)
 				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
-				cleanupCombobox:AddChoice("Displacements","MapMaterials.Displacements:RemoveAll")
+				cleanupCombobox:AddChoice("Displacements","Displacements:RemoveAll")
 				cleanupCombobox:AddChoice("Map Materials","MapMaterials:RemoveAll")
 				cleanupCombobox:AddChoice("Model Materials","ModelMaterials:RemoveAll")
 				cleanupCombobox:AddChoice("Skybox","Skybox:Remove")

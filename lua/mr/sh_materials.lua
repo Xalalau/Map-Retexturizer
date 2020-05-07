@@ -292,5 +292,17 @@ function Materials:SetFinalSteps()
 	-- Register that the map is modified
 	if SERVER and not MR.Base:GetInitialized() then
 		MR.Base:SetInitialized()
+
+		-- Auto save
+		if GetConVar("internal_mr_autosave"):GetString() == "1" then
+			if not timer.Exists("MRAutoSave") then
+				timer.Create("MRAutoSave", 60, 1, function()
+					if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
+						MR.Save:Set_SV(ply, MR.Base:GetAutoSaveName())
+						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
+					end
+				end)
+			end
+		end
 	end
 end

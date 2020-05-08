@@ -24,7 +24,8 @@ end
 function Decals:Set_CL(data, isBroadcasted)
 	-- General first steps
 	local check = {
-		material = data and data.newMaterial or MR.Materials:GetNew(ply)
+		material = data and data.newMaterial or MR.Materials:GetNew(ply),
+		type = "Decals"
 	}
 
 	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check) then

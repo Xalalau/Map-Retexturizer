@@ -64,6 +64,10 @@ end
 -- Load modifications
 function Load:Start(ply, loadName)
 	-- General first steps
+	local check = {
+		type = "Load"
+	}
+
 	if not MR.Materials:SetFirstSteps(ply) then
 		return false
 	end

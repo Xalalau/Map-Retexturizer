@@ -16,7 +16,8 @@ end)
 function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
 	local check = {
-		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply)
+		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply),
+		type = "Decals"
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then

@@ -135,7 +135,10 @@ function Map:Set(ply, data, isBroadcasted)
 	-- General first steps (part 1)
 	local check = {
 		material = data.newMaterial,
-		material2 = data.newMaterial2
+		material2 = data.newMaterial2,
+		type = selected.isDisplacement and "Displacements" or
+					selected.isSkybox and "Skybox" or
+					"Map"
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
@@ -194,7 +197,10 @@ function Map:Set(ply, data, isBroadcasted)
 			-- General first steps (part 2)
 			local check = {
 				list = selected.list,
-				limit = selected.limit
+				limit = selected.limit,
+				type = selected.isDisplacement and "Displacements" or
+					selected.isSkybox and "Skybox" or
+					"Map"
 			}
 
 			if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then

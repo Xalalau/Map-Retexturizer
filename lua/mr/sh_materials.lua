@@ -313,6 +313,7 @@ end
 		ent = data.ent
 		list = a data materials list
 		limit = limit for the above list
+		type = the kind of the material
 	}
 ]]
 function Materials:SetFirstSteps(ply, isBroadcasted, check)
@@ -338,7 +339,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	if check then
 		-- Don't apply bad materials
 		if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
-			print("[Map Retexturizer] Bad material blocked.")
+			print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 
 			return false
 		end
@@ -349,7 +350,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 		-- Don't modify bad entities
 		if check.ent and (isstring(check.ent) or not IsValid(check.ent)) then
-			print("[Map Retexturizer] Bad entity blocked.")
+			print("[Map Retexturizer]["..check.type.."] Bad entity blocked.")
 
 			return false
 		end
@@ -357,7 +358,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 		-- Check if the modifications table is full
 		if check.list and check.limit and MR.Data.list:IsFull(check.list, check.limit) then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]["..check.type.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
 			end
 
 			return false

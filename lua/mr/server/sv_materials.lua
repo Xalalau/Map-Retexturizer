@@ -19,7 +19,8 @@ function Materials:SetAll(ply)
 
 	-- General first steps
 	local check = {
-		material = material
+		material = material,
+		type = "SetAll"
 	}
 
 	if not Materials:SetFirstSteps(ply, isBroadcasted, check) then

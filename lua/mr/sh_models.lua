@@ -190,7 +190,8 @@ function Models:Set(ply, data, isBroadcasted)
 	-- General first steps
 	local check = {
 		material = data.newMaterial,
-		ent = data.ent or ""
+		ent = data.ent or "",
+		type = "Models"
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then

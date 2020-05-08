@@ -1,6 +1,6 @@
 @echo off
 
-echo I'm going to create (6 + 24 + 1512) .vmt files for Map Retexturizer.
+echo I'm going to create (6 + 6 + 48 + 1512) .vmt files for Map Retexturizer.
 echo Close me if you want to cancel.
 echo.
 
@@ -33,7 +33,7 @@ for /l %%x in (1, 1, 6) do (
 echo.
 
 :: Displacements
-for /l %%x in (1, 1, 24) do (
+for /l %%x in (1, 1, 48) do (
 	echo "VertexlitGeneric" >> disp_file%%x.vmt
 	echo { >> disp_file%%x.vmt
 	echo 	"$basetexture" "mr/disp_file%%x" >> disp_file%%x.vmt

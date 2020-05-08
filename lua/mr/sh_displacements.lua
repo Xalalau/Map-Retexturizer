@@ -10,7 +10,7 @@ local displacements = {
 	-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
 	filename = MR.Base:GetMaterialsFolder().."disp_file",
 	-- 24 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
-	limit = 24,
+	limit = 48,
 	-- List of detected displacements on the map
 	-- ["displacement material"] = { [1] = "$basetexture material", [2] = "$basetexture2 material" }
 	detected = {},

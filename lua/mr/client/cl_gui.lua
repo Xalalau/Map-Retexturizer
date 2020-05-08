@@ -2,7 +2,9 @@
 --- MAP RETEXTURIZER BASE
 -------------------------------------
 
-local GUI = MR.GUI
+local GUI = {}
+GUI.__index = GUI
+MR.CL.GUI = GUI
 
 local gui = {
 	["save"] = {
@@ -22,21 +24,21 @@ local gui = {
 	}
 }
 
+-- Merge the above table in the shared one
+table.Merge(MR.GUI:GetTable(), gui) 
+
 -- Networking
-net.Receive("GUI:SetDetail", function()
+net.Receive("CL.GUI:SetDetail", function()
 	GUI:SetDetailValue(net.ReadString())
 end)
 
-net.Receive("GUI:ResetSkyboxComboValue", function()
+net.Receive("CL.GUI:ResetSkyboxComboValue", function()
 	GUI:ResetSkyboxComboValue()
 end)
 
-net.Receive("GUI:ResetDisplacementsComboValue", function()
+net.Receive("CL.GUI:ResetDisplacementsComboValue", function()
 	GUI:ResetDisplacementsComboValue()
 end)
-
--- Merge the above table in the shared one
-table.Merge(GUI:GetTable(), gui) 
 
 function GUI:GetSaveText()
 	return gui["save"].text

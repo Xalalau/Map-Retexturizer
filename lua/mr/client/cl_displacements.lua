@@ -2,7 +2,9 @@
 --- DISPLACEMENTS
 --------------------------------
 
-local Displacements = MR.Displacements
+local Displacements = {}
+Displacements.__index = Displacements
+MR.CL.Displacements = Displacements
 
 -- A dirty hack to make all the displacements darker, since the tool does it with these materials
 local displacements = {
@@ -20,17 +22,17 @@ function Displacements:InitHack()
 		data.newMaterial = nil
 		data.newMaterial2 = nil
 
-		MR.Map:Set_CL(data)
+		MR.CL.Map:Set(data)
 	end
 
 	displacements.initHack = true
 end
 
 -- Change the displacements: client
-function Displacements:Set_CL(applyProperties)
-	local displacement, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
-	local newMaterial = MR.GUI:GetDisplacementsText1():GetValue()
-	local newMaterial2 = MR.GUI:GetDisplacementsText2():GetValue()
+function Displacements:Set(applyProperties)
+	local displacement, _ = MR.CL.GUI:GetDisplacementsCombo():GetSelected()
+	local newMaterial = MR.CL.GUI:GetDisplacementsText1():GetValue()
+	local newMaterial2 = MR.CL.GUI:GetDisplacementsText2():GetValue()
 	local list = MR.Displacements:GetList()
 	local data = applyProperties and MR.Data:Create(LocalPlayer()) or MR.Data.list:GetElement(list, displacement) or {}
 
@@ -44,7 +46,7 @@ function Displacements:Set_CL(applyProperties)
 		newMaterial = list[displacement][1]
 
 		timer.Create("MRText1Update", 0.5, 1, function()
-			MR.GUI:GetDisplacementsText1():SetValue(newMaterial)
+			MR.CL.GUI:GetDisplacementsText1():SetValue(newMaterial)
 		end)
 	end
 
@@ -52,7 +54,7 @@ function Displacements:Set_CL(applyProperties)
 		newMaterial2 = list[displacement][2]
 
 		timer.Create("MRText2Update", 0.5, 1, function()
-			MR.GUI:GetDisplacementsText2():SetValue(newMaterial2)
+			MR.CL.GUI:GetDisplacementsText2():SetValue(newMaterial2)
 		end)
 	end
 
@@ -62,7 +64,7 @@ function Displacements:Set_CL(applyProperties)
 	end
 
 	-- Start the change
-	net.Start("Displacements:Set_SV")
+	net.Start("SV.Displacements:Set")
 		net.WriteString(displacement)
 		net.WriteString(newMaterial or "")
 		net.WriteString(newMaterial2 or "")

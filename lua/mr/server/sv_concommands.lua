@@ -2,12 +2,14 @@
 --- CONCOMMANDS
 -------------------------------------
 
-local Concommand = MR.Concommand
+local Concommand = {}
+Concommand.__index = Concommand
+MR.SV.Concommand = Concommand
 
 -- Networking
-util.AddNetworkString("Concommand:Run")
+util.AddNetworkString("SV.Concommand:Run")
 
-net.Receive("Concommand:Run", function(_, ply)
+net.Receive("SV.Concommand:Run", function(_, ply)
 	RunConsoleCommand(net.ReadString(), net.ReadString() or "", "@@" .. tostring(ply:EntIndex())) --"@@" is used to help me explode the arguments
 end)
 
@@ -24,3 +26,4 @@ function Concommand:PrintFail(plyIndex, message)
 		player.GetAll()[tonumber(plyIndex)]:PrintMessage(HUD_PRINTCONSOLE, message)
 	end
 end
+

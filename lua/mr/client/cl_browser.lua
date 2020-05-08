@@ -14,7 +14,7 @@ local browser = {
 -- Create a new window if it doesn't exit
 function Browser:Run()
 	-- Preview material
-	local browserPreviewMaterial = MR.Materials:Create("browserPreviewMaterial", "UnlitGeneric", "")
+	local browserPreviewMaterial = MR.CL.Materials:Create("browserPreviewMaterial", "UnlitGeneric", "")
 
 	-- Basic setup
 	local topBar = 25

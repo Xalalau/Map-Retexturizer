@@ -2,7 +2,9 @@
 --- MAP MATERIALS
 --------------------------------
 
-local Map = MR.Map
+local Map = {}
+Map.__index = Map
+MR.SV.Map = Map
 
 local map = {
 	-- Name used in duplicator
@@ -12,17 +14,17 @@ local map = {
 -- Networking
 util.AddNetworkString("Map:Set")
 util.AddNetworkString("Map:Remove")
-util.AddNetworkString("Map:RemoveAll")
-util.AddNetworkString("Map:Set_CL")
-util.AddNetworkString("Map:FixDetail_CL")
-util.AddNetworkString("Map:FixDetail_SV")
+util.AddNetworkString("CL.Map:Set")
+util.AddNetworkString("CL.Map:FixDetail")
+util.AddNetworkString("SV.Map:RemoveAll")
+util.AddNetworkString("SV.Map:FixDetail")
 
-net.Receive("Map:RemoveAll", function(_,ply)
+net.Receive("SV.Map:RemoveAll", function(_,ply)
 	Map:RemoveAll(ply)
 end)
 
-net.Receive("Map:FixDetail_SV", function()
-	Map:FixDetail_SV(net.ReadString(), net.ReadBool(), net.ReadString())
+net.Receive("SV.Map:FixDetail", function()
+	Map:FixDetail(net.ReadString(), net.ReadBool(), net.ReadString())
 end)
 
 -- Get duplicator name
@@ -31,7 +33,7 @@ function Map:GetDupName()
 end
 
 -- Fix the detail name on the server backup
-function Map:FixDetail_SV(oldMaterial, isDisplacement, detail)
+function Map:FixDetail(oldMaterial, isDisplacement, detail)
 	local element = MR.Data.list:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
 	
 	if element then
@@ -47,13 +49,13 @@ function Map:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop_SV()
+	MR.SV.Duplicator:ForceStop()
 
 	-- Remove
 	if MR.Data.list:Count(MR.Map:GetList()) > 0 then
 		for k,v in pairs(MR.Map:GetList()) do
 			if MR.Data.list:IsActive(v) then
-				Map:Remove(v.oldMaterial)
+				MR.Map:Remove(v.oldMaterial)
 			end
 		end
 	end

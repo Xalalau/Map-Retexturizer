@@ -2,21 +2,24 @@
 --- DISPLACEMENTS
 --------------------------------
 
-local Displacements = MR.Displacements
+local Displacements = {}
+Displacements.__index = Displacements
+MR.SV.Displacements = Displacements
+
 
 local displacements = {
 	-- Name used in duplicator
 	dupName = "MapRetexturizer_Displacements"
 }
 -- Networking
-util.AddNetworkString("Displacements:Set_SV")
-util.AddNetworkString("Displacements:RemoveAll")
+util.AddNetworkString("SV.Displacements:Set")
+util.AddNetworkString("SV.Displacements:RemoveAll")
 
-net.Receive("Displacements:Set_SV", function(_, ply)
-	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())
+net.Receive("SV.Displacements:Set", function(_, ply)
+	Displacements:Set(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())
 end)
 
-net.Receive("Displacements:RemoveAll", function(_, ply)
+net.Receive("SV.Displacements:RemoveAll", function(_, ply)
 	Displacements:RemoveAll(ply)
 end)
 
@@ -30,7 +33,7 @@ end
 -- displacement = displacement detected name
 -- newMaterial = new material for $basetexture
 -- newMaterial2 = new material for $basetexture2
-function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2, data)
+function Displacements:Set(ply, displacement, newMaterial, newMaterial2, data)
 	-- Check if there is a displacement selected
 	if not displacement then
 		return
@@ -81,10 +84,10 @@ function Displacements:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop_SV()
+	MR.SV.Duplicator:ForceStop()
 
 	-- Reset the combobox and its text fields
-	net.Start("GUI:ResetDisplacementsComboValue")
+	net.Start("CL.GUI:ResetDisplacementsComboValue")
 	net.Broadcast()
 
 	-- Remove

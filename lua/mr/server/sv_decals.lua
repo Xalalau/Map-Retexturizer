@@ -2,18 +2,20 @@
 --- MATERIALS (DECALS)
 --------------------------------
 
-local Decals = MR.Decals
+local Decals = {}
+Decals.__index = Decals
+MR.SV.Decals = Decals
 
 -- Networking 
-util.AddNetworkString("Decals:Set_CL")
-util.AddNetworkString("Decals:RemoveAll")
+util.AddNetworkString("CL.Decals:Set")
+util.AddNetworkString("SV.Decals:RemoveAll")
 
-net.Receive("Decals:RemoveAll", function(_, ply)
+net.Receive("SV.Decals:RemoveAll", function(_, ply)
 	Decals:RemoveAll(ply)
 end)
 
 -- Apply decal materials: server
-function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
+function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
 	local check = {
 		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply),
@@ -28,19 +30,19 @@ function Decals:Set_SV(ply, tr, duplicatorData, isBroadcasted)
 	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
 
 	-- Save the data
-	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		-- Set the duplicator
-		duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = Decals:GetList() })
+		duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = MR.Decals:GetList() })
 
 		-- Index the Data
-		MR.Data.list:InsertElement(Decals:GetList(), data)
+		MR.Data.list:InsertElement(MR.Decals:GetList(), data)
 	end
 
 	-- Send to...
-	net.Start("Decals:Set_CL")
+	net.Start("CL.Decals:Set")
 		net.WriteTable(data)
 	-- all players
-	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		net.WriteBool(true)
 		net.Broadcast()
 	-- the player
@@ -61,7 +63,7 @@ function Decals:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop_SV()
+	MR.SV.Duplicator:ForceStop()
 
 	-- Cleanup
 	for k,v in pairs(player.GetAll()) do
@@ -69,6 +71,6 @@ function Decals:RemoveAll(ply)
 			v:ConCommand("r_cleardecals")
 		end
 	end
-	table.Empty(Decals:GetList())
-	duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_Decals")
+	table.Empty(MR.Decals:GetList())
+	duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
 end

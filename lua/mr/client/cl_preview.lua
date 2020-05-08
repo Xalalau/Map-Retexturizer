@@ -4,7 +4,7 @@
 
 local Preview = {}
 Preview.__index = Preview
-MR.Preview = Preview
+MR.CL.Preview = Preview
 
 local preview = {
 	-- Store the newMaterial that the preview is using
@@ -26,7 +26,7 @@ end)
 
 -- Create the material file
 function Preview:Init()
-	MR.Materials:Create("MatRetPreviewMaterial", "UnlitGeneric", "")
+	MR.CL.Materials:Create("MatRetPreviewMaterial", "UnlitGeneric", "")
 end
 
 -- Toogle the preview mode for a player
@@ -74,7 +74,7 @@ function Preview:Render()
 
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
-		MR.Map:Set_CL(newData)
+		MR.CL.Map:Set(newData)
 		preview.rotationHack = newData.rotation
 		preview.newMaterial = newData.newMaterial
 	end

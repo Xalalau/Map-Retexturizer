@@ -2,14 +2,16 @@
 --- MATERIALS (MODELS)
 --------------------------------
 
-local Models = MR.Models
+local Models = {}
+Models.__index = Models
+MR.SV.Models = Models
 
 -- Networking
 util.AddNetworkString("Models:Remove")
 util.AddNetworkString("Models:Set")
-util.AddNetworkString("Models:RemoveAll")
+util.AddNetworkString("SV.Models:RemoveAll")
 
-net.Receive("Models:RemoveAll", function(_, ply)
+net.Receive("SV.Models:RemoveAll", function(_, ply)
 	Models:RemoveAll(ply)
 end)
 
@@ -21,7 +23,7 @@ function Models:RemoveAll(ply)
 	end
 
 	-- Stop the duplicator
-	MR.Duplicator:ForceStop_SV()
+	MR.SV.Duplicator:ForceStop()
 
 	-- Cleanup
 	for k,v in pairs(ents.GetAll()) do

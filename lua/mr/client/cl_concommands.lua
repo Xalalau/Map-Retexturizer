@@ -7,7 +7,7 @@ local Concommand = MR.Concommand
 -- Run a console command on server
 function Concommand:RunOnSV(command, value)
 	if MR.Ply:IsAdmin(LocalPlayer()) then
-		net.Start("Concommand:Run")
+		net.Start("SV.Concommand:Run")
 			net.WriteString(command)
 			net.WriteString(isstring(value) and value or tostring(value))
 		net.SendToServer()
@@ -39,7 +39,7 @@ concommand.Add("internal_mr_changeall", function ()
 		buttonYes:SetText("Yes")
 		buttonYes:SetSize(120, 30)
 		buttonYes.DoClick = function()
-			net.Start("Materials:SetAll")
+			net.Start("SV.Materials:SetAll")
 			net.SendToServer()
 			qPanel:Close()
 		end

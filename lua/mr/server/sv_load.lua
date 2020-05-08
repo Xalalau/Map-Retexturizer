@@ -2,25 +2,27 @@
 --- LOAD
 -------------------------------------
 
-local Load = MR.Load
+local Load = {}
+Load.__index = Load
+MR.SV.Load = Load
 
 -- Networking
-util.AddNetworkString("Load:Start")
 util.AddNetworkString("Load:SetList")
-util.AddNetworkString("Load:Delete_SV")
-util.AddNetworkString("Load:Delete_CL2")
-util.AddNetworkString("Load:SetAuto")
+util.AddNetworkString("CL.Load:Delete_Finish")
+util.AddNetworkString("SV.Load:SetAuto")
+util.AddNetworkString("SV.Load:Delete")
+util.AddNetworkString("SV.Load:Start")
 
-net.Receive("Load:SetAuto", function(_, ply)
+net.Receive("SV.Load:SetAuto", function(_, ply)
 	Load:SetAuto(ply, net.ReadString())
 end)
 
-net.Receive("Load:Start", function(_, ply)
-	Load:Start(MR.Ply:GetFakeHostPly(), net.ReadString())
+net.Receive("SV.Load:Start", function(_, ply)
+	Load:Start(MR.SV.Ply:GetFakeHostPly(), net.ReadString())
 end)
 
-net.Receive("Load:Delete_SV", function(_, ply)
-	Load:Delete_SV(ply, net.ReadString())
+net.Receive("SV.Load:Delete", function(_, ply)
+	Load:Delete(ply, net.ReadString())
 end)
 
 -- First spawn hook
@@ -90,7 +92,7 @@ function Load:Start(ply, loadName)
 
 	-- Start the loading
 	if loadTable then
-		MR.Duplicator:Start(ply, nil, loadTable, loadName)
+		MR.SV.Duplicator:Start(ply, nil, loadTable, loadName)
 
 		return true
 	end
@@ -118,7 +120,7 @@ function Load:FirstSpawn(ply)
 			Load:Start(ply, MR.Duplicator:IsRunning())
 		-- Send the current modifications
 		elseif MR.Base:GetInitialized() then
-			MR.Duplicator:Start(ply)
+			MR.SV.Duplicator:Start(ply)
 		-- Run an autoload
 		elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
 			-- Set the spawn as done since The fakeHostPly will take care of this load
@@ -126,7 +128,7 @@ function Load:FirstSpawn(ply)
 			net.Start("Ply:SetFirstSpawn")
 			net.Send(ply)
 
-			Load:Start(MR.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
+			Load:Start(MR.SV.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
 		-- Nothing to send, finish the joining process
 		else
 			MR.Ply:SetFirstSpawn(ply)
@@ -137,7 +139,7 @@ function Load:FirstSpawn(ply)
 end
 
 -- Delete a saved file: server
-function Load:Delete_SV(ply, loadName)
+function Load:Delete(ply, loadName)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
@@ -162,7 +164,7 @@ function Load:Delete_SV(ply, loadName)
 	file.Delete(loadFile)
 
 	-- Updates the load list on every client
-	net.Start("Load:Delete_CL2")
+	net.Start("CL.Load:Delete_Finish")
 		net.WriteString(loadName)
 	net.Broadcast()
 	
@@ -182,7 +184,7 @@ function Load:SetAuto(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	MR.CVars:Replicate_SV(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
+	MR.SV.CVars:Replicate(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MRWaitToSave", 0.3, 1, function()
 		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("internal_mr_autoload"):GetString())

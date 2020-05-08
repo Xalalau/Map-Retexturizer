@@ -2,7 +2,9 @@
 --- MATERIALS (SKYBOX)
 --------------------------------
 
-local Skybox = MR.Skybox
+local Skybox = {}
+Skybox.__index = Skybox
+MR.CL.Skybox = Skybox
 
 -- Skybox rendering hook
 hook.Add("PostDraw2DSkyBox", "Skybox:Render", function()

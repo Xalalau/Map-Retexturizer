@@ -145,7 +145,7 @@ end
 	-- If we are dealing with decals, apply it
 	if isDecal then
 		if SERVER then
-			MR.Decals:Set_SV(ply, tr)
+			MR.SV.Decals:Set(ply, tr)
 		end
 
 		return true
@@ -201,7 +201,7 @@ end
 
 	-- Skybox
 	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-		MR.Skybox:Set(ply, newData)
+		MR.SV.Skybox:Set(ply, newData)
 	-- model
 	elseif IsValid(tr.Entity) then
 		MR.Models:Set(ply, newData)
@@ -260,7 +260,7 @@ function TOOL:RightClick(tr)
 
 	-- Set the detail material on the client menu
 	if SERVER then
-		net.Start("GUI:SetDetail")
+		net.Start("CL.GUI:SetDetail")
 			net.WriteString(newData.oldMaterial)
 		net.Send(ply)
 	end
@@ -282,7 +282,7 @@ function TOOL:Reload(tr)
 		if SERVER then
 			-- Skybox
 			if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-				MR.Skybox:Remove(ply)
+				MR.SV.Skybox:Remove(ply)
 			-- model
 			elseif IsValid(tr.Entity) then
 				MR.Models:Remove(tr.Entity)
@@ -301,7 +301,7 @@ end
 -- Map materials preview
 function TOOL:DrawHUD()
 	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		MR.Preview:Render()
+		MR.CL.Preview:Render()
 	end
 end
 
@@ -321,9 +321,9 @@ function TOOL.BuildCPanel(CPanel)
 	local properties = { label, a, b, c, d, e, f, baseMaterialReset }
 	local function Properties_Toogle(val)
 		if val then
-			MR.GUI:GetDetail():Hide()
+			MR.CL.GUI:GetDetail():Hide()
 		else
-			MR.GUI:GetDetail():Show()
+			MR.CL.GUI:GetDetail():Show()
 		end
 
 		for k,v in pairs(properties) do
@@ -336,12 +336,12 @@ function TOOL.BuildCPanel(CPanel)
 	end
 
 	-- Sync some menu fields
-	net.Start("CVars:ReplicateFirstSpawn")
+	net.Start("SV.CVars:ReplicateFirstSpawn")
 	net.SendToServer()
 
 	-- Finish to sync some menu fields
 	timer.Create("MRMenuOpenned1stimeDelay1", 2, 1, function()
-		MR.CVars:SetLoopBlock(false)
+		MR.CL.CVars:SetLoopBlock(false)
 	end)
 
 	-- Force mr_detail to use the right value
@@ -368,7 +368,7 @@ function TOOL.BuildCPanel(CPanel)
 					previewBox:SetChecked(true)
 
 					function previewBox:OnChange(val)
-						MR.Preview:Toogle(val)
+						MR.CL.Preview:Toogle(val)
 					end
 
 				local previewDLabel = vgui.Create("DLabel", generalPanel)
@@ -386,7 +386,7 @@ function TOOL.BuildCPanel(CPanel)
 					if not MR.Ply:IsInitialized(ply) then
 						timer.Create("MRDecalFixDelaw", 1.5, 1, function()
 							Properties_Toogle(val)
-							MR.Decals:Toogle(val)
+							MR.CL.Decals:Toogle(val)
 						end)
 
 						return
@@ -395,7 +395,7 @@ function TOOL.BuildCPanel(CPanel)
 					MR.CVars:SetPropertiesToDefaults(ply)
 					timer.Create("MRWaitPropertiesReset", 0.1, 1, function()
 						Properties_Toogle(val)
-						MR.Decals:Toogle(val)
+						MR.CL.Decals:Toogle(val)
 					end)
 				end
 
@@ -417,10 +417,10 @@ function TOOL.BuildCPanel(CPanel)
 		CPanel:AddItem(sectionProperties)
 
 		local detail, label = CPanel:ComboBox("Detail", "internal_mr_detail")
-		MR.GUI:SetDetail(detail)
+		MR.CL.GUI:SetDetail(detail)
 		properties.label = label
 			for k,v in SortedPairs(MR.Materials:GetDetailList()) do
-				MR.GUI:GetDetail():AddChoice(k, k, v)
+				MR.CL.GUI:GetDetail():AddChoice(k, k, v)
 			end	
 
 			CPanel:NumSlider("Width Magnification", "internal_mr_scalex", 0.01, 6, 2)
@@ -446,15 +446,15 @@ function TOOL.BuildCPanel(CPanel)
 
 				CPanel:AddItem(sectionDisplacements)
 
-				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected"))
-				element = MR.GUI:GetDisplacementsCombo()
+				MR.CL.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected"))
+				element = MR.CL.GUI:GetDisplacementsCombo()
 					function element:OnSelect(index, value, data)
 						if value ~= "" then
-							MR.GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
-							MR.GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
+							MR.CL.GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
+							MR.CL.GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
 						else
-							MR.GUI:GetDisplacementsText1():SetValue("")
-							MR.GUI:GetDisplacementsText2():SetValue("")
+							MR.CL.GUI:GetDisplacementsText1():SetValue("")
+							MR.CL.GUI:GetDisplacementsText2():SetValue("")
 						end					
 					end
 
@@ -465,17 +465,17 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					timer.Create("MRDisplacementsDelay", 0.1, 1, function()
-						MR.GUI:GetDisplacementsCombo():SetValue("")
+						MR.CL.GUI:GetDisplacementsCombo():SetValue("")
 					end)
 
-				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
-					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
-						MR.Displacements:Set_CL()
+				MR.CL.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
+					MR.CL.GUI:GetDisplacementsText1().OnEnter = function(self)
+						MR.CL.Displacements:Set()
 					end
 
-				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
-					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
-						MR.Displacements:Set_CL()
+				MR.CL.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
+					MR.CL.GUI:GetDisplacementsText2().OnEnter = function(self)
+						MR.CL.Displacements:Set()
 					end
 
 				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
@@ -483,7 +483,7 @@ function TOOL.BuildCPanel(CPanel)
 				local displacementsProperties = CPanel:Button("Apply current material properties")
 
 				function displacementsProperties:DoClick()
-					MR.Displacements:Set_CL(true)
+					MR.CL.Displacements:Set(true)
 				end
 		end
 	end
@@ -504,7 +504,7 @@ function TOOL.BuildCPanel(CPanel)
 
 					-- This field doesn't have problems with a sync loop, so disable the block
 					timer.Create("MRDisableSyncLoolBlock", 0.3, 1, function()
-						MR.CVars:SetLoopBlock(false)
+						MR.CL.CVars:SetLoopBlock(false)
 					end)
 
 					-- Admin only
@@ -519,31 +519,31 @@ function TOOL.BuildCPanel(CPanel)
 							value = MR.Skybox:SetSuffix(value)
 						end
 
-						net.Start("Skybox:Set")
+						net.Start("SV.Skybox:Set")
 							net.WriteTable(MR.Data:CreateFromMaterial(MR.Skybox:GetGenericName(), value == "" and MR.Skybox:GetName() or value))
 						net.SendToServer()
 					end
 				end
 
-			MR.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2"))
-			element = MR.GUI:GetSkyboxCombo()
+			MR.CL.GUI:SetSkyboxCombo(CPanel:ComboBox("HL2"))
+			element = MR.CL.GUI:GetSkyboxCombo()
 				function element:OnSelect(index, value, data)
 					-- Admin only
 					if not MR.Ply:IsAdmin(ply) then
 						return false
 					end
 
-					net.Start("Skybox:Set")
+					net.Start("SV.Skybox:Set")
 						net.WriteTable(MR.Data:CreateFromMaterial(MR.Skybox:GetGenericName(), MR.Skybox:SetSuffix(value == "" and MR.Skybox:GetName() or value)))
 					net.SendToServer()
 				end
 
 				for k,v in pairs(MR.Skybox:GetHL2List()) do
-					MR.GUI:GetSkyboxCombo():AddChoice(k, k)
+					MR.CL.GUI:GetSkyboxCombo():AddChoice(k, k)
 				end	
 
 				timer.Create("MRSkyboxDelay", 0.1, 1, function()
-					MR.GUI:GetSkyboxCombo():SetValue("")
+					MR.CL.GUI:GetSkyboxCombo():SetValue("")
 				end)
 
 				MR.GUI:Set("skybox", "box", CPanel:CheckBox("Edit with the tool gun"))
@@ -551,9 +551,9 @@ function TOOL.BuildCPanel(CPanel)
 					function element:OnChange(val)
 
 						-- Force the field to update and disable a sync loop block
-						if MR.CVars:GetLoopBlock() then
+						if MR.CL.CVars:GetLoopBlock() then
 							MR.GUI:Get("skybox", "box"):SetChecked(val)
-							MR.CVars:SetLoopBlock(false)
+							MR.CL.CVars:SetLoopBlock(false)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
@@ -563,7 +563,7 @@ function TOOL.BuildCPanel(CPanel)
 							return
 						end
 
-						net.Start("CVars:Replicate_SV")
+						net.Start("SV.CVars:Replicate")
 							net.WriteString("internal_mr_skybox_toolgun")
 							net.WriteString(val and "1" or "0")
 							net.WriteString("skybox")
@@ -585,7 +585,7 @@ function TOOL.BuildCPanel(CPanel)
 
 			CPanel:AddItem(sectionSave)
 
-			MR.GUI:SetSaveText(CPanel:TextEntry("Filename", "internal_mr_savename"))
+			MR.CL.GUI:SetSaveText(CPanel:TextEntry("Filename", "internal_mr_savename"))
 				CPanel:ControlHelp("\nYour saves are located in the folder: \"garrysmod/data/"..MR.Base:GetSaveFolder().."\"")
 				CPanel:ControlHelp("\n[WARNING] Changed models aren't stored!")
 
@@ -595,9 +595,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetLoopBlock() then
+					if MR.CL.CVars:GetLoopBlock() then
 						MR.GUI:Get("save", "box"):SetChecked(val)
-						MR.CVars:SetLoopBlock(false)
+						MR.CL.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -607,14 +607,14 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					net.Start("Save:SetAuto")
+					net.Start("SV.Save:SetAuto")
 						net.WriteBool(val)
 					net.SendToServer()
 				end
 
 			local saveChanges = CPanel:Button("Save")
 				function saveChanges:DoClick()
-					MR.Save:Set_CL()
+					MR.CL.Save:Set()
 				end
 	end
 
@@ -636,8 +636,8 @@ function TOOL.BuildCPanel(CPanel)
 				element:SetEnabled(false)
 				element:SetText("")
 
-			MR.GUI:SetLoadText(CPanel:ComboBox("Saved File"))
-			element = MR.GUI:GetLoadText()
+			MR.CL.GUI:SetLoadText(CPanel:ComboBox("Saved File"))
+			element = MR.CL.GUI:GetLoadText()
 				element:AddChoice("")
 
 				for k,v in pairs(MR.Load:GetList()) do
@@ -659,18 +659,18 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					-- Force the field to update (2 times, slider fix) and disable a sync loop block
-					if MR.CVars:GetSliderUpdate() then
-						MR.CVars:SetSliderUpdate(false)
+					if MR.CL.CVars:GetSliderUpdate() then
+						MR.CL.CVars:SetSliderUpdate(false)
 
 						return
-					elseif MR.CVars:GetLoopBlock() then
+					elseif MR.CL.CVars:GetLoopBlock() then
 						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
-						MR.CVars:SetSliderUpdate(true)
+						MR.CL.CVars:SetSliderUpdate(true)
 
-						MR.CVars:SetLoopBlock(false)
+						MR.CL.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -685,7 +685,7 @@ function TOOL.BuildCPanel(CPanel)
 						timer.Destroy("MRSliderSend")
 					end
 					timer.Create("MRSliderSend", 0.1, 1, function()
-						net.Start("CVars:Replicate_SV")
+						net.Start("SV.CVars:Replicate")
 							net.WriteString("internal_mr_delay")
 							net.WriteString(string.format("%0.3f", val))
 							net.WriteString("load")
@@ -700,9 +700,9 @@ function TOOL.BuildCPanel(CPanel)
 
 				function element:OnChange(val)
 					-- Force the field to update and disable a sync loop block
-					if MR.CVars:GetLoopBlock() then
+					if MR.CL.CVars:GetLoopBlock() then
 						MR.GUI:Get("load", "box"):SetChecked(val)
-						MR.CVars:SetLoopBlock(false)
+						MR.CL.CVars:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -713,7 +713,7 @@ function TOOL.BuildCPanel(CPanel)
 					end
 
 					-- Start syncing
-					net.Start("CVars:Replicate_SV")
+					net.Start("SV.CVars:Replicate")
 						net.WriteString("internal_mr_duplicator_cleanup")
 						net.WriteString(val and "1" or "0")
 						net.WriteString("load")
@@ -723,21 +723,21 @@ function TOOL.BuildCPanel(CPanel)
 
 			local setAutoload = CPanel:Button("Set")
 				function setAutoload:DoClick()
-					net.Start("Load:SetAuto")
-						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
+					net.Start("SV.Load:SetAuto")
+						net.WriteString(MR.CL.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
 			local loadSave = CPanel:Button("Load")
 				function loadSave:DoClick()
-					net.Start("Load:Start")
-						net.WriteString(MR.GUI:GetLoadText():GetSelected() or "")
+					net.Start("SV.Load:Start")
+						net.WriteString(MR.CL.GUI:GetLoadText():GetSelected() or "")
 					net.SendToServer()
 				end
 
 			local delSave = CPanel:Button("Delete")
 				function delSave:DoClick()
-					MR.Load:Delete_CL()
+					MR.CL.Load:Delete()
 				end
 	end
 
@@ -751,12 +751,12 @@ function TOOL.BuildCPanel(CPanel)
 			CPanel:AddItem(sectionCleanup)
 
 			local cleanupCombobox = CPanel:ComboBox("Select")
-				cleanupCombobox:AddChoice("All","Materials:RemoveAll", true)
-				cleanupCombobox:AddChoice("Decals","Decals:RemoveAll")
-				cleanupCombobox:AddChoice("Displacements","Displacements:RemoveAll")
-				cleanupCombobox:AddChoice("Map Materials","Map:RemoveAll")
-				cleanupCombobox:AddChoice("Model Materials","Models:RemoveAll")
-				cleanupCombobox:AddChoice("Skybox","Skybox:Remove")
+				cleanupCombobox:AddChoice("All","SV.Materials:RemoveAll", true)
+				cleanupCombobox:AddChoice("Decals","SV.Decals:RemoveAll")
+				cleanupCombobox:AddChoice("Displacements","SV.Displacements:RemoveAll")
+				cleanupCombobox:AddChoice("Map Materials","SV.Map:RemoveAll")
+				cleanupCombobox:AddChoice("Model Materials","SV.Models:RemoveAll")
+				cleanupCombobox:AddChoice("Skybox","SV.Skybox:Remove")
 
 			local cleanupButton = CPanel:Button("Cleanup","mr_cleanup_all")
 				function cleanupButton:DoClick()

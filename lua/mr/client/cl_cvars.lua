@@ -2,7 +2,9 @@
 --- CVARS
 --------------------------------
 
-local CVars = MR.CVars
+local CVars = {}
+CVars.__index = CVars
+MR.CL.CVars = CVars
 
 local cvars = {
 	loop = {
@@ -17,8 +19,8 @@ local cvars = {
 }
 
 -- Networking
-net.Receive("CVars:Replicate_CL", function()
-	CVars:Replicate_CL(net.ReadString(), net.ReadString(), net.ReadString())
+net.Receive("CL.CVars:Replicate", function()
+	CVars:Replicate(net.ReadString(), net.ReadString(), net.ReadString())
 end)
 
 -- Get if a sync loop block is enabled
@@ -61,7 +63,7 @@ end
 -- value = new command value
 -- field1 = first field name from GUI element
 -- field2 = second field name from GUI element
-function CVars:Replicate_CL(value, field1, field2)
+function CVars:Replicate(value, field1, field2)
 	-- Enable a sync loop block
 	CVars:SetLoopBlock(true)
 

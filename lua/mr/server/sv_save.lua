@@ -4,7 +4,7 @@
 
 local Save = {}
 Save.__index = Save
-MR.Save = Save
+MR.SV.Save = Save
 
 local save = {
 	-- The current save formating
@@ -12,16 +12,16 @@ local save = {
 }
 
 -- Networking
-util.AddNetworkString("Save:Set_SV")
-util.AddNetworkString("Save:Set_CL2")
-util.AddNetworkString("Save:SetAuto")
+util.AddNetworkString("CL.Save:Set_Finish")
+util.AddNetworkString("SV.Save:Set")
+util.AddNetworkString("SV.Save:SetAuto")
 
-net.Receive("Save:SetAuto", function(_, ply)
+net.Receive("SV.Save:SetAuto", function(_, ply)
 	Save:SetAuto(ply, net.ReadBool(value))
 end)
 
-net.Receive("Save:Set_SV", function(_, ply)
-	Save:Set_SV(ply, net.ReadString())
+net.Receive("SV.Save:Set", function(_, ply)
+	Save:Set(ply, net.ReadString())
 end)
 
 -- Get the current save formating
@@ -30,7 +30,7 @@ function Save:GetCurrentVersion()
 end
 
 -- Save the modifications to a file: server
-function Save:Set_SV(ply, saveName, blockAlert)
+function Save:Set(ply, saveName, blockAlert)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
@@ -50,7 +50,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 		map = MR.Map:GetList(),
 		displacements = MR.Displacements:GetList(),
 		skybox = { MR.Skybox:GetList()[1] } ,
-		savingFormat = MR.Save:GetCurrentVersion()
+		savingFormat = Save:GetCurrentVersion()
 	}
 
 	-- Remove all the disabled elements
@@ -71,7 +71,7 @@ function Save:Set_SV(ply, saveName, blockAlert)
 	MR.Load:SetOption(saveName, saveFile)
 
 	-- Update the load list on every client
-	net.Start("Save:Set_CL2")
+	net.Start("CL.Save:Set_Finish")
 		net.WriteString(saveName)
 	net.Broadcast()
 
@@ -93,7 +93,7 @@ function Save:SetAuto(ply, value)
 	end
  
 	-- Apply the change on clients
-	MR.CVars:Replicate_SV(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
+	MR.SV.CVars:Replicate(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
 
 	return true
 end

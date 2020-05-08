@@ -3,6 +3,6 @@
 -------------------------------------
 
 -- Networking 
-util.AddNetworkString("GUI:SetDetail")
-util.AddNetworkString("GUI:ResetSkyboxComboValue")
-util.AddNetworkString("GUI:ResetDisplacementsComboValue")
+util.AddNetworkString("CL.GUI:SetDetail")
+util.AddNetworkString("CL.GUI:ResetSkyboxComboValue")
+util.AddNetworkString("CL.GUI:ResetDisplacementsComboValue")

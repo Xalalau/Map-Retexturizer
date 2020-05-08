@@ -146,7 +146,7 @@ function Models:Create(data)
 			-- Create material
 			local newMaterial
 
-			model.list[materialID] = MR.Materials:Create(materialID, "VertexLitGeneric", material)
+			model.list[materialID] = MR.CL.Materials:Create(materialID, "VertexLitGeneric", material)
 			model.list[materialID]:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
 			newMaterial = model.list[materialID]
 
@@ -168,7 +168,7 @@ function Models:Create(data)
 
 			if file.Exists("materials/"..bumpmappath..".vtf", "GAME") then
 				if not model.list[bumpmappath] then
-					model.list[bumpmappath] = MR.Materials:Create(bumpmappath)
+					model.list[bumpmappath] = MR.CL.Materials:Create(bumpmappath)
 				end
 				newMaterial:SetTexture("$bumpmap", model.list[bumpmappath]:GetTexture("$basetexture"))
 			elseif bumpmap then
@@ -203,7 +203,7 @@ function Models:Set(ply, data, isBroadcasted)
 		net.Start("Models:Set")
 			net.WriteTable(data)
 		-- every player
-		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 			net.Broadcast()
 		-- the player
 		else
@@ -212,7 +212,7 @@ function Models:Set(ply, data, isBroadcasted)
 	end
 
 	-- run once serverside and once on every player clientside
-	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
+	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
 		if SERVER then
 			-- Set the duplicator
 			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)

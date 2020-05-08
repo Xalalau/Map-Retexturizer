@@ -88,7 +88,7 @@ concommand.Add("mr_delay", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
+	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
@@ -112,7 +112,7 @@ concommand.Add("mr_load", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Load:Start(MR.Ply:GetFakeHostPly(), loadName) then
+	if MR.SV.Load:Start(MR.SV.Ply:GetFakeHostPly(), loadName) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: loading \""..loadName.."\"...")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
@@ -130,7 +130,7 @@ concommand.Add("mr_autoload", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Load:SetAuto(MR.Ply:GetFakeHostPly(), loadName) then
+	if MR.SV.Load:SetAuto(MR.SV.Ply:GetFakeHostPly(), loadName) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: autoload set to \""..loadName.."\".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
@@ -154,7 +154,7 @@ concommand.Add("mr_save", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Save:Set_SV(MR.Ply:GetFakeHostPly(), saveName, true) then
+	if MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), saveName, true) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \""..saveName.."\".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to save.")
@@ -178,7 +178,7 @@ concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Save:SetAuto(MR.Ply:GetFakeHostPly(), value) then
+	if MR.SV.Save:SetAuto(MR.SV.Ply:GetFakeHostPly(), value) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value == "1" and "enabled" or "disabled")..".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
@@ -196,7 +196,7 @@ concommand.Add("mr_delete", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Load:Delete_SV(MR.Ply:GetFakeHostPly(), loadName) then
+	if MR.SV.Load:Delete_SV(MR.SV.Ply:GetFakeHostPly(), loadName) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
@@ -220,7 +220,7 @@ concommand.Add("mr_dup_cleanup", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.CVars:Replicate_SV(MR.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
+	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
@@ -238,7 +238,7 @@ concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Materials:RemoveAll(MR.Ply:GetFakeHostPly()) then
+	if MR.SV.Materials:RemoveAll(MR.SV.Ply:GetFakeHostPly()) then
 		Concommand:PrintSuccess("[Map Retexturizer] Console: cleaning modifications...")
 	else
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to run the cleanup.")

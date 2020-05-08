@@ -2,18 +2,20 @@
 --- Materials (GENERAL)
 --------------------------------
 
-local Materials = MR.Materials
+local Materials = {}
+Materials.__index = Materials
+MR.SV.Materials = Materials
 
 -- Networking
 util.AddNetworkString("Materials:SetValid")
-util.AddNetworkString("Materials:RemoveAll")
-util.AddNetworkString("Materials:SetAll")
+util.AddNetworkString("SV.Materials:RemoveAll")
+util.AddNetworkString("SV.Materials:SetAll")
 
-net.Receive("Materials:RemoveAll", function(_, ply)
+net.Receive("SV.Materials:RemoveAll", function(_, ply)
 	 Materials:RemoveAll(ply)
 end)
 
-net.Receive("Materials:SetAll", function(_,ply)
+net.Receive("SV.Materials:SetAll", function(_,ply)
 	Materials:SetAll(ply)
 end)
 
@@ -40,13 +42,13 @@ function Materials:SetAll(ply)
 	-- Clean the map
 	Materials:RemoveAll(ply, true)
 
-	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.Duplicator:ForceStop_SV() and 0.15 or 0, 1, function() -- Wait for the map cleanup
+	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.SV.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait for the map cleanup
 		-- Create a fake save table
 		local newTable = {
 			map = {},
 			displacements = {},
 			skybox = {},
-			savingFormat = MR.Save:GetCurrentVersion()
+			savingFormat = MR.SV.Save:GetCurrentVersion()
 		}
 
 		-- Fill the fake save table with the correct structures (ignoring water materials)
@@ -103,7 +105,7 @@ function Materials:SetAll(ply)
 		]]
 
 		-- Apply the fake save
-		MR.Duplicator:Start(ply, nil, newTable, "noMrLoadFile")
+		MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile")
 
 
 		-- General final steps
@@ -119,11 +121,11 @@ function Materials:RemoveAll(ply)
 	end
 
 	-- Cleanup
-	MR.Models:RemoveAll(ply)
-	MR.Map:RemoveAll(ply)
-	MR.Decals:RemoveAll(ply)
-	MR.Displacements:RemoveAll(ply)
-	MR.Skybox:Remove(ply)
+	MR.SV.Models:RemoveAll(ply)
+	MR.SV.Map:RemoveAll(ply)
+	MR.SV.Decals:RemoveAll(ply)
+	MR.SV.Displacements:RemoveAll(ply)
+	MR.SV.Skybox:Remove(ply)
 
 	return true
 end

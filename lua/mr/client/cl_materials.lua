@@ -2,7 +2,9 @@
 --- Materials (GENERAL)
 --------------------------------
 
-local Materials = MR.Materials
+local Materials = {}
+Materials.__index = Materials
+MR.CL.Materials = Materials
 
 -- Create a material if it doesn't exist
 function Materials:Create(name, matType, path)
@@ -18,7 +20,7 @@ end
 -- Note: displacement materials return true for Material("displacement basetexture 1 or 2"):IsError(),
 -- but I can detect them as valid if I create a new material using "displacement basetexture 1 or 2"
 -- and then check for its $basetexture or $basetexture2, which will be valid.
-function Materials:SetValid_CL(material)
+function Materials:SetValid(material)
 	local checkWorkaround = Material(material)
 	local result = false
 

@@ -2,18 +2,20 @@
 --- CVARS
 --------------------------------
 
-local CVars = MR.CVars
+local CVars = {}
+CVars.__index = CVars
+MR.SV.CVars = CVars
 
 -- Networking
-util.AddNetworkString("CVars:Replicate_SV")
-util.AddNetworkString("CVars:Replicate_CL")
-util.AddNetworkString("CVars:ReplicateFirstSpawn")
+util.AddNetworkString("CL.CVars:Replicate")
+util.AddNetworkString("SV.CVars:Replicate")
+util.AddNetworkString("SV.CVars:ReplicateFirstSpawn")
 
-net.Receive("CVars:Replicate_SV", function(_, ply)
-	CVars:Replicate_SV(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
+net.Receive("SV.CVars:Replicate", function(_, ply)
+	CVars:Replicate(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadString())
 end)
 
-net.Receive("CVars:ReplicateFirstSpawn", function(_, ply)
+net.Receive("SV.CVars:ReplicateFirstSpawn", function(_, ply)
 	CVars:ReplicateFirstSpawn(ply)
 end)
 
@@ -24,7 +26,7 @@ end)
 -- value = new command value
 -- field1 = first field name from GUI element
 -- field2 = second field name from GUI element
-function CVars:Replicate_SV(ply, command, value, field1, field2)
+function CVars:Replicate(ply, command, value, field1, field2)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
@@ -44,7 +46,7 @@ function CVars:Replicate_SV(ply, command, value, field1, field2)
 
 	-- Change field values on clients
 	if field1 then
-		net.Start("CVars:Replicate_CL")
+		net.Start("CL.CVars:Replicate")
 			net.WriteString(value)
 			net.WriteString(field1)
 			net.WriteString(field2 or "")
@@ -59,14 +61,14 @@ function CVars:ReplicateFirstSpawn(ply)
 	for k,v in pairs(MR.GUI:GetTable()) do
 		if istable(v) then
 			for k2,v2 in pairs(v) do
-				net.Start("CVars:Replicate_CL")
+				net.Start("CL.CVars:Replicate")
 					net.WriteString(v2)
 					net.WriteString(k or 0)
 					net.WriteString(k2)
 				net.Send(ply)
 			end
 		else
-			net.Start("CVars:Replicate_CL")
+			net.Start("CL.CVars:Replicate")
 				net.WriteString(v)
 				net.WriteString(k)
 			net.Send(ply)

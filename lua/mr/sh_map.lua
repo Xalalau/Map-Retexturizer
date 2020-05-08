@@ -113,7 +113,7 @@ function Map:Set(ply, data, isBroadcasted)
 		selected.filename = Map:GetFilename()
 		selected.filename2 = MR.Displacements:GetFilename()
 		if SERVER then
-			selected.dupName = MR.Displacements:GetDupName()
+			selected.dupName = MR.SV.Displacements:GetDupName()
 		end
 	elseif MR.Materials:IsSkybox(data.oldMaterial) then	
 		selected.isSkybox = true
@@ -121,14 +121,14 @@ function Map:Set(ply, data, isBroadcasted)
 		selected.limit = MR.Skybox:GetLimit()
 		selected.filename = MR.Skybox:GetFilename()
 		if SERVER then
-			selected.dupName = MR.Skybox:GetDupName()
+			selected.dupName = MR.SV.Skybox:GetDupName()
 		end
 	else
 		selected.list = Map:GetList()
 		selected.limit = Map:GetLimit()
 		selected.filename = Map:GetFilename()
 		if SERVER then
-			selected.dupName = MR.Map:GetDupName()
+			selected.dupName = MR.SV.Map:GetDupName()
 		end
 	end
 
@@ -153,7 +153,7 @@ function Map:Set(ply, data, isBroadcasted)
 			-- because materials don't have their $detail keyvalue correctly configured in this scope.
 			net.WriteTable(data) 
 		-- every player
-		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 			net.WriteBool(true)
 			net.Broadcast()
 		-- the player
@@ -163,8 +163,8 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 
 		-- Fix the detail name on the server backup (explained just above)
-		if ply ~= MR.Ply:GetFakeHostPly() and not data.backup then
-			net.Start("Map:FixDetail_CL")
+		if ply ~= MR.SV.Ply:GetFakeHostPly() and not data.backup then
+			net.Start("CL.Map:FixDetail")
 				net.WriteString(data.oldMaterial)
 				net.WriteBool(selected.isDisplacement or false)
 			net.Send(ply)
@@ -172,7 +172,7 @@ function Map:Set(ply, data, isBroadcasted)
 	end
 
 	-- run once serverside and once on every player clientside
-	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.Ply:GetFakeHostPly() then
+	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
 		local element = MR.Data.list:GetElement(selected.list, data.oldMaterial)
 		local i
 
@@ -184,7 +184,7 @@ function Map:Set(ply, data, isBroadcasted)
 
 			-- Run the element backup
 			if CLIENT then
-				MR.Map:Set_CL(element.backup)
+				MR.CL.Map:Set(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -234,10 +234,10 @@ function Map:Set(ply, data, isBroadcasted)
 		if CLIENT then
 			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
 			if selected.isDisplacement then
-				MR.Displacements:InitHack()
+				MR.CL.Displacements:InitHack()
 			end
 
-			MR.Map:Set_CL(data)
+			MR.CL.Map:Set(data)
 		end
 
 		-- Set the duplicator
@@ -246,7 +246,7 @@ function Map:Set(ply, data, isBroadcasted)
 							  selected.isDisplacement and { displacements = selected.list } or
 							  { map = selected.list }
 
-			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), selected.dupName, dataTable)
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), selected.dupName, dataTable)
 		end
 	end
 
@@ -268,7 +268,7 @@ function Map:Set(ply, data, isBroadcasted)
 					undo.AddFunction(function(tab, oldMaterial)
 						-- Skybox
 						if MR.Materials:IsSkybox(oldMaterial) then
-							MR.Skybox:Remove(ply)
+							MR.SV.Skybox:Remove(ply)
 						-- map/displacement
 						else
 							Map:Remove(data.oldMaterial)
@@ -296,17 +296,17 @@ function Map:Remove(oldMaterial)
 	if MR.Materials:IsDisplacement(oldMaterial) then
 		selected.list = MR.Displacements:GetList()
 		if SERVER then
-			selected.dupName = MR.Displacements:GetDupName()
+			selected.dupName = MR.SV.Displacements:GetDupName()
 		end
 	elseif MR.Materials:IsSkybox(oldMaterial) then
 		selected.list = MR.Skybox:GetList()
 		if SERVER then
-			selected.dupName = MR.Skybox:GetDupName()
+			selected.dupName = MR.SV.Skybox:GetDupName()
 		end
 	else
 		selected.list = Map:GetList()
 		if SERVER then
-			selected.dupName = Map:GetDupName()
+			selected.dupName = MR.SV.Map:GetDupName()
 		end
 	end
 
@@ -317,7 +317,7 @@ function Map:Remove(oldMaterial)
 		if element then
 			-- Run the element backup
 			if CLIENT then
-				MR.Map:Set_CL(element.backup)
+				MR.CL.Map:Set(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -325,9 +325,9 @@ function Map:Remove(oldMaterial)
 
 			-- Update the duplicator
 			if SERVER then
-				if IsValid(MR.Duplicator:GetEnt()) then
+				if IsValid(MR.SV.Duplicator:GetEnt()) then
 					if MR.Data.list:Count(selected.list) == 0 then
-						duplicator.ClearEntityModifier(MR.Duplicator:GetEnt(), selected.dupName)
+						duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), selected.dupName)
 					end
 				end
 			end

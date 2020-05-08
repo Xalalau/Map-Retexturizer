@@ -2,19 +2,21 @@
 --- DUPLICATOR
 --------------------------------
 
-local Duplicator = MR.Duplicator
+local Duplicator = {}
+Duplicator.__index = Duplicator
+MR.CL.Duplicator = Duplicator
 
 -- Networking
-net.Receive("Duplicator:SetProgress_CL", function()
-	Duplicator:SetProgress_CL(net.ReadInt(14), net.ReadInt(14), net.ReadBool())
+net.Receive("CL.Duplicator:SetProgress", function()
+	Duplicator:SetProgress(net.ReadInt(14), net.ReadInt(14), net.ReadBool())
 end)
 
-net.Receive("Duplicator:SetErrorProgress_CL", function()
-	Duplicator:SetErrorProgress_CL(net.ReadInt(14), net.ReadString(),  net.ReadBool())
+net.Receive("CL.Duplicator:SetErrorProgress", function()
+	Duplicator:SetErrorProgress(net.ReadInt(14), net.ReadString(),  net.ReadBool())
 end)
 
-net.Receive("Duplicator:ForceStop_CL", function()
-	Duplicator:ForceStop_CL()
+net.Receive("CL.Duplicator:ForceStop", function()
+	Duplicator:ForceStop()
 end)
 
 -- Progress bar hook
@@ -25,7 +27,7 @@ hook.Add("HUDPaint", "MRDupProgress", function()
 end)
 
 -- Update the duplicator progress: client
-function Duplicator:SetProgress_CL(current, total, isBroadcasted)
+function Duplicator:SetProgress(current, total, isBroadcasted)
 	local ply = LocalPlayer()
 
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
@@ -44,7 +46,7 @@ function Duplicator:SetProgress_CL(current, total, isBroadcasted)
 end
 
 -- Print errors in the console
-function Duplicator:SetErrorProgress_CL(count, mat, isBroadcasted)
+function Duplicator:SetErrorProgress(count, mat, isBroadcasted)
 	local ply = LocalPlayer()
 
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
@@ -138,7 +140,7 @@ function Duplicator:RenderProgress()
 end
 
 -- Force to stop the duplicator: client
-function Duplicator:ForceStop_CL()
+function Duplicator:ForceStop()
 	MR.Duplicator:SetStopping(true)
 
 	timer.Create("MRDuplicatorForceStop", 0.25, 1, function()

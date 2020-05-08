@@ -7,7 +7,10 @@
 local mode = "hybrid"
 
 -- Global tool functions
-MR = {}
+MR = {
+	CL = {},
+	SV = {}
+}
 
 -- Load libs
 local function HandleFile(dir, file)
@@ -70,10 +73,10 @@ MR.Displacements:Init()
 MR.Skybox:Init()
 
 if SERVER then
-	MR.Ply:Init()
-	MR.Load:Init()
+	MR.SV.Ply:Init()
+	MR.SV.Load:Init()
 else
 	MR.Materials:Init()
-	MR.Preview:Init()
-	MR.Save:Init()
+	MR.CL.Preview:Init()
+	MR.CL.Save:Init()
 end

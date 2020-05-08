@@ -57,7 +57,7 @@ end)
 -- Detect admin privileges 
 function Ply:IsAdmin(ply)
 	-- fakeHostPly
-	if SERVER and ply == Ply:GetFakeHostPly() then
+	if SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
 		return true
 	end
 
@@ -89,7 +89,7 @@ function Ply:Set(ply)
 	ply.mr = table.Copy(MRPlayer)
 
 	if SERVER then
-		if ply ~= Ply:GetFakeHostPly() then
+		if ply ~= MR.SV.Ply:GetFakeHostPly() then
 			net.Start("Ply:Set")
 			net.Send(ply)
 		end

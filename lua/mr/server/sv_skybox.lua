@@ -2,7 +2,9 @@
 --- MATERIALS (SKYBOX)
 --------------------------------
 
-local Skybox = MR.Skybox
+local Skybox = {}
+Skybox.__index = Skybox
+MR.SV.Skybox = Skybox
 
 local skybox = {
 	-- Name used in duplicator
@@ -10,15 +12,14 @@ local skybox = {
 }
 
 -- Networking
-util.AddNetworkString("Skybox:Set")
-util.AddNetworkString("Skybox:Set_CL")
-util.AddNetworkString("Skybox:Remove")
+util.AddNetworkString("SV.Skybox:Set")
+util.AddNetworkString("SV.Skybox:Remove")
 
-net.Receive("Skybox:Set", function(_, ply)
+net.Receive("SV.Skybox:Set", function(_, ply)
 	Skybox:Set(ply, net.ReadTable())
 end)
 
-net.Receive("Skybox:Remove", function(_, ply)
+net.Receive("SV.Skybox:Remove", function(_, ply)
 	Skybox:Remove(ply)
 end)
 
@@ -63,10 +64,10 @@ function Skybox:Set(ply, data, isBroadcasted)
 			data.oldMaterial = MR.Skybox:GetFilename2()..tostring(i)
 
 			-- Send to
-			net.Start("Map:Set_CL")
+			net.Start("CL.Map:Set")
 				net.WriteTable(data) 
 			-- every player
-			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.Ply:GetFakeHostPly() then
+			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 				net.Broadcast()
 			-- player
 			else
@@ -76,7 +77,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	end
 
 	-- Replicate
-	MR.CVars:Replicate_SV(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
+	MR.SV.CVars:Replicate(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
 
 	return
 end
@@ -84,11 +85,11 @@ end
 -- Remove the skybox
 function Skybox:Remove(ply)
 	-- Replicate
-	MR.CVars:Replicate_SV(ply, "internal_mr_skybox", "", "skybox", "text")
+	MR.SV.CVars:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
 
 	-- Reset the combobox
 	if MR.Skybox:GetCurrentName() ~= "" then
-		net.Start("GUI:ResetSkyboxComboValue")
+		net.Start("CL.GUI:ResetSkyboxComboValue")
 		net.Broadcast()
 	end
 

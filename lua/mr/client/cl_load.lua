@@ -2,16 +2,18 @@
 --- LOAD
 -------------------------------------
 
-local Load = MR.Load
+local Load = {}
+Load.__index = Load
+MR.CL.Load = Load
 
-net.Receive("Load:Delete_CL2", function()
-	Load:Delete_CL2(net.ReadString())
+net.Receive("CL.Load:Delete_Finish", function()
+	Load:Delete_Finish(net.ReadString())
 end)
 
 -- Delete a saved file: client
-function Load:Delete_CL()
+function Load:Delete()
 	-- Get the load name and check if it's no empty
-	local loadName = MR.GUI:GetLoadText():GetSelected()
+	local loadName = MR.CL.GUI:GetLoadText():GetSelected()
 
 	if not loadName or loadName == "" then
 		return
@@ -34,7 +36,7 @@ function Load:Delete_CL()
 	local text = vgui.Create("DLabel", qPanel)
 		text:SetPos(10, 25)
 		text:SetSize(300, 25)
-		text:SetText("Are you sure you want to delete "..MR.GUI:GetLoadText():GetSelected().."?")
+		text:SetText("Are you sure you want to delete "..MR.CL.GUI:GetLoadText():GetSelected().."?")
 
 	local buttonYes = vgui.Create("DButton", qPanel)
 		buttonYes:SetPos(24, 50)
@@ -43,7 +45,7 @@ function Load:Delete_CL()
 		buttonYes.DoClick = function()
 			-- Remove the load on every client
 			qPanel:Close()
-			net.Start("Load:Delete_SV")
+			net.Start("SV.Load:Delete")
 				net.WriteString(loadName)
 			net.SendToServer()
 		end
@@ -58,11 +60,11 @@ function Load:Delete_CL()
 end
 
 -- Delete a saved file: client part 2
-function Load:Delete_CL2(loadName)
+function Load:Delete_Finish(loadName)
 	MR.Load:SetOption(loadName, nil)
-	MR.GUI:GetLoadText():Clear()
+	MR.CL.GUI:GetLoadText():Clear()
 
 	for k,v in pairs(MR.Load:GetList()) do
-		MR.GUI:GetLoadText():AddChoice(k)
+		MR.CL.GUI:GetLoadText():AddChoice(k)
 	end
 end

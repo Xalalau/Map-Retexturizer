@@ -35,10 +35,10 @@ end)
 function Materials:Init()
 	-- Detail init
 	if CLIENT then
-		Materials:GetDetailList()["Concrete"] = MR.Materials:Create("detail/noise_detail_01")
-		Materials:GetDetailList()["Metal"] = MR.Materials:Create("detail/metal_detail_01")
-		Materials:GetDetailList()["Plaster"] = MR.Materials:Create("detail/plaster_detail_01")
-		Materials:GetDetailList()["Rock"] = MR.Materials:Create("detail/rock_detail_01")
+		Materials:GetDetailList()["Concrete"] = MR.CL.Materials:Create("detail/noise_detail_01")
+		Materials:GetDetailList()["Metal"] = MR.CL.Materials:Create("detail/metal_detail_01")
+		Materials:GetDetailList()["Plaster"] = MR.CL.Materials:Create("detail/plaster_detail_01")
+		Materials:GetDetailList()["Rock"] = MR.CL.Materials:Create("detail/rock_detail_01")
 	elseif SERVER then
 		Materials:GetDetailList()["Concrete"] = "detail/noise_detail_01"
 		Materials:GetDetailList()["Metal"] = "detail/metal_detail_01"
@@ -108,7 +108,7 @@ function Materials:IsValid(material)
 
 	-- Process partially valid materials (clientside and serverside)
 	if CLIENT then
-		return MR.Materials:SetValid_CL(material)
+		return MR.CL.Materials:SetValid(material)
 	end
 
 	return true
@@ -367,7 +367,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 	-- Set the duplicator entity
 	if SERVER then
-		MR.Duplicator:SetEnt()
+		MR.SV.Duplicator:SetEnt()
 	end
 
 	return true
@@ -382,7 +382,7 @@ function Materials:SetFinalSteps()
 			MR.Base:SetInitialized()
 
 			-- Register the current save version on the duplicator
-			duplicator.StoreEntityModifier(MR.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.Save:GetCurrentVersion() } )
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.SV.Save:GetCurrentVersion() } )
 		end
 
 		-- Auto save
@@ -390,7 +390,7 @@ function Materials:SetFinalSteps()
 			if not timer.Exists("MRAutoSave") then
 				timer.Create("MRAutoSave", 60, 1, function()
 					if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
-						MR.Save:Set_SV(ply, MR.Base:GetAutoSaveName())
+						MR.SV.Save:Set(ply, MR.Base:GetAutoSaveName())
 						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 					end
 				end)

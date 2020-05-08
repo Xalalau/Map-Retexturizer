@@ -220,8 +220,8 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
 		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
 
-		--file.Rename(pathCurrent, pathBackup)
-		--file.Write(pathCurrent, util.TableToJSON(savedTable))
+		file.Rename(pathCurrent, pathBackup)
+		file.Write(pathCurrent, util.TableToJSON(savedTable))
 	end
 
 	return savedTable

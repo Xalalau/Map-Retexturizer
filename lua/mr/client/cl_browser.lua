@@ -87,8 +87,6 @@ function Browser:Run()
 			y = topBar + border
 		}
 
-
-
 		local sendButtonInfo = {
 			width = materialBoxSize/3 - border,
 			height = buttonsHeight,

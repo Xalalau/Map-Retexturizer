@@ -7,9 +7,14 @@ local Materials = MR.Materials
 -- Networking
 util.AddNetworkString("Materials:SetValid")
 util.AddNetworkString("Materials:RemoveAll")
+util.AddNetworkString("Materials:SetAll")
 
 net.Receive("Materials:RemoveAll", function(_, ply)
 	 Materials:RemoveAll(ply)
+end)
+
+net.Receive("Materials:SetAll", function(_,ply)
+	Materials:SetAll(ply)
 end)
 
 -- Change all the materials to a single one
@@ -23,7 +28,7 @@ function Materials:SetAll(ply)
 		type = "SetAll"
 	}
 
-	if not Materials:SetFirstSteps(ply, isBroadcasted, check) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		return
 	end
 
@@ -102,7 +107,7 @@ function Materials:SetAll(ply)
 
 
 		-- General final steps
-		Materials:SetFinalSteps()
+		MR.Materials:SetFinalSteps()
 	end)
 end
 

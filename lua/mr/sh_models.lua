@@ -72,7 +72,7 @@ function Models:GetData(ent)
 
 		-- Revert the newName if there is data
 		if oldData and oldData.newMaterial ~= "" then
-			oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
+			oldData.newMaterial = Models:RevertID(oldData.newMaterial)
 		end
 	end
 
@@ -240,7 +240,7 @@ function Models:Set(ply, data, isBroadcasted)
 			undo.SetPlayer(ply)
 			undo.AddFunction(function(tab, ent)
 				if IsValid(ent) and ent.mr then
-					MR.Models:Remove(ent)
+					Models:Remove(ent)
 				end
 			end, data.ent)
 			undo.SetCustomUndoText("Undone Material")

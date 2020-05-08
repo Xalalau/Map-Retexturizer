@@ -139,9 +139,9 @@ end
 
 -- Force to stop the duplicator: client
 function Duplicator:ForceStop_CL()
-	Duplicator:SetStopping(true)
+	MR.Duplicator:SetStopping(true)
 
 	timer.Create("MRDuplicatorForceStop", 0.25, 1, function()
-		Duplicator:SetStopping(false)
+		MR.Duplicator:SetStopping(false)
 	end)
 end

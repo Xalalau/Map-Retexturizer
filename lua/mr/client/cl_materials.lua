@@ -34,7 +34,7 @@ function Materials:SetValid_CL(material)
 	end
 
 	-- Store the result
-	Materials:SetValid(material, result)
+	MR.Materials:SetValid(material, result)
 
 	net.Start("Materials:SetValid")
 		net.WriteString(material)

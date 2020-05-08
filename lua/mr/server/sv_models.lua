@@ -26,7 +26,7 @@ function Models:RemoveAll(ply)
 	-- Cleanup
 	for k,v in pairs(ents.GetAll()) do
 		if IsValid(v) then
-			Models:Remove(v)
+			MR.Models:Remove(v)
 		end
 	end
 end

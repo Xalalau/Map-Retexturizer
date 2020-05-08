@@ -23,7 +23,7 @@ end
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
-	return SERVER and Duplicator:GetDupRunning() or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or nil
+	return SERVER and MR.Duplicator:GetDupRunning() or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or nil
 end
 
 -- Set duplicator stopping state
@@ -55,7 +55,7 @@ local function RecreateTable(ply, ent, savedTable)
 			-- Index the format version
 			savedTable.savingFormat = recreateTableSaveFormat
 
-			Duplicator:RecreateTable(ply, ent, savedTable)
+			MR.Duplicator:RecreateTable(ply, ent, savedTable)
 		end)
 	end
 end

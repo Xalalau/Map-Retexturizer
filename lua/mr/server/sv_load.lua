@@ -47,7 +47,7 @@ function Load:Init()
 	local files = file.Find(MR.Base:GetSaveFolder().."*", "Data")
 
 	for k,v in pairs(files) do
-		Load:SetOption(string.lower(v):sub(1, -5), MR.Base:GetSaveFolder()..string.lower(v):sub(1, -5)..".txt") -- lowercase to adjust old save names
+		MR.Load:SetOption(string.lower(v):sub(1, -5), MR.Base:GetSaveFolder()..string.lower(v):sub(1, -5)..".txt") -- lowercase to adjust old save names
 	end
 
 	-- Set the autoLoad command
@@ -78,7 +78,7 @@ function Load:Start(ply, loadName)
 	end
 
 	-- Get the load file
-	local loadFile = Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"
+	local loadFile = MR.Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"
 
 	-- Check if it exists
 	if !file.Exists(loadFile, "Data") then
@@ -102,7 +102,7 @@ end
 function Load:PlayerJoined(ply)
 	-- Set the player load list
 	net.Start("Load:SetList")
-		net.WriteTable(Load:GetList())
+		net.WriteTable(MR.Load:GetList())
 	net.Send(ply)
 end
 
@@ -143,7 +143,7 @@ function Load:Delete_SV(ply, loadName)
 		return false
 	end
 
-	local loadFile = Load:GetOption(loadName)
+	local loadFile = MR.Load:GetOption(loadName)
 
 	-- Check if the file exists
 	if loadFile == nil then
@@ -151,7 +151,7 @@ function Load:Delete_SV(ply, loadName)
 	end
 
 	-- Remove the load entry
-	Load:SetOption(loadName, nil)
+	MR.Load:SetOption(loadName, nil)
 
 	-- Unset autoload if needed
 	if GetConVar("internal_mr_autoload"):GetString() == loadName then
@@ -177,7 +177,7 @@ function Load:SetAuto(ply, loadName)
 	end
 
 	-- Check if the load name is valid
-	if not loadName or not Load:GetOption(loadName) and loadName ~= "" then
+	if not loadName or not MR.Load:GetOption(loadName) and loadName ~= "" then
 		return false
 	end
 

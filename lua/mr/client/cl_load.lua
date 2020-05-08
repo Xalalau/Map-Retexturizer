@@ -59,10 +59,10 @@ end
 
 -- Delete a saved file: client part 2
 function Load:Delete_CL2(loadName)
-	Load:SetOption(loadName, nil)
+	MR.Load:SetOption(loadName, nil)
 	MR.GUI:GetLoadText():Clear()
 
-	for k,v in pairs(Load:GetList()) do
+	for k,v in pairs(MR.Load:GetList()) do
 		MR.GUI:GetLoadText():AddChoice(k)
 	end
 end

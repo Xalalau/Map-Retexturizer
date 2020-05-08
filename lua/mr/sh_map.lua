@@ -128,7 +128,7 @@ function Map:Set(ply, data, isBroadcasted)
 		selected.limit = Map:GetLimit()
 		selected.filename = Map:GetFilename()
 		if SERVER then
-			selected.dupName = Map:GetDupName()
+			selected.dupName = MR.Map:GetDupName()
 		end
 	end
 
@@ -184,7 +184,7 @@ function Map:Set(ply, data, isBroadcasted)
 
 			-- Run the element backup
 			if CLIENT then
-				Map:Set_CL(element.backup)
+				MR.Map:Set_CL(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -237,7 +237,7 @@ function Map:Set(ply, data, isBroadcasted)
 				MR.Displacements:InitHack()
 			end
 
-			Map:Set_CL(data)
+			MR.Map:Set_CL(data)
 		end
 
 		-- Set the duplicator
@@ -271,7 +271,7 @@ function Map:Set(ply, data, isBroadcasted)
 							MR.Skybox:Remove(ply)
 						-- map/displacement
 						else
-							MR.Map:Remove(data.oldMaterial)
+							Map:Remove(data.oldMaterial)
 						end
 					end, data.oldMaterial)
 					undo.SetCustomUndoText("Undone Material")
@@ -317,7 +317,7 @@ function Map:Remove(oldMaterial)
 		if element then
 			-- Run the element backup
 			if CLIENT then
-				Map:Set_CL(element.backup)
+				MR.Map:Set_CL(element.backup)
 			end
 
 			-- Change the state of the element to disabled

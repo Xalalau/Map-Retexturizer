@@ -35,10 +35,10 @@ end)
 function Materials:Init()
 	-- Detail init
 	if CLIENT then
-		Materials:GetDetailList()["Concrete"] = Materials:Create("detail/noise_detail_01")
-		Materials:GetDetailList()["Metal"] = Materials:Create("detail/metal_detail_01")
-		Materials:GetDetailList()["Plaster"] = Materials:Create("detail/plaster_detail_01")
-		Materials:GetDetailList()["Rock"] = Materials:Create("detail/rock_detail_01")
+		Materials:GetDetailList()["Concrete"] = MR.Materials:Create("detail/noise_detail_01")
+		Materials:GetDetailList()["Metal"] = MR.Materials:Create("detail/metal_detail_01")
+		Materials:GetDetailList()["Plaster"] = MR.Materials:Create("detail/plaster_detail_01")
+		Materials:GetDetailList()["Rock"] = MR.Materials:Create("detail/rock_detail_01")
 	elseif SERVER then
 		Materials:GetDetailList()["Concrete"] = "detail/noise_detail_01"
 		Materials:GetDetailList()["Metal"] = "detail/metal_detail_01"
@@ -108,7 +108,7 @@ function Materials:IsValid(material)
 
 	-- Process partially valid materials (clientside and serverside)
 	if CLIENT then
-		return Materials:SetValid_CL(material)
+		return MR.Materials:SetValid_CL(material)
 	end
 
 	return true
@@ -157,7 +157,7 @@ function Materials:GetDetail(material)
 	local detail = Material(material):GetString("$detail")
 
 	if material then
-		for k,v in pairs(MR.Materials:GetDetailList()) do
+		for k,v in pairs(Materials:GetDetailList()) do
 			if not isbool(v) then
 				if v:GetTexture("$basetexture"):GetName() == detail then
 					detail = k
@@ -167,7 +167,7 @@ function Materials:GetDetail(material)
 			end
 		end
 
-		if not MR.Materials:GetDetailList()[detail] then
+		if not Materials:GetDetailList()[detail] then
 			detail = nil
 		end
 	end

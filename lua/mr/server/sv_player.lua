@@ -16,7 +16,7 @@ util.AddNetworkString("Ply:SetDecalMode")
 
 -- Set the fake player
 function Ply:Init()
-	Ply:Set(fakeHostPly)
+	MR.Ply:Set(fakeHostPly)
 end
 
 function Ply:GetFakeHostPly()

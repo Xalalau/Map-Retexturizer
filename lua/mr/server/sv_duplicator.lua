@@ -443,7 +443,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	end
 
 	-- If the entry exists and duplicator is not stopping...
-	if savedTable[position] and not Duplicator:IsStopping() then
+	if savedTable[position] and not MR.Duplicator:IsStopping() then
 		-- Check if we have a valid material
 		local newMaterial = savedTable[position].newMaterial
 		local newMaterial2 = savedTable[position].newMaterial2
@@ -518,11 +518,11 @@ end
 
 -- Force to stop the duplicator: server
 function Duplicator:ForceStop_SV(isGModLoadStarting)
-	if Duplicator:IsRunning() or isGModLoadStarting then
-		Duplicator:SetStopping(true)
+	if MR.Duplicator:IsRunning() or isGModLoadStarting then
+		MR.Duplicator:SetStopping(true)
 
 		timer.Create("MRDuplicatorForceStop", 0.25, 1, function()
-			Duplicator:SetStopping(false)
+			MR.Duplicator:SetStopping(false)
 		end)
 
 		net.Start("Duplicator:ForceStop_CL")
@@ -536,7 +536,7 @@ end
 
 -- Finish the duplication process
 function Duplicator:Finish(ply, isGModLoadOverriding)
-	if Duplicator:IsStopping() or MR.Ply:GetDupCurrent(ply) + MR.Ply:GetDupErrorsN(ply) >= MR.Ply:GetDupTotal(ply) then
+	if MR.Duplicator:IsStopping() or MR.Ply:GetDupCurrent(ply) + MR.Ply:GetDupErrorsN(ply) >= MR.Ply:GetDupTotal(ply) then
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()

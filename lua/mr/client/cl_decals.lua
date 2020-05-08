@@ -33,7 +33,7 @@ function Decals:Set_CL(data, isBroadcasted)
 	end
 
 	-- Create the material
-	local decalMaterial = Decals:GetList()[data.newMaterial.."2"]
+	local decalMaterial = MR.Decals:GetList()[data.newMaterial.."2"]
 
 	if not decalMaterial then
 		decalMaterial = MR.Materials:Create(data.newMaterial.."2", "LightmappedGeneric", data.newMaterial)
@@ -47,5 +47,5 @@ function Decals:Set_CL(data, isBroadcasted)
 	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scalex, data.scaley)
 
 	-- Index the Data
-	MR.Data.list:InsertElement(Decals:GetList(), data)
+	MR.Data.list:InsertElement(MR.Decals:GetList(), data)
 end

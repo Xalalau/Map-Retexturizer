@@ -33,19 +33,19 @@ function Skybox:Set(ply, data, isBroadcasted)
 	local i
 
 	-- It's the default map sky or it's empty
-	if data.newMaterial == Skybox:GetName() or
-		Skybox:RemoveSuffix(data.newMaterial) == Skybox:GetName() or
+	if data.newMaterial == MR.Skybox:GetName() or
+		MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
 		data.newMaterial == "" then
 
 		Skybox:Remove(ply)
 		return
 	-- It's a HL2 sky (Render box on clientside)
-	elseif Skybox:GetHL2List()[data.newMaterial] then
-		suffixes = Skybox:GetSuffixes()
+	elseif MR.Skybox:GetHL2List()[data.newMaterial] then
+		suffixes = MR.Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox (Render box on clientside)
-	elseif MR.Materials:IsFullSkybox(Skybox:RemoveSuffix(data.newMaterial)) then
-		data.newMaterial = Skybox:RemoveSuffix(data.newMaterial)
-		suffixes = Skybox:GetSuffixes()
+	elseif MR.Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(data.newMaterial)) then
+		data.newMaterial = MR.Skybox:RemoveSuffix(data.newMaterial)
+		suffixes = MR.Skybox:GetSuffixes()
 	-- It's an invalid material
 	elseif not MR.Materials:IsValid(data.newMaterial) then
 		return
@@ -54,13 +54,13 @@ function Skybox:Set(ply, data, isBroadcasted)
 
 	for i = 1,6 do
 		-- Backup information (for all maps) + change the sky (for maps without env_skypainted)
-		data.oldMaterial = Skybox:GetName()..Skybox:GetSuffixes()[i]
+		data.oldMaterial = MR.Skybox:GetName()..MR.Skybox:GetSuffixes()[i]
 
 		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
 
 		-- Change the auxiliar sky material (for maps with env_skypainted)
-		if Skybox:IsPainted() then
-			data.oldMaterial = Skybox:GetFilename2()..tostring(i)
+		if MR.Skybox:IsPainted() then
+			data.oldMaterial = MR.Skybox:GetFilename2()..tostring(i)
 
 			-- Send to
 			net.Start("Map:Set_CL")
@@ -87,12 +87,12 @@ function Skybox:Remove(ply)
 	MR.CVars:Replicate_SV(ply, "internal_mr_skybox", "", "skybox", "text")
 
 	-- Reset the combobox
-	if Skybox:GetCurrentName() ~= "" then
+	if MR.Skybox:GetCurrentName() ~= "" then
 		net.Start("GUI:ResetSkyboxComboValue")
 		net.Broadcast()
 	end
 
-	for k,v in pairs(Skybox:GetList()) do
+	for k,v in pairs(MR.Skybox:GetList()) do
 		MR.Map:Remove(v.oldMaterial)
 	end
 end

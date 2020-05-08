@@ -46,7 +46,7 @@ function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2, data
 	end
 
 	if newMaterial or newMaterial2 then
-		for k,v in pairs(Displacements:GetDetected()) do 
+		for k,v in pairs(MR.Displacements:GetDetected()) do 
 			if k == displacement then
 				if newMaterial and v[1] == newMaterial then
 					newMaterial = nil
@@ -88,8 +88,8 @@ function Displacements:RemoveAll(ply)
 	net.Broadcast()
 
 	-- Remove
-	if MR.Data.list:Count(Displacements:GetList()) > 0 then
-		for k,v in pairs(Displacements:GetList()) do
+	if MR.Data.list:Count(MR.Displacements:GetList()) > 0 then
+		for k,v in pairs(MR.Displacements:GetList()) do
 			if MR.Data.list:IsActive(v) then
 				MR.Map:Remove(v.oldMaterial)
 			end

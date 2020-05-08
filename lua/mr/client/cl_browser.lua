@@ -142,7 +142,7 @@ function Browser:Run()
 			Send:SetPos(sendButtonInfo.x, sendButtonInfo.y)
 			Send:SetText("Tool Gun")
 			Send.DoClick = function()
-				RunConsoleCommand("internal_mr_material", browser.SelectedMaterial:GetText())
+				MR.Materials:SetNew(LocalPlayer(), browser.SelectedMaterial:GetText())
 			end
 
 		-- Copy to clipboard button
@@ -360,7 +360,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 						-- Use the material with the tool gun (MOUSE_RIGHT)
 						elseif input.IsMouseDown(108) then
 							pressed = 108
-							RunConsoleCommand("internal_mr_material", arq)
+							MR.Materials:SetNew(LocalPlayer(), arq)
 							SetEffect(color.middle)
 							PrintOverlayMessage(14, "Tool gun")
 						-- Copy material path to clipboard (MOUSE_MIDDLE)

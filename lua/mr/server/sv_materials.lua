@@ -15,7 +15,7 @@ end)
 -- Change all the materials to a single one
 function Materials:SetAll(ply)
 	-- Get the material
-	local material = ply:GetInfo("internal_mr_material")
+	local material = MR.Materials:GetNew(ply)
 
 	-- General first steps
 	local check = {
@@ -27,7 +27,7 @@ function Materials:SetAll(ply)
 	end
 
 	-- Adjustments for skybox materials
-	if MR.Skybox:IsFullSkybox(material) then
+	if MR.Materials:IsFullSkybox(material) then
 		material = MR.Skybox:SetSuffix(material)
 	end
 
@@ -108,7 +108,7 @@ end
 -- Clean up everything
 function Materials:RemoveAll(ply)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 

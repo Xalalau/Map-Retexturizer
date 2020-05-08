@@ -78,7 +78,7 @@ end
 
 function TOOL_BasicChecks(ply, tr)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 
@@ -111,7 +111,7 @@ function TOOL_BasicChecks(ply, tr)
 	end
 
 	--Check if we can interact with the skybox
-	if MR.Skybox:IsSkybox(material) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
+	if MR.Materials:IsSkybox(material) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
 			if not MR.Ply:GetDecalMode(ply) then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
@@ -145,7 +145,7 @@ end
 
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = MR.Materials:GetCurrentData(tr)
+	local oldData = MR.Materials:GetData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -154,7 +154,7 @@ end
 	end
 
 	-- Don't apply bad materials
-	if not MR.Materials:IsValid(newData.newMaterial) and not MR.Skybox:IsSkybox(newData.newMaterial) then
+	if not MR.Materials:IsValid(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -163,7 +163,7 @@ end
 	end
 
 	-- Skybox...
-	if MR.Skybox:IsSkybox(newData.oldMaterial) then
+	if MR.Materials:IsSkybox(newData.oldMaterial) then
 		-- Adjustments
 		newData.oldMaterial = oldData.oldMaterial
 
@@ -192,7 +192,7 @@ end
 	-- Set the material
 	timer.Create("MRLeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 		-- Skybox
-		if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 			MR.Skybox:Set(ply, newData)
 		-- model
 		elseif IsValid(tr.Entity) then
@@ -217,7 +217,7 @@ function TOOL:RightClick(tr)
 
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = MR.Materials:GetCurrentData(tr)
+	local oldData = MR.Materials:GetData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -226,7 +226,7 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Adjustment for skybox materials
-	if MR.Skybox:IsSkybox(newData.oldMaterial) then
+	if MR.Materials:IsSkybox(newData.oldMaterial) then
 		newData.oldMaterial = oldData.oldMaterial
 
 		if newData.oldMaterial == MR.Skybox:GetGenericName() and
@@ -246,7 +246,7 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Copy the material
-	ply:ConCommand("internal_mr_material "..MR.Materials:GetCurrent(tr))
+	MR.Materials:SetNew(ply, MR.Materials:GetCurrent(tr))
 
 	-- Set the cvars to data values or to default values
 	MR.CVars:SetPropertiesToData(ply, oldData)
@@ -271,11 +271,11 @@ function TOOL:Reload(tr)
 	end
 
 	-- Normal materials cleanup
-	if MR.Materials:GetCurrentData(tr) then
+	if MR.Materials:GetData(tr) then
 		if SERVER then
 			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- Skybox
-				if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+				if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 					MR.Skybox:Remove(ply)
 				-- model
 				elseif IsValid(tr.Entity) then
@@ -503,14 +503,14 @@ function TOOL.BuildCPanel(CPanel)
 					end)
 
 					-- Admin only
-					if not MR.Utils:PlyIsAdmin(ply) then
+					if not MR.Ply:IsAdmin(ply) then
 						MR.GUI:Get("skybox", "text"):SetValue(GetConVar("internal_mr_skybox"):GetString())
 
 						return
 					end
 
-					if MR.Materials:IsValid(value) or MR.Skybox:IsFullSkybox(value) or value == "" then
-						if MR.Skybox:IsFullSkybox(value) then
+					if MR.Materials:IsValid(value) or MR.Materials:IsFullSkybox(value) or value == "" then
+						if MR.Materials:IsFullSkybox(value) then
 							value = MR.Skybox:SetSuffix(value)
 						end
 
@@ -524,7 +524,7 @@ function TOOL.BuildCPanel(CPanel)
 			element = MR.GUI:GetSkyboxCombo()
 				function element:OnSelect(index, value, data)
 					-- Admin only
-					if not MR.Utils:PlyIsAdmin(ply) then
+					if not MR.Ply:IsAdmin(ply) then
 						return false
 					end
 
@@ -552,7 +552,7 @@ function TOOL.BuildCPanel(CPanel)
 
 							return
 						-- Admin only: reset the option if it's not being synced and return
-						elseif not MR.Utils:PlyIsAdmin(ply) then
+						elseif not MR.Ply:IsAdmin(ply) then
 							MR.GUI:Get("skybox", "box"):SetChecked(GetConVar("internal_mr_skybox_toolgun"):GetBool())
 
 							return
@@ -596,7 +596,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not MR.Utils:PlyIsAdmin(ply) then
+					elseif not MR.Ply:IsAdmin(ply) then
 						MR.GUI:Get("save", "box"):SetChecked(GetConVar("internal_mr_autosave"):GetBool())
 
 						return
@@ -669,7 +669,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not MR.Utils:PlyIsAdmin(ply) then
+					elseif not MR.Ply:IsAdmin(ply) then
 						MR.GUI:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("internal_mr_delay"):GetFloat()))
 
 						return
@@ -701,7 +701,7 @@ function TOOL.BuildCPanel(CPanel)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
-					elseif not MR.Utils:PlyIsAdmin(ply) then
+					elseif not MR.Ply:IsAdmin(ply) then
 						MR.GUI:Get("load", "box"):SetChecked(GetConVar("internal_mr_duplicator_cleanup"):GetBool())
 
 						return

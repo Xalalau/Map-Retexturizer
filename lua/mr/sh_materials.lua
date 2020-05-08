@@ -47,6 +47,44 @@ function Materials:Init()
 	end
 end
 
+-- Check if a given material path is a displacement
+function Materials:IsDisplacement(material)
+	for k,v in pairs(MR.Displacements:GetDetected()) do
+		if k == material then
+			return true
+		end
+	end
+
+	return false
+end
+
+-- Is it the skybox material?
+function Materials:IsSkybox(material)
+	if material and (
+			material == MR.Skybox:GetGenericName() or
+			Materials:IsFullSkybox(material) or
+			Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
+	   ) then
+
+		return true
+	end
+
+	return false
+end
+
+-- Check if the skybox is a valid 6 side setup
+function Materials:IsFullSkybox(material)
+	if Materials:IsValid(MR.Skybox:SetSuffix(material)) then
+		if not Material(MR.Skybox:SetSuffix(material)):IsError() then
+			return true
+		else
+			return false
+		end
+	else
+		return false
+	end
+end
+
 -- Check if a given material path is valid
 function Materials:IsValid(material)
 	-- Empty
@@ -81,6 +119,16 @@ function Materials:GetValid(material)
 	return materials.valid[material]
 end
 
+-- Get the new material from mr_material cvar
+function Materials:GetNew(ply)
+	return ply:GetInfo("internal_mr_material")
+end
+
+-- Set the new material on mr_material cvar
+function Materials:SetNew(ply, value)
+	ply:ConCommand("internal_mr_material "..value)
+end
+
 -- Get the original material full path
 function Materials:GetOriginal(tr)
 	return MR.Models:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
@@ -94,36 +142,9 @@ function Materials:GetCurrent(tr)
 			""
 end
 
--- Get the new material from mr_material cvar
-function Materials:GetNew(ply)
-	return ply:GetInfo("internal_mr_material")
-end
-
--- Get the current data from a trace
-function Materials:GetCurrentData(tr)
-	local oldData
-
-	-- Model
-	if IsValid(tr.Entity) then
-		oldData = table.Copy(MR.Models:GetNew(tr.Entity))
-
-		-- Revert the newName if there is data
-		if oldData and oldData.newMaterial ~= "" then
-			oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
-		end
-	-- Skybox or map material
-	else
-		local dataList = MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()
-
-		if dataList then
-			local oldMaterial = MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)
-			local aux = MR.Data.list:GetElement(dataList, oldMaterial)
-
-			oldData = table.Copy(aux)
-		end
-	end
-
-	return oldData
+-- Get the current data
+function Materials:GetData(tr)
+	return MR.Models:GetData(tr.Entity) or MR.Map:GetData(tr)
 end
 
 -- Get the details list
@@ -132,7 +153,7 @@ function Materials:GetDetailList()
 end
 
 -- Get a material detail name
-function Materials:GetDetailFromMaterial(material)
+function Materials:GetDetail(material)
 	local detail = Material(material):GetString("$detail")
 
 	if material then
@@ -297,7 +318,7 @@ end
 function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	-- Admin only
 	if SERVER then
-		if not MR.Utils:PlyIsAdmin(ply) then
+		if not MR.Ply:IsAdmin(ply) then
 			return false
 		end
 	end
@@ -316,7 +337,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 	if check then
 		-- Don't apply bad materials
-		if check.material and not Materials:IsValid(check.material) and not MR.Skybox:IsSkybox(check.material) then
+		if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
 			print("[Map Retexturizer] Bad material blocked.")
 
 			return false

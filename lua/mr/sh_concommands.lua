@@ -60,7 +60,7 @@ concommand.Add("mr_admin", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if not MR.Utils:PlyIsAdmin(player.GetAll()[tonumber(plyIndex)]) then
+	if not MR.Ply:IsAdmin(player.GetAll()[tonumber(plyIndex)]) then
 		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
 
 		return

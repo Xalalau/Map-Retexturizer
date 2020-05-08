@@ -26,7 +26,7 @@ end)
 -- field2 = second field name from GUI element
 function CVars:Replicate_SV(ply, command, value, field1, field2)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 

@@ -33,17 +33,6 @@ net.Receive("Map:Remove", function()
 	Map:Remove(net.ReadString())
 end)
 
--- Check if a given material path is a displacement
-function Map:IsDisplacement(material)
-	for k,v in pairs(MR.Displacements:GetDetected()) do
-		if k == material then
-			return true
-		end
-	end
-
-	return false
-end
-
 -- Get map modifications
 function Map:GetList()
 	return map.list
@@ -73,7 +62,7 @@ function Map:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local selected = {}
 
-		if MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 			selected.list = MR.Skybox:GetList()
 			selected.oldMaterial = MR.Skybox:GetValidName()
 		else
@@ -97,12 +86,27 @@ function Map:GetCurrent(tr)
 	return nil
 end
 
+-- Get the current data
+function Map:GetData(tr)
+	local oldData
+	local dataList = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()
+
+	if dataList then
+		local oldMaterial = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)
+		local aux = MR.Data.list:GetElement(dataList, oldMaterial)
+
+		oldData = table.Copy(aux)
+	end
+
+	return oldData
+end
+
 -- Set map material
 function Map:Set(ply, data, isBroadcasted)
 	-- Select the correct type
 	local selected = {}
 
-	if MR.Map:IsDisplacement(data.oldMaterial) then
+	if MR.Materials:IsDisplacement(data.oldMaterial) then
 		selected.isDisplacement = true
 		selected.list = MR.Displacements:GetList()
 		selected.limit = MR.Displacements:GetLimit()
@@ -111,7 +115,7 @@ function Map:Set(ply, data, isBroadcasted)
 		if SERVER then
 			selected.dupName = MR.Displacements:GetDupName()
 		end
-	elseif MR.Skybox:IsSkybox(data.oldMaterial) then	
+	elseif MR.Materials:IsSkybox(data.oldMaterial) then	
 		selected.isSkybox = true
 		selected.list = MR.Skybox:GetList()
 		selected.limit = MR.Skybox:GetLimit()
@@ -246,7 +250,7 @@ function Map:Set(ply, data, isBroadcasted)
 			-- Only allow 1 skybox undo (otherwise it'll set 6)
 			local create = true
 
-			if MR.Skybox:IsSkybox(data.oldMaterial) then
+			if MR.Materials:IsSkybox(data.oldMaterial) then
 				if not (data.oldMaterial == MR.Skybox:SetSuffix(MR.Skybox:RemoveSuffix(data.oldMaterial))) then
 					create = false
 				end
@@ -257,7 +261,7 @@ function Map:Set(ply, data, isBroadcasted)
 					undo.SetPlayer(ply)
 					undo.AddFunction(function(tab, oldMaterial)
 						-- Skybox
-						if MR.Skybox:IsSkybox(oldMaterial) then
+						if MR.Materials:IsSkybox(oldMaterial) then
 							MR.Skybox:Remove(ply)
 						-- map/displacement
 						else
@@ -283,12 +287,12 @@ function Map:Remove(oldMaterial)
 	-- Select the correct type
 	local selected = {}
 
-	if MR.Map:IsDisplacement(oldMaterial) then
+	if MR.Materials:IsDisplacement(oldMaterial) then
 		selected.list = MR.Displacements:GetList()
 		if SERVER then
 			selected.dupName = MR.Displacements:GetDupName()
 		end
-	elseif MR.Skybox:IsSkybox(oldMaterial) then
+	elseif MR.Materials:IsSkybox(oldMaterial) then
 		selected.list = MR.Skybox:GetList()
 		if SERVER then
 			selected.dupName = MR.Skybox:GetDupName()

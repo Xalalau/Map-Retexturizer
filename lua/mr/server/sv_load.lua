@@ -135,7 +135,7 @@ end
 -- Delete a saved file: server
 function Load:Delete_SV(ply, loadName)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 
@@ -168,7 +168,7 @@ end
 -- Set an auto load for the map
 function Load:SetAuto(ply, loadName)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 

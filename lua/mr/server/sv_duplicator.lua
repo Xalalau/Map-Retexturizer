@@ -7,8 +7,12 @@ local Duplicator = MR.Duplicator
 local dup = {
 	-- Holds the name of a loading or 
 	running = nil,
-	-- Workaround to duplicate map and decal materials
-	entity = nil,
+	entity = { 
+		-- Workaround to duplicate map and decal materials
+		object = nil,
+		-- Entity model
+		model = "models/props_phx/cannonball_solid.mdl"
+	},
 	-- Special aditive delay for models
 	models = {
 		delay = 0.3,
@@ -49,7 +53,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	end
 
 	-- Models
-	if ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
+	if ent:GetModel() ~= dup.entity.model then
 		-- Set the aditive delay time
 		dup.models.delay = dup.models.delay + 0.05 -- It's initialized as 0.3
 
@@ -132,7 +136,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 
 			savedTable = {}
 
-			if MR.Map:IsDisplacement(aux[1].oldMaterial) then
+			if MR.Materials:IsDisplacement(aux[1].oldMaterial) then
 				savedTable.displacements = aux
 			else
 				savedTable.map = aux
@@ -290,7 +294,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 			local newList = {}
 
 			for k,v in pairs(ents.GetAll()) do
-				if MR.Models:GetNew(v) then
+				if MR.Models:GetData(v) then
 					table.insert(newList, v)
 				end
 			end
@@ -375,26 +379,26 @@ end
 function Duplicator:SetEnt(ent)
 	-- Hide/Disable our entity after a duplicator
 	if IsValid(ent) and ent:IsSolid() then
-		dup.entity = ent
-		dup.entity:SetNoDraw(true)				
-		dup.entity:SetSolid(0)
-		dup.entity:PhysicsInitStatic(SOLID_NONE)
+		dup.entity.object = ent
+		dup.entity.object:SetNoDraw(true)				
+		dup.entity.object:SetSolid(0)
+		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
 	-- Create a new entity if we don't have one yet
-	elseif not IsValid(dup.entity) then
-		dup.entity = ents.Create("prop_physics")
-		dup.entity:SetModel("models/props_phx/cannonball_solid.mdl")
-		dup.entity:SetPos(Vector(0, 0, 0))
-		dup.entity:SetNoDraw(true)				
-		dup.entity:Spawn()
-		dup.entity:SetSolid(0)
-		dup.entity:PhysicsInitStatic(SOLID_NONE)
-		dup.entity:SetName("MRDup")
+	elseif not IsValid(dup.entity.object) then
+		dup.entity.object = ents.Create("prop_physics")
+		dup.entity.object:SetModel(dup.entity.model)
+		dup.entity.object:SetPos(Vector(0, 0, 0))
+		dup.entity.object:SetNoDraw(true)				
+		dup.entity.object:Spawn()
+		dup.entity.object:SetSolid(0)
+		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
+		dup.entity.object:SetName("MRDup")
 	end
 end
 
 -- Get the duplicator entity
 function Duplicator:GetEnt()
-	return dup.entity
+	return dup.entity.object
 end
 
 -- Update the duplicator progress: server
@@ -434,7 +438,7 @@ end
 -- Load map materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return
 	end
 
@@ -449,7 +453,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 
 		-- Frist material
 		if newMaterial then
-			if MR.Materials:IsValid(newMaterial) or MR.Skybox:IsSkybox(newMaterial) then
+			if MR.Materials:IsValid(newMaterial) or MR.Materials:IsSkybox(newMaterial) then
 				isError = false
 			else
 				msg = "Invalid $basetexture"..oldMaterial

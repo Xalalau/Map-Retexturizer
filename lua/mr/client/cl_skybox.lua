@@ -24,7 +24,7 @@ function Skybox:Render()
 	elseif Skybox:GetHL2List()[newMaterial] then
 		suffixes = Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox (Render box on clientside)
-	elseif Skybox:IsFullSkybox(Skybox:RemoveSuffix(newMaterial)) then
+	elseif MR.Materials:IsFullSkybox(Skybox:RemoveSuffix(newMaterial)) then
 		newMaterial = Skybox:RemoveSuffix(newMaterial)
 		suffixes = Skybox:GetSuffixes()
 	-- It's an invalid material

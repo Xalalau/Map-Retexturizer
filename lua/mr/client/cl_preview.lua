@@ -53,7 +53,7 @@ function Preview:Render()
 	local newData = MR.Data:Create(ply, tr, MR.Ply:GetDecalMode(ply) and {} )
 
 	-- Adjustments for skybox materials
-	if MR.Skybox:IsFullSkybox(newData.newMaterial) then
+	if MR.Materials:IsFullSkybox(newData.newMaterial) then
 		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
 	-- Don't apply bad materials
 	elseif not MR.Materials:IsValid(newData.newMaterial) then

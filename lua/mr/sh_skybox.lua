@@ -84,33 +84,6 @@ function Skybox:IsPainted(material)
 	return skybox.painted
 end
 
--- Is it the skybox material?
-function Skybox:IsSkybox(material)
-	if material and (
-			material == MR.Skybox:GetGenericName() or
-			Skybox:IsFullSkybox(material) or
-			Skybox:IsFullSkybox(Skybox:RemoveSuffix(material))
-	   ) then
-
-		return true
-	end
-
-	return false
-end
-
--- Check if the skybox is a valid 6 side setup
-function Skybox:IsFullSkybox(material)
-	if MR.Materials:IsValid(Skybox:SetSuffix(material)) then
-		if not Material(Skybox:SetSuffix(material)):IsError() then
-			return true
-		else
-			return false
-		end
-	else
-		return false
-	end
-end
-
 -- Get HL2 skies list
 function Skybox:GetHL2List()
 	return skybox.HL2List

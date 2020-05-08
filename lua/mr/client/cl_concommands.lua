@@ -6,7 +6,7 @@ local Concommand = MR.Concommand
 
 -- Run a console command on server
 function Concommand:RunOnSV(command, value)
-	if MR.Utils:PlyIsAdmin(LocalPlayer()) then
+	if MR.Ply:IsAdmin(LocalPlayer()) then
 		net.Start("Concommand:Run")
 			net.WriteString(command)
 			net.WriteString(isstring(value) and value or tostring(value))

@@ -32,7 +32,7 @@ end
 -- Save the modifications to a file: server
 function Save:Set_SV(ply, saveName, blockAlert)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 
@@ -81,7 +81,7 @@ end
 -- Set autoLoading for the map
 function Save:SetAuto(ply, value)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 

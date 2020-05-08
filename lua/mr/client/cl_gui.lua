@@ -98,7 +98,7 @@ end
 
 -- Set the detail material
 function GUI:SetDetailValue(oldMaterial)
-	local detail = MR.Materials:GetDetailFromMaterial(oldMaterial)
+	local detail = MR.Materials:GetDetail(oldMaterial)
 
 	if GUI:GetDetail() ~= "" then
 		local i = 1

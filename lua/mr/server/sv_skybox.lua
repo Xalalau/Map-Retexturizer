@@ -43,7 +43,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	elseif Skybox:GetHL2List()[data.newMaterial] then
 		suffixes = Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox (Render box on clientside)
-	elseif Skybox:IsFullSkybox(Skybox:RemoveSuffix(data.newMaterial)) then
+	elseif MR.Materials:IsFullSkybox(Skybox:RemoveSuffix(data.newMaterial)) then
 		data.newMaterial = Skybox:RemoveSuffix(data.newMaterial)
 		suffixes = Skybox:GetSuffixes()
 	-- It's an invalid material

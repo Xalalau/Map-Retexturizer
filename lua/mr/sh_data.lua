@@ -66,8 +66,8 @@ end
 function Data:Create(ply, tr, decalInfo)
 	local data = {
 		ent = tr and tr.Entity or game.GetWorld(),
-		oldMaterial = decalInfo and ply:GetInfo("internal_mr_material") or tr and MR.Materials:GetOriginal(tr) or "",
-		newMaterial = ply:GetInfo("internal_mr_material"),
+		oldMaterial = decalInfo and MR.Materials:GetNew(ply) or tr and MR.Materials:GetOriginal(tr) or "",
+		newMaterial = MR.Materials:GetNew(ply),
 		offsetx = not decalInfo and ply:GetInfo("internal_mr_offsetx") or nil,
 		offsety = not decalInfo and ply:GetInfo("internal_mr_offsety") or nil,
 		scalex = ply:GetInfo("internal_mr_scalex") ~= "0" and ply:GetInfo("internal_mr_scalex") or "0.01",
@@ -103,7 +103,7 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2)
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
 		rotation = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y or "0",
 		alpha = string.format("%.2f", oldMaterial:GetString("$alpha") or "1.00"),
-		detail = MR.Materials:GetDetailFromMaterial(oldMaterialIn)
+		detail = MR.Materials:GetDetail(oldMaterialIn)
 	}
 
 	return data

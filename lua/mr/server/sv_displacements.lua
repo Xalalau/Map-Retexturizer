@@ -76,7 +76,7 @@ end
 -- Remove all displacements materials
 function Displacements:RemoveAll(ply)
 	-- Admin only
-	if not MR.Utils:PlyIsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 

@@ -145,38 +145,16 @@ end
 
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
-												MR.Skybox:GetList() or
-												MR.Map:GetList())) or
-												MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
+	local oldData = MR.Materials:GetCurrentData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 		oldData.newMaterial = oldData.oldMaterial 
-	-- If it's a model, adjust the material name
-	elseif IsValid(tr.Entity) then
-		if oldData.newMaterial ~= "" then
-			oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
-		end
-	end	
+	end
 
-	-- Adjustment for skybox materials
-	if MR.Skybox:IsSkybox(newData.oldMaterial) then
-		newData.oldMaterial = oldData.oldMaterial
-
-		oldData.newMaterial = MR.Skybox:RemoveSuffix(oldData.newMaterial)
-		newData.newMaterial = MR.Skybox:RemoveSuffix(newData.newMaterial)
-
-		if newData.newMaterial == MR.Skybox:GetName() and oldData.newMaterial == "" then
-			return false
-		end
-
-		if MR.Skybox:IsPainted() then
-			oldData.newMaterial = MR.Materials:GetCurrent(tr)
-		end
 	-- Don't apply bad materials
-	elseif not MR.Materials:IsValid(newData.newMaterial) then
+	if not MR.Materials:IsValid(newData.newMaterial) and not MR.Skybox:IsSkybox(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -184,9 +162,26 @@ end
 		return false
 	end
 
+	-- Skybox...
+	if MR.Skybox:IsSkybox(newData.oldMaterial) then
+		-- Adjustments
+		newData.oldMaterial = oldData.oldMaterial
+
+		oldData.newMaterial = MR.Skybox:RemoveSuffix(oldData.newMaterial)
+		newData.newMaterial = MR.Skybox:RemoveSuffix(newData.newMaterial)
+
+		if MR.Skybox:IsPainted() then
+			oldData.newMaterial = MR.Materials:GetCurrent(tr)
+		end
+
+		-- Don't apply the default sky over itself
+		if newData.newMaterial == MR.Skybox:GetName() and oldData.newMaterial == "" then
+			return false
+		end
+	end
+
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
-
 		return false
 	end
 
@@ -222,15 +217,12 @@ function TOOL:RightClick(tr)
 
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, tr)
-	local oldData = table.Copy(MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()))
+	local oldData = MR.Materials:GetCurrentData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
 		oldData.newMaterial = oldData.oldMaterial 
-	-- If it's a model, adjust the material name
-	elseif IsValid(tr.Entity) then
-		oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
 	end
 
 	-- Adjustment for skybox materials
@@ -279,7 +271,7 @@ function TOOL:Reload(tr)
 	end
 
 	-- Normal materials cleanup
-	if MR.Data:Get(tr, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()) then
+	if MR.Materials:GetCurrentData(tr) then
 		if SERVER then
 			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
 				-- Skybox

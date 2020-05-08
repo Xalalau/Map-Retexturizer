@@ -99,6 +99,33 @@ function Materials:GetNew(ply)
 	return ply:GetInfo("internal_mr_material")
 end
 
+-- Get the current data from a trace
+function Materials:GetCurrentData(tr)
+	local oldData
+
+	-- Model
+	if IsValid(tr.Entity) then
+		oldData = table.Copy(MR.Models:GetNew(tr.Entity))
+
+		-- Revert the newName if there is data
+		if oldData and oldData.newMaterial ~= "" then
+			oldData.newMaterial = MR.Models:RevertID(oldData.newMaterial)
+		end
+	-- Skybox or map material
+	else
+		local dataList = MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()
+
+		if dataList then
+			local oldMaterial = MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)
+			local aux = MR.Data.list:GetElement(dataList, oldMaterial)
+
+			oldData = table.Copy(aux)
+		end
+	end
+
+	return oldData
+end
+
 -- Get the details list
 function Materials:GetDetailList()
 	return materials.detail.list

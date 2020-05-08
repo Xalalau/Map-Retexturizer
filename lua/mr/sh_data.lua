@@ -62,14 +62,6 @@ function Data:IsEqual(Data1, Data2)
 	return true
 end
 
--- Get the data table if it exists or return nil
-function Data:Get(tr, list)
-	return IsValid(tr.Entity) and MR.Models:GetNew(tr.Entity) or
-	       MR.Data.list:GetElement(list, MR.Skybox:IsSkybox(MR.Materials:GetOriginal(tr)) and
-										 MR.Skybox:GetValidName() or
-										 MR.Materials:GetOriginal(tr))
-end
-
 -- Set a data table
 function Data:Create(ply, tr, decalInfo)
 	local data = {

@@ -77,6 +77,14 @@ end
 --------------------------------
 
 function TOOL_BasicChecks(ply, tr)
+	-- Flood control
+	-- This prevents the tool from doing multiple activations in a short time
+	if timer.Exists("MRWaitForNextInteration"..tostring(ply)) then
+		return false
+	else
+		timer.Create("MRWaitForNextInteration"..tostring(ply), 0.01, 1, function() end)
+	end
+
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
@@ -190,18 +198,17 @@ end
 	end
 
 	-- Set the material
-	timer.Create("MRLeftClickMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
-		-- Skybox
-		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-			MR.Skybox:Set(ply, newData)
-		-- model
-		elseif IsValid(tr.Entity) then
-			MR.Models:Set(ply, newData)
-		-- map/displacement
-		elseif tr.Entity:IsWorld() then
-			MR.Map:Set(ply, newData)
-		end
-	end)
+
+	-- Skybox
+	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		MR.Skybox:Set(ply, newData)
+	-- model
+	elseif IsValid(tr.Entity) then
+		MR.Models:Set(ply, newData)
+	-- map/displacement
+	elseif tr.Entity:IsWorld() then
+		MR.Map:Set(ply, newData)
+	end
 
 	return true
 end
@@ -273,18 +280,16 @@ function TOOL:Reload(tr)
 	-- Normal materials cleanup
 	if MR.Materials:GetData(tr) then
 		if SERVER then
-			timer.Create("MRReloadMultiplayerDelay"..tostring(math.random(999))..tostring(ply), game.SinglePlayer() and 0 or 0.1, 1, function()
-				-- Skybox
-				if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-					MR.Skybox:Remove(ply)
-				-- model
-				elseif IsValid(tr.Entity) then
-					MR.Models:Remove(tr.Entity)
-				-- map/displacement
-				elseif tr.Entity:IsWorld() then
-					MR.Map:Remove(MR.Materials:GetOriginal(tr))
-				end
-			end)
+			-- Skybox
+			if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+				MR.Skybox:Remove(ply)
+			-- model
+			elseif IsValid(tr.Entity) then
+				MR.Models:Remove(tr.Entity)
+			-- map/displacement
+			elseif tr.Entity:IsWorld() then
+				MR.Map:Remove(MR.Materials:GetOriginal(tr))
+			end
 		end
 
 		return true

@@ -124,6 +124,8 @@ end
 function GUI:ResetDisplacementsComboValue()
 	-- Wait the cleanup
 	timer.Create("MRWaitCleanupDispCombo", 0.3, 1, function()
-		GUI:GetDisplacementsCombo():ChooseOptionID(GUI:GetDisplacementsCombo():GetSelectedID())
+		if GUI:GetDisplacementsCombo():GetSelectedID() then
+			GUI:GetDisplacementsCombo():ChooseOptionID(GUI:GetDisplacementsCombo():GetSelectedID())
+		end
 	end)
 end

@@ -27,14 +27,11 @@ function Displacements:InitHack()
 end
 
 -- Change the displacements: client
---
--- displacement = displacement detected name
--- newMaterial = new material for $basetexture
--- newMaterial2 = new material for $basetexture2
-function Displacements:Set_CL(displacement, newMaterial, newMaterial2)
+function Displacements:Set_CL(applyProperties)
 	local displacement, _ = MR.GUI:GetDisplacementsCombo():GetSelected()
 	local newMaterial = MR.GUI:GetDisplacementsText1():GetValue()
 	local newMaterial2 = MR.GUI:GetDisplacementsText2():GetValue()
+	local data = applyProperties and MR.Data:Create(LocalPlayer()) or MR.Data.list:GetElement(MR.Displacements:GetList(), displacement) or {}
 
 	-- No displacement selected
 	if not Displacements:GetDetected() or not displacement or displacement == "" then
@@ -58,10 +55,16 @@ function Displacements:Set_CL(displacement, newMaterial, newMaterial2)
 		end)
 	end
 
+	-- Adjustments to the data table
+	if table.Count(data) > 0 then
+		data.oldMaterial = displacement
+	end
+
 	-- Start the change
 	net.Start("Displacements:Set_SV")
 		net.WriteString(displacement)
 		net.WriteString(newMaterial or "")
 		net.WriteString(newMaterial2 or "")
+		net.WriteTable(data)
 	net.SendToServer()
 end

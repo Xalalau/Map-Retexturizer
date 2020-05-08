@@ -431,6 +431,58 @@ function TOOL.BuildCPanel(CPanel)
 			end
 	end
 
+	-- Displacements ---------------------------------------------------
+	if (table.Count(MR.Displacements:GetDetected()) > 0) then
+		CPanel:Help(" ")
+
+		do
+			local sectionDisplacements = vgui.Create("DCollapsibleCategory", CPanel)
+				sectionDisplacements:SetLabel("Displacements")
+
+				CPanel:AddItem(sectionDisplacements)
+
+				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected"))
+				element = MR.GUI:GetDisplacementsCombo()
+					function element:OnSelect(index, value, data)
+						if value ~= "" then
+							MR.GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
+							MR.GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
+						else
+							MR.GUI:GetDisplacementsText1():SetValue("")
+							MR.GUI:GetDisplacementsText2():SetValue("")
+						end					
+					end
+
+					element:AddChoice("", "")
+
+					for k,v in pairs(MR.Displacements:GetDetected()) do
+						element:AddChoice(k)
+					end
+
+					timer.Create("MRDisplacementsDelay", 0.1, 1, function()
+						MR.GUI:GetDisplacementsCombo():SetValue("")
+					end)
+
+				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
+					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
+						MR.Displacements:Set_CL()
+					end
+
+				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
+					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
+						MR.Displacements:Set_CL()
+					end
+
+				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
+
+				local displacementsProperties = CPanel:Button("Apply current material properties")
+
+				function displacementsProperties:DoClick()
+					MR.Displacements:Set_CL(true)
+				end
+		end
+	end
+
 	-- Skybox ----------------------------------------------------------
 	CPanel:Help(" ")
 
@@ -517,52 +569,6 @@ function TOOL.BuildCPanel(CPanel)
 				CPanel:ControlHelp("\nYou can use whatever you want as a sky.")
 				CPanel:ControlHelp("developer.valvesoftware.com/wiki/Sky_List")
 				CPanel:ControlHelp("[WARNING] Expect FPS drops using this!")
-	end
-
-	-- Displacements ---------------------------------------------------
-	if (table.Count(MR.Displacements:GetDetected()) > 0) then
-		CPanel:Help(" ")
-
-		do
-			local sectionDisplacements = vgui.Create("DCollapsibleCategory", CPanel)
-				sectionDisplacements:SetLabel("Displacements")
-
-				CPanel:AddItem(sectionDisplacements)
-
-				MR.GUI:SetDisplacementsCombo(CPanel:ComboBox("Detected"))
-				element = MR.GUI:GetDisplacementsCombo()
-					function element:OnSelect(index, value, data)
-						if value ~= "" then
-							MR.GUI:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
-							MR.GUI:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
-						else
-							MR.GUI:GetDisplacementsText1():SetValue("")
-							MR.GUI:GetDisplacementsText2():SetValue("")
-						end					
-					end
-
-					element:AddChoice("", "")
-
-					for k,v in pairs(MR.Displacements:GetDetected()) do
-						element:AddChoice(k)
-					end
-
-					timer.Create("MRDisplacementsDelay", 0.1, 1, function()
-						MR.GUI:GetDisplacementsCombo():SetValue("")
-					end)
-
-				MR.GUI:SetDisplacementsText1(CPanel:TextEntry("Texture Path 1", ""))
-					MR.GUI:GetDisplacementsText1().OnEnter = function(self)
-						MR.Displacements:Set_CL()
-					end
-
-				MR.GUI:SetDisplacementsText2(CPanel:TextEntry("Texture Path 2", ""))
-					MR.GUI:GetDisplacementsText2().OnEnter = function(self)
-						MR.Displacements:Set_CL()
-					end
-
-				CPanel:ControlHelp("\nTo reset a field erase the text and press enter.")
-		end
 	end
 
 	-- Save ------------------------------------------------------------

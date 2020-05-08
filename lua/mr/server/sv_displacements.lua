@@ -13,7 +13,7 @@ util.AddNetworkString("Displacements:Set_SV")
 util.AddNetworkString("Displacements:RemoveAll")
 
 net.Receive("Displacements:Set_SV", function(_, ply)
-	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString())
+	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())
 end)
 
 net.Receive("Displacements:RemoveAll", function(_, ply)
@@ -30,7 +30,7 @@ end
 -- displacement = displacement detected name
 -- newMaterial = new material for $basetexture
 -- newMaterial2 = new material for $basetexture2
-function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2)
+function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2, data)
 	-- Check if there is a displacement selected
 	if not displacement then
 		return
@@ -61,8 +61,10 @@ function Displacements:Set_SV(ply, displacement, newMaterial, newMaterial2)
 		end
 	end
 
-	-- Create the data table
-	local data = MR.Data:CreateFromMaterial(displacement)
+	-- Create the data table if we don't have one
+	if table.Count(data) == 0 then
+		data = MR.Data:CreateFromMaterial(displacement)
+	end
 
 	data.newMaterial = newMaterial
 	data.newMaterial2 = newMaterial2

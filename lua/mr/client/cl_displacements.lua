@@ -4,26 +4,26 @@
 
 local Displacements = MR.Displacements
 
--- Networking
-net.Receive("Displacements:InitHack_CL", function()
-	Displacements:InitHack_CL()
-end)
+-- A dirty hack to make all the displacements darker, since the tool does it with these materials
+local displacements = {
+	initHhack = false
+}
 
--- It's a dirty hack to make all the displacements darker, since the tool does it with these materials
-function Displacements:InitHack_CL()
-	local delay = 0
+function Displacements:InitHack()
+	if displacements.initHack then
+		return
+	end
 
 	for k,v in pairs(Displacements:GetDetected()) do
-		timer.Create("MRDiscplamentsDirtyHackCleanup"..tostring(delay), delay, 1, function()
-			net.Start("Displacements:Set_SV")
-				net.WriteString(k)
-				net.WriteString(Material(k):GetTexture("$basetexture"):GetName())
-				net.WriteString(Material(k):GetTexture("$basetexture2"):GetName())
-			net.SendToServer()
-		end)
-		
-		delay = delay + 0.05
+		local data = MR.Data:CreateFromMaterial(k)
+
+		data.newMaterial = nil
+		data.newMaterial2 = nil
+
+		MR.Map:Set_CL(data)
 	end
+
+	displacements.initHack = true
 end
 
 -- Change the displacements: client

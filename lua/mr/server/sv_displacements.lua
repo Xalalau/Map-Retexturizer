@@ -11,7 +11,6 @@ local displacements = {
 -- Networking
 util.AddNetworkString("Displacements:Set_SV")
 util.AddNetworkString("Displacements:RemoveAll")
-util.AddNetworkString("Displacements:InitHack_CL")
 
 net.Receive("Displacements:Set_SV", function(_, ply)
 	Displacements:Set_SV(ply, net.ReadString(), net.ReadString(), net.ReadString())
@@ -81,6 +80,10 @@ function Displacements:RemoveAll(ply)
 
 	-- Stop the duplicator
 	MR.Duplicator:ForceStop_SV()
+
+	-- Reset the combobox and its text fields
+	net.Start("GUI:ResetDisplacementsComboValue")
+	net.Broadcast()
 
 	-- Remove
 	if MR.Data.list:Count(Displacements:GetList()) > 0 then

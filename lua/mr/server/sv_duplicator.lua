@@ -46,8 +46,10 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	-- Saving format
 	if savedTable.savingFormat and not dup.recreatedTable.savingFormat then
 		dup.recreatedTable.savingFormat = savedTable.savingFormat
+	end
+
 	-- Models
-	elseif ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
+	if ent:GetModel() ~= "models/props_phx/cannonball_solid.mdl" then
 		-- Set the aditive delay time
 		dup.models.delay = dup.models.delay + 0.05 -- It's initialized as 0.3
 
@@ -84,18 +86,15 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		notModelDelay = 0.37
 	-- Displacements
 	elseif savedTable.displacements then
-		dup.recreatedTable.displacements = savedTable.displacements
-		notModelDelay = 0.38
-
-		for k,v in pairs(dup.recreatedTable.displacements) do
-			if not v.newMaterial then
-				v.newMaterial = Material(v.oldMaterial):GetTexture("$basetexture"):GetName()
-			end
-
-			if not v.newMaterial2 then
-				v.newMaterial2 = Material(v.oldMaterial):GetTexture("$basetexture2"):GetName()
+		-- Remove nil entries if they exist
+		for k,v in pairs(savedTable.displacements) do
+			if not v.newMaterial and not v.newMaterial2 then
+				table.remove(savedTable.displacements, k)
 			end
 		end
+
+		dup.recreatedTable.displacements = savedTable.displacements
+		notModelDelay = 0.38
 	-- Decals
 	elseif savedTable.decals then
 		dup.recreatedTable.decals = savedTable.decals
@@ -138,7 +137,6 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 			else
 				savedTable.map = aux
 			end
-
 		-- Rebuild decals structure from GMod saves
 		elseif savedTable[1] and savedTable[1].mat then
 			local aux = table.Copy(savedTable)
@@ -156,7 +154,6 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 			local i
 
 			for i = 1,#savedTable.map do
-
 				savedTable.map[i].backup.newMaterial, _ = string.gsub(savedTable.map[i].backup.newMaterial, "%mapretexturizer", "mr")
 			end
 		end
@@ -211,6 +208,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		if isDupStarting then
 			savedTable.savingFormat = "3.0"
 		end
+		currentFormat = "3.0"
 	end
 
 	-- If the table was upgraded, create a file backup for the old format and save the new
@@ -222,8 +220,8 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
 		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
 
-		file.Rename(pathCurrent, pathBackup)
-		file.Write(pathCurrent, util.TableToJSON(savedTable))
+		--file.Rename(pathCurrent, pathBackup)
+		--file.Write(pathCurrent, util.TableToJSON(savedTable))
 	end
 
 	return savedTable
@@ -445,30 +443,31 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 		-- Check if we have a valid material
 		local newMaterial = savedTable[position].newMaterial
 		local newMaterial2 = savedTable[position].newMaterial2
-		local isError = false
+		local oldMaterial = savedTable[position].oldMaterial and (" on "..savedTable[position].oldMaterial) or ""
+		local isError = true
 		local msg
 
-		if not newMaterial then
-			msg = "Map Material, entry is nil"
-			isError = true
-		elseif newMaterial and -- Single material
-		       not newMaterial2 and
-		       not MR.Materials:IsValid(newMaterial) and
-		       not MR.Skybox:IsSkybox(newMaterial) then
-			msg = "Map Material, $basetexture: " .. newMaterial
-			isError = true
-		elseif newMaterial2 then -- Two materials (displacement)
-			msg = "Displacement material, "
-
-			if not MR.Materials:IsValid(newMaterial) then
-				msg = msg .. "$basetexture: " .. newMaterial
-				isError = true
+		-- Frist material
+		if newMaterial then
+			if MR.Materials:IsValid(newMaterial) or MR.Skybox:IsSkybox(newMaterial) then
+				isError = false
+			else
+				msg = "Invalid $basetexture"..oldMaterial
 			end
+		end
 
-			if not MR.Materials:IsValid(newMaterial2) then
-				msg = msg .. "$basetexture2: " ..  newMaterial2
-				isError = true
+		-- Second material
+		if newMaterial2 then
+			if MR.Materials:IsValid(newMaterial2) then
+				isError = false
+			else
+				msg = "Invalid $basetexture2"..oldMaterial
 			end
+		end
+
+		-- No changes to do
+		if not newMaterial and not newMaterial2 then
+			msg = "Nothing to modify"..oldMaterial
 		end
 
 		-- If it's an error, let's register and check the next entry

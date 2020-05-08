@@ -1,6 +1,6 @@
 --[[
    \   MAP RETEXTURIZER
- =3 ]]  local mr_revision = "Version 14.1" --[[
+ =3 ]]  local mr_revision = "Version 14.2" --[[
  =o |   License: MIT
    /   Created by: Xalalau Xubilozo
   |
@@ -395,8 +395,11 @@ function TOOL.BuildCPanel(CPanel)
 						return
 					end
 
-					Properties_Toogle(val)
-					MR.Decals:Toogle(val)
+					MR.CVars:SetPropertiesToDefaults(ply)
+					timer.Create("MRWaitPropertiesReset", 0.1, 1, function()
+						Properties_Toogle(val)
+						MR.Decals:Toogle(val)
+					end)
 				end
 
 			CPanel:Button("Change all map materials","internal_mr_changeall")
@@ -546,11 +549,11 @@ function TOOL.BuildCPanel(CPanel)
 						end					
 					end
 
+					element:AddChoice("", "")
+
 					for k,v in pairs(MR.Displacements:GetDetected()) do
 						element:AddChoice(k)
 					end
-
-					element:AddChoice("", "")
 
 					timer.Create("MRDisplacementsDelay", 0.1, 1, function()
 						MR.GUI:GetDisplacementsCombo():SetValue("")

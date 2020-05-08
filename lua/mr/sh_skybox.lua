@@ -131,6 +131,11 @@ function Skybox:GetName()
 	return skybox.name
 end
 
+-- Get current sky name
+function Skybox:GetCurrentName()
+	return GetConVar("internal_mr_skybox"):GetString()
+end
+
 -- Get valid sky name
 function Skybox:GetValidName()
 	return Skybox:SetSuffix(Skybox:GetName())

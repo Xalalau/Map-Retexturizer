@@ -27,6 +27,14 @@ net.Receive("GUI:SetDetail", function()
 	GUI:SetDetailValue(net.ReadString())
 end)
 
+net.Receive("GUI:ResetSkyboxComboValue", function()
+	GUI:ResetSkyboxComboValue()
+end)
+
+net.Receive("GUI:ResetDisplacementsComboValue", function()
+	GUI:ResetDisplacementsComboValue()
+end)
+
 -- Merge the above table in the shared one
 table.Merge(GUI:GetTable(), gui) 
 
@@ -105,4 +113,17 @@ function GUI:SetDetailValue(oldMaterial)
 
 		GUI:GetDetail():ChooseOptionID(i)
 	end
+end
+
+-- Reset the skybox combobox material
+function GUI:ResetSkyboxComboValue()
+	GUI:GetSkyboxCombo():ChooseOptionID(1)
+end
+
+-- Reset the displacements combobox material and its text fields
+function GUI:ResetDisplacementsComboValue()
+	-- Wait the cleanup
+	timer.Create("MRWaitCleanupDispCombo", 0.3, 1, function()
+		GUI:GetDisplacementsCombo():ChooseOptionID(GUI:GetDisplacementsCombo():GetSelectedID())
+	end)
 end

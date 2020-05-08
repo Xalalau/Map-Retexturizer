@@ -19,20 +19,42 @@ local displacements = {
 }
 
 -- Generate map displacements list
-function Displacements:Init()
+function Displacements:Init(retrying)
 	local map_data = MR.OpenBSP()
 	local found = map_data:ReadLumpTextDataStringData()
-	
-	for k,v in pairs(found) do
-		if Material(v):GetString("$surfaceprop2") then
-			v = v:sub(1, #v - 1) -- Remove last char (line break?)
 
-			displacements.detected[v] = {
-				Material(v):GetTexture("$basetexture"):GetName(),
-				Material(v):GetTexture("$basetexture2"):GetName()
-			}
+	timer.Create("MRWaitToGetDisplacementsList", 0.5, 1, function()
+		for k,v in pairs(found) do
+			if Material(v):GetString("$surfaceprop2") then
+				-- I usually have trouble initializing this list at the beginning of the game because the time these
+				-- materials are usually ready is not consistent, so I try to re-add them a few times if they are invalid
+				if not Material(v):GetTexture("$basetexture") or not Material(v):GetTexture("$basetexture2") then
+					if not retrying then
+						retrying = 1
+					elseif retrying == 10 then
+						return
+					else
+						retrying = retrying + 1
+					end
+					
+					break
+				else
+					v = v:sub(1, #v - 1) -- Remove last char (line break?)
+
+					displacements.detected[v] = {
+						Material(v):GetTexture("$basetexture"):GetName(),
+						Material(v):GetTexture("$basetexture2"):GetName()
+					}
+
+					retrying = nil
+				end
+			end
 		end
-	end
+
+		if retrying then
+			Displacements:Init(retrying)
+		end
+	end)
 end
 
 -- Get map displacements list

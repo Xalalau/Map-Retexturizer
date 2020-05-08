@@ -86,6 +86,12 @@ function Skybox:Remove(ply)
 	-- Replicate
 	MR.CVars:Replicate_SV(ply, "internal_mr_skybox", "", "skybox", "text")
 
+	-- Reset the combobox
+	if Skybox:GetCurrentName() ~= "" then
+		net.Start("GUI:ResetSkyboxComboValue")
+		net.Broadcast()
+	end
+
 	for k,v in pairs(Skybox:GetList()) do
 		MR.Map:Remove(v.oldMaterial)
 	end

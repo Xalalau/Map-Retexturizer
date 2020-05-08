@@ -10,7 +10,9 @@ local dup = {
 	-- Force to stop the current loading to begin a new one
 	forceStop = false,
 	-- Get the recreated table format version
-	recreateTableSaveFormat
+	recreateTableSaveFormat,
+	-- Controls the timer from RecreateTable
+	recreateTimerIncrement = 0
 }
 
 -- Check if the duplicator is stopping
@@ -41,9 +43,12 @@ local function RecreateTable(ply, ent, savedTable)
 				recreateTableSaveFormat = nil
 			end)
 		end
-	
+
+		-- Increment timer name
+		dup.recreateTimerIncrement = dup.recreateTimerIncrement + 1
+
 		-- Start with the saving format, then send the rest
-		timer.Create("MRSendFormatFirst"..math.random(9999999999), savedTable.savingFormat and 0 or 0.1, 1, function()
+		timer.Create("MRSendFormatFirst"..tostring(dup.recreateTimerIncrement), savedTable.savingFormat and 0 or 0.01, 1, function()
 			-- Remove some disabled elements (because duplicator allways gets these tables full of trash)
 			MR.Data.list:Clean(savedTable.map or savedTable.displacements or nil)
 

@@ -222,6 +222,11 @@ function Map:Set(ply, data, isBroadcasted)
 
 		-- Apply the new state to the map material
 		if CLIENT then
+			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
+			if selected.isDisplacement then
+				MR.Displacements:InitHack()
+			end
+
 			Map:Set_CL(data)
 		end
 

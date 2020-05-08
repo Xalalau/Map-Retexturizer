@@ -119,7 +119,7 @@ function TOOL_BasicChecks(ply, tr)
 	end
 
 	--Check if we can interact with the skybox
-	if MR.Materials:IsSkybox(material) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
+	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
 			if not MR.Ply:GetDecalMode(ply) then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")

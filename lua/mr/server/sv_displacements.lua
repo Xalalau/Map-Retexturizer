@@ -34,6 +34,11 @@ end
 -- newMaterial = new material for $basetexture
 -- newMaterial2 = new material for $basetexture2
 function Displacements:Set(ply, displacement, newMaterial, newMaterial2, data)
+	-- Admin only
+	if not MR.Ply:IsAdmin(ply) then
+		return false
+	end
+
 	-- Check if there is a displacement selected
 	if not displacement then
 		return

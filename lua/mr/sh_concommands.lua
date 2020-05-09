@@ -49,26 +49,20 @@ concommand.Add("mr_admin", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_admin", value)
+		MR.CL.Concommand:RunOnSV("mr_admin", value)
 
 		return
 	end
 
 	if value ~= "1" and value ~= "0" then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
-
-		return
-	end
-
-	if not MR.Ply:IsAdmin(player.GetAll()[tonumber(plyIndex)]) then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
 	RunConsoleCommand("internal_mr_admin", value)
 
-	Concommand:PrintSuccess("[Map Retexturizer] Console: setting admin mode to " .. tostring(value) .. ".")
+	MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: setting admin mode to " .. tostring(value) .. ".")
 end)
 
 -- ---------------------------------------------------------
@@ -77,21 +71,21 @@ concommand.Add("mr_delay", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_delay", value)
+		MR.CL.Concommand:RunOnSV("mr_delay", value)
 
 		return
 	end
 
 	if not value or not tonumber(value) then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose a number.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose a number.")
 
 		return
 	end
 
 	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
 	end
 end)
 
@@ -107,15 +101,15 @@ concommand.Add("mr_load", function (_1, _2, _3, arguments)
 	local loadName, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_load", loadName)
+		MR.CL.Concommand:RunOnSV("mr_load", loadName)
 		
 		return
 	end
 
 	if MR.SV.Load:Start(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: loading \""..loadName.."\"...")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: loading \""..loadName.."\"...")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -125,15 +119,15 @@ concommand.Add("mr_autoload", function (_1, _2, _3, arguments)
 	local loadName, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_autoload", loadName)
+		MR.CL.Concommand:RunOnSV("mr_autoload", loadName)
 		
 		return
 	end
 
 	if MR.SV.Load:SetAuto(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: autoload set to \""..loadName.."\".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: autoload set to \""..loadName.."\".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -143,21 +137,21 @@ concommand.Add("mr_save", function (_1, _2, _3, arguments)
 	local saveName, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_save", saveName)
+		MR.CL.Concommand:RunOnSV("mr_save", saveName)
 		
 		return
 	end
 
 	if saveName == "" then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to save because the name is empty.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to save because the name is empty.")
 
 		return
 	end
 
 	if MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), saveName, true) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \""..saveName.."\".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \""..saveName.."\".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to save.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to save.")
 	end
 end)
 
@@ -167,21 +161,21 @@ concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_autosave", value)
+		MR.CL.Concommand:RunOnSV("mr_autosave", value)
 		
 		return
 	end
 
 	if value ~= "1" and value ~= "0" then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
 	if MR.SV.Save:SetAuto(MR.SV.Ply:GetFakeHostPly(), value) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value == "1" and "enabled" or "disabled")..".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value == "1" and "enabled" or "disabled")..".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
 	end
 end)
 
@@ -191,15 +185,15 @@ concommand.Add("mr_delete", function (_1, _2, _3, arguments)
 	local loadName, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_delete", loadName)
+		MR.CL.Concommand:RunOnSV("mr_delete", loadName)
 		
 		return
 	end
 
 	if MR.SV.Load:Delete_SV(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
 end)
 
@@ -209,21 +203,22 @@ concommand.Add("mr_dup_cleanup", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_dup_cleanup", value)
+		MR.CL.Concommand:RunOnSV("mr_dup_cleanup", value)
 		
 		return
 	end
 
+
 	if value ~= "1" and value ~= "0" then
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
 
 		return
 	end
 
 	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
 	end
 end)
 
@@ -233,14 +228,14 @@ concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
 	local _, plyIndex = Concommand:ExplodeArguments(arguments)
 
 	if CLIENT then
-		Concommand:RunOnSV("mr_cleanup")
+		MR.CL.Concommand:RunOnSV("mr_cleanup")
 
 		return
 	end
 
 	if MR.SV.Materials:RemoveAll(MR.SV.Ply:GetFakeHostPly()) then
-		Concommand:PrintSuccess("[Map Retexturizer] Console: cleaning modifications...")
+		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: cleaning modifications...")
 	else
-		Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to run the cleanup.")
+		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Failed to run the cleanup.")
 	end
 end)

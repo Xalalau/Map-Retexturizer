@@ -2,7 +2,9 @@
 --- CONCOMMANDS
 -------------------------------------
 
-local Concommand = MR.Concommand
+local Concommand = {}
+Concommand.__index = Concommand
+MR.CL.Concommand = Concommand
 
 -- Run a console command on server
 function Concommand:RunOnSV(command, value)

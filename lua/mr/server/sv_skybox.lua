@@ -33,6 +33,11 @@ function Skybox:Set(ply, data, isBroadcasted)
 	local suffixes = { "", "", "", "", "", "" }
 	local i
 
+	-- Admin only
+	if not MR.Ply:IsAdmin(ply) then
+		return false
+	end
+
 	-- It's the default map sky or it's empty
 	if data.newMaterial == MR.Skybox:GetName() or
 		MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
@@ -84,6 +89,11 @@ end
 
 -- Remove the skybox
 function Skybox:Remove(ply)
+	-- Admin only
+	if not MR.Ply:IsAdmin(ply) then
+		return false
+	end
+
 	-- Replicate
 	MR.SV.CVars:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
 

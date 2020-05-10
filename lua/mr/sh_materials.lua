@@ -121,7 +121,8 @@ end
 
 -- Get the new material from mr_material cvar
 function Materials:GetNew(ply)
-	return ply:GetInfo("internal_mr_material")
+	return CLIENT and GetConVar("internal_mr_material"):GetString() or
+			SERVER and ply:GetInfo("internal_mr_material")
 end
 
 -- Set the new material on mr_material cvar

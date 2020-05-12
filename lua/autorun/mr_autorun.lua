@@ -6,46 +6,72 @@
 ]]
 local mode = "hybrid"
 
+-- Folder inside "[...]/garrysmod/data/"
+local mainDir = "mr/"
+
+local _types = {
+	"sh_",
+	"sv_",
+	"cl_"
+}
+
 -- Global tool functions
 MR = {
 	CL = {},
 	SV = {}
 }
 
--- Load libs
-local function HandleFile(dir, file)
-	local path = dir .. file
-	local _type = string.sub(file, 0, 3)
-
+-- Load source files
+local function HandleFile(filePath, _type)
 	if SERVER then
-		if _type == "cl_" or _type == "sh_" then
-			AddCSLuaFile(path)
-		end
 		if _type ~= "cl_" then
-			return include(path)
+			include(filePath)
 		end
-	elseif _type ~= "sv_" then
-		return include(path)
+
+		if _type ~= "sv_" then
+			AddCSLuaFile(filePath)
+		end
+
+		return
+	end
+
+	if CLIENT then
+		if _type ~= "sv_" then
+			return include(filePath)
+		end
 	end
 end
 
--- Note: start with the files, so the shared code code will be available everywhere
-local function ParseDir(dir)
+local function ParseDir(dir, _type)
 	local files, dirs = file.Find(dir.."*", "LUA")
 
+	local selectedFiles = {}
 
+	-- Separate files by type
 	for _, file in pairs(files) do
 		if string.sub(file, -4) == ".lua" then
-			HandleFile(dir, file)
+			local filePath = dir .. file
+
+			if string.sub(file, 0, 3) == _type then
+				table.insert(selectedFiles, filePath)
+			end
 		end
 	end
 
+	-- Load separated files
+	for _, filePath in pairs(selectedFiles) do
+		HandleFile(filePath, _type)
+	end
+
+	-- Open the next directory
 	for _, subDir in pairs(dirs) do
-		ParseDir(dir..subDir.."/")
+		ParseDir(dir..subDir.."/", _type)
 	end
 end
 
-ParseDir("mr/")
+for _,_type in pairs(_types) do
+	ParseDir(mainDir, _type)
+end
 
 -- Add resources
 if SERVER then

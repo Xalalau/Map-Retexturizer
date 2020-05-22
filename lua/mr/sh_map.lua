@@ -230,18 +230,24 @@ function Map:Set(ply, data, isBroadcasted)
 		-- Index the Data
 		MR.Data.list:InsertElement(selected.list, data, i)
 
-		-- Apply the new state to the map material
 		if CLIENT then
 			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
 			if selected.isDisplacement then
 				MR.CL.Displacements:InitHack()
 			end
 
+			-- Apply the new state to the map material
 			MR.CL.Map:Set(data)
 		end
-
-		-- Set the duplicator
+		
 		if SERVER then
+			-- Reset the combobox and its text fields
+			if selected.isDisplacement then
+				net.Start("CL.CPanel:ResetDisplacementsComboValue")
+				net.Broadcast()
+			end
+
+			-- Set the duplicator
 			local dataTable = selected.isSkybox and { skybox = { selected.list[1] } } or
 							  selected.isDisplacement and { displacements = selected.list } or
 							  { map = selected.list }

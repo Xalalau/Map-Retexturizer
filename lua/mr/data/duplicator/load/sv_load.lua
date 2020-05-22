@@ -8,7 +8,7 @@ MR.SV.Load = Load
 
 -- Networking
 util.AddNetworkString("Load:SetList")
-util.AddNetworkString("CL.Load:Delete_Finish")
+util.AddNetworkString("CL.Load:Delete")
 util.AddNetworkString("SV.Load:SetAuto")
 util.AddNetworkString("SV.Load:Delete")
 util.AddNetworkString("SV.Load:Start")
@@ -164,7 +164,7 @@ function Load:Delete(ply, loadName)
 	file.Delete(loadFile)
 
 	-- Updates the load list on every client
-	net.Start("CL.Load:Delete_Finish")
+	net.Start("CL.Load:Delete")
 		net.WriteString(loadName)
 	net.Broadcast()
 	

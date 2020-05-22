@@ -184,7 +184,7 @@ function Load:SetAuto(ply, loadName)
 	end
 
 	-- Apply the value to every client
-	MR.SV.CVars:Replicate(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
+	MR.SV.Sync:Replicate(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
 
 	timer.Create("MRWaitToSave", 0.3, 1, function()
 		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("internal_mr_autoload"):GetString())

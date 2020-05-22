@@ -93,7 +93,7 @@ function Save:SetAuto(ply, value)
 	end
  
 	-- Apply the change on clients
-	MR.SV.CVars:Replicate(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
+	MR.SV.Sync:Replicate(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
 
 	return true
 end

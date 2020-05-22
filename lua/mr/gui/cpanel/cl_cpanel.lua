@@ -591,7 +591,7 @@ function CPanel:SetSave(parent, paddingTop, setDFrame)
 				if val ~= autosaveBox:GetValue() then
 					autosaveBox:SetChecked(val)
 				else
-					MR.CL.CVars:SetLoopBlock(false)
+					MR.CL.Sync:SetLoopBlock(false)
 				end
 
 				return
@@ -819,8 +819,8 @@ function CPanel:SetLoad(parent, paddingTop, setDFrame)
 		loadCleanupBox:SetValue(GetConVar("internal_mr_duplicator_cleanup"):GetBool())
 		loadCleanupBox.OnChange = function(self, val)
 			-- Force the field to update and disable a sync loop block
-			if MR.CL.CVars:GetLoopBlock() then
-				MR.CL.CVars:SetLoopBlock(false)
+			if MR.CL.Sync:GetLoopBlock() then
+				MR.CL.Sync:SetLoopBlock(false)
 
 				return
 			-- Admin only: reset the option if it's not being synced and return
@@ -831,7 +831,7 @@ function CPanel:SetLoad(parent, paddingTop, setDFrame)
 			end
 
 			-- Start syncing
-			net.Start("SV.CVars:Replicate")
+			net.Start("SV.Sync:Replicate")
 				net.WriteString("internal_mr_duplicator_cleanup")
 				net.WriteString(val and "1" or "0")
 				net.WriteString("load")
@@ -884,12 +884,12 @@ function CPanel:SetLoad(parent, paddingTop, setDFrame)
 
 		speedCombobox.OnSelect = function(self, index, value, data)
 			-- Force the field to update and disable a sync loop block
-			if MR.CL.CVars:GetLoopBlock() then
+			if MR.CL.Sync:GetLoopBlock() then
 				if index ~= speedCombobox:GetSelected() then
 					speedCombobox:ChooseOptionID(index)
 				end
 
-				MR.CL.CVars:SetLoopBlock(false)
+				MR.CL.Sync:SetLoopBlock(false)
 
 				return
 			-- Admin only: reset the option if it's not being synced and return
@@ -899,7 +899,7 @@ function CPanel:SetLoad(parent, paddingTop, setDFrame)
 				return
 			end
 
-			net.Start("SV.CVars:Replicate")
+			net.Start("SV.Sync:Replicate")
 				net.WriteString("internal_mr_delay")
 				net.WriteString(data)
 				net.WriteString("load")
@@ -1164,7 +1164,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 
 			-- This field doesn't have problems with a sync loop, so disable the block
 			timer.Create("MRDisableSyncLoolBlock", 0.3, 1, function()
-				MR.CL.CVars:SetLoopBlock(false)
+				MR.CL.Sync:SetLoopBlock(false)
 			end)
 
 			-- Admin only
@@ -1196,9 +1196,9 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 		skyboxCheckbox:SetValue(true)
 		skyboxCheckbox.OnChange = function(self, val)
 			-- Force the field to update and disable a sync loop block
-			if MR.CL.CVars:GetLoopBlock() then
+			if MR.CL.Sync:GetLoopBlock() then
 				MR.CPanel:Get("skybox", "box"):SetChecked(val)
-				MR.CL.CVars:SetLoopBlock(false)
+				MR.CL.Sync:SetLoopBlock(false)
 
 				return
 			-- Admin only: reset the option if it's not being synced and return
@@ -1208,7 +1208,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 				return
 			end
 
-			net.Start("SV.CVars:Replicate")
+			net.Start("SV.Sync:Replicate")
 				net.WriteString("internal_mr_skybox_toolgun")
 				net.WriteString(val and "1" or "0")
 				net.WriteString("skybox")

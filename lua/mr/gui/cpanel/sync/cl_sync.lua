@@ -1,12 +1,12 @@
 --------------------------------
---- CVARS
+--- SYNC
 --------------------------------
 
-local CVars = {}
-CVars.__index = CVars
-MR.CL.CVars = CVars
+local Sync = {}
+Sync.__index = Sync
+MR.CL.Sync = Sync
 
-local cvars = {
+local sync = {
 	loop = {
 		-- When I sync a field it SOMETIMES triggers itself again and tries to
 		-- resync, entering a loop. I have to control it
@@ -19,43 +19,43 @@ local cvars = {
 }
 
 -- Networking
-net.Receive("CL.CVars:Replicate", function()
-	CVars:Replicate(net.ReadString(), net.ReadString(), net.ReadString())
+net.Receive("CL.Sync:Replicate", function()
+	Sync:Replicate(net.ReadString(), net.ReadString(), net.ReadString())
 end)
 
 -- Get if a sync loop block is enabled
-function CVars:GetLoopBlock()
-	return cvars.loop.block
+function Sync:GetLoopBlock()
+	return sync.loop.block
 end
 
 -- Get if a slider value fix is enabled
-function CVars:GetSliderUpdate()
-	return cvars.loop.sliderUpdate
+function Sync:GetSliderUpdate()
+	return sync.loop.sliderUpdate
 end
 
 -- Set a sync loop block
-function CVars:SetLoopBlock(value)
-	cvars.loop.block = value
+function Sync:SetLoopBlock(value)
+	sync.loop.block = value
 
 	-- Set an auto unblock
 	if value then
-		CVars:SetAutoLoopUnblock()
+		Sync:SetAutoLoopUnblock()
 	end
 end
 
 -- Sometimes a field auto triggers itself again, sometimes not... Since menu option values
 -- change very quickly, I can and have to finish the sync disabling the block after a short time.
-function CVars:SetAutoLoopUnblock()
+function Sync:SetAutoLoopUnblock()
 	if not timer.Exists("MRAutoUnlock") then
 		timer.Create("MRAutoUnlock", 0.2, 1, function()
-			CVars:SetLoopBlock(false)
+			Sync:SetLoopBlock(false)
 		end)
 	end
 end
 
 -- Set a slider value fix
-function CVars:SetSliderUpdate(value)
-	cvars.loop.sliderUpdate = value
+function Sync:SetSliderUpdate(value)
+	sync.loop.sliderUpdate = value
 end
 
 -- Replicate menu field: client
@@ -63,9 +63,9 @@ end
 -- value = new command value
 -- field1 = first field name from GUI element
 -- field2 = second field name from GUI element
-function CVars:Replicate(value, field1, field2)
+function Sync:Replicate(value, field1, field2)
 	-- Enable a sync loop block
-	CVars:SetLoopBlock(true)
+	Sync:SetLoopBlock(true)
 
 	-- Replicate
 	local selectedField
@@ -106,18 +106,18 @@ end
 					end
 
 					-- Force the field to update (2 times, slider fix) and disable a sync loop block
-					if MR.CL.CVars:GetSliderUpdate() then
-						MR.CL.CVars:SetSliderUpdate(false)
+					if MR.CL.Sync:GetSliderUpdate() then
+						MR.CL.Sync:SetSliderUpdate(false)
 
 						return
-					elseif MR.CL.CVars:GetLoopBlock() then
+					elseif MR.CL.Sync:GetLoopBlock() then
 						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
 							MR.CPanel:Get("load", "slider"):SetValue(string.format("%0.3f", val))
 						end)
 
-						MR.CL.CVars:SetSliderUpdate(true)
+						MR.CL.Sync:SetSliderUpdate(true)
 
-						MR.CL.CVars:SetLoopBlock(false)
+						MR.CL.Sync:SetLoopBlock(false)
 
 						return
 					-- Admin only: reset the option if it's not being synced and return
@@ -132,7 +132,7 @@ end
 						timer.Destroy("MRSliderSend")
 					end
 					timer.Create("MRSliderSend", 0.1, 1, function()
-						net.Start("SV.CVars:Replicate")
+						net.Start("SV.Sync:Replicate")
 							net.WriteString("internal_mr_delay")
 							net.WriteString(string.format("%0.3f", val))
 							net.WriteString("load")

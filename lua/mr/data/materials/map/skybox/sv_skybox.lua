@@ -82,7 +82,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	end
 
 	-- Replicate
-	MR.SV.CVars:Replicate(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
+	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
 
 	return
 end
@@ -95,7 +95,7 @@ function Skybox:Remove(ply)
 	end
 
 	-- Replicate
-	MR.SV.CVars:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
+	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
 
 	-- Reset the combobox
 	if MR.Skybox:GetCurrentName() ~= "" then

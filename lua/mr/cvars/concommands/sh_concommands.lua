@@ -82,7 +82,7 @@ concommand.Add("mr_delay", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
+	if MR.SV.Sync:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_delay", value, "load", "slider") then
 		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: setting duplicator delay to " .. tostring(value) .. ".")
 	else
 		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
@@ -215,7 +215,7 @@ concommand.Add("mr_dup_cleanup", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.SV.CVars:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
+	if MR.SV.Sync:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_duplicator_cleanup", value, "load", "box") then
 		MR.SV.Concommand:PrintSuccess("[Map Retexturizer] Console: duplicator cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
 	else
 		MR.SV.Concommand:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")

@@ -5,10 +5,11 @@
 		hybrid = tool files extracted into the addons folder using materials from an extra gma and from files
 ]]
 local mode = "hybrid"
-
--- Folder inside "[...]/garrysmod/data/"
-local mainDir = "mr/"
-
+-- Folder inside "[...]/garrysmod/materials"
+local materialsDir = "mr/"
+-- Folder inside "[...]/garrysmod/lua"
+local luaDir = "mr/"
+-- Code scopes
 local _types = {
 	"sh_",
 	"sv_",
@@ -17,8 +18,9 @@ local _types = {
 
 -- Global tool functions
 MR = {
-	CL = {},
-	SV = {}
+	-- Shared
+	CL = {}, -- Client
+	SV = {} -- Server
 }
 
 -- Load source files
@@ -70,16 +72,16 @@ local function ParseDir(dir, _type)
 end
 
 for _,_type in pairs(_types) do
-	ParseDir(mainDir, _type)
+	ParseDir(luaDir, _type)
 end
 
 -- Add resources
 if SERVER then
 	local function SendFiles()
-		local files, _ = file.Find("materials/mr/*.vmt", "GAME")
+		local files, _ = file.Find("materials/".. luaDir .."*.vmt", "GAME")
 
 		for k, v in ipairs(files) do
-			resource.AddFile("materials/mr/"..v)
+			resource.AddFile("materials/".. luaDir .. v)
 		end
 	end
 

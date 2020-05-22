@@ -64,15 +64,13 @@ hook.Add("OnSpawnMenuClose", "MRPPanelHandleSpawnMenuClosed", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Restart the preview
-	if not MR.Ply:GetDecalMode(LocalPlayer()) then
-		PPanel:RestartPreviewBox()
-	end
+	PPanel:RestartPreviewBox()
 end)
 
--- Show the panel
 hook.Add("OnContextMenuOpen", "MROpenPPanel", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
+	-- Show the panel
 	PPanel:Show()
 end)
 
@@ -376,8 +374,10 @@ end
 
 -- Show the preview box
 function PPanel:RestartPreviewBox()
-	if PPanel:Preview_GetSelf() then
-		PPanel:Preview_GetSelf():Show()
+	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
+		if PPanel:Preview_GetSelf() then
+			PPanel:Preview_GetSelf():Show()
+		end
 	end
 end
 

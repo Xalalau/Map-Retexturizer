@@ -49,15 +49,7 @@ end)
 
 -- Hooks
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
-	-- General: if the tool gun is loaded and using Map Retexturizer
-	if MR.Ply:GetUsingTheTool(LocalPlayer()) then
-		-- Keep the preview working
-		if not MR.Ply:GetDecalMode(LocalPlayer()) then
-			MR.CL.PPanel:RestartPreviewBox()
-		end
-	end
-
-	-- Specific: a situation that can only occur at the start of the match
+	-- This situation can only occur at the start of the match:
 	-- Inhibit GMod's spawn menu context panel in case the player opens the spawn
 	-- menu, load our tool menu but don't click on it to load the tool gun
 	if MR.CL.GUI:GetSpawnmenuActiveControlPanel() then

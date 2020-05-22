@@ -103,6 +103,5 @@ if SERVER then
 	MR.SV.Load:Init()
 else
 	MR.Materials:Init()
-	MR.CL.Preview:Init()
 	MR.CL.Save:Init()
 end

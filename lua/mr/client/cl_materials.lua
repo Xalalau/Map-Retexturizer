@@ -6,6 +6,17 @@ local Materials = {}
 Materials.__index = Materials
 MR.CL.Materials = Materials
 
+local materials = {
+	preview = {
+		-- Preview material
+		name = "MatRetPreviewMaterial"
+	}
+}
+
+function Materials:GetPreviewName()
+	return materials.preview.name
+end
+
 -- Create a material if it doesn't exist
 function Materials:Create(name, matType, path)
 	if Material(name):IsError() then
@@ -44,4 +55,33 @@ function Materials:SetValid(material)
 	net.SendToServer()
 
 	return result
+end
+
+-- Set material preview Data
+-- use newData to force a specific material preview
+function Materials:SetPreview(newData, isDecal)
+	local ply = LocalPlayer()
+	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), isDecal and newData.newMaterial, nil, isDecal)
+	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() })
+
+	-- Adjustments for skybox materials
+	if MR.Materials:IsFullSkybox(newData.newMaterial) then
+		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
+	-- Don't apply bad materials
+	elseif not MR.Materials:IsValid(newData.newMaterial) then
+		return false
+	end
+
+	-- Adjustments for decal materials
+	if isDecal then
+		oldData.oldMaterial = oldData.newMaterial
+	end
+
+	-- Update the material if necessary
+	if not MR.Data:IsEqual(oldData, newData) then
+		MR.CL.Map:Set(newData)
+		materials.preview.rotationHack = newData.rotation
+	end
+
+	return true
 end

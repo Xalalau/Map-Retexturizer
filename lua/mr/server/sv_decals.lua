@@ -14,7 +14,7 @@ net.Receive("SV.Decals:RemoveAll", function(_, ply)
 	Decals:RemoveAll(ply)
 end)
 
--- Apply decal materials: server
+-- Apply decal materials
 function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
 	local check = {

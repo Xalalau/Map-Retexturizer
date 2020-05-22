@@ -29,7 +29,7 @@ function Save:GetCurrentVersion()
 	return save.currentVersion
 end
 
--- Save the modifications to a file: server
+-- Save the modifications to a file
 function Save:Set(ply, saveName, blockAlert)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then

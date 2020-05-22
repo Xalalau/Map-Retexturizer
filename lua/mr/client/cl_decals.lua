@@ -11,7 +11,16 @@ net.Receive("CL.Decals:Set", function()
 	Decals:Set(net.ReadTable(), net.ReadBool())
 end)
 
--- Toogle the decal mode for a player: server
+-- Decal rendering hook
+hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
+	local ply = LocalPlayer()
+
+	if ply and MR.Ply:IsInitialized(ply) and MR.Ply:GetUsingTheTool(ply) and MR.Ply:GetDecalMode(ply) then
+		Decals:Preview()
+	end
+end)
+
+-- Toogle the decal mode for a player
 function Decals:Toogle(value)
 	local ply = LocalPlayer()
 
@@ -22,7 +31,7 @@ function Decals:Toogle(value)
 	net.SendToServer()
 end
 
--- Apply decal materials: client
+-- Apply decal materials
 function Decals:Set(data, isBroadcasted)
 	-- General first steps
 	local check = {
@@ -50,4 +59,29 @@ function Decals:Set(data, isBroadcasted)
 
 	-- Index the Data
 	MR.Data.list:InsertElement(MR.Decals:GetList(), data)
+end
+
+-- Material rendering
+function Decals:Preview()
+	local ply = LocalPlayer()
+	local tr = ply:GetEyeTrace()
+
+	-- Don't render if there is a loading or the material browser is open
+	if MR.Duplicator:IsRunning(ply) then
+		return
+	end
+
+	-- Don't render decal materials over the skybox
+	if MR.Materials:GetOriginal(tr) == MR.Skybox:GetGenericName() then
+		return
+	end
+
+	-- Render
+	local ang = tr.HitNormal:Angle()
+	local scalex = ply:GetInfo("internal_mr_scalex")
+	local scaley = ply:GetInfo("internal_mr_scaley")
+	local material = Material(MR.CL.Materials:GetPreviewName())
+
+	render.SetMaterial(material)
+	render.DrawQuadEasy(tr.HitPos, tr.HitNormal, material:Width() * scalex, material:Height() * scaley, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
 end

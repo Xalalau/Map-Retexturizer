@@ -28,7 +28,7 @@ function Skybox:GetDupName()
 	return skybox.dupName
 end
 
--- Change the skybox: server
+-- Change the skybox
 function Skybox:Set(ply, data, isBroadcasted)
 	local suffixes = { "", "", "", "", "", "" }
 	local i
@@ -99,7 +99,7 @@ function Skybox:Remove(ply)
 
 	-- Reset the combobox
 	if MR.Skybox:GetCurrentName() ~= "" then
-		net.Start("CL.GUI:ResetSkyboxComboValue")
+		net.Start("CL.CPanel:ResetSkyboxComboValue")
 		net.Broadcast()
 	end
 

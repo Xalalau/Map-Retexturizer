@@ -28,7 +28,7 @@ function Displacements:GetDupName()
 	return displacements.dupName
 end
 
--- Change the displacements: server
+-- Change the displacements
 --
 -- displacement = displacement detected name
 -- newMaterial = new material for $basetexture
@@ -92,7 +92,7 @@ function Displacements:RemoveAll(ply)
 	MR.SV.Duplicator:ForceStop()
 
 	-- Reset the combobox and its text fields
-	net.Start("CL.GUI:ResetDisplacementsComboValue")
+	net.Start("CL.CPanel:ResetDisplacementsComboValue")
 	net.Broadcast()
 
 	-- Remove

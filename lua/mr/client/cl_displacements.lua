@@ -30,37 +30,31 @@ end
 
 -- Change the displacements: client
 function Displacements:Set(applyProperties)
-	local displacement, _ = MR.CL.GUI:GetDisplacementsCombo():GetSelected()
-	local newMaterial = MR.CL.GUI:GetDisplacementsText1():GetValue()
-	local newMaterial2 = MR.CL.GUI:GetDisplacementsText2():GetValue()
-	local list = MR.Displacements:GetList()
-	local data = applyProperties and MR.Data:Create(LocalPlayer()) or MR.Data.list:GetElement(list, displacement) or {}
+	local displacement, _ = MR.CL.CPanel:GetDisplacementsCombo():GetSelected()
+	local newMaterial = MR.CL.CPanel:GetDisplacementsText1():GetValue()
+	local newMaterial2 = MR.CL.CPanel:GetDisplacementsText2():GetValue()
+	local data = applyProperties and MR.Data:Create(LocalPlayer(), { oldMaterial = displacement }) or MR.Data.list:GetElement(MR.Displacements:GetList(), displacement) or {}
 
 	-- No displacement selected
-	if not list or not displacement or displacement == "" then
+	if not displacement or displacement == "" then
 		return false
 	end
 
 	-- Validate empty fields
 	if newMaterial == "" then
-		newMaterial = list[displacement][1]
+		newMaterial = MR.Displacements:GetDetected()[displacement][1]
 
 		timer.Create("MRText1Update", 0.5, 1, function()
-			MR.CL.GUI:GetDisplacementsText1():SetValue(newMaterial)
+			MR.CL.CPanel:GetDisplacementsText1():SetValue(newMaterial)
 		end)
 	end
 
 	if newMaterial2 == "" then
-		newMaterial2 = list[displacement][2]
+		newMaterial2 = MR.Displacements:GetDetected()[displacement][2]
 
 		timer.Create("MRText2Update", 0.5, 1, function()
-			MR.CL.GUI:GetDisplacementsText2():SetValue(newMaterial2)
+			MR.CL.CPanel:GetDisplacementsText2():SetValue(newMaterial2)
 		end)
-	end
-
-	-- Adjustments to the data table
-	if table.Count(data) > 0 then
-		data.oldMaterial = displacement
 	end
 
 	-- Start the change

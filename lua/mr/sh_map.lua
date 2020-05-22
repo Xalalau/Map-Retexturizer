@@ -115,7 +115,7 @@ function Map:Set(ply, data, isBroadcasted)
 		if SERVER then
 			selected.dupName = MR.SV.Displacements:GetDupName()
 		end
-	elseif MR.Materials:IsSkybox(data.oldMaterial) then	
+	elseif MR.Materials:IsSkybox(data.oldMaterial) then
 		selected.isSkybox = true
 		selected.list = MR.Skybox:GetList()
 		selected.limit = MR.Skybox:GetLimit()

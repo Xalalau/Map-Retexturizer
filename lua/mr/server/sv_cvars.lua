@@ -19,7 +19,7 @@ net.Receive("SV.CVars:ReplicateFirstSpawn", function(_, ply)
 	CVars:ReplicateFirstSpawn(ply)
 end)
 
--- Replicate menu field: server
+-- Replicate menu field
 --
 -- ply = player
 -- command = console command
@@ -37,9 +37,9 @@ function CVars:Replicate(ply, command, value, field1, field2)
 
 	-- Change field values on server
 	if field1 and field2 then
-		MR.GUI:Set(field1, field2, value)
+		MR.CPanel:Set(field1, field2, value)
 	elseif field1 then
-		MR.GUI:Set(field1, nil, value)
+		MR.CPanel:Set(field1, nil, value)
 	else
 		return false
 	end

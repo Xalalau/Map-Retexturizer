@@ -15,6 +15,7 @@ util.AddNetworkString("Ply:SetDupRunning")
 util.AddNetworkString("Ply:SetFirstSpawn")
 util.AddNetworkString("Ply:SetPreviewMode")
 util.AddNetworkString("Ply:SetDecalMode")
+util.AddNetworkString("Ply:SetUsingTheTool")
 
 -- Set the fake player
 function Ply:Init()

@@ -129,7 +129,7 @@ function Browser:Run()
 			browser.SelectedMaterial.OnEnter = function(self)
 				local arq = self:GetText()
 
-				if not Material(arq):IsError() then -- I have to block all bad entries here
+				if arq ~= "" and not Material(arq):IsError() then -- I have to block all bad entries here
 					Browser:SelectMaterial(arq, browserPreviewMaterial)
 				end
 			end
@@ -141,6 +141,9 @@ function Browser:Run()
 			Send:SetText("Tool Gun")
 			Send.DoClick = function()
 				MR.Materials:SetNew(LocalPlayer(), browser.SelectedMaterial:GetText())
+				timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+					MR.CL.Materials:SetPreview()
+				end)
 			end
 
 		-- Copy to clipboard button
@@ -359,6 +362,9 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 						elseif input.IsMouseDown(108) then
 							pressed = 108
 							MR.Materials:SetNew(LocalPlayer(), arq)
+							timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+								MR.CL.Materials:SetPreview()
+							end)
 							SetEffect(color.middle)
 							PrintOverlayMessage(14, "Tool gun")
 						-- Copy material path to clipboard (MOUSE_MIDDLE)
@@ -384,6 +390,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 						-- Draw a selection around the selected material
 						if browser.SelectedMaterial:GetText() == arq then
 							if not selected then
+								Browser:SelectMaterial(arq, browserPreviewMaterial)
 								SetEffect(color.left)
 								selected = true
 							end

@@ -68,9 +68,76 @@ function CVars:Replicate(value, field1, field2)
 	CVars:SetLoopBlock(true)
 
 	-- Replicate
-	if field1 and field2 and MR.GUI:Get(field1, field2) ~= "" and IsValid(MR.GUI:Get(field1, field2)) then
-		MR.GUI:Get(field1, field2):SetValue(value)
-	elseif field1 and MR.GUI:Get(field1) ~= "" and IsValid(MR.GUI:Get(field1)) then
-		MR.GUI:Get(field1):SetValue(value)
+	local selectedField
+
+	if field1 and field2 and MR.CPanel:Get(field1, field2) ~= "" and IsValid(MR.CPanel:Get(field1, field2)) then
+		selectedField = MR.CPanel:Get(field1, field2)
+	elseif field1 and MR.CPanel:Get(field1) ~= "" and IsValid(MR.CPanel:Get(field1)) then
+		selectedField = MR.CPanel:Get(field1)
+	end
+
+	if selectedField then
+		if selectedField:GetName() == "DComboBox" then
+			value = selectedField:GetOptionTextByData(value)
+		end
+		selectedField:SetValue(value)
 	end
 end
+
+
+
+
+
+--[[
+	OLD fully working CPanel slider sync example
+
+			MR.CPanel:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
+			element = MR.CPanel:Get("load", "slider")
+				CPanel:ControlHelp("Delay between the application of each material")
+
+				function element:OnValueChanged(val)
+					-- Hack to initialize the field
+					if MR.CPanel:Get("load", "slider"):GetValue() == 0 then
+						timer.Create("MRSliderValueHack", 1, 1, function()
+							MR.CPanel:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("internal_mr_delay"):GetFloat()))
+						end)
+
+						return
+					end
+
+					-- Force the field to update (2 times, slider fix) and disable a sync loop block
+					if MR.CL.CVars:GetSliderUpdate() then
+						MR.CL.CVars:SetSliderUpdate(false)
+
+						return
+					elseif MR.CL.CVars:GetLoopBlock() then
+						timer.Create("MRForceSliderToUpdate"..tostring(math.random(99999)), 0.001, 1, function()
+							MR.CPanel:Get("load", "slider"):SetValue(string.format("%0.3f", val))
+						end)
+
+						MR.CL.CVars:SetSliderUpdate(true)
+
+						MR.CL.CVars:SetLoopBlock(false)
+
+						return
+					-- Admin only: reset the option if it's not being synced and return
+					elseif not MR.Ply:IsAdmin(ply) then
+						MR.CPanel:Get("load", "slider"):SetValue(string.format("%0.3f", GetConVar("internal_mr_delay"):GetFloat()))
+
+						return
+					end
+
+					-- Start syncing (don't overflow the channel with tons of slider values)
+					if timer.Exists("MRSliderSend") then
+						timer.Destroy("MRSliderSend")
+					end
+					timer.Create("MRSliderSend", 0.1, 1, function()
+						net.Start("SV.CVars:Replicate")
+							net.WriteString("internal_mr_delay")
+							net.WriteString(string.format("%0.3f", val))
+							net.WriteString("load")
+							net.WriteString("slider")
+						net.SendToServer()
+					end)
+				end
+]]

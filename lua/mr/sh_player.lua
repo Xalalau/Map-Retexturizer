@@ -11,7 +11,8 @@ local MRPlayer = {
 	state = {
 		firstSpawn = true,
 		previewMode = true,
-		decalMode = false
+		decalMode = false,
+		usingTheTool = false
 	},
 	dup = {
 		-- If a save is being loaded, the file name keeps stored here until it's done
@@ -54,6 +55,30 @@ net.Receive("Ply:Set", function()
 	Ply:Set(LocalPlayer())
 end)
 
+net.Receive("Ply:SetUsingTheTool", function(_, ply)
+	Ply:SetUsingTheTool(ply or LocalPlayer(), net.ReadBool())
+end)
+
+-- Auto detect if the player is using the tool (weapon switched)
+if SERVER then
+	hook.Add("PlayerSwitchWeapon", "MRIsTheToolActive", function(ply, oldWeapon, newWeapon)
+		if ply and MR.Ply:IsInitialized(ply) then
+			Ply:ValidateTool(ply, newWeapon)
+		end
+	end)
+end
+
+-- Auto detect if the player is using the tool (Spawnmenu closed: has the player changed the tool?)
+if CLIENT then
+	hook.Add("OnSpawnMenuClose", "MRIsTheToolActive2", function() -- 
+		local ply = LocalPlayer()
+
+		if ply and MR.Ply:IsInitialized(ply) then
+			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		end
+	end)
+end
+
 -- Detect admin privileges 
 function Ply:IsAdmin(ply)
 	-- fakeHostPly
@@ -70,7 +95,7 @@ function Ply:IsAdmin(ply)
 	if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
 		if CLIENT then
 			if not timer.Exists("MRNotAdminPrint") then
-				if not MR.CVars:GetLoopBlock() then -- Don't print the message if we are checking a syncing
+				if not MR.CL.CVars:GetLoopBlock() then -- Don't print the message if we are checking a syncing
 					timer.Create("MRNotAdminPrint", 2, 1, function() end)
 				
 					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
@@ -82,6 +107,51 @@ function Ply:IsAdmin(ply)
 	end
 
 	return true
+end
+
+-- Check if a given weapon is the tool
+function Ply:ValidateTool(ply, weapon)
+	if IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
+		if not Ply:GetUsingTheTool(ply) then
+			Ply:SetUsingTheTool(ply, true)
+
+			if SERVER then
+				net.Start("Ply:SetUsingTheTool")
+				net.WriteBool(true)
+				net.Send(ply)
+
+				net.Start("CL.GUI:DisableSpawnmenuActiveControlPanel")
+				net.Send(ply)
+
+				if not MR.Ply:GetDecalMode(ply) then
+					net.Start("CL.PPanel:RestartPreviewBox")
+					net.Send(ply)
+				end
+			else
+				MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
+			end
+		end
+	else
+		-- It's a tool gun but the mode is empty. this occurs when
+		-- the player (re)spanws. To ensure success I will revalidate
+		if SERVER and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
+			timer.Create("MRRevalidateTool", 0.05, 1, function()
+				Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
+			end)
+
+			return 
+		end
+	
+		if Ply:GetUsingTheTool(ply) then
+			Ply:SetUsingTheTool(ply, false)
+
+			if SERVER then
+				net.Start("Ply:SetUsingTheTool")
+				net.WriteBool(false)
+				net.Send(ply)
+			end
+		end
+	end
 end
 
 -- Set some new values in the player entity
@@ -106,6 +176,11 @@ end
 
 function Ply:SetFirstSpawn(ply)
 	ply.mr.state.firstSpawn = false
+
+	if CLIENT then
+		-- Keep the GMod's spawn menu context closed
+		MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
+	end
 end
 
 function Ply:GetPreviewMode(ply)
@@ -122,6 +197,14 @@ end
 
 function Ply:SetDecalMode(ply, value)
 	ply.mr.state.decalMode = value
+end
+
+function Ply:GetUsingTheTool(ply)
+	return ply.mr.state.usingTheTool
+end
+
+function Ply:SetUsingTheTool(ply, value)
+	ply.mr.state.usingTheTool = value
 end
 
 function Ply:GetDupRunning(ply)

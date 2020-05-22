@@ -57,7 +57,7 @@ function Load:Init()
 
 	if value then
 		RunConsoleCommand("internal_mr_autoload", value)
-		MR.GUI:Set("load", "autoloadtext", value)
+		MR.CPanel:Set("load", "autoloadtext", value)
 	else
 		RunConsoleCommand("internal_mr_autoload", "")
 	end
@@ -138,7 +138,7 @@ function Load:FirstSpawn(ply)
 	end)
 end
 
--- Delete a saved file: server
+-- Delete a saved file
 function Load:Delete(ply, loadName)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then

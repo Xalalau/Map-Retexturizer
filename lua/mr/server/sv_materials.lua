@@ -53,10 +53,8 @@ function Materials:SetAll(ply)
 
 		-- Fill the fake save table with the correct structures (ignoring water materials)
 		newTable.skybox = {
-			MR.Data:Create(ply)
+			MR.Data:Create(ply, { oldMaterial = MR.Skybox:GetGenericName() })
 		}
-
-		newTable.skybox[1].oldMaterial = MR.Skybox:GetGenericName()
 
 		local map_data = MR.OpenBSP()
 		local found = map_data:ReadLumpTextDataStringData()
@@ -69,40 +67,21 @@ function Materials:SetAll(ply)
 					isDiscplacement = true
 				end
 
-				local data = MR.Data:Create(ply)
 				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
+				local data = MR.Data:Create(ply, { oldMaterial = v })
 
 				if isDiscplacement then
-					data.oldMaterial = v
 					data.newMaterial = material
 					data.newMaterial2 = material
 
 					table.insert(newTable.displacements, data)
 				else
-					data.oldMaterial = v
 					data.newMaterial = material
 
 					table.insert(newTable.map, data)
 				end
 			end
 		end
-
-		--[[
-		-- Fill the fake loading table with the correct structure (ignoring water materials)
-		-- Note: this is my old GMod buggy implementation. In the future I can use it if this is closed:
-		-- https://github.com/Facepunch/garrysmod-issues/issues/3216
-		for k, v in pairs (game.GetWorld():GetMaterials()) do 
-			local data = MR.Data:Create(ply)
-			
-			-- Ignore water
-			if not string.find(v, "water") then
-				data.oldMaterial = v
-				data.newMaterial = material
-
-				table.insert(map, data)
-			end
-		end
-		]]
 
 		-- Apply the fake save
 		MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile")

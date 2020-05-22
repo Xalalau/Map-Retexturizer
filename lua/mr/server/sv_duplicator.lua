@@ -403,7 +403,7 @@ function Duplicator:GetEnt()
 	return dup.entity.object
 end
 
--- Update the duplicator progress: server
+-- Update the duplicator progress
 function Duplicator:SetProgress(ply, current, total)
 	-- Update...
 	net.Start("CL.Duplicator:SetProgress")
@@ -518,7 +518,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	end)
 end
 
--- Force to stop the duplicator: server
+-- Force to stop the duplicator
 function Duplicator:ForceStop(isGModLoadStarting)
 	if MR.Duplicator:IsRunning() or isGModLoadStarting then
 		MR.Duplicator:SetStopping(true)

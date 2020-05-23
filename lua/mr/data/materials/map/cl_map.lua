@@ -17,7 +17,7 @@ end)
 
 -- Fix the detail name on the server backup
 function Map:FixDetail(oldMaterial, isDisplacement)
-	local element = MR.Data.list:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
+	local element = MR.DataList:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
 
 	if element then
 		net.Start("SV.Map:FixDetail")
@@ -38,7 +38,7 @@ function Map:Set(data)
 		local newMaterial = nil
 
 		-- Get the correct material
-		local element = MR.Data.list:GetElement(MR.Map:GetList(), data.newMaterial)
+		local element = MR.DataList:GetElement(MR.Map:GetList(), data.newMaterial)
 		
 		if element and element.backup then
 			newMaterial = Material(element.backup.newMaterial)
@@ -65,7 +65,7 @@ function Map:Set(data)
 		end
 
 		-- Get the correct material
-		local element = MR.Data.list:GetElement(MR.Map:GetList(), data.newMaterial2)
+		local element = MR.DataList:GetElement(MR.Map:GetList(), data.newMaterial2)
 
 		if element and element.backup then
 			newMaterial2 = Material(element.backup.newMaterial2)

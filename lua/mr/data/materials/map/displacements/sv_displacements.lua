@@ -96,9 +96,9 @@ function Displacements:RemoveAll(ply)
 	net.Broadcast()
 
 	-- Remove
-	if MR.Data.list:Count(MR.Displacements:GetList()) > 0 then
+	if MR.DataList:Count(MR.Displacements:GetList()) > 0 then
 		for k,v in pairs(MR.Displacements:GetList()) do
-			if MR.Data.list:IsActive(v) then
+			if MR.DataList:IsActive(v) then
 				MR.Map:Remove(v.oldMaterial)
 			end
 		end

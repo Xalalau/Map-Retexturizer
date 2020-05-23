@@ -50,7 +50,7 @@ local function RecreateTable(ply, ent, savedTable)
 		-- Start with the saving format, then send the rest
 		timer.Create("MRSendFormatFirst"..tostring(dup.recreateTimerIncrement), savedTable.savingFormat and 0 or 0.01, 1, function()
 			-- Remove some disabled elements (because duplicator allways gets these tables full of trash)
-			MR.Data.list:Clean(savedTable.map or savedTable.displacements or nil)
+			MR.DataList:Clean(savedTable.map or savedTable.displacements or nil)
 
 			-- Index the format version
 			savedTable.savingFormat = recreateTableSaveFormat

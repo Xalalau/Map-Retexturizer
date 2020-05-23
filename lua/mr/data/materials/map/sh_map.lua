@@ -72,7 +72,7 @@ function Map:GetCurrent(tr)
 
 		local path = ""
 
-		local element = MR.Data.list:GetElement(selected.list, selected.oldMaterial)
+		local element = MR.DataList:GetElement(selected.list, selected.oldMaterial)
 
 		if element then
 			path = element.newMaterial
@@ -93,7 +93,7 @@ function Map:GetData(tr)
 
 	if dataList then
 		local oldMaterial = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)
-		local aux = MR.Data.list:GetElement(dataList, oldMaterial)
+		local aux = MR.DataList:GetElement(dataList, oldMaterial)
 
 		oldData = table.Copy(aux)
 	end
@@ -173,7 +173,7 @@ function Map:Set(ply, data, isBroadcasted)
 
 	-- run once serverside and once on every player clientside
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
-		local element = MR.Data.list:GetElement(selected.list, data.oldMaterial)
+		local element = MR.DataList:GetElement(selected.list, data.oldMaterial)
 		local i
 
 		-- Set the backup:
@@ -188,10 +188,10 @@ function Map:Set(ply, data, isBroadcasted)
 			end
 
 			-- Change the state of the element to disabled
-			MR.Data.list:DisableElement(element)
+			MR.DataList:DisableElement(element)
 
 			-- Get a map.list free index
-			i = MR.Data.list:GetFreeIndex(selected.list)
+			i = MR.DataList:GetFreeIndex(selected.list)
 		-- If the material is untouched
 		else
 			-- General first steps (part 2)
@@ -208,7 +208,7 @@ function Map:Set(ply, data, isBroadcasted)
 			end
 
 			-- Get a map.list free index
-			i = MR.Data.list:GetFreeIndex(selected.list)
+			i = MR.DataList:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
 			local dataBackup = data.backup or MR.Data:CreateFromMaterial(data.oldMaterial, selected.filename..tostring(i), selected.isDisplacement and selected.filename2..tostring(i))
@@ -228,7 +228,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 
 		-- Index the Data
-		MR.Data.list:InsertElement(selected.list, data, i)
+		MR.DataList:InsertElement(selected.list, data, i)
 
 		if CLIENT then
 			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
@@ -316,9 +316,9 @@ function Map:Remove(oldMaterial)
 		end
 	end
 
-	if MR.Data.list:Count(selected.list) > 0 then
+	if MR.DataList:Count(selected.list) > 0 then
 		-- Get the element to clean from the table
-		local element = MR.Data.list:GetElement(selected.list, oldMaterial)
+		local element = MR.DataList:GetElement(selected.list, oldMaterial)
 
 		if element then
 			-- Run the element backup
@@ -327,12 +327,12 @@ function Map:Remove(oldMaterial)
 			end
 
 			-- Change the state of the element to disabled
-			MR.Data.list:DisableElement(element)
+			MR.DataList:DisableElement(element)
 
 			-- Update the duplicator
 			if SERVER then
 				if IsValid(MR.SV.Duplicator:GetEnt()) then
-					if MR.Data.list:Count(selected.list) == 0 then
+					if MR.DataList:Count(selected.list) == 0 then
 						duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), selected.dupName)
 					end
 				end

@@ -171,7 +171,7 @@ function GUI:OnCursorStoppedHoveringAndMoving(identifier, panelInfo, callback, a
 	end
 end
 
--- Remove GMod's context menu control panel
+-- Inhibit GMod's spawn menu context panel
 function GUI:DisableSpawnmenuActiveControlPanel()
 	spawnmenu.SetActiveControlPanel(nil)
 end

@@ -58,7 +58,7 @@ function Decals:Set(data, isBroadcasted)
 	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scalex, data.scaley)
 
 	-- Index the Data
-	MR.Data.list:InsertElement(MR.Decals:GetList(), data)
+	MR.DataList:InsertElement(MR.Decals:GetList(), data)
 end
 
 -- Material rendering

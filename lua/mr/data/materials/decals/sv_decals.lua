@@ -35,7 +35,7 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 		duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = MR.Decals:GetList() })
 
 		-- Index the Data
-		MR.Data.list:InsertElement(MR.Decals:GetList(), data)
+		MR.DataList:InsertElement(MR.Decals:GetList(), data)
 	end
 
 	-- Send to...

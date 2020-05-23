@@ -7,21 +7,24 @@ Ply.__index = Ply
 MR.Ply = Ply
 
 local MRPlayer = {
-	-- Tells if the player is spawning for the first time, using preview mode and/or decal mode
 	state = {
+		-- The player is spawning for the first time
 		firstSpawn = true,
+		-- If the preview box is always showing
 		previewMode = true,
+		-- Enable the preview for decals
 		decalMode = false,
+		-- If the player is using Map Retexturizer
 		usingTheTool = false
 	},
-	dup = {
+	dup = { -- Note: this should be in the duplicator files, not here
 		-- If a save is being loaded, the file name keeps stored here until it's done
 		running = "",
 		-- Number of elements
 		count = {
 			total = 0,
 			current = 0,
-			-- Numbers of errors and a simple string list of them
+			-- Number of errors and a simple table listing the bad material names
 			errors = {
 				n = 0,
 				list = {}
@@ -111,29 +114,36 @@ end
 
 -- Check if a given weapon is the tool
 function Ply:ValidateTool(ply, weapon)
-	if IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
-		if not Ply:GetUsingTheTool(ply) then
-			Ply:SetUsingTheTool(ply, true)
+	-- It's the tool gun, it's using this addon and  the player isn't just reselecting it
+	if IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" and not Ply:GetUsingTheTool(ply) then
+		-- Register that the player is using this addon 
+		Ply:SetUsingTheTool(ply, true)
 
-			if SERVER then
-				net.Start("Ply:SetUsingTheTool")
-				net.WriteBool(true)
+		if CLIENT then
+			-- Inhibit GMod's spawn menu context panel
+			MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
+		end
+
+		if SERVER then
+			-- Register that the player is using this addon 
+			net.Start("Ply:SetUsingTheTool")
+			net.WriteBool(true)
+			net.Send(ply)
+
+			-- Inhibit GMod's spawn menu context panel
+			net.Start("CL.GUI:DisableSpawnmenuActiveControlPanel")
+			net.Send(ply)
+
+			-- Restart the preview box rendering
+			if not MR.Ply:GetDecalMode(ply) then
+				net.Start("CL.PPanel:RestartPreviewBox")
 				net.Send(ply)
-
-				net.Start("CL.GUI:DisableSpawnmenuActiveControlPanel")
-				net.Send(ply)
-
-				if not MR.Ply:GetDecalMode(ply) then
-					net.Start("CL.PPanel:RestartPreviewBox")
-					net.Send(ply)
-				end
-			else
-				MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
 			end
 		end
+	-- It's some weapon unrelated to this addon
 	else
 		-- It's a tool gun but the mode is empty. this occurs when
-		-- the player (re)spanws. To ensure success I will revalidate
+		-- the player (re)spawns and to ensure success I'll revalidate
 		if SERVER and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
 			timer.Create("MRRevalidateTool", 0.05, 1, function()
 				Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
@@ -141,7 +151,8 @@ function Ply:ValidateTool(ply, weapon)
 
 			return 
 		end
-	
+
+		-- Register that the player isn't using this addon 
 		if Ply:GetUsingTheTool(ply) then
 			Ply:SetUsingTheTool(ply, false)
 
@@ -178,7 +189,7 @@ function Ply:SetFirstSpawn(ply)
 	ply.mr.state.firstSpawn = false
 
 	if CLIENT then
-		-- Keep the GMod's spawn menu context closed
+		-- Inhibit GMod's spawn menu context panel
 		MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
 	end
 end

@@ -154,7 +154,7 @@ function Duplicator:UpgradeSaveFormat(savedTable, loadName, isDupStarting)
 		-- Map and displacements tables from saved files and rebuilt GMod saves:
 		if savedTable.map then
 			-- Remove all the disabled elements
-			MR.Data.list:Clean(savedTable.map)
+			MR.DataList:Clean(savedTable.map)
 
 			-- Change "mapretexturizer" to "mr"
 			local i
@@ -287,8 +287,8 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		-- Remove all the disabled elements from the map materials tables
 		-- if we are sending the current modifications to a new player
 		if not savedTable then
-			MR.Data.list:Clean(mapTable.map)
-			MR.Data.list:Clean(mapTable.displacements)
+			MR.DataList:Clean(mapTable.map)
+			MR.DataList:Clean(mapTable.displacements)
 		end
 
 		-- Get the changed models for new players
@@ -315,9 +315,9 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 
 		-- Get the total modifications to do
 		local decalsTotal = decalsTable and istable(decalsTable) and table.Count(decalsTable) or 0
-		local mapTotal = mapTable and istable(mapTable) and MR.Data.list:Count(mapTable) or 0
-		local displacementsTotal = displacementsTable and istable(displacementsTable) and MR.Data.list:Count(displacementsTable) or 0
-		local skyboxTotal = skyboxTable and istable(skyboxTable) and MR.Data.list:Count(skyboxTable) or 0
+		local mapTotal = mapTable and istable(mapTable) and MR.DataList:Count(mapTable) or 0
+		local displacementsTotal = displacementsTable and istable(displacementsTable) and MR.DataList:Count(displacementsTable) or 0
+		local skyboxTotal = skyboxTable and istable(skyboxTable) and MR.DataList:Count(skyboxTable) or 0
 		local total = decalsTotal + mapTotal + displacementsTotal + modelsTable.count + skyboxTotal
 
 		-- Print server alert

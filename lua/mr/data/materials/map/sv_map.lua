@@ -34,7 +34,7 @@ end
 
 -- Fix the detail name on the server backup
 function Map:FixDetail(oldMaterial, isDisplacement, detail)
-	local element = MR.Data.list:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
+	local element = MR.DataList:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
 	
 	if element then
 		element.backup.detail = detail
@@ -52,9 +52,9 @@ function Map:RemoveAll(ply)
 	MR.SV.Duplicator:ForceStop()
 
 	-- Remove
-	if MR.Data.list:Count(MR.Map:GetList()) > 0 then
+	if MR.DataList:Count(MR.Map:GetList()) > 0 then
 		for k,v in pairs(MR.Map:GetList()) do
-			if MR.Data.list:IsActive(v) then
+			if MR.DataList:IsActive(v) then
 				MR.Map:Remove(v.oldMaterial)
 			end
 		end

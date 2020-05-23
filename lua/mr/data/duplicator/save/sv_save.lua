@@ -54,10 +54,10 @@ function Save:Set(ply, saveName, blockAlert)
 	}
 
 	-- Remove all the disabled elements
-	MR.Data.list:Clean(save.decals)
-	MR.Data.list:Clean(save.map)
-	MR.Data.list:Clean(save.displacements)
-	MR.Data.list:Clean(save.skybox)
+	MR.DataList:Clean(save.decals)
+	MR.DataList:Clean(save.map)
+	MR.DataList:Clean(save.displacements)
+	MR.DataList:Clean(save.skybox)
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save))

@@ -363,7 +363,7 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 		desciption:SetText("#tool.mr.desc")
 		desciption:SetTextColor(Color(0, 0, 0, 255))
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, desciptionInfo.y + desciptionInfo.height)
@@ -526,7 +526,7 @@ function CPanel:SetGeneral(parent, paddingTop, setDFrame)
 			MR.Browser:Run()
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, browserInfo.y + browserInfo.height)
@@ -642,7 +642,7 @@ function CPanel:SetSave(parent, paddingTop, setDFrame)
 			MR.CL.Save:Set()
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, decalsBoxInfo.y)
@@ -982,7 +982,7 @@ function CPanel:SetLoad(parent, paddingTop, setDFrame)
 			net.SendToServer()
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, speedComboboxInfo.y + speedComboboxInfo.height)
@@ -1131,7 +1131,6 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 	--------------------------
 	-- Displacements properties
 	--------------------------
-
 	local displacementsButton = vgui.Create("DButton", panel)
 		displacementsButton:SetSize(displacementsButtonInfo.width, displacementsButtonInfo.height)
 		displacementsButton:SetPos(displacementsButtonInfo.x, displacementsButtonInfo.y)
@@ -1140,7 +1139,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 			MR.CL.Displacements:Set(true)
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, displacementsButtonInfo.y + displacementsButtonInfo.height)
@@ -1291,7 +1290,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 			net.SendToServer()
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, skyboxToolGunInfo.y + MR.CL.GUI:GetComboboxHeight())
@@ -1397,7 +1396,7 @@ function CPanel:SetCleanup(parent, paddingTop, setDFrame)
 			end
 		end
 
-	-- Margion bottom
+	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.GUI:GetGeneralBorders(), MR.CL.GUI:GetGeneralBorders())
 		extraBorder:SetPos(0, cleanupButtonInfo.y + cleanupButtonInfo.height)
@@ -1408,7 +1407,7 @@ end
 
 
 
--- Test the menus. Uncomment and save while the game is open
+-- Test the menus. Uncomment and save while the game is running
 function CPanel:Test()
 	local contextFrameInfo = {
 		width = 275,

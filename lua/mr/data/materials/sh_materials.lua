@@ -357,7 +357,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 		end
 
 		-- Check if the modifications table is full
-		if check.list and check.limit and MR.Data.list:IsFull(check.list, check.limit) then
+		if check.list and check.limit and MR.DataList:IsFull(check.list, check.limit) then
 			if SERVER then
 				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]["..check.type.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
 			end

@@ -6,33 +6,28 @@ local Data = {}
 Data.__index = Data
 MR.Data = Data
 
-Data.list = {}
-Data.list.__index = Data.list
-
 --[[
+	Labels:
+		- map
+		- models
+		- decals
+		- * [All]
 
-Labels:
-	- map
-	- models
-	- decals
-	- * [All]
-
-Data = {
-	ent = *
-	oldMaterial = map and models
-	newMaterial = *
-	newMaterial2 = map
-	offsetx = map and models
-	offsety = map and models
-	scalex = *
-	scaley = *
-	rotation = map and models
-	alpha = map and models
-	detail = map and models
-	position = decals
-	normal = decals
-}
-
+	Data = {
+		ent = *
+		oldMaterial = map and models
+		newMaterial = *
+		newMaterial2 = map
+		offsetx = map and models
+		offsety = map and models
+		scalex = *
+		scaley = *
+		rotation = map and models
+		alpha = map and models
+		detail = map and models
+		position = decals
+		normal = decals
+	}
 ]]
 
 -- Check if the tables are the same
@@ -58,19 +53,19 @@ function Data:IsEqual(Data1, Data2)
 	return isEqual
 end
 
--- Set a data table
 --[[
-materialInfo = {
-	tr = table,
-	oldMaterial = string
-}
+	Set a data table
 
-decalInfo = {
-	pos = vector,
-	normal = vector
-}
+	materialInfo = {
+		tr = table,
+		oldMaterial = string
+	}
+
+	decalInfo = {
+		pos = vector,
+		normal = vector
+	}
 ]]
-
 function Data:Create(ply, materialInfo, decalInfo)
 	local data = {
 		ent = materialInfo and materialInfo.tr and materialInfo.tr.Entity or game.GetWorld(),
@@ -117,100 +112,5 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDec
 	return data
 end
 
--------------------------------------
---- Data TABLE LIST MANAGEMENT
--------------------------------------
 
--- Check if the element is active
-function Data.list:IsActive(element)
-	if element and istable(element) and element.oldMaterial ~=nil then
-		return true
-	end
-
-	return false
-end
-
--- Check if the table is full
-function Data.list:IsFull(list, limit)
-	-- Check if the backup table is full
-	if Data.list:Count(list) == limit then
-		-- Limit reached! Try to open new spaces in the list removing disabled entries
-		Data.list:Clean(list)
-
-		-- Check again
-		if Data.list:Count(list) == limit then
-			return true
-		end
-	end
-	
-	return false
-end
-
--- Get a free index
-function Data.list:GetFreeIndex(list)
-	local i = 1
-
-	for k,v in pairs(list) do
-		if not Data.list:IsActive(v) then
-			break
-		end
-
-		i = i + 1
-	end
-
-	return i
-end
-
--- Insert an element
-function Data.list:InsertElement(list, data, position)
-	list[position or Data.list:GetFreeIndex(list)] = data
-end
-
--- Get an element and its index
-function Data.list:GetElement(list, oldMaterial)
-	for k,v in pairs(list) do
-		if v.oldMaterial == oldMaterial then
-			return v, k
-		end
-	end
-
-	return nil
-end
-
--- Number of active elements in the table 
-function Data.list:Count(list)
-	local i = 0
-
-	for k,v in pairs(list) do
-		if Data.list:IsActive(v) then
-			i = i + 1
-		end
-	end
-
-	return i
-end
-
--- Disable an element
-function Data.list:DisableElement(element)
-	for m,n in pairs(element) do
-		element[m] = nil
-	end
-end
-
--- Remove all the disabled elements
-function Data.list:Clean(list)
-	if not list then
-		return
-	end
-
-	local i = 1
-
-	while list[i] do
-		if not Data.list:IsActive(list[i]) then
-			list[i] = nil
-		end
-
-		i = i + 1
-	end
-end
  

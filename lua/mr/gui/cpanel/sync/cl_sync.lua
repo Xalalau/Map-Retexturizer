@@ -89,7 +89,7 @@ end
 
 
 --[[
-	OLD fully working CPanel slider sync example
+	-- OLD working default CPanel slider sync example
 
 			MR.CPanel:Set("load", "slider", CPanel:NumSlider("Delay", "", 0.016, 0.1, 3))
 			element = MR.CPanel:Get("load", "slider")

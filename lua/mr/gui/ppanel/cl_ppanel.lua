@@ -552,3 +552,8 @@ function PPanel:ResetProperties()
 		PPanel:Properties_GetResetCallback(nil, true)
 	end
 end
+
+
+
+-- Test the menus. Uncomment and save while the game is running
+-- PPanel:Create()

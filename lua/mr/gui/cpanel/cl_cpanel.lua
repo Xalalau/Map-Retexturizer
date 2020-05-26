@@ -523,7 +523,7 @@ function CPanel:SetGeneral(parent, paddingTop, setDFrame)
 		browser:SetPos(browserInfo.x, browserInfo.y)
 		browser:SetText("Material Browser")
 		browser.DoClick = function()
-			MR.Browser:Run()
+			MR.Browser:Create()
 		end
 
 	-- Margin bottom

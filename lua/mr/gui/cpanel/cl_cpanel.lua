@@ -165,7 +165,7 @@ end
 function CPanel:ResetDisplacementsComboValue()
 	-- Wait the cleanup
 	timer.Create("MRWaitCleanupDispCombo", 0.3, 1, function()
-		if CPanel:GetDisplacementsCombo():GetSelectedID() then
+		if CPanel:GetDisplacementsCombo() ~= "" and CPanel:GetDisplacementsCombo():GetSelectedID() then
 			CPanel:GetDisplacementsCombo():ChooseOptionID(CPanel:GetDisplacementsCombo():GetSelectedID())
 		end
 	end)

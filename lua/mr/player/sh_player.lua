@@ -154,13 +154,22 @@ function Ply:ValidateTool(ply, weapon)
 			return 
 		end
 
-		-- Register that the player isn't using this addon 
+		-- 
 		if Ply:GetUsingTheTool(ply) then
+			-- Register that the player isn't using this addon 
 			Ply:SetUsingTheTool(ply, false)
 
 			if SERVER then
 				net.Start("Ply:SetUsingTheTool")
-				net.WriteBool(false)
+					net.WriteBool(false)
+				net.Send(ply)
+
+				-- Force to close the menus
+				-- It's for cases like: get the tool gun, press C, while C is pressed switch for another weapon, menus got stuck
+				net.Start("CL.CPanel:ForceHide")
+				net.Send(ply)
+
+				net.Start("CL.PPanel:ForceHide")
 				net.Send(ply)
 			end
 		end

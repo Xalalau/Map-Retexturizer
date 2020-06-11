@@ -4,3 +4,4 @@
 
 -- Networking 
 util.AddNetworkString("CL.PPanel:RestartPreviewBox")
+util.AddNetworkString("CL.PPanel:ForceHide")

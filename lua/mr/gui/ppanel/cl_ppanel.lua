@@ -309,12 +309,14 @@ end
 function PPanel:Show()
 	PPanel:GetSelf():Show()
 
-	if not PPanel:Preview_GetSelf():IsVisible() then
-		PPanel:Preview_GetSelf():Show()
-	else
-		timer.Create("MRWaitToGetFocus", 0.01, 1, function()
-			PPanel:Preview_GetSelf():MakePopup()
-		end)
+	if IsValid(PPanel:Preview_GetSelf()) then
+		if not PPanel:Preview_GetSelf():IsVisible() then
+			PPanel:Preview_GetSelf():Show()
+		else
+			timer.Create("MRWaitToGetFocus", 0.01, 1, function()
+				PPanel:Preview_GetSelf():MakePopup()
+			end)
+		end
 	end
 end
 
@@ -379,7 +381,7 @@ end
 -- Show the preview box
 function PPanel:RestartPreviewBox()
 	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		if PPanel:Preview_GetSelf() then
+		if IsValid(PPanel:Preview_GetSelf()) then
 			PPanel:Preview_GetSelf():Show()
 		end
 	end
@@ -387,7 +389,7 @@ end
 
 -- Hide the preview box
 function PPanel:StopPreviewBox()
-	if PPanel:Preview_GetSelf() then
+	if IsValid(PPanel:Preview_GetSelf()) then
 		PPanel:Preview_GetSelf():Hide()
 	end
 end
@@ -560,4 +562,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
--- PPanel:Create()
+ PPanel:Create()

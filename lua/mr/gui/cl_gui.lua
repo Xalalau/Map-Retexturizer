@@ -89,6 +89,8 @@ end
 
 -- Check if the cursor is inside bounds of a selected panel
 function GUI:IsCursorHovering(panelIn)
+	if not IsValid(panelIn) then return; end
+
 	local mouse = { x, y }
 	local panel = { width, height, x, y }
 

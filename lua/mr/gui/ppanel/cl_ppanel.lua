@@ -73,6 +73,7 @@ end)
 
 hook.Add("OnContextMenuOpen", "MROpenPPanel", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
+	if not IsValid(PPanel:GetSelf()) then return; end
 
 	-- Show the panel
 	PPanel:Show()
@@ -80,6 +81,7 @@ end)
 
 hook.Add("OnContextMenuClose", "MRClosePPanel", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
+	if not IsValid(PPanel:GetSelf()) then return; end
 
 	-- Hide the CPanel if the mouse isn't hovering any panel
 	if not MR.CL.GUI:IsCursorHovering(PPanel:GetSelf()) and not MR.CL.GUI:IsCursorHovering(MR.CL.CPanel:GetContextSelf()) then
@@ -307,6 +309,8 @@ end
 
 -- Show the panel
 function PPanel:Show()
+	if not IsValid(PPanel:GetSelf()) then return; end
+
 	PPanel:GetSelf():Show()
 
 	if IsValid(PPanel:Preview_GetSelf()) then
@@ -322,6 +326,8 @@ end
 
 -- Hide the panel
 function PPanel:Hide()
+	if not IsValid(PPanel:GetSelf()) then return; end
+
 	PPanel:GetSelf():Hide()
 
 	if not MR.Ply:GetPreviewMode(LocalPlayer()) or MR.Ply:GetDecalMode(LocalPlayer()) then

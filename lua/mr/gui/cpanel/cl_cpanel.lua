@@ -64,8 +64,8 @@ hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
 end)
 
 hook.Add("OnContextMenuOpen", "MROpenCPanel", function()
-	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 	if not IsValid(CPanel:GetSelf()) then return; end
+	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Show the context CPanel frame
 	CPanel:Show(CPanel:GetContextSelf())
@@ -75,8 +75,8 @@ hook.Add("OnContextMenuOpen", "MROpenCPanel", function()
 end)
 
 hook.Add("OnContextMenuClose", "MRCloseCPanel", function()
-	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 	if not IsValid(CPanel:GetSelf()) then return; end
+	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Hide the CPanel if the mouse isn't hovering any panel
 	if not MR.CL.GUI:IsCursorHovering(CPanel:GetContextSelf()) and not MR.CL.GUI:IsCursorHovering(MR.CL.PPanel:GetSelf()) then
@@ -1443,4 +1443,4 @@ function CPanel:Test()
 	end)
 end
 
-CPanel:Test()
+--CPanel:Test()

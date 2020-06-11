@@ -72,16 +72,16 @@ hook.Add("OnSpawnMenuClose", "MRPPanelHandleSpawnMenuClosed", function()
 end)
 
 hook.Add("OnContextMenuOpen", "MROpenPPanel", function()
-	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 	if not IsValid(PPanel:GetSelf()) then return; end
+	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Show the panel
 	PPanel:Show()
 end)
 
 hook.Add("OnContextMenuClose", "MRClosePPanel", function()
-	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 	if not IsValid(PPanel:GetSelf()) then return; end
+	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Hide the CPanel if the mouse isn't hovering any panel
 	if not MR.CL.GUI:IsCursorHovering(PPanel:GetSelf()) and not MR.CL.GUI:IsCursorHovering(MR.CL.CPanel:GetContextSelf()) then
@@ -568,4 +568,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
- PPanel:Create()
+-- PPanel:Create()

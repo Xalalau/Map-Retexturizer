@@ -164,7 +164,9 @@ function CPanel:SetDisplacementsCombo(value)
 end
 
 function CPanel:ResetSkyboxComboValue()
-	CPanel:GetSkyboxCombo():ChooseOptionID(1)
+	if CPanel:GetSkyboxCombo() ~= "" and IsValid(CPanel:GetSkyboxCombo()) then
+		CPanel:GetSkyboxCombo():ChooseOptionID(1)
+	end
 end
 
 -- Reset the displacements combobox material and its text fields

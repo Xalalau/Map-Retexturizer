@@ -40,7 +40,7 @@ function Save:Set_Finish(saveName)
 	-- Add the save as an option in the player's menu
 	if MR.Load:GetList()[saveName] == nil then
 		loadList = MR.CL.CPanel:GetLoadText()
-		if loadList and IsValid(loadList) then
+		if loadList and not isstring(loadList) and IsValid(loadList) then
 			loadList:AddLine(saveName)
 			loadList:SortByColumn(1)
 		end

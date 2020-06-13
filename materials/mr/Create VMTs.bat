@@ -6,6 +6,8 @@ echo.
 
 pause
 
+echo.
+
 :: Skybox
 for /l %%x in (1, 1, 6) do (
 	echo "UnlitGeneric" >> backup%%x.vmt
@@ -44,7 +46,7 @@ for /l %%x in (1, 1, 48) do (
 
 echo.
 
-:: Common materials
+:: Regular map materials
 for /l %%x in (1, 1, 1512) do (
 	echo "VertexlitGeneric" >> file%%x.vmt
 	echo { >> file%%x.vmt

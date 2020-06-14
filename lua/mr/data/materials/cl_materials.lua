@@ -13,8 +13,27 @@ local materials = {
 	}
 }
 
+-- Networking
+net.Receive("CL.Materials:SetPreview", function()
+	Materials:SetPreview()
+end)
+
 function Materials:GetPreviewName()
 	return materials.preview.name
+end
+
+-- Set a broadcasted material as (in)valid
+-- Returns the material path if it's valid or a custom missing texture if it's invalid
+function Materials:ValidateBroadcasted(material)
+	if MR.Materials:IsValid(material) == nil then
+		MR.Materials:Validate(material)
+	end
+
+	if not MR.Materials:IsValid(material) then
+		return MR.Materials:GetMissing()
+	end
+
+	return material
 end
 
 -- Create a material if it doesn't exist
@@ -24,37 +43,6 @@ function Materials:Create(name, matType, path)
 	else
 		return Material(name)
 	end
-end
-
--- Set a material as (in)valid
---
--- Note: displacement materials return true for Material("displacement basetexture 1 or 2"):IsError(),
--- but I can detect them as valid if I create a new material using "displacement basetexture 1 or 2"
--- and then check for its $basetexture or $basetexture2, which will be valid.
-function Materials:SetValid(material)
-	local checkWorkaround = Material(material)
-	local result = false
-
-	-- If the material is invalid
-	if checkWorkaround:IsError() then
-		-- Try to create a new valid material with it
-		checkWorkaround = Materials:Create(material, "UnlitGeneric")
-	end
-
-	-- If the $basetexture is valid, set the material as valid
-	if checkWorkaround:GetTexture("$basetexture") then
-		result = true
-	end
-
-	-- Store the result
-	MR.Materials:SetValid(material, result)
-
-	net.Start("Materials:SetValid")
-		net.WriteString(material)
-		net.WriteBool(result)
-	net.SendToServer()
-
-	return result
 end
 
 -- Set material preview Data
@@ -68,8 +56,8 @@ function Materials:SetPreview(newData, isDecal)
 	if MR.Materials:IsFullSkybox(newData.newMaterial) then
 		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
 	-- Don't apply bad materials
-	elseif not MR.Materials:IsValid(newData.newMaterial) then
-		return false
+	elseif not MR.Materials:Validate(newData.newMaterial) then
+		newData.newMaterial = MR.Materials:GetMissing()
 	end
 
 	-- Adjustments for decal materials

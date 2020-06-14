@@ -8,7 +8,8 @@ MR.Materials = Materials
 
 local materials = {
 	-- Initialized later (Note: only "None" remains as a boolean)
-	detail={
+	missing = MR.Base:GetMaterialsFolder().."missing",
+	detail = {
 		list = {
 			["Concrete"] = false,
 			["Metal"] = false,
@@ -74,15 +75,7 @@ end
 
 -- Check if the skybox is a valid 6 side setup
 function Materials:IsFullSkybox(material)
-	if Materials:IsValid(MR.Skybox:SetSuffix(material)) then
-		if not Material(MR.Skybox:SetSuffix(material)):IsError() then
-			return true
-		else
-			return false
-		end
-	else
-		return false
-	end
+	return Materials:Validate(MR.Skybox:SetSuffix(material))
 end
 
 -- Check if a given material path is valid
@@ -92,31 +85,78 @@ function Materials:IsValid(material)
 		return false
 	end
 
-	-- The material is already validated
-	if Materials:GetValid(material) then
-		return true
-	elseif Materials:GetValid(material) ~= nil then
-		return false
+	-- Get the validation
+	return Materials:GetValid(material)
+end
+
+-- Set a material as (in)valid
+function Materials:Validate(material)
+	-- If it's already validated, return the saved result
+	if Materials:GetValid(material) or CLIENT and Materials:GetValid(material) == false then
+		return Materials:GetValid(material)
 	end
 
-	-- Ignore post processing and returns
+	local checkWorkaround = Material(material)
+	local currentTResult = false
+
+	-- Ignore post processing and folder returns
 	if 	string.find(material, "../", 1, true) or
 		string.find(material, "pp/", 1, true) then
+	else
+		if CLIENT then
+			-- Perfect material validation on the client:
 
-		return false
+			-- Displacement materials return true with Material("displacement basetexture 1 or 2"):IsError(),
+			-- but I can detect them as valid if I create a new material using "displacement basetexture 1 or 2"
+			-- and then check the $basetexture or $basetexture2, which will be valid.
+
+			-- If the material is invalid
+			if checkWorkaround:IsError() then
+				-- Try to create a new valid material with it
+				checkWorkaround = MR.CL.Materials:Create(material, "UnlitGeneric")
+			end
+
+			-- If the $basetexture is valid, set the material as valid
+			if checkWorkaround:GetTexture("$basetexture") then
+				currentTResult = true
+			end
+		elseif SERVER then
+			-- This is the best validation I can make on the server:
+			if not Material(material):IsError() then 
+				currentTResult = true
+			end
+		end
 	end
 
-	-- Process partially valid materials (clientside and serverside)
+	-- Store the result
+	Materials:SetValid(material, currentTResult)
+
 	if CLIENT then
-		return MR.CL.Materials:SetValid(material)
+		net.Start("Materials:SetValid")
+			net.WriteString(material)
+			net.WriteBool(currentTResult)
+		net.SendToServer()
 	end
 
-	return true
+	return currentTResult
 end
 
 -- Check if a material is valid
 function Materials:GetValid(material)
 	return materials.valid[material]
+end
+
+-- Set a material as (in)valid
+-- Note can be set as true after being set as false. Will be true forever
+function Materials:SetValid(material, value)
+	if not materials.valid[material] and materials.valid[material] ~= value then
+		materials.valid[material] = value
+	end
+end
+
+-- Get our custom missing material
+function Materials:GetMissing()
+	return materials.missing
 end
 
 -- Get the new material from mr_material cvar
@@ -297,11 +337,6 @@ function Materials:ResizeInABox(boxSize, width, height)
 	return texture["width"], texture["height"]
 end
 
--- Set a material as (in)valid
-function Materials:SetValid(material, value)
-	materials.valid[material] = value
-end
-
 --[[
 	Many initial important checks and adjustments for functions that apply material changes
 	Must be clientside and serverside - on the top
@@ -339,17 +374,23 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 	if check then
 		-- Don't apply bad materials
-		if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
-			print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
+		-- Note: these are redundant checks to avoid script errors from untreated cases
+		if CLIENT and not isBroadcasted then
+			if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
+				print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 
-			return false
-		end
+				return false
+			end
 
-		if check.material2 and not Materials:IsValid(check.material2) then
-			return false
+			if check.material2 and not Materials:IsValid(check.material2) then
+				print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
+
+				return false
+			end
 		end
 
 		-- Don't modify bad entities
+		-- Note: it's an redundant check to avoid script errors from untreated cases
 		if check.ent and (isstring(check.ent) or not IsValid(check.ent)) then
 			print("[Map Retexturizer]["..check.type.."] Bad entity blocked.")
 

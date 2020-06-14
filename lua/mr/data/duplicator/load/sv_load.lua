@@ -113,6 +113,9 @@ function Load:FirstSpawn(ply)
 	-- Index the player control
 	MR.Ply:Set(ply)
 
+	-- Validate the preview material
+	MR.Materials:Validate(ply:GetInfo("internal_mr_material"))
+
 	-- wait until the player has our table attached to him
 	timer.Create("MRWaitToSetPly", 0.5, 1, function()
 		-- Start an ongoing load from the beggining

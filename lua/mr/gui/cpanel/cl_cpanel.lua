@@ -1256,7 +1256,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 				return
 			end
 
-			if MR.Materials:IsValid(value) or MR.Materials:IsFullSkybox(value) or value == "" then
+			if MR.Materials:Validate(value) or MR.Materials:IsFullSkybox(value) or value == "" then
 				if MR.Materials:IsFullSkybox(value) then
 					value = MR.Skybox:SetSuffix(value)
 				end

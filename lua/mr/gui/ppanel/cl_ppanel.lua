@@ -414,7 +414,7 @@ function PPanel:SetSelectedMaterialTextentry(panel, materialInfo)
 
 			MR.Materials:SetNew(LocalPlayer(), self:GetText())
 
-			if not MR.Materials:IsValid(input) and PPanel:Preview_GetSelf():IsVisible() then
+			if not MR.Materials:Validate(input) and PPanel:Preview_GetSelf():IsVisible() then
 				PPanel:Preview_GetSelf():Hide()
 			else
 				timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()

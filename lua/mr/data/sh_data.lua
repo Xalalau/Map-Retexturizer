@@ -69,7 +69,7 @@ end
 function Data:Create(ply, materialInfo, decalInfo)
 	local data = {
 		ent = materialInfo and materialInfo.tr and materialInfo.tr.Entity or game.GetWorld(),
-		oldMaterial = decalInfo and MR.Materials:GetNew(ply) or materialInfo.tr and MR.Materials:GetOriginal(materialInfo.tr) or materialInfo.oldMaterial or "",
+		oldMaterial = decalInfo and MR.Materials:GetNew(ply) or materialInfo and materialInfo.tr and MR.Materials:GetOriginal(materialInfo.tr) or materialInfo.oldMaterial or "",
 		newMaterial = MR.Materials:GetNew(ply),
 		offsetx = not decalInfo and ply:GetInfo("internal_mr_offsetx") or nil,
 		offsety = not decalInfo and ply:GetInfo("internal_mr_offsety") or nil,

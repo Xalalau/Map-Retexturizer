@@ -8,6 +8,7 @@ MR.SV.Materials = Materials
 
 -- Networking
 util.AddNetworkString("Materials:SetValid")
+util.AddNetworkString("CL.Materials:SetPreview")
 util.AddNetworkString("SV.Materials:RemoveAll")
 util.AddNetworkString("SV.Materials:SetAll")
 

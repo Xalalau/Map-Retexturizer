@@ -132,6 +132,11 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	end
 
+	-- Validation for broadcasted materials
+	if CLIENT and isBroadcasted then
+		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
+	end
+
 	-- General first steps (part 1)
 	local check = {
 		material = data.newMaterial,

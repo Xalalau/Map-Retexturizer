@@ -33,6 +33,11 @@ end
 
 -- Apply decal materials
 function Decals:Set(data, isBroadcasted)
+	-- Validation for broadcasted materials
+	if CLIENT and isBroadcasted then
+		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
+	end
+
 	-- General first steps
 	local check = {
 		material = data and data.newMaterial or MR.Materials:GetNew(ply),

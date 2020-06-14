@@ -30,7 +30,7 @@ function Skybox:Render()
 		newMaterial = MR.Skybox:RemoveSuffix(newMaterial)
 		suffixes = MR.Skybox:GetSuffixes()
 	-- It's an invalid material
-	elseif not MR.Materials:IsValid(newMaterial) then
+	elseif not MR.Materials:Validate(newMaterial) then
 		return
 	-- It's a single material but we don't need to render if there isn't an env_skypainted in the map
 	elseif not MR.Skybox:IsPainted() then

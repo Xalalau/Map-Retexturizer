@@ -7,12 +7,17 @@ Duplicator.__index = Duplicator
 MR.CL.Duplicator = Duplicator
 
 -- Networking
+
+net.Receive("CL.Duplicator:CheckForErrors", function()
+	Duplicator:CheckForErrors(net.ReadString(), net.ReadBool())
+end)
+
 net.Receive("CL.Duplicator:SetProgress", function()
 	Duplicator:SetProgress(net.ReadInt(14), net.ReadInt(14), net.ReadBool())
 end)
 
-net.Receive("CL.Duplicator:SetErrorProgress", function()
-	Duplicator:SetErrorProgress(net.ReadInt(14), net.ReadString(),  net.ReadBool())
+net.Receive("CL.Duplicator:FinishErrorProgress", function()
+	Duplicator:FinishErrorProgress()
 end)
 
 net.Receive("CL.Duplicator:ForceStop", function()
@@ -25,6 +30,17 @@ hook.Add("HUDPaint", "MRDupProgress", function()
 		Duplicator:RenderProgress()
 	end
 end)
+
+-- Load materials from saves
+function Duplicator:CheckForErrors(material, isBroadcasted)
+	if MR.Materials:IsValid(material) == nil then
+		MR.Materials:Validate(material)
+	end
+
+	if not MR.Materials:IsValid(material) then
+		Duplicator:SetErrorProgress(material, isBroadcasted)
+	end
+end
 
 -- Update the duplicator progress: client
 function Duplicator:SetProgress(current, total, isBroadcasted)
@@ -46,7 +62,7 @@ function Duplicator:SetProgress(current, total, isBroadcasted)
 end
 
 -- Print errors in the console
-function Duplicator:SetErrorProgress(count, mat, isBroadcasted)
+function Duplicator:SetErrorProgress(mat, isBroadcasted)
 	local ply = LocalPlayer()
 
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
@@ -55,24 +71,32 @@ function Duplicator:SetErrorProgress(count, mat, isBroadcasted)
 	end
 
 	-- Set the error count
-	MR.Ply:SetDupErrorsN(ply, count)
+	MR.Ply:IncrementDupErrorsN(ply)
 
 	-- Set the missing material name
-	if MR.Ply:GetDupErrorsN(ply) > 0 then
-		MR.Ply:InsertDupErrorsList(ply, mat)
-	-- Print the failed materials table when the load finishes
-	else
-		if table.Count(MR.Ply:GetDupErrorsList(ply)) > 0 then
-			LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the terminal for the errors.")
-			print("")
-			print("-------------------------------------------------------------")
-			print("[MAP RETEXTURIZER] - Failed to load these materials:")
-			print("-------------------------------------------------------------")
-			print(table.ToString(MR.Ply:GetDupErrorsList(ply), "List ", true))
-			print("-------------------------------------------------------------")
-			print("")
-			MR.Ply:EmptyDupErrorsList(ply)
-		end
+	MR.Ply:InsertDupErrorsList(ply, mat)
+end
+
+function Duplicator:FinishErrorProgress()
+	local ply = LocalPlayer()
+
+	-- If there are errors
+	if table.Count(MR.Ply:GetDupErrorsList(ply)) > 0 then
+		-- Set the error count to 0
+		MR.Ply:SetDupErrorsN(ply, 0)
+
+		-- Print the failed materials table
+		LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the console for the errors.")
+		print("")
+		print("-------------------------------------------------------------")
+		print("[MAP RETEXTURIZER] - Failed to load these materials:")
+		print("-------------------------------------------------------------")
+		print(table.ToString(MR.Ply:GetDupErrorsList(ply), "List ", true))
+		print("-------------------------------------------------------------")
+		print("")
+
+		-- Delete it
+		MR.Ply:EmptyDupErrorsList(ply)
 	end
 end
 

@@ -33,7 +33,8 @@ local dup = {
 
 -- Networking
 util.AddNetworkString("CL.Duplicator:SetProgress")
-util.AddNetworkString("CL.Duplicator:SetErrorProgress")
+util.AddNetworkString("CL.Duplicator:CheckForErrors")
+util.AddNetworkString("CL.Duplicator:FinishErrorProgress")
 util.AddNetworkString("CL.Duplicator:ForceStop")
 
 -- Get if the server is running a duplication/load
@@ -420,73 +421,15 @@ function Duplicator:SetProgress(ply, current, total)
 	end
 end
 
--- If any errors are found
-function Duplicator:SetErrorProgress(ply, count, material)
-	-- Send the status to...
-	net.Start("CL.Duplicator:SetErrorProgress")
-		net.WriteInt(count or 0, 14)
-		net.WriteString(material or "")
-	-- all players
-	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
-		net.WriteBool(true)
-		net.Broadcast()
-	-- the player
-	else
-		net.WriteBool(false)
-		net.Send(ply)
-	end
-end
-
--- Load map materials from saves
+-- Load materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return
 	end
 
-	-- If the entry exists and duplicator is not stopping...
-	if savedTable[position] and not MR.Duplicator:IsStopping() then
-		-- Check if we have a valid material
-		local newMaterial = savedTable[position].newMaterial
-		local newMaterial2 = savedTable[position].newMaterial2
-		local oldMaterial = savedTable[position].oldMaterial and (" on "..savedTable[position].oldMaterial) or ""
-		local isError = true
-		local msg
-
-		-- Frist material
-		if newMaterial then
-			if MR.Materials:IsValid(newMaterial) or MR.Materials:IsSkybox(newMaterial) then
-				isError = false
-			else
-				msg = "Invalid $basetexture"..oldMaterial
-			end
-		end
-
-		-- Second material
-		if newMaterial2 then
-			if MR.Materials:IsValid(newMaterial2) then
-				isError = false
-			else
-				msg = "Invalid $basetexture2"..oldMaterial
-			end
-		end
-
-		-- No changes to do
-		if not newMaterial and not newMaterial2 then
-			msg = "Nothing to modify"..oldMaterial
-		end
-
-		-- If it's an error, let's register and check the next entry
-		if isError then
-			MR.Ply:IncrementDupErrorsN(ply)
-			Duplicator:SetErrorProgress(ply, MR.Ply:GetDupErrorsN(ply), msg)
-
-			Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
-
-			return
-		end
-	-- If there are no more entries or duplicator is stopping, finish
-	else
+	-- If there are no more entries or the duplicator is being forced to stop, finish
+	if not savedTable[position] or MR.Duplicator:IsStopping() then
 		Duplicator:Finish(ply)
 
 		return
@@ -510,6 +453,19 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- Apply skybox
 	elseif section == "skybox" then
 		MR.SV.Skybox:Set(ply, savedTable[position], true)
+	end
+
+	-- Check the clientside errors on...
+	net.Start("CL.Duplicator:CheckForErrors")
+		net.WriteString(savedTable[position].newMaterial)
+	-- all players
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+		net.WriteBool(true)
+		net.Broadcast()
+	-- the player
+	else
+		net.WriteBool(false)
+		net.Send(ply)
 	end
 
 	-- Next material
@@ -550,10 +506,14 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			MR.Ply:SetDupCurrent(ply, 0)
 			Duplicator:SetProgress(ply, 0, 0)
 
-			-- Print the errors on the console and reset the counting
-			if MR.Ply:GetDupErrorsN(ply) then
-				Duplicator:SetErrorProgress(ply, 0)
-				MR.Ply:SetDupErrorsN(ply, 0)
+			-- Print the errors on the console and reset the counting on...
+			net.Start("CL.Duplicator:FinishErrorProgress")
+			-- all players
+			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+				net.Broadcast()
+			-- the player
+			else
+				net.Send(ply)
 			end
 		end)
 

@@ -53,7 +53,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 		data.newMaterial = MR.Skybox:RemoveSuffix(data.newMaterial)
 		suffixes = MR.Skybox:GetSuffixes()
 	-- It's an invalid material
-	elseif not MR.Materials:IsValid(data.newMaterial) then
+	elseif not MR.Materials:Validate(data.newMaterial) then
 		return
 	end
 	-- if nothing above is true, it's a valid single material

@@ -163,7 +163,7 @@ end
 	end
 
 	-- Don't apply bad materials
-	if not MR.Materials:IsValid(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
+	if not MR.Materials:Validate(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end
@@ -238,7 +238,7 @@ function TOOL:RightClick(tr)
 		newData.oldMaterial = oldData.oldMaterial
 
 		if newData.oldMaterial == MR.Skybox:GetGenericName() and
-		   oldData.newMaterial == MR.Skybox:GetGenericName() then
+		oldData.newMaterial == MR.Skybox:GetGenericName() then
 			oldData.newMaterial = MR.Skybox:GetValidName()
 		end
 
@@ -249,22 +249,26 @@ function TOOL:RightClick(tr)
 
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
-
 		return false
 	end
 
 	-- Copy the material
-	MR.Materials:SetNew(ply, MR.Materials:GetCurrent(tr))
+	if SERVER then
+		MR.Materials:SetNew(ply, MR.Materials:GetCurrent(tr))
+	end
 
-	-- Set the cvars to data values or to default values
+	-- Set the cvars to the copied values
 	MR.CVars:SetPropertiesToData(ply, oldData)
 
-	if CLIENT then
-		-- Update the preview
-		timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
-			MR.CL.Materials:SetPreview()
+	if SERVER then
+		-- Set the preview
+		timer.Create("MRWaitToSetNewMaterial", "0.2", 1, function()
+			net.Start("CL.Materials:SetPreview")
+			net.Send(ply)
 		end)
+	end
 
+	if CLIENT then
 		-- Update the properties panel
 		MR.CL.PPanel:ResetProperties()
 	end

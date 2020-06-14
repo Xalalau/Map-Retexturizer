@@ -40,7 +40,7 @@ function Displacements:Set(applyProperties)
 		return false
 	end
 
-	-- Validate empty fields
+	-- Validate the fields
 	if newMaterial == "" then
 		newMaterial = MR.Displacements:GetDetected()[displacement][1]
 
@@ -48,6 +48,7 @@ function Displacements:Set(applyProperties)
 			MR.CL.CPanel:GetDisplacementsText1():SetValue(newMaterial)
 		end)
 	end
+	MR.Materials:Validate(newMaterial)
 
 	if newMaterial2 == "" then
 		newMaterial2 = MR.Displacements:GetDetected()[displacement][2]
@@ -56,12 +57,13 @@ function Displacements:Set(applyProperties)
 			MR.CL.CPanel:GetDisplacementsText2():SetValue(newMaterial2)
 		end)
 	end
+	MR.Materials:Validate(newMaterial2)
 
 	-- Start the change
 	net.Start("SV.Displacements:Set")
 		net.WriteString(displacement)
-		net.WriteString(newMaterial or "")
-		net.WriteString(newMaterial2 or "")
+		net.WriteString(newMaterial)
+		net.WriteString(newMaterial2)
 		net.WriteTable(data)
 	net.SendToServer()
 end

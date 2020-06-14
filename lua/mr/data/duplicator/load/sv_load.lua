@@ -117,7 +117,7 @@ function Load:FirstSpawn(ply)
 	MR.Materials:Validate(ply:GetInfo("internal_mr_material"))
 
 	-- wait until the player has our table attached to him
-	timer.Create("MRWaitToSetPly", 0.5, 1, function()
+	timer.Create("MRWaitToSetPly"..tostring(ply), 1, 1, function()
 		-- Start an ongoing load from the beggining
 		if MR.Duplicator:IsRunning() then
 			Load:Start(ply, MR.Duplicator:IsRunning())

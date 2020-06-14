@@ -423,11 +423,6 @@ end
 
 -- Load materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, section)
-	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
-		return
-	end
-
 	-- If there are no more entries or the duplicator is being forced to stop, finish
 	if not savedTable[position] or MR.Duplicator:IsStopping() then
 		Duplicator:Finish(ply)

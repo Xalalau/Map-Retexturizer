@@ -472,18 +472,14 @@ function Browser:ParseDir_CreateResetIconsPanel(Scroll, setOnly, n, dir, fdir, e
 	end
 
 	-- Block folders that crash the game (at least on my computer, try it yourself)
-	if dir..fdir == ("materials" .. MR.Base:GetMaterialsFolder()):sub(1, -2) then
+	if dir..fdir == "materials/decals" or
+		dir..fdir == "materials/effects" or
+		dir..fdir == "materials/sprites" then
+
 		Scroll.IconsList.warning = vgui.Create("DLabel", Scroll)
-			Scroll.IconsList.warning:SetText("This is our generic materials folder.\nNothing to see here.")
-			Scroll.IconsList.warning:SetSize(300, 75)
-			Scroll.IconsList.warning:SetPos(5, 5)
-	elseif dir..fdir == "materials/decals" or
-		   dir..fdir == "materials/effects" or
-		   dir..fdir == "materials/sprites" then
-		Scroll.IconsList.warning = vgui.Create("DLabel", Scroll)
-			Scroll.IconsList.warning:SetText("BLOCKED!\n\nRendering this folder crashes the game.")
-			Scroll.IconsList.warning:SetSize(300, 75)
-			Scroll.IconsList.warning:SetPos(5, 5)
+		Scroll.IconsList.warning:SetText("BLOCKED!\n\nRendering this folder crashes the game.")
+		Scroll.IconsList.warning:SetSize(300, 75)
+		Scroll.IconsList.warning:SetPos(5, 5)
 	-- Fill the list(s)
 	else
 		Browser:ParseDir(n, dir..fdir.."/", ext, browserPreviewMaterial, Scroll)

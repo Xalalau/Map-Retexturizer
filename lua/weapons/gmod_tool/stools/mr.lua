@@ -20,7 +20,8 @@
  [*] NickMBR
  [*] Nerdy
  [*] twitch.tv/deekzzyy
- 
+ [*] Dom
+
  Valeu, pessoal!!
 ]]
 

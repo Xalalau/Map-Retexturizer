@@ -34,7 +34,7 @@ end)
 -- Load materials from saves
 function Duplicator:CheckForErrors(material, isBroadcasted)
 	if MR.Materials:IsValid(material) == nil then
-		MR.Materials:Validate(material)
+		material = MR.CL.Materials:ValidateBroadcasted(material)
 	end
 
 	if not MR.Materials:IsValid(material) then

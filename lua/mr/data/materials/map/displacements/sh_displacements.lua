@@ -25,9 +25,9 @@ function Displacements:Init(retrying)
 
 	timer.Create("MRWaitToGetDisplacementsList", 0.5, 1, function()
 		for k,v in pairs(found) do
-			if Material(v):GetString("$surfaceprop") or Material(v):GetString("$surfaceprop2") then
+			if Material(v):GetString("$surfaceprop2") or Material(v):GetMatrix("$basetexturetransform2") then
 				-- I usually have trouble initializing this list at the beginning of the game because the time these
-				-- materials are usually ready is not consistent, so I try to re-add them a few times if they are invalid
+				-- materials are ready is not consistent, so I try to re-add them a few times if they are invalid yet
 				if not Material(v):GetTexture("$basetexture") or not Material(v):GetTexture("$basetexture2") then
 					if not retrying then
 						retrying = 1
@@ -36,7 +36,7 @@ function Displacements:Init(retrying)
 					else
 						retrying = retrying + 1
 					end
-					
+
 					break
 				else
 					v = v:sub(1, #v - 1) -- Remove last char (line break?)

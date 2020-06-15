@@ -33,7 +33,8 @@ mr_save        "name"  =  Save the current tool modifications into a file called
 mr_autosave     1/0    =  Enable/Disable the autosaving;
 mr_delete      "name"  =  Delete the save called "name";
 mr_dup_cleanup  1/0    =  Enable/Disable cleanup before starting a load;
-mr_cleanup             =  Clean all the modifications.
+mr_cleanup             =  Clean all the modifications;
+mr_list_map_materials  =  List all the map materials.
 ]]
 
 	print(message)
@@ -233,4 +234,20 @@ concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to run the cleanup.")
 	end
+end)
+
+-- ---------------------------------------------------------
+-- mr_list_map_materials
+concommand.Add("mr_list_map_materials", function (_1, _2, _3, arguments)
+	local map_data = MR.OpenBSP()
+	local found = map_data:ReadLumpTextDataStringData()
+
+	print()
+	print("-------------------------------------")
+	print("Map Retexturizer - Map Materials List")
+	print("-------------------------------------")
+	for k,v in pairs(found) do
+		print(v)
+	end
+	print()
 end)

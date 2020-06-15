@@ -168,7 +168,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 
 		-- Fix the detail name on the server backup (explained just above)
-		if ply ~= MR.SV.Ply:GetFakeHostPly() and not data.backup then
+		if ply ~= MR.SV.Ply:GetFakeHostPly() and not MR.Ply:GetFirstSpawn(ply) and not data.backup then
 			net.Start("CL.Map:FixDetail")
 				net.WriteString(data.oldMaterial)
 				net.WriteBool(selected.isDisplacement or false)

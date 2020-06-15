@@ -37,7 +37,7 @@ function Duplicator:CheckForErrors(material, isBroadcasted)
 		material = MR.CL.Materials:ValidateBroadcasted(material)
 	end
 
-	if not MR.Materials:IsValid(material) then
+	if not MR.Materials:IsValid(material) and not MR.Materials:IsSkybox(material) then
 		Duplicator:SetErrorProgress(material, isBroadcasted)
 	end
 end

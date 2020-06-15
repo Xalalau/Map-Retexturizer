@@ -1226,8 +1226,6 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 			skyboxCombobox:AddChoice(k, k)
 		end
 
-		skyboxCombobox:ChooseOptionID(1)
-
 	--------------------------
 	-- Skybox Path
 	--------------------------

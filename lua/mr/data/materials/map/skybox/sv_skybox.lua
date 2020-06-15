@@ -34,7 +34,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	local i
 
 	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
+	if not MR.Ply:IsAdmin(ply) and not MR.Ply:GetFirstSpawn(ply) then
 		return false
 	end
 
@@ -58,8 +58,17 @@ function Skybox:Set(ply, data, isBroadcasted)
 	end
 	-- if nothing above is true, it's a valid single material
 
+	-- Adjustment for first spawn
+	if MR.Ply:GetFirstSpawn(ply) then
+		data = table.Copy(data)
+		data.backup = nil
+	end
+
+	-- Apply the material(s)
 	for i = 1,6 do
-		-- Backup information (for all maps) + change the sky (for maps without env_skypainted)
+		-- Next line:
+		-- 	All maps: generate backup information
+		-- 	Maps without env_skypainted: change the sky
 		data.oldMaterial = MR.Skybox:GetName()..MR.Skybox:GetSuffixes()[i]
 
 		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
@@ -91,18 +100,22 @@ end
 function Skybox:Remove(ply)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
-		return false
+		return
+	end
+
+	-- Check if we need to go ahead
+	if MR.Skybox:GetCurrentName() == "" then
+		return
+	-- Reset the combobox
+	else
+		net.Start("CL.CPanel:ResetSkyboxComboValue")
+		net.Broadcast()
 	end
 
 	-- Replicate
 	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
 
-	-- Reset the combobox
-	if MR.Skybox:GetCurrentName() ~= "" then
-		net.Start("CL.CPanel:ResetSkyboxComboValue")
-		net.Broadcast()
-	end
-
+	-- Remove the skybox
 	for k,v in pairs(MR.Skybox:GetList()) do
 		MR.Map:Remove(v.oldMaterial)
 	end

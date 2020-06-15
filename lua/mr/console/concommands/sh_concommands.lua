@@ -190,7 +190,7 @@ concommand.Add("mr_delete", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.SV.Load:Delete_SV(MR.SV.Ply:GetFakeHostPly(), loadName) then
+	if MR.SV.Load:Delete(MR.SV.Ply:GetFakeHostPly(), loadName) then
 		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] File not found.")

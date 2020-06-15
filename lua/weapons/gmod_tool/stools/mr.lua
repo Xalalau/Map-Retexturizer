@@ -94,7 +94,7 @@ function TOOL_BasicChecks(ply, tr)
 
 	-- Don't use in the middle of a loading
 	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
-		if CLIENT then
+		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the loading finishes.")
 		end
 
@@ -113,8 +113,8 @@ function TOOL_BasicChecks(ply, tr)
 
 	-- Don't try to change displacements directly
 	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
-		if CLIENT then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]  Modify displacements using the tool menu.")
+		if SERVER then
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify displacements using the tool menu.")
 		end
 
 		return false
@@ -262,16 +262,15 @@ function TOOL:RightClick(tr)
 	MR.CVars:SetPropertiesToData(ply, oldData)
 
 	if SERVER then
-		-- Set the preview
 		timer.Create("MRWaitToSetNewMaterial", "0.2", 1, function()
+			-- Set the preview
 			net.Start("CL.Materials:SetPreview")
 			net.Send(ply)
+	
+			-- Update the properties panel
+			net.Start("CL.PPanel:ResetProperties")
+			net.Send(ply)
 		end)
-	end
-
-	if CLIENT then
-		-- Update the properties panel
-		MR.CL.PPanel:ResetProperties()
 	end
 
 	return true

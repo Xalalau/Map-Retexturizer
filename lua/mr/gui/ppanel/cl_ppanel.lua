@@ -56,6 +56,10 @@ net.Receive("CL.PPanel:ForceHide", function()
 	PPanel:Hide()
 end)
 
+net.Receive("CL.PPanel:ResetProperties", function()
+	PPanel:ResetProperties()
+end)
+
 -- Hooks
 hook.Add("OnSpawnMenuOpen", "MRPPanelHandleSpawnMenuOpenned", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end

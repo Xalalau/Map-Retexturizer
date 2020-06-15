@@ -14,6 +14,7 @@ local displacements = {
 -- Networking
 util.AddNetworkString("SV.Displacements:Set")
 util.AddNetworkString("SV.Displacements:RemoveAll")
+util.AddNetworkString("CL.Displacements:SetDetectedList")
 
 net.Receive("SV.Displacements:Set", function(_, ply)
 	Displacements:Set(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())
@@ -22,6 +23,42 @@ end)
 net.Receive("SV.Displacements:RemoveAll", function(_, ply)
 	Displacements:RemoveAll(ply)
 end)
+
+-- Generate map displacements list
+function Displacements:Init(retrying)
+	local map_data = MR.OpenBSP()
+	local found = map_data:ReadLumpTextDataStringData()
+
+	timer.Create("MRWaitToGetDisplacementsList", 0.5, 1, function()
+		for k,v in pairs(found) do
+			if Material(v):GetString("$surfaceprop2") or Material(v):GetMatrix("$basetexturetransform2") then
+				-- I usually have trouble initializing this list at the beginning of the game because the time these
+				-- materials are ready is not consistent, so I try to re-add them a few times if they are invalid yet
+				if not Material(v):GetTexture("$basetexture") or not Material(v):GetTexture("$basetexture2") then
+					if not retrying then
+						retrying = 1
+					elseif retrying == 10 then
+						return
+					else
+						retrying = retrying + 1
+					end
+
+					break
+				else
+					v = v:sub(1, #v - 1) -- Remove last char (line break?)
+
+					MR.Displacements:SetDetected(v)
+
+					retrying = nil
+				end
+			end
+		end
+
+		if retrying then
+			Displacements:Init(retrying)
+		end
+	end)
+end
 
 -- Get duplicator name
 function Displacements:GetDupName()

@@ -25,6 +25,7 @@ Map Retexturizer commands
 -------------------------
 
 mr_admin        1/0    =  Turn on/off the admin protections;
+mr_materials           =  List all the map materials;
 mr_delay               =  The delay between each materiall application on a load;
 mr_list                =  List the saved game names;
 mr_load        "name"  =  Load the saved game called "name";
@@ -34,7 +35,8 @@ mr_autosave     1/0    =  Enable/Disable the autosaving;
 mr_delete      "name"  =  Delete the save called "name";
 mr_dup_cleanup  1/0    =  Enable/Disable cleanup before starting a load;
 mr_cleanup             =  Clean all the modifications;
-mr_list_map_materials  =  List all the map materials.
+mr_add_disp "material" =  Add displacement to the menu;
+mr_rem_disp "material" =  Remove displacement from the menu.
 ]]
 
 	print(message)
@@ -60,6 +62,22 @@ concommand.Add("mr_admin", function (_1, _2, _3, arguments)
 	RunConsoleCommand("internal_mr_admin", value)
 
 	MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: setting admin mode to " .. tostring(value) .. ".")
+end)
+
+-- ---------------------------------------------------------
+-- mr_materials
+concommand.Add("mr_materials", function (_1, _2, _3, arguments)
+	local map_data = MR.OpenBSP()
+	local found = map_data:ReadLumpTextDataStringData()
+
+	print()
+	print("-------------------------------------")
+	print("Map Retexturizer - Map Materials List")
+	print("-------------------------------------")
+	for k,v in pairs(found) do
+		print(v)
+	end
+	print()
 end)
 
 -- ---------------------------------------------------------
@@ -237,17 +255,54 @@ concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
 end)
 
 -- ---------------------------------------------------------
--- mr_list_map_materials
-concommand.Add("mr_list_map_materials", function (_1, _2, _3, arguments)
-	local map_data = MR.OpenBSP()
-	local found = map_data:ReadLumpTextDataStringData()
+-- mr_add_disp
+concommand.Add("mr_add_disp", function (_1, _2, _3, arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
 
-	print()
-	print("-------------------------------------")
-	print("Map Retexturizer - Map Materials List")
-	print("-------------------------------------")
-	for k,v in pairs(found) do
-		print(v)
+	if CLIENT then
+		MR.CL.Concommands:RunOnSV("mr_add_disp", value)
+
+		return
 	end
-	print()
+
+	if MR.Materials:Validate(value) then
+		MR.Displacements:SetDetected(value)
+
+		net.Start("CL.CPanel:InsertInDisplacementsCombo")
+			net.WriteString(value)
+		net.Broadcast()
+
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: added displacement: " .. value)
+	else
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to add displacement.")
+	end
+end)
+
+-- ---------------------------------------------------------
+-- mr_remove_displacement
+concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
+	local displacement = MR.Concommands:CleanUpArguments(arguments)
+end)
+
+-- mr_rem_disp
+concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+
+	if CLIENT then
+		MR.CL.Concommands:RunOnSV("mr_rem_disp", value)
+
+		return
+	end
+
+	if MR.Displacements:GetDetected()[value] then
+		MR.Displacements:SetDetected(value, true)
+
+		net.Start("CL.CPanel:RecreateDisplacementsCombo")
+			net.WriteTable(MR.Displacements:GetDetected())
+		net.Broadcast()
+
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: removed displacement: " .. value)
+	else
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to add displacement.")
+	end
 end)

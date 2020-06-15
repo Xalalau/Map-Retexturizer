@@ -97,10 +97,10 @@ end
 
 -- Initialization
 MR.Base:Init()
-MR.Displacements:Init()
 MR.Skybox:Init()
 
 if SERVER then
+	MR.SV.Displacements:Init()
 	MR.SV.Ply:Init()
 	MR.SV.Load:Init()
 else

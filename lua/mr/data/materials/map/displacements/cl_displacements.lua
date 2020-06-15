@@ -11,6 +11,17 @@ local displacements = {
 	initHhack = false
 }
 
+-- Networking
+net.Receive("CL.Displacements:SetDetectedList", function()
+	Displacements:SetDetectedList(net.ReadTable())
+end)
+
+function Displacements:SetDetectedList(list)
+	for k,v in pairs(list) do
+		MR.Displacements:SetDetected(k)
+	end
+end
+
 function Displacements:InitHack()
 	if displacements.initHack then
 		return

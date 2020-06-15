@@ -8,6 +8,7 @@ MR.SV.Concommands = Concommands
 
 -- Networking
 util.AddNetworkString("SV.Concommands:Run")
+util.AddNetworkString("CL.Concommands:PrintDisplacementsHelp")
 
 net.Receive("SV.Concommands:Run", function(_, ply)
 	Concommands:Run(ply, net.ReadString(), net.ReadString() or "", "@@" .. tostring(ply:EntIndex())) --"@@" is used to help me explode the arguments

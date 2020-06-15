@@ -106,6 +106,11 @@ function Load:PlayerJoined(ply)
 	net.Start("Load:SetList")
 		net.WriteTable(MR.Load:GetList())
 	net.Send(ply)
+
+	-- Set the player load list
+	net.Start("CL.Displacements:SetDetectedList")
+		net.WriteTable(MR.Displacements:GetDetected())
+	net.Send(ply)
 end
 
 -- Load tool modifications AFTER the player is fully ready

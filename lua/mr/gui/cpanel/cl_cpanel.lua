@@ -51,6 +51,14 @@ net.Receive("CL.CPanel:ForceHide", function()
 	CPanel:Hide(CPanel:GetContextSelf())
 end)
 
+net.Receive("CL.CPanel:InsertInDisplacementsCombo", function()
+	CPanel:InsertInDisplacementsCombo(net.ReadString())
+end)
+
+net.Receive("CL.CPanel:RecreateDisplacementsCombo", function()
+	CPanel:RecreateDisplacementsCombo(net.ReadTable())
+end)
+
 -- Hooks
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
 	-- This situation can only occur at the start of the match:
@@ -163,9 +171,22 @@ function CPanel:SetDisplacementsCombo(value)
 	cpanel.sync.displacements.combo = value
 end
 
-function CPanel:ResetSkyboxComboValue()
-	if CPanel:GetSkyboxCombo() ~= "" and IsValid(CPanel:GetSkyboxCombo()) then
-		CPanel:GetSkyboxCombo():ChooseOptionID(1)
+function CPanel:InsertInDisplacementsCombo(value)
+	if CPanel:GetDisplacementsCombo() ~= "" then
+		CPanel:GetDisplacementsCombo():AddChoice(value)
+	end
+end
+
+-- Reset the displacements combobox material and its text fields
+function CPanel:RecreateDisplacementsCombo(list)
+	if CPanel:GetDisplacementsCombo() ~= "" then
+		CPanel:GetDisplacementsCombo():Clear()
+
+		CPanel:GetDisplacementsCombo():AddChoice("")
+
+		for k,v in pairs(list) do
+			CPanel:GetDisplacementsCombo():AddChoice(k)
+		end
 	end
 end
 
@@ -177,6 +198,12 @@ function CPanel:ResetDisplacementsComboValue()
 			CPanel:GetDisplacementsCombo():ChooseOptionID(CPanel:GetDisplacementsCombo():GetSelectedID())
 		end
 	end)
+end
+
+function CPanel:ResetSkyboxComboValue()
+	if CPanel:GetSkyboxCombo() ~= "" and IsValid(CPanel:GetSkyboxCombo()) then
+		CPanel:GetSkyboxCombo():ChooseOptionID(1)
+	end
 end
 
 -- Create the panel
@@ -1050,17 +1077,24 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		y = path2LabelInfo.y
 	}
 
-	local displacementsHintInfo = {
-		width = width - MR.CL.GUI:GetGeneralBorders() * 2,
-		height = MR.CL.GUI:GetTextHeight() + 5,
-		x = path2LabelInfo.x + MR.CL.GUI:GetTextMarginLeft(),
-		y = path2TextInfo.y + path2TextInfo.height
-	}
-
 	local displacementsButtonInfo = {
+		width = width - MR.CL.GUI:GetGeneralBorders() * 2,
+		height = MR.CL.GUI:GetTextHeight(),
+		x = MR.CL.GUI:GetGeneralBorders(),
+		y = path2TextInfo.y + path2TextInfo.height + MR.CL.GUI:GetGeneralBorders()
+	}
+	
+	local displacementsHintInfo = {
 		width = panel:GetWide() - MR.CL.GUI:GetGeneralBorders() * 2,
 		height = MR.CL.GUI:GetTextHeight(),
-		x =  MR.CL.GUI:GetGeneralBorders(),
+		x = path2LabelInfo.x + MR.CL.GUI:GetTextMarginLeft(),
+		y = displacementsButtonInfo.y + displacementsButtonInfo.height + MR.CL.GUI:GetGeneralBorders()
+	}
+
+	local displacementsHint2Info = {
+		width = displacementsHintInfo.width,
+		height = MR.CL.GUI:GetTextHeight() * 2,
+		x =  displacementsHintInfo.x,
 		y = displacementsHintInfo.y + displacementsHintInfo.height + MR.CL.GUI:GetGeneralBorders()
 	}
 
@@ -1128,15 +1162,6 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		end
 
 	--------------------------
-	-- Displacements hint
-	--------------------------
-	local displacementsHint = vgui.Create("DLabel", panel)
-		displacementsHint:SetPos(displacementsHintInfo.x, displacementsHintInfo.y)
-		displacementsHint:SetSize(displacementsHintInfo.width, displacementsHintInfo.height)
-		displacementsHint:SetText("\nTo reset a field erase the text and press enter.")
-		displacementsHint:SetTextColor(MR.CL.GUI:GetHintColor())
-
-	--------------------------
 	-- Displacements properties
 	--------------------------
 	local displacementsButton = vgui.Create("DButton", panel)
@@ -1146,6 +1171,24 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		displacementsButton.DoClick = function()
 			MR.CL.Displacements:Set(true)
 		end
+
+	--------------------------
+	-- Displacements hint
+	--------------------------
+	local displacementsHint = vgui.Create("DLabel", panel)
+		displacementsHint:SetPos(displacementsHintInfo.x, displacementsHintInfo.y)
+		displacementsHint:SetSize(displacementsHintInfo.width, displacementsHintInfo.height)
+		displacementsHint:SetText("\nTo reset a field erase it and press enter.")
+		displacementsHint:SetTextColor(MR.CL.GUI:GetHintColor())
+
+	--------------------------
+	-- Displacements hint 2
+	--------------------------
+	local displacementsHint2 = vgui.Create("DLabel", panel)
+		displacementsHint2:SetPos(displacementsHint2Info.x, displacementsHint2Info.y)
+		displacementsHint2:SetSize(displacementsHint2Info.width, displacementsHint2Info.height)
+		displacementsHint2:SetText("\nTo manually add items to the list, set sv_cheats\nto 1 in the console and press the right mouse\nbutton aiming at a displacement.")
+		displacementsHint2:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)

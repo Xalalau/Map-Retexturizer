@@ -7,11 +7,7 @@ Concommands.__index = Concommands
 MR.Concommands = Concommands
 
 -- Split the command argument from the player entity index
-function Concommands:ExplodeArguments(arguments)
-	if CLIENT then
-		return arguments
-	end
-
+function Concommands:CleanUpArguments(arguments)
 	arguments = arguments:gsub('"','') -- Clean double quotes from an ingame console command 
 
 	local words = string.Explode(" @@", arguments)
@@ -46,7 +42,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_admin
 concommand.Add("mr_admin", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:ExplodeArguments(arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_admin", value)
@@ -68,7 +64,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_delay
 concommand.Add("mr_delay", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:ExplodeArguments(arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_delay", value)
@@ -98,7 +94,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_load
 concommand.Add("mr_load", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:ExplodeArguments(arguments)
+	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_load", loadName)
@@ -116,7 +112,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_autoload
 concommand.Add("mr_autoload", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:ExplodeArguments(arguments)
+	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_autoload", loadName)
@@ -134,7 +130,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_save
 concommand.Add("mr_save", function (_1, _2, _3, arguments)
-	local saveName, plyIndex = Concommands:ExplodeArguments(arguments)
+	local saveName, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_save", saveName)
@@ -158,7 +154,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_autosave
 concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:ExplodeArguments(arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_autosave", value)
@@ -182,7 +178,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_delete
 concommand.Add("mr_delete", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:ExplodeArguments(arguments)
+	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_delete", loadName)
@@ -200,7 +196,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_dup_cleanup
 concommand.Add("mr_dup_cleanup", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:ExplodeArguments(arguments)
+	local value, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_dup_cleanup", value)
@@ -224,7 +220,7 @@ end)
 -- ---------------------------------------------------------
 -- mr_cleanup
 concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
-	local _, plyIndex = Concommands:ExplodeArguments(arguments)
+	local _, plyIndex = Concommands:CleanUpArguments(arguments)
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_cleanup")

@@ -54,8 +54,11 @@ end
 -- Get an element and its index
 function DataList:GetElement(list, oldMaterial)
 	for k,v in pairs(list) do
-		if v.oldMaterial == oldMaterial then
-			return v, k
+		-- Note: GMod supports both Windows and Linux, so it's case-insensitive
+		if DataList:IsActive(v) then
+			if string.lower(v.oldMaterial) == string.lower(oldMaterial) then
+				return v, k
+			end
 		end
 	end
 

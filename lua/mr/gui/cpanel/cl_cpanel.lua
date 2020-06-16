@@ -381,6 +381,13 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 		y = MR.CL.GUI:GetGeneralBorders()
 	}
 
+	local desciptionHintInfo = {
+		width = width - MR.CL.GUI:GetGeneralBorders() * 2,
+		height = MR.CL.GUI:GetTextHeight() * 2,
+		x = desciptionInfo.x + MR.CL.GUI:GetTextMarginLeft(),
+		y = desciptionInfo.y + desciptionInfo.height/2
+	}
+
 	--------------------------
 	-- Description
 	--------------------------
@@ -389,6 +396,15 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 		desciption:SetSize(desciptionInfo.width, desciptionInfo.height)
 		desciption:SetText("#tool.mr.desc")
 		desciption:SetTextColor(Color(0, 0, 0, 255))
+
+	--------------------------
+	-- Desciption hint
+	--------------------------
+	local desciptionHint = vgui.Create("DLabel", panel)
+		desciptionHint:SetPos(desciptionHintInfo.x, desciptionHintInfo.y)
+		desciptionHint:SetSize(desciptionHintInfo.width, desciptionHintInfo.height)
+		desciptionHint:SetText("\nUse the Context Menu (C) to edit material\nproperties!")
+		desciptionHint:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)

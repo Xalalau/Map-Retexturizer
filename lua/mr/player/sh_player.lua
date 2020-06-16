@@ -222,6 +222,11 @@ function Ply:SetDecalMode(ply, value)
 end
 
 function Ply:GetUsingTheTool(ply)
+	-- This check is used very early sometimes, so check if it's ready first
+	if not Ply:IsInitialized(ply) then
+		return false
+	end
+
 	return ply.mr.state.usingTheTool
 end
 

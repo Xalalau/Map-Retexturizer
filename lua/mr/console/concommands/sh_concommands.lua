@@ -265,10 +265,10 @@ concommand.Add("mr_add_disp", function (_1, _2, _3, arguments)
 		return
 	end
 
-	if MR.Materials:Validate(value) then
+	if MR.Materials:Validate(value) and not MR.Displacements:GetDetected()[value] then
 		MR.Displacements:SetDetected(value)
 
-		net.Start("CL.CPanel:InsertInDisplacementsCombo")
+		net.Start("CL.Displacements:InsertDetected")
 			net.WriteString(value)
 		net.Broadcast()
 
@@ -279,11 +279,6 @@ concommand.Add("mr_add_disp", function (_1, _2, _3, arguments)
 end)
 
 -- ---------------------------------------------------------
--- mr_remove_displacement
-concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
-	local displacement = MR.Concommands:CleanUpArguments(arguments)
-end)
-
 -- mr_rem_disp
 concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
 	local value, plyIndex = Concommands:CleanUpArguments(arguments)
@@ -297,12 +292,13 @@ concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
 	if MR.Displacements:GetDetected()[value] then
 		MR.Displacements:SetDetected(value, true)
 
-		net.Start("CL.CPanel:RecreateDisplacementsCombo")
+		net.Start("CL.Displacements:RemoveDetected")
+			net.WriteString(value)
 			net.WriteTable(MR.Displacements:GetDetected())
 		net.Broadcast()
 
 		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: removed displacement: " .. value)
 	else
-		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to add displacement.")
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to remove displacement.")
 	end
 end)

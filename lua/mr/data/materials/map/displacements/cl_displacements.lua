@@ -12,14 +12,32 @@ local displacements = {
 }
 
 -- Networking
-net.Receive("CL.Displacements:SetDetectedList", function()
-	Displacements:SetDetectedList(net.ReadTable())
+net.Receive("CL.Displacements:InitDetected", function()
+	Displacements:InitDetected(net.ReadTable())
 end)
 
-function Displacements:SetDetectedList(list)
+net.Receive("CL.Displacements:InsertDetected", function()
+	Displacements:InsertDetected(net.ReadString())
+end)
+
+net.Receive("CL.Displacements:RemoveDetected", function()
+	Displacements:RemoveDetected(net.ReadString(), net.ReadTable())
+end)
+
+function Displacements:InitDetected(list)
 	for k,v in pairs(list) do
 		MR.Displacements:SetDetected(k)
 	end
+end
+
+function Displacements:InsertDetected(displacement)
+	MR.Displacements:SetDetected(displacement)
+	MR.CL.CPanel:InsertInDisplacementsCombo(displacement)
+end
+
+function Displacements:RemoveDetected(displacement, list)
+	MR.Displacements:SetDetected(displacement, true)
+	MR.CL.CPanel:RecreateDisplacementsCombo(list)
 end
 
 function Displacements:InitHack()

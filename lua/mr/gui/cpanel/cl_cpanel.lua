@@ -51,14 +51,6 @@ net.Receive("CL.CPanel:ForceHide", function()
 	CPanel:Hide(CPanel:GetContextSelf())
 end)
 
-net.Receive("CL.CPanel:InsertInDisplacementsCombo", function()
-	CPanel:InsertInDisplacementsCombo(net.ReadString())
-end)
-
-net.Receive("CL.CPanel:RecreateDisplacementsCombo", function()
-	CPanel:RecreateDisplacementsCombo(net.ReadTable())
-end)
-
 -- Hooks
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
 	-- This situation can only occur at the start of the match:

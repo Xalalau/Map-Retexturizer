@@ -14,7 +14,9 @@ local displacements = {
 -- Networking
 util.AddNetworkString("SV.Displacements:Set")
 util.AddNetworkString("SV.Displacements:RemoveAll")
-util.AddNetworkString("CL.Displacements:SetDetectedList")
+util.AddNetworkString("CL.Displacements:InitDetected")
+util.AddNetworkString("CL.Displacements:InsertDetected")
+util.AddNetworkString("CL.Displacements:RemoveDetected")
 
 net.Receive("SV.Displacements:Set", function(_, ply)
 	Displacements:Set(ply, net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())

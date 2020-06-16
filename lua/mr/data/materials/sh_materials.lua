@@ -374,8 +374,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 
 	if check then
 		-- Don't apply bad materials
-		-- Note: these are redundant checks to avoid script errors from untreated cases
-		if CLIENT and not isBroadcasted and not MR.Ply:GetFirstSpawn(ply) then
+		if CLIENT and not isBroadcasted then
 			if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
 				print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 

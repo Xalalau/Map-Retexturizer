@@ -452,7 +452,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 
 	-- Check the clientside errors on...
 	net.Start("CL.Duplicator:CheckForErrors")
-		net.WriteString(savedTable[position].newMaterial)
+		net.WriteString(savedTable[position].newMaterial or "")
 	-- all players
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		net.WriteBool(true)

@@ -1093,7 +1093,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 
 	local displacementsHint2Info = {
 		width = displacementsHintInfo.width,
-		height = MR.CL.GUI:GetTextHeight() * 2,
+		height = MR.CL.GUI:GetTextHeight() * 3 + MR.CL.GUI:GetTextHeight()/2,
 		x =  displacementsHintInfo.x,
 		y = displacementsHintInfo.y + displacementsHintInfo.height + MR.CL.GUI:GetGeneralBorders()
 	}
@@ -1187,7 +1187,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 	local displacementsHint2 = vgui.Create("DLabel", panel)
 		displacementsHint2:SetPos(displacementsHint2Info.x, displacementsHint2Info.y)
 		displacementsHint2:SetSize(displacementsHint2Info.width, displacementsHint2Info.height)
-		displacementsHint2:SetText("\nTo manually add items to the list, set sv_cheats\nto 1 in the console and press the right mouse\nbutton aiming at a displacement.")
+		displacementsHint2:SetText("Use mr_help in the console to help you add\nmore items to the list manually. In addition,\nyou can do this more easily by setting\nsv_cheats to 1 and 'trying to modify any\ndisplacement with the tool.")
 		displacementsHint2:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom
@@ -1486,4 +1486,4 @@ function CPanel:Test()
 	end)
 end
 
---CPanel:Test()
+CPanel:Test()

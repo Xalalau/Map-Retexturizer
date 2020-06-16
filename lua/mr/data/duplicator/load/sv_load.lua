@@ -121,8 +121,7 @@ function Load:FirstSpawn(ply)
 	-- Validate the preview material
 	MR.Materials:Validate(ply:GetInfo("internal_mr_material"))
 
-	-- wait until the player has our table attached to him
-	timer.Create("MRWaitToSetPly"..tostring(ply), 1, 1, function()
+	local function StartLoading()
 		-- Start an ongoing load from the beggining
 		if MR.Duplicator:IsRunning() then
 			Load:Start(ply, MR.Duplicator:IsRunning())
@@ -143,7 +142,20 @@ function Load:FirstSpawn(ply)
 			net.Start("Ply:SetFirstSpawn")
 			net.Send(ply)
 		end
-	end)
+	end
+
+	local function WaitForPlayerSetup()
+		-- wait until the player has our table attached to him
+		timer.Create("WaitForPlayerSetup"..tostring(ply), 0.2, 1, function()
+			if MR.Ply:IsInitialized(ply) then 
+				StartLoading()
+			else
+				WaitForPlayerSetup()
+			end
+		end)
+	end
+
+	WaitForPlayerSetup()
 end
 
 -- Delete a saved file

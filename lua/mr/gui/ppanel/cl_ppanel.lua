@@ -565,7 +565,9 @@ end
 -- Reset the properties values
 function PPanel:ResetProperties()
 	if PPanel:Properties_GetResetCallback() then
-		PPanel:Properties_GetResetCallback(nil, true)
+		local ResetProperties = PPanel:Properties_GetResetCallback()
+
+		ResetProperties(nil, true)
 	end
 end
 

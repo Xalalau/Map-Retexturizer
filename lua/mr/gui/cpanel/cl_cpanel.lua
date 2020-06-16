@@ -244,9 +244,12 @@ end
 
 -- Create a frame to show the panel in the context menu
 function CPanel:CreateContext(panel, width, height)
+	local margin topAndDown = MR.CL.GUI:GetFrameTopBar() + MR.CL.GUI:GetGeneralBorders()*2
+	local maxHeight = ScrH() - topAndDown * 2
+
 	local contextFrameInfo = {
 		width = width + 10,
-		height = height > 700 and 700 or height + MR.CL.GUI:GetFrameTopBar() + MR.CL.GUI:GetGeneralBorders()*2,
+		height = height > maxHeight and maxHeight or height + topAndDown,
 		externalPadding = {
 			right = 20,
 			top = 50

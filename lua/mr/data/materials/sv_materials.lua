@@ -59,19 +59,33 @@ function Materials:SetAll(ply)
 
 		local map_data = MR.OpenBSP()
 		local found = map_data:ReadLumpTextDataStringData()
-		
+		local count = {
+			map = 0,
+			disp = 0
+		}
+
 		for k,v in pairs(found) do
 			if not v:find("water") then
-				local isDiscplacement = false
-			
-				if Material(v):GetString("$surfaceprop2") then
-					isDiscplacement = true
+				local selected = {}
+
+				if MR.Materials:IsDisplacement(v) then
+					selected.isDisplacement = true
+					selected.filename2 = MR.Displacements:GetFilename()
+					count.disp = count.disp + 1
+				else
+					count.map = count.map + 1
 				end
+
+				selected.filename = MR.Map:GetFilename()
 
 				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 				local data = MR.Data:Create(ply, { oldMaterial = v })
 
-				if isDiscplacement then
+				data.ent = nil
+
+				data.backup = MR.Data:CreateFromMaterial(v, selected.filename..tostring(selected.isDisplacement and count.disp or count.map), selected.isDisplacement and selected.filename2..tostring(count.disp))
+
+				if selected.isDisplacement then
 					data.newMaterial = material
 					data.newMaterial2 = material
 
@@ -85,11 +99,7 @@ function Materials:SetAll(ply)
 		end
 
 		-- Apply the fake save
-		MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile")
-
-
-		-- General final steps
-		MR.Materials:SetFinalSteps()
+		MR.SV.Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, newTable, "noMrLoadFile")
 	end)
 end
 

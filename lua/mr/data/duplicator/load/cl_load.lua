@@ -13,11 +13,14 @@ end)
 -- Delete a saved file
 function Load:Delete(loadName)
 	MR.Load:SetOption(loadName, nil)
-	MR.CL.CPanel:GetLoadText():Clear()
 
-	for k,v in pairs(MR.Load:GetList()) do
-		MR.CL.CPanel:GetLoadText():AddLine(k)
+	if not isstring(MR.CL.CPanel:GetLoadText()) and IsValid(MR.CL.CPanel:GetLoadText()) then
+		MR.CL.CPanel:GetLoadText():Clear()
+
+		for k,v in pairs(MR.Load:GetList()) do
+			MR.CL.CPanel:GetLoadText():AddLine(k)
+		end
+
+		MR.CL.CPanel:GetLoadText():SortByColumn(1)
 	end
-
-	MR.CL.CPanel:GetLoadText():SortByColumn(1)
 end

@@ -133,8 +133,8 @@ function Map:Set(ply, data, isBroadcasted)
 	end
 
 	-- Validation for broadcasted materials
-	if CLIENT and (isBroadcasted or MR.Ply:GetFirstSpawn(ply)) then
-		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
+	if CLIENT and (data.newMaterial or data.newMaterial2) and (isBroadcasted or MR.Ply:GetFirstSpawn(ply)) then
+		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial or data.newMaterial2)
 	end
 
 	-- General first steps (part 1)

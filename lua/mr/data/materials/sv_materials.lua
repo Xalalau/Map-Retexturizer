@@ -68,8 +68,6 @@ function Materials:SetAll(ply)
 			if not v:find("water") then
 				local selected = {}
 
-				v = string.lower(v)
-
 				if MR.Materials:IsDisplacement(v) then
 					selected.isDisplacement = true
 					selected.filename2 = MR.Displacements:GetFilename()

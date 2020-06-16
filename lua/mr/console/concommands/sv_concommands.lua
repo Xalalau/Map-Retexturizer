@@ -24,7 +24,13 @@ end
 function Concommands:PrintFail(plyIndex, message)
 	print(message)
 	if plyIndex then
-		player.GetAll()[tonumber(plyIndex)]:PrintMessage(HUD_PRINTCONSOLE, message)
+		for k,v in pairs(player.GetAll()) do
+			if tonumber(plyIndex) == v:EntIndex() then
+				v:PrintMessage(HUD_PRINTCONSOLE, message)
+
+				break
+			end
+		end		
 	end
 end
 

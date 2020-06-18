@@ -33,48 +33,14 @@ function Map:Set(data)
 	-- Get the material to be modified
 	local oldMaterial = Material(data.oldMaterial)
 
-	-- Change $basetexture
+	-- Change the texture
 	if data.newMaterial then
-		local newMaterial = nil
-
-		-- Get the correct material
-		local element = MR.DataList:GetElement(MR.Map:GetList(), data.newMaterial)
-		
-		if element and element.backup then
-			newMaterial = Material(element.backup.newMaterial)
-		else
-			newMaterial = Material(data.newMaterial)
-		end
-
-		-- Apply
-		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
+		oldMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
 	end
 
-	-- Displacements: change $basetexture2
+	-- Change the second texture (displacements only)
 	if data.newMaterial2 then
-		local keyValue = "$basetexture"
-		local newMaterial2 = nil
-	
-		--If it's running a displacement backup the second material is in $basetexture2
-		if data.newMaterial == data.newMaterial2 then 
-			local nameStart, nameEnd = string.find(data.newMaterial, MR.Displacements:GetFilename())
-
-			if nameStart then
-				keyValue = "$basetexture2"
-			end
-		end
-
-		-- Get the correct material
-		local element = MR.DataList:GetElement(MR.Map:GetList(), data.newMaterial2)
-
-		if element and element.backup then
-			newMaterial2 = Material(element.backup.newMaterial2)
-		else
-			newMaterial2 = Material(data.newMaterial2)
-		end
-
-		-- Apply
-		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture(keyValue))
+		oldMaterial:SetTexture("$basetexture2", Material(data.newMaterial2):GetTexture("$basetexture"))
 	end
 
 	-- Change the alpha channel
@@ -85,17 +51,24 @@ function Map:Set(data)
 
 	-- Change the matrix
 	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
+	local matrixChanged = false
 
 	if data.rotation then
 		textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
+		matrixChanged = true
 	end
 
 	if data.scalex and data.scaley then
 		textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
+		if not matrixChanged then matrixChanged = true; end
 	end
 
 	if data.offsetx and data.offsety then
 		textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
+		if not matrixChanged then matrixChanged = true; end
+	end
+
+	if matrixChanged then
 		oldMaterial:SetMatrix("$basetexturetransform", textureMatrix)
 	end
 

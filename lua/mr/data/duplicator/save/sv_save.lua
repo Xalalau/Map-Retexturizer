@@ -60,7 +60,7 @@ function Save:Set(ply, saveName, blockAlert)
 	MR.DataList:Clean(save.skybox)
 
 	-- Save it in a file
-	file.Write(saveFile, util.TableToJSON(save))
+	file.Write(saveFile, util.TableToJSON(save, true))
 
 	-- Server alert
 	if not blockAlert then

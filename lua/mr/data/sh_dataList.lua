@@ -18,12 +18,12 @@ end
 -- Check if the table is full
 function DataList:IsFull(list, limit)
 	-- Check if the backup table is full
-	if DataList:Count(list) == limit then
+	if DataList:Count(list) > limit then
 		-- Limit reached! Try to open new spaces in the list removing disabled entries
 		DataList:Clean(list)
 
 		-- Check again
-		if DataList:Count(list) == limit then
+		if DataList:Count(list) > limit then
 			return true
 		end
 	end

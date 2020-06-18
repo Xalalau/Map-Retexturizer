@@ -9,7 +9,8 @@ MR.CL.Materials = Materials
 local materials = {
 	preview = {
 		-- Preview material
-		name = "MatRetPreviewMaterial"
+		name = "MatRetPreviewMaterial",
+		material = ""
 	}
 }
 
@@ -20,6 +21,14 @@ end)
 
 function Materials:GetPreviewName()
 	return materials.preview.name
+end
+
+function Materials:GetPreviewMaterial()
+	return materials.preview.material
+end
+
+function Materials:SetPreviewMaterial(value)
+	materials.preview.material = value
 end
 
 -- Set a broadcasted material as (in)valid
@@ -52,6 +61,9 @@ function Materials:SetPreview(newData, isDecal)
 	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), isDecal and newData.newMaterial, nil, isDecal)
 	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() })
 
+	-- Get the current preview image
+	oldData.newMaterial = Materials:GetPreviewMaterial()
+
 	-- Adjustments for skybox materials
 	if MR.Materials:IsFullSkybox(newData.newMaterial) then
 		newData.newMaterial = MR.Skybox:SetSuffix(newData.newMaterial)
@@ -68,7 +80,7 @@ function Materials:SetPreview(newData, isDecal)
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
 		MR.CL.Map:Set(newData)
-		materials.preview.rotationHack = newData.rotation
+		Materials:SetPreviewMaterial(newData.newMaterial)
 	end
 
 	return true

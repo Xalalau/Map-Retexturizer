@@ -7,8 +7,10 @@ Displacements.__index = Displacements
 MR.Displacements = Displacements
 
 local displacements = {
-	-- The name of our backup displacement material files. They are disp_file1, disp_file2, disp_file3...
+	-- The name of our backup displacement material 1 files. They are disp_file1, disp_file2, disp_file3...
 	filename = MR.Base:GetMaterialsFolder().."disp_file",
+	-- The name of our backup displacement material 2 files. They are disp_file01, disp_file02, disp_file03...
+	filename2 = MR.Base:GetMaterialsFolder().."disp_file0",
 	-- 24 file limit (it seemed to be more than enough. This physical method is used due to bsp limitations)
 	limit = 48,
 	-- List of detected displacements on the map
@@ -48,4 +50,9 @@ end
 -- Get backup filenames
 function Displacements:GetFilename()
 	return displacements.filename
+end
+
+-- Get backup filenames
+function Displacements:GetFilename2()
+	return displacements.filename2
 end

@@ -112,7 +112,7 @@ function TOOL_BasicChecks(ply, tr)
 	end
 
 	-- Don't try to change displacements directly
-	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
+	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" or MR.Materials:IsDisplacement(MR.Materials:GetCurrent(tr)) then
 		if SERVER then
 			if GetConVar("sv_cheats"):GetString() == "0" then
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify displacements using the tool menu.")

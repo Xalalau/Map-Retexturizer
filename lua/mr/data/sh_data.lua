@@ -97,7 +97,7 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDec
 	local data = {
 		ent = game.GetWorld(),
 		oldMaterial = oldMaterialIn,
-		newMaterial = newMaterial2 or newMaterial or "",
+		newMaterial = newMaterial or nil,
 		newMaterial2 = newMaterial2 or nil,
 		offsetx = not isDecal and string.format("%.2f", math.floor((offsetx)*100)/100) or nil,
 		offsety = not isDecal and string.format("%.2f", math.floor((offsety)*100)/100) or nil,

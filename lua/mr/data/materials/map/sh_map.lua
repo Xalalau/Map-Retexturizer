@@ -110,8 +110,8 @@ function Map:Set(ply, data, isBroadcasted)
 		selected.isDisplacement = true
 		selected.list = MR.Displacements:GetList()
 		selected.limit = MR.Displacements:GetLimit()
-		selected.filename = Map:GetFilename()
-		selected.filename2 = MR.Displacements:GetFilename()
+		selected.filename = MR.Displacements:GetFilename()
+		selected.filename2 = MR.Displacements:GetFilename2()
 		if SERVER then
 			selected.dupName = MR.SV.Displacements:GetDupName()
 		end
@@ -134,7 +134,13 @@ function Map:Set(ply, data, isBroadcasted)
 
 	-- Validation for broadcasted materials
 	if CLIENT and (data.newMaterial or data.newMaterial2) and (isBroadcasted or MR.Ply:GetFirstSpawn(ply)) then
-		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial or data.newMaterial2)
+		if data.newMaterial then
+			data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
+		end
+
+		if data.newMaterial2 then
+			data.newMaterial2 = MR.CL.Materials:ValidateBroadcasted(data.newMaterial2)
+		end
 	end
 
 	-- General first steps (part 1)
@@ -216,14 +222,16 @@ function Map:Set(ply, data, isBroadcasted)
 			i = MR.DataList:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = data.backup or MR.Data:CreateFromMaterial(data.oldMaterial, selected.filename..tostring(i), selected.isDisplacement and selected.filename2..tostring(i))
+			local dataBackup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i))
 
 			-- Save the material texture
-			Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(dataBackup.oldMaterial):GetTexture("$basetexture"))
+			if data.newMaterial then
+				Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture"))
+			end
 
 			-- Save the second material texture (if it's a displacement)
-			if selected.isDisplacement then
-				Material(dataBackup.newMaterial2):SetTexture("$basetexture2", Material(dataBackup.oldMaterial):GetTexture("$basetexture2"))
+			if data.newMaterial2 then
+				Material(dataBackup.newMaterial2):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture2"))
 			end
 
 			-- Keep with a duplicator data.backup or point to a one
@@ -236,9 +244,27 @@ function Map:Set(ply, data, isBroadcasted)
 		MR.DataList:InsertElement(selected.list, data, i)
 
 		if CLIENT then
-			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
 			if selected.isDisplacement then
+				-- A dirty hack to make all the displacements darker, since the tool does it with these materials
 				MR.CL.Displacements:InitHack()
+
+				-- Don't apply the materials if they are the default
+				-- Note: this has to be done here for backups to be created successfully!
+				for k,v in pairs(MR.Displacements:GetDetected()) do 
+					if k == data.oldMaterial then
+						found = true
+			
+						if data.newMaterial == v[1] then
+							data.newMaterial = nil
+						end
+			
+						if data.newMaterial2 == v[2] then
+							data.newMaterial2 = nil
+						end
+			
+						break
+					end
+				end
 			end
 
 			-- Apply the new state to the map material
@@ -246,7 +272,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 		
 		if SERVER then
-			-- Reset the combobox and its text fields
+			-- Reset the displacements combobox
 			if selected.isDisplacement then
 				net.Start("CL.CPanel:ResetDisplacementsComboValue")
 				net.Broadcast()

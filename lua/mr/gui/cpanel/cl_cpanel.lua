@@ -1125,13 +1125,29 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		displacementsCombobox:AddChoice("", "")
 		displacementsCombobox:ChooseOptionID(1)
 		displacementsCombobox.OnSelect = function(self, index, value, data)
+			local material, material2
+
+			local function DisableField(material, element)
+				if material == "error" or value == "" then
+					element:SetEnabled(false)
+				elseif not element:IsEnabled() then
+					element:SetEnabled(true)
+				end
+			end
+
 			if value ~= "" then
-				CPanel:GetDisplacementsText1():SetValue(Material(value):GetTexture("$basetexture"):GetName())
-				CPanel:GetDisplacementsText2():SetValue(Material(value):GetTexture("$basetexture2"):GetName())
+				material = Material(value):GetTexture("$basetexture"):GetName()
+				material2 = Material(value):GetTexture("$basetexture2"):GetName()
+
+				CPanel:GetDisplacementsText1():SetValue(material)
+				CPanel:GetDisplacementsText2():SetValue(material2)
 			else
 				CPanel:GetDisplacementsText1():SetValue("")
 				CPanel:GetDisplacementsText2():SetValue("")
-			end	
+			end
+
+			DisableField(material, CPanel:GetDisplacementsText1())
+			DisableField(material2, CPanel:GetDisplacementsText2())
 		end
 
 		for k,v in pairs(MR.Displacements:GetDetected()) do
@@ -1151,6 +1167,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		CPanel:SetDisplacementsText1(path1Text)
 		path1Text:SetSize(path1TextInfo.width, path1TextInfo.height)
 		path1Text:SetPos(path1TextInfo.x, path1TextInfo.y)
+		path1Text:SetEnabled(false)
 		path1Text.OnEnter = function(self)
 			MR.CL.Displacements:Set()
 		end
@@ -1168,6 +1185,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		CPanel:SetDisplacementsText2(path2Text)
 		path2Text:SetSize(path2TextInfo.width, path2TextInfo.height)
 		path2Text:SetPos(path2TextInfo.x, path2TextInfo.y)
+		path2Text:SetEnabled(false)
 		path2Text.OnEnter = function(self)
 			MR.CL.Displacements:Set()
 		end

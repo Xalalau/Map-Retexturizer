@@ -42,6 +42,13 @@ for /l %%x in (1, 1, 48) do (
 	echo 	"$basetexture2" "mr/disp_file%%x" >> disp_file%%x.vmt
 	echo } >> disp_file%%x.vmt
 	echo disp_file%%x.vmt
+
+	echo "VertexlitGeneric" >> disp_file0%%x.vmt
+	echo { >> disp_file0%%x.vmt
+	echo 	"$basetexture" "mr/disp_file0%%x" >> disp_file0%%x.vmt
+	echo 	"$basetexture2" "mr/disp_file0%%x" >> disp_file0%%x.vmt
+	echo } >> disp_file0%%x.vmt
+	echo disp_file0%%x.vmt
 )
 
 echo.

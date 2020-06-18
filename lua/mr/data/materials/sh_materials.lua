@@ -51,7 +51,7 @@ end
 -- Check if a given material path is a displacement
 function Materials:IsDisplacement(material)
 	for k,v in pairs(MR.Displacements:GetDetected()) do
-		if k == material then
+		if string.lower(k) == string.lower(material) then
 			return true
 		end
 	end
@@ -62,7 +62,7 @@ end
 -- Is it the skybox material?
 function Materials:IsSkybox(material)
 	if material and (
-			material == MR.Skybox:GetGenericName() or
+		string.lower(material) == MR.Skybox:GetGenericName() or
 			Materials:IsFullSkybox(material) or
 			Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
 	   ) then

@@ -67,18 +67,18 @@ function Materials:SetAll(ply)
 		for k,v in pairs(found) do
 			if not v:find("water") then
 				local selected = {}
+				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 
 				if MR.Materials:IsDisplacement(v) then
 					selected.isDisplacement = true
-					selected.filename2 = MR.Displacements:GetFilename()
+					selected.filename = MR.Displacements:GetFilename()
+					selected.filename2 = MR.Displacements:GetFilename2()
 					count.disp = count.disp + 1
 				else
+					selected.filename = MR.Map:GetFilename()
 					count.map = count.map + 1
 				end
 
-				selected.filename = MR.Map:GetFilename()
-
-				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 				local data = MR.Data:Create(ply, { oldMaterial = v })
 
 				data.ent = nil
@@ -86,8 +86,13 @@ function Materials:SetAll(ply)
 				data.backup = MR.Data:CreateFromMaterial(v, selected.filename..tostring(selected.isDisplacement and count.disp or count.map), selected.isDisplacement and selected.filename2..tostring(count.disp))
 
 				if selected.isDisplacement then
-					data.newMaterial = material
-					data.newMaterial2 = material
+					if Material(v):GetTexture("$basetexture"):GetName() ~= "error" then
+						data.newMaterial = material
+					end
+
+					if Material(v):GetTexture("$basetexture2"):GetName() ~= "error" then
+						data.newMaterial2 = material
+					end
 
 					table.insert(newTable.displacements, data)
 				else

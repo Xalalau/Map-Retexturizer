@@ -84,28 +84,27 @@ function Displacements:Set(ply, displacement, newMaterial, newMaterial2, data)
 	end
 
 	-- To identify and apply a displacement default material we default it to "nil" here
-	if newMaterial == "" then
+	local found = false
+
+	for k,v in pairs(MR.Displacements:GetDetected()) do 
+		if k == displacement then
+			found = true
+
+			break
+		end
+	end
+
+	if not found then
+		return
+	end
+
+	-- Don't allow bad materials
+	if newMaterial == "error" then
 		newMaterial = nil
 	end
 
-	if newMaterial2 == "" then
+	if newMaterial2 == "error" then
 		newMaterial2 = nil
-	end
-
-	if newMaterial or newMaterial2 then
-		for k,v in pairs(MR.Displacements:GetDetected()) do 
-			if k == displacement then
-				if newMaterial and v[1] == newMaterial then
-					newMaterial = nil
-				end
-
-				if newMaterial2 and v[2] == newMaterial2 then
-					newMaterial2 = nil
-				end
-
-				break
-			end
-		end
 	end
 
 	-- Create the data table if we don't have one

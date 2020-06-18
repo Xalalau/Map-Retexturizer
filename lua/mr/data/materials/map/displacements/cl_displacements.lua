@@ -60,14 +60,15 @@ end
 -- Change the displacements: client
 function Displacements:Set(applyProperties)
 	local displacement, _ = MR.CL.CPanel:GetDisplacementsCombo():GetSelected()
-	local newMaterial = MR.CL.CPanel:GetDisplacementsText1():GetValue()
-	local newMaterial2 = MR.CL.CPanel:GetDisplacementsText2():GetValue()
-	local data = applyProperties and MR.Data:Create(LocalPlayer(), { oldMaterial = displacement }) or MR.DataList:GetElement(MR.Displacements:GetList(), displacement) or {}
 
 	-- No displacement selected
 	if not displacement or displacement == "" then
 		return false
 	end
+
+	local newMaterial = MR.CL.CPanel:GetDisplacementsText1():GetValue()
+	local newMaterial2 = MR.CL.CPanel:GetDisplacementsText2():GetValue()
+	local data = applyProperties and MR.Data:Create(LocalPlayer(), { oldMaterial = displacement }) or MR.DataList:GetElement(MR.Displacements:GetList(), displacement) or {}
 
 	-- Validate the fields
 	if newMaterial == "" then

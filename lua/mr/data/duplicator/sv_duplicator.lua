@@ -435,7 +435,18 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	Duplicator:SetProgress(ply, MR.Ply:GetDupCurrent(ply))
 
 	-- Apply map material
-	if section == "map" or section == "displacements" then
+	if section == "map" then
+		MR.Map:Set(ply, savedTable[position], true)
+	-- Apply displacement material(s)
+	elseif section == "displacements" then
+		if not MR.Displacements:GetDetected()[savedTable[position].oldMaterial] then
+			MR.Displacements:SetDetected(savedTable[position].oldMaterial)
+
+			net.Start("CL.Displacements:InsertDetected")
+				net.WriteString(savedTable[position].oldMaterial)
+			net.Broadcast()
+		end
+
 		MR.Map:Set(ply, savedTable[position], true)
 	-- Apply model material
 	elseif section == "model" then

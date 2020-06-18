@@ -212,3 +212,131 @@ function Load:SetAuto(ply, loadName)
 
 	return true
 end
+
+-- Upgrade format 1.0 to 2.0
+function Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
+	if savedTable and not savedTable.savingFormat then
+		-- Rebuild map materials structure from GMod saves
+		if savedTable[1] and savedTable[1].oldMaterial then
+			local aux = table.Copy(savedTable)
+
+			savedTable = {}
+
+			if MR.Materials:IsDisplacement(aux[1].oldMaterial) then
+				savedTable.displacements = aux
+			else
+				savedTable.map = aux
+			end
+		-- Rebuild decals structure from GMod saves
+		elseif savedTable[1] and savedTable[1].mat then
+			local aux = table.Copy(savedTable)
+
+			savedTable = {}
+			savedTable.decals = aux
+		end
+
+		-- Map and displacements tables from saved files and rebuilt GMod saves:
+		if savedTable.map then
+			-- Remove all the disabled elements
+			MR.DataList:Clean(savedTable.map)
+
+			-- Change "mapretexturizer" to "mr"
+			local i
+
+			for i = 1,#savedTable.map do
+				savedTable.map[i].backup.newMaterial, _ = string.gsub(savedTable.map[i].backup.newMaterial, "%mapretexturizer", "mr")
+			end
+		end
+
+		if savedTable.displacements then
+			-- Change "mapretexturizer" to "mr"
+			local i
+
+			for i = 1,#savedTable.displacements do
+
+				savedTable.displacements[i].backup.newMaterial, _ = string.gsub(savedTable.displacements[i].backup.newMaterial, "%mapretexturizer", "mr")
+				savedTable.displacements[i].backup.newMaterial2, _ = string.gsub(savedTable.displacements[i].backup.newMaterial2, "%mapretexturizer", "mr")
+			end
+		end
+
+		-- Set the new format number before fully loading the table in the duplicator
+		if isDupStarting then
+			savedTable.savingFormat = "2.0"
+		end
+		currentFormat = "2.0"
+	end
+
+	return currentFormat
+end
+
+-- Upgrade format 2.0 to 3.0
+function Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
+	if savedTable and savedTable.savingFormat == "2.0" or currentFormat == "2.0" then
+		-- Update decals structure
+		if savedTable.decals then
+			for k,v in pairs(savedTable.decals) do
+				local new = {
+					oldMaterial = v.mat,
+					newMaterial = v.mat,
+					scalex = "1",
+					scaley = "1",
+					position = v.pos,
+					normal = v.hit
+				}
+			
+				savedTable.decals[k] = new
+			end
+		end
+
+		-- Update skybox structure
+		if savedTable.skybox and savedTable.skybox ~= "" then
+			savedTable.skybox = {
+				MR.Data:CreateFromMaterial(savedTable.skybox)
+			}
+
+			savedTable.skybox[1].newMaterial = savedTable.skybox[1].oldMaterial
+			savedTable.skybox[1].oldMaterial = MR.Skybox:GetGenericName()
+		end
+
+		-- Set the new format number before fully loading the table in the duplicator
+		if isDupStarting then
+			savedTable.savingFormat = "3.0"
+		end
+		currentFormat = "3.0"
+	end
+
+	return savedTable
+end
+
+-- Format upgrading
+-- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
+function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
+	local savedTableOld
+	local currentFormat
+
+	-- Use a copy
+	if savedTable then 
+		savedTableOld = table.Copy(savedTable)
+	end
+
+	-- Upgrade
+	currentFormat = Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
+	currentFormat = Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
+
+	-- If the load was upgraded, backup the old file and save a new one
+	if isDupStarting and
+		not isGModSave and
+		savedTableOld and (
+			not savedTableOld.savingFormat or 
+	   		savedTableOld.savingFormat ~= MR.SV.Save:GetCurrentVersion()
+	   	) then
+
+		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
+		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
+
+		file.Rename(pathCurrent, pathBackup)
+		file.Write(pathCurrent, util.TableToJSON(savedTable, true))
+	end
+
+	return savedTable
+end

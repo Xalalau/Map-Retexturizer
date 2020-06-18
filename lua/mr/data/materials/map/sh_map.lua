@@ -222,56 +222,60 @@ function Map:Set(ply, data, isBroadcasted)
 			i = MR.DataList:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			local dataBackup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i))
+			data.backup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i))
 
 			-- Save the material texture
 			if data.newMaterial then
-				Material(dataBackup.newMaterial):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture"))
+				Material(data.backup.newMaterial):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture"))
 			end
 
 			-- Save the second material texture (if it's a displacement)
 			if data.newMaterial2 then
-				Material(dataBackup.newMaterial2):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture2"))
-			end
-
-			-- Keep with a duplicator data.backup or point to a one
-			if not data.backup then
-				data.backup = dataBackup
+				Material(data.backup.newMaterial2):SetTexture("$basetexture", Material(data.oldMaterial):GetTexture("$basetexture2"))
 			end
 		end
 
 		-- Index the Data
 		MR.DataList:InsertElement(selected.list, data, i)
 
-		if CLIENT then
-			if selected.isDisplacement then
-				-- A dirty hack to make all the displacements darker, since the tool does it with these materials
+		-- Handle the last displacements bits
+		if selected.isDisplacement then
+			-- A dirty hack to make all the displacements darker, since the tool does it with these materials
+			if CLIENT then
 				MR.CL.Displacements:InitHack()
-
-				-- Don't apply the materials if they are the default
-				-- Note: this has to be done here for backups to be created successfully!
-				for k,v in pairs(MR.Displacements:GetDetected()) do 
-					if k == data.oldMaterial then
-						found = true
-			
-						if data.newMaterial == v[1] then
-							data.newMaterial = nil
-						end
-			
-						if data.newMaterial2 == v[2] then
-							data.newMaterial2 = nil
-						end
-			
-						break
-					end
-				end
 			end
 
-			-- Apply the new state to the map material
+			for k,v in pairs(MR.Displacements:GetDetected()) do 
+				if k == data.oldMaterial then
+					found = true
+
+					-- If the entries are the default, this data was only to run a backup. Disable it
+					if data.newMaterial == v[1] and data.newMaterial2 == v[2] then
+						MR.DataList:DisableElement(data)
+
+						break
+					end
+
+					-- Don't apply the materials if they are the default
+					if data.newMaterial == v[1] then
+						data.newMaterial = nil
+					end
+		
+					if data.newMaterial2 == v[2] then
+						data.newMaterial2 = nil
+					end
+		
+					break
+				end
+			end
+		end
+
+		-- Apply the new state to the map material
+		if CLIENT and MR.DataList:IsActive(data) then
 			MR.CL.Map:Set(data)
 		end
 		
-		if SERVER then
+		if SERVER and MR.DataList:IsActive(data) then
 			-- Reset the displacements combobox
 			if selected.isDisplacement then
 				net.Start("CL.CPanel:ResetDisplacementsComboValue")
@@ -287,7 +291,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	end
 
-	if SERVER then
+	if SERVER and MR.DataList:IsActive(data) then
 		-- Set the Undo
 		if not isBroadcasted then
 			-- Only allow 1 skybox undo (otherwise it'll set 6)

@@ -375,14 +375,21 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	if check then
 		-- Don't apply bad materials
 		if CLIENT then
-			if check.material and not Materials:IsValid(check.material) and not Materials:IsSkybox(check.material) then
-				print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
+			if check.material and
+				not Materials:IsValid(check.material) and
+				not Materials:IsSkybox(check.material) and
+				not check.material == Materials:GetMissing() then
+
+					print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 
 				return false
 			end
 
-			if check.material2 and not Materials:IsValid(check.material2) then
-				print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
+			if check.material2 and
+				not Materials:IsValid(check.material2) and
+				not check.material == Materials:GetMissing() then
+
+					print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 
 				return false
 			end

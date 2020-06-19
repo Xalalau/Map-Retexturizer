@@ -60,7 +60,7 @@ function Decals:Set(data, isBroadcasted)
 	end
 
 	-- Apply the decal
-	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scalex, data.scaley)
+	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scaleX or MR.CVars:GetDefaultScaleX(), data.scaleY or MR.CVars:GetDefaultScaleY())
 
 	-- Index the Data
 	MR.DataList:InsertElement(MR.Decals:GetList(), data)
@@ -83,10 +83,10 @@ function Decals:Preview()
 
 	-- Render
 	local ang = tr.HitNormal:Angle()
-	local scalex = ply:GetInfo("internal_mr_scalex")
-	local scaley = ply:GetInfo("internal_mr_scaley")
+	local scaleX = ply:GetInfo("internal_mr_scalex")
+	local scaleY = ply:GetInfo("internal_mr_scaley")
 	local material = Material(MR.CL.Materials:GetPreviewName())
 
 	render.SetMaterial(material)
-	render.DrawQuadEasy(tr.HitPos, tr.HitNormal, material:Width() * scalex, material:Height() * scaley, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
+	render.DrawQuadEasy(tr.HitPos, tr.HitNormal, material:Width() * scaleX, material:Height() * scaleY, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
 end

@@ -8,7 +8,7 @@ MR.SV.Save = Save
 
 local save = {
 	-- The current save formating
-	currentVersion = 3.0
+	currentVersion = 4.0
 }
 
 -- Networking
@@ -58,6 +58,15 @@ function Save:Set(ply, saveName, blockAlert)
 	MR.DataList:Clean(save.map)
 	MR.DataList:Clean(save.displacements)
 	MR.DataList:Clean(save.skybox)
+
+	-- Remove the backups
+	for _,section in pairs(save) do
+		if istable(section) then
+			for _,data in pairs(section) do
+				data.backup = nil
+			end
+		end
+	end
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save, true))

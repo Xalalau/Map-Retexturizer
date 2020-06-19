@@ -160,13 +160,16 @@ end
 	end
 
 	-- Get data tables with the future and current materials
-	local newData = MR.Data:Create(ply, { tr = tr })
+	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
 	local oldData = MR.Materials:GetData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
-		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
+		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
 		oldData.newMaterial = oldData.oldMaterial 
+	-- Else fill up the empty fields
+	else
+		MR.Data:ReinsertDefaultValues(oldData)
 	end
 
 	-- Don't apply bad materials
@@ -205,6 +208,9 @@ end
 		return true
 	end
 
+	-- Remove unused fields
+	MR.Data:RemoveDefaultValues(newData)
+
 	-- Set the material
 
 	-- Skybox
@@ -231,13 +237,23 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Get data tables with the future and current materials
-	local newData = MR.Data:Create(ply, { tr = tr })
+	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
 	local oldData = MR.Materials:GetData(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
-		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr))
+		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
 		oldData.newMaterial = oldData.oldMaterial 
+	-- Else fill up the empty fields
+	else
+		MR.Data:ReinsertDefaultValues(oldData)
+	end
+
+	-- Get the correct detail for the oldData in the server
+	if SERVER then
+		if MR.SV.Materials:GetDetailFix(oldData.oldMaterial) then
+			oldData.detail = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		end
 	end
 
 	-- Adjustment for skybox materials
@@ -259,15 +275,13 @@ function TOOL:RightClick(tr)
 		return false
 	end
 
-	-- Copy the material
 	if SERVER then
+		-- Copy the material
 		MR.Materials:SetNew(ply, MR.Materials:GetCurrent(tr))
-	end
 
-	-- Set the cvars to the copied values
-	MR.CVars:SetPropertiesToData(ply, oldData)
+		-- Set the cvars to the copied values
+		MR.SV.CVars:SetPropertiesToData(ply, oldData)
 
-	if SERVER then
 		timer.Create("MRWaitToSetNewMaterial", "0.2", 1, function()
 			-- Set the preview
 			net.Start("CL.Materials:SetPreview")

@@ -7,26 +7,9 @@ Map.__index = Map
 MR.CL.Map = Map
 
 -- Networking
-net.Receive("CL.Map:FixDetail", function()
-	Map:FixDetail(net.ReadString(), net.ReadBool())
-end)
-
 net.Receive("CL.Map:Set", function()
 	Map:Set(net.ReadTable())
 end)
-
--- Fix the detail name on the server backup
-function Map:FixDetail(oldMaterial, isDisplacement)
-	local element = MR.DataList:GetElement(isDisplacement and MR.Displacements:GetList() or MR.Map:GetList(), oldMaterial)
-
-	if element then
-		net.Start("SV.Map:FixDetail")
-			net.WriteString(oldMaterial)
-			net.WriteBool(isDisplacement)
-			net.WriteString(element.detail)
-		net.SendToServer()
-	end
-end
 
 -- Set map material: client
 function Map:Set(data)
@@ -73,15 +56,13 @@ function Map:Set(data)
 	end
 
 	-- Change the detail
-	if data.detail then
-		if data.detail ~= "None" then
-			oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
-			oldMaterial:SetString("$detailblendfactor", "1")
-		else
-			oldMaterial:SetString("$detailblendfactor", "0")
-			oldMaterial:SetString("$detail", "")
-			oldMaterial:Recompute()
-		end
+	if data.detail and data.detail ~= "None" then
+		oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
+		oldMaterial:SetString("$detailblendfactor", "1")
+	elseif oldMaterial:GetString("$detail") and oldMaterial:GetString("$detail") ~= "" then
+		oldMaterial:SetString("$detailblendfactor", "0")
+		oldMaterial:SetString("$detail", "")
+		oldMaterial:Recompute()
 	end
 
 	--[[

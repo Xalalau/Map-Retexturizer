@@ -484,7 +484,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_scalex", data)
-					MR.CL.Materials:SetPreview()
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
@@ -492,7 +496,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				heightMagnification:SetValue(GetConVar("internal_mr_scaley"):GetFloat())
 				heightMagnification.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_scaley", data)
-					MR.CL.Materials:SetPreview()
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
@@ -500,7 +508,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_offsetx", data)
-					MR.CL.Materials:SetPreview()
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
@@ -508,7 +520,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				verticalTranslation:SetValue(GetConVar("internal_mr_offsety"):GetFloat())
 				verticalTranslation.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_offsety", data)
-					MR.CL.Materials:SetPreview()
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
@@ -516,7 +532,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_rotation", data)
-					MR.CL.Materials:SetPreview()
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
@@ -527,9 +547,11 @@ function PPanel:SetProperties(panel, materialInfo)
 				end	
 				details.DataChanged = function(self, data)
 					RunConsoleCommand("internal_mr_detail", data[1])
-					timer.Create("MRWaitDetailSetup", 0.03, 1, function()
-						MR.CL.Materials:SetPreview()
-					end)
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
 				end
 
 		return propertiesPanel
@@ -547,7 +569,7 @@ function PPanel:SetProperties(panel, materialInfo)
 		resetButton.DoClick = function(self, isRightClick)
 			propertiesPanel:Remove()
 			if not isRightClick then
-				MR.CVars:SetPropertiesToDefaults(LocalPlayer())
+				MR.CL.CVars:SetPropertiesToDefaults(LocalPlayer())
 			end
 			timer.Create("MRWaitForPropertiesDeleteion", 0.01, 1, function()
 				 propertiesPanel = SetProperties(panel, propertiesPanelInfo)

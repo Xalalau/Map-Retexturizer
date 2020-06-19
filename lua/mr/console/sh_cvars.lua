@@ -6,24 +6,42 @@ local CVars = {}
 CVars.__index = CVars
 MR.CVars = CVars
 
--- Set propertie cvars to default
-function CVars:SetPropertiesToDefaults(ply)
-	ply:ConCommand("internal_mr_detail None")
-	ply:ConCommand("internal_mr_offsetx 0.00")
-	ply:ConCommand("internal_mr_offsety 0.00")
-	ply:ConCommand("internal_mr_scalex 1.00")
-	ply:ConCommand("internal_mr_scaley 1.00")
-	ply:ConCommand("internal_mr_rotation 0.00")
-	ply:ConCommand("internal_mr_alpha 1.00")
+local cvars = {
+	defaults = {
+		detail = "None",
+		offsetX = "0.00",
+		offsetY = "0.00",
+		scaleX = "1.00",
+		scaleY = "1.00",
+		rotation = "0.00",
+		alpha = "1.00"
+	}
+}
+
+function CVars:GetDefaultDetail()
+	return cvars.defaults.detail
 end
 
--- Set propertie cvars based on some data table
-function CVars:SetPropertiesToData(ply, data)
-	RunConsoleCommand("internal_mr_detail", data.detail)
-	RunConsoleCommand("internal_mr_offsetx", data.offsetx)
-	RunConsoleCommand("internal_mr_offsety", data.offsety)
-	RunConsoleCommand("internal_mr_scalex", data.scalex)
-	RunConsoleCommand("internal_mr_scaley", data.scaley)
-	RunConsoleCommand("internal_mr_rotation", data.rotation)
-	RunConsoleCommand("internal_mr_alpha", data.alpha)
+function CVars:GetDefaultOffsetX()
+	return cvars.defaults.offsetX
+end
+
+function CVars:GetDefaultOffsetY()
+	return cvars.defaults.offsetY
+end
+
+function CVars:GetDefaultScaleX()
+	return cvars.defaults.scaleX
+end
+
+function CVars:GetDefaultScaleY()
+	return cvars.defaults.scaleY
+end
+
+function CVars:GetDefaultRotation()
+	return cvars.defaults.rotation
+end
+
+function CVars:GetDefaultAlpha()
+	return cvars.defaults.alpha
 end

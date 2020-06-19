@@ -308,6 +308,58 @@ function Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
 	return currentFormat
 end
 
+-- Upgrade format 3.0 to 4.0
+function Load:Upgrade3to4(savedTable, isDupStarting, currentFormat)
+	if savedTable and savedTable.savingFormat == "3.0" or currentFormat == "3.0" then
+		-- For each data block...
+		for _,section in pairs(savedTable) do
+			if istable(section) then
+				for _,data in pairs(section) do
+					-- Remove the backups
+					data.backup = nil
+
+					-- Adjust rotation
+					if data.rotation then
+						data.rotation = string.format("%.2f", data.rotation)
+					end
+
+					-- Adjust variable names
+					if data.offsetx then
+						data.offsetX = data.offsetx
+						data.offsetx = nil
+					end
+
+					if data.offsety then
+						data.offsetY = data.offsety
+						data.offsety = nil
+					end
+
+					if data.scalex then
+						data.scaleX = data.scalex
+						data.scalex = nil
+					end
+
+					if data.scaley then
+						data.scaleY = data.scaley
+						data.scaley = nil
+					end
+
+					-- Disable unused fields
+					MR.Data:RemoveDefaultValues(data)
+				end
+			end
+		end
+
+		-- Set the new format number before fully loading the table in the duplicator
+		if isDupStarting then
+			savedTable.savingFormat = "4.0"
+		end
+		currentFormat = "4.0"
+	end
+
+	return currentFormat
+end
+
 -- Format upgrading
 -- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
 function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
@@ -317,6 +369,7 @@ function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
 	-- Upgrade
 	currentFormat = Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
 	currentFormat = Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
+	currentFormat = Load:Upgrade3to4(savedTable, isDupStarting, currentFormat)
 
 	-- Backup the old save file and create a new one with the convertion
 	if isDupStarting and

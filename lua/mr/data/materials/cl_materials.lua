@@ -10,7 +10,7 @@ local materials = {
 	preview = {
 		-- Preview material
 		name = "MatRetPreviewMaterial",
-		material = ""
+		material = "MatRetPreviewMaterial",
 	}
 }
 
@@ -58,8 +58,8 @@ end
 -- use newData to force a specific material preview
 function Materials:SetPreview(newData, isDecal)
 	local ply = LocalPlayer()
-	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), isDecal and newData.newMaterial, nil, isDecal)
-	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() })
+	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), isDecal and newData.newMaterial, nil, isDecal, true)
+	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() }, nil, true)
 
 	-- Get the current preview image
 	oldData.newMaterial = Materials:GetPreviewMaterial()
@@ -79,9 +79,7 @@ function Materials:SetPreview(newData, isDecal)
 
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
-		MR.CL.Map:Set(newData)
 		Materials:SetPreviewMaterial(newData.newMaterial)
+		MR.CL.Map:Set(newData)
 	end
-
-	return true
 end

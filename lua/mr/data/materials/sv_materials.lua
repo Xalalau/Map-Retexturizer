@@ -6,6 +6,12 @@ local Materials = {}
 Materials.__index = Materials
 MR.SV.Materials = Materials
 
+local materials = {
+	-- Store the real $detail keyvalue (collected from the clients)
+	-- ["material"] = "detail"
+	detailFix = {}
+}
+
 -- Networking
 util.AddNetworkString("Materials:SetValid")
 util.AddNetworkString("CL.Materials:SetPreview")
@@ -19,6 +25,16 @@ end)
 net.Receive("SV.Materials:SetAll", function(_,ply)
 	Materials:SetAll(ply)
 end)
+
+function Materials:GetDetailFix(material)
+	return materials.detailFix[material]
+end
+
+function Materials:SetDetailFix(material, detail)
+	if not materials.detailFix[material] then
+		materials.detailFix[material] = detail
+	end
+end
 
 -- Change all the materials to a single one
 function Materials:SetAll(ply)
@@ -52,7 +68,7 @@ function Materials:SetAll(ply)
 			savingFormat = MR.SV.Save:GetCurrentVersion()
 		}
 
-		-- Fill the fake save table with the correct structures (ignoring water materials)
+		-- Fill the fake save table with the correct structures
 		newTable.skybox = {
 			MR.Data:Create(ply, { oldMaterial = MR.Skybox:GetGenericName() })
 		}
@@ -65,7 +81,7 @@ function Materials:SetAll(ply)
 		}
 
 		for k,v in pairs(found) do
-			if not v:find("water") then
+			if not v:find("water") then -- Ignore water
 				local selected = {}
 				v = v:sub(1, #v - 1) -- Remove last char (linebreak?)
 
@@ -82,8 +98,6 @@ function Materials:SetAll(ply)
 				local data = MR.Data:Create(ply, { oldMaterial = v })
 
 				data.ent = nil
-
-				data.backup = MR.Data:CreateFromMaterial(v, selected.filename..tostring(selected.isDisplacement and count.disp or count.map), selected.isDisplacement and selected.filename2..tostring(count.disp))
 
 				if selected.isDisplacement then
 					if Material(v):GetTexture("$basetexture"):GetName() ~= "error" then

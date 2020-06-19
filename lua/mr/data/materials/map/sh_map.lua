@@ -159,9 +159,6 @@ function Map:Set(ply, data, isBroadcasted)
 	-- Send the modification to...
 	if SERVER then
 		net.Start("Map:Set")
-			-- Note: I have to send this before a backup is created on the server, otherwise clients will
-			-- keep the saved values and later, after a cleanup, reload details as "None". This happens
-			-- because materials don't have their $detail keyvalue correctly configured in this scope.
 			net.WriteTable(data) 
 		-- every player
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
@@ -170,14 +167,6 @@ function Map:Set(ply, data, isBroadcasted)
 		-- the player
 		else
 			net.WriteBool(false)
-			net.Send(ply)
-		end
-
-		-- Fix the detail name on the server backup (explained just above)
-		if ply ~= MR.SV.Ply:GetFakeHostPly() and not MR.Ply:GetFirstSpawn(ply) and not data.backup then
-			net.Start("CL.Map:FixDetail")
-				net.WriteString(data.oldMaterial)
-				net.WriteBool(selected.isDisplacement or false)
 			net.Send(ply)
 		end
 	end
@@ -222,7 +211,7 @@ function Map:Set(ply, data, isBroadcasted)
 			i = MR.DataList:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
-			data.backup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i))
+			data.backup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i), nil, true)
 
 			-- Save the material texture
 			if data.newMaterial then

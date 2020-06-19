@@ -1326,7 +1326,10 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 				return
 			end
 
-			if MR.Materials:Validate(value) or MR.Materials:IsFullSkybox(value) or value == "" then
+			if value == "" then
+				net.Start("SV.Skybox:Remove")
+				net.SendToServer()
+			elseif MR.Materials:Validate(value) or MR.Materials:IsFullSkybox(value) then
 				if MR.Materials:IsFullSkybox(value) then
 					value = MR.Skybox:SetSuffix(value)
 				end

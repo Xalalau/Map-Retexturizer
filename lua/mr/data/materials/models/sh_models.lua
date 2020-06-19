@@ -138,10 +138,22 @@ function Models:Create(data)
 
 			-- Create matrix
 			local matrix = Matrix()
+			local matrixChanged = false
 
-			matrix:SetAngles(Angle(0, data.rotation, 0)) -- Rotation
-			matrix:Scale(Vector(1/data.scalex, 1/data.scaley, 1)) -- Scale
-			matrix:Translate(Vector(data.offsetx, data.offsety, 0)) -- Offset
+			if data.rotation then
+				matrix:SetAngles(Angle(0, data.rotation, 0)) -- Rotation
+				matrixChanged = true
+			end
+
+			if data.scaleX or data.scaleY then
+				matrix:Scale(Vector(1/(data.scaleX or 1), 1/(data.scaleY or 1), 1)) -- Scale
+				if not matrixChanged then matrixChanged = true; end
+			end
+
+			if data.offsetX or data.offsetY then
+				matrix:Translate(Vector(data.offsetX or 0, data.offsetY or 0, 0)) -- Offset
+				if not matrixChanged then matrixChanged = true; end
+			end
 
 			-- Create material
 			local newMaterial
@@ -151,14 +163,14 @@ function Models:Create(data)
 			newMaterial = model.list[materialID]
 
 			-- Apply detail
-			if data.detail ~= "None" then
+			if data.detail and data.detail ~= "None" then
 				if MR.Materials:GetDetailList()[data.detail] then
 					newMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
 					newMaterial:SetString("$detailblendfactor", "1")
 				else
 					newMaterial:SetString("$detailblendfactor", "0")
 				end
-			else
+			elseif oldMaterial:GetString("$detail") and oldMaterial:GetString("$detail") ~= "" then
 				newMaterial:SetString("$detailblendfactor", "0")
 			end
 
@@ -176,9 +188,11 @@ function Models:Create(data)
 			end
 
 			-- Apply matrix
-			newMaterial:SetMatrix("$basetexturetransform", matrix)
-			newMaterial:SetMatrix("$detailtexturetransform", matrix)
-			newMaterial:SetMatrix("$bumptransform", matrix)
+			if matrixChanged then
+				newMaterial:SetMatrix("$basetexturetransform", matrix)
+				newMaterial:SetMatrix("$detailtexturetransform", matrix)
+				newMaterial:SetMatrix("$bumptransform", matrix)
+			end
 		end
 	end
 
@@ -230,7 +244,7 @@ function Models:Set(ply, data, isBroadcasted)
 		data.ent.mr = data
 
 		-- Set the alpha
-		if SERVER then
+		if SERVER and data.alpha then
 			data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
 			data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
 		-- Apply the material

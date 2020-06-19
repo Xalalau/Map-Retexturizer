@@ -310,9 +310,17 @@ end
 
 -- Load materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, section)
-	-- If there are no more entries or the duplicator is being forced to stop, finish
+	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or MR.Duplicator:IsStopping() then
-		Duplicator:Finish(ply)
+		-- Next material
+		if position < #savedTable then
+			timer.Create("MRDuplicatorDelay"..section..tostring(ply), 0, 1, function()
+				Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
+			end)
+		-- There are no more entries
+		else
+			Duplicator:Finish(ply)
+		end
 
 		return
 	end

@@ -58,13 +58,13 @@ function Map:Set(data)
 		matrixChanged = true
 	end
 
-	if data.scalex and data.scaley then
-		textureMatrix:SetScale(Vector(1/data.scalex, 1/data.scaley, 1)) 
+	if data.scaleX or data.scaleY then
+		textureMatrix:SetScale(Vector(1/(data.scaleX or 1), 1/(data.scaleY or 1), 1))
 		if not matrixChanged then matrixChanged = true; end
 	end
 
-	if data.offsetx and data.offsety then
-		textureMatrix:SetTranslation(Vector(data.offsetx, data.offsety)) 
+	if data.offsetX or data.offsetY then
+		textureMatrix:SetTranslation(Vector(data.offsetX or 0, data.offsetY or 0)) 
 		if not matrixChanged then matrixChanged = true; end
 	end
 

@@ -8,7 +8,7 @@ MR.SV.Save = Save
 
 local save = {
 	-- The current save formating
-	currentVersion = 4.0
+	currentVersion = "4.0"
 }
 
 -- Networking

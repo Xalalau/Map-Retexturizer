@@ -38,7 +38,7 @@ function Materials:ValidateBroadcasted(material)
 		MR.Materials:Validate(material)
 	end
 
-	if not MR.Materials:IsValid(material) then
+	if not MR.Materials:IsValid(material) and not MR.Materials:IsSkybox(material) then
 		return MR.Materials:GetMissing()
 	end
 

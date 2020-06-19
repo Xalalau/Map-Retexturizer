@@ -170,7 +170,7 @@ function Models:Create(data)
 				else
 					newMaterial:SetString("$detailblendfactor", "0")
 				end
-			elseif oldMaterial:GetString("$detail") and oldMaterial:GetString("$detail") ~= "" then
+			elseif newMaterial:GetString("$detail") and newMaterial:GetString("$detail") ~= "" then
 				newMaterial:SetString("$detailblendfactor", "0")
 			end
 

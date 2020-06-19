@@ -438,7 +438,7 @@ function Materials:SetFinalSteps()
 			if not timer.Exists("MRAutoSave") then
 				timer.Create("MRAutoSave", 60, 1, function()
 					if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
-						MR.SV.Save:Set(ply, MR.Base:GetAutoSaveName())
+						MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), MR.Base:GetAutoSaveName())
 						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 					end
 				end)

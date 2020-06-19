@@ -305,34 +305,26 @@ function Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
 		currentFormat = "3.0"
 	end
 
-	return savedTable
+	return currentFormat
 end
 
 -- Format upgrading
 -- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
 function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
-	local savedTableOld
-	local currentFormat
-
-	-- Use a copy
-	if savedTable then 
-		savedTableOld = table.Copy(savedTable)
-	end
+	local startFormat = savedTable.savingFormat or "1.0"
+	local currentFormat = startFormat
 
 	-- Upgrade
 	currentFormat = Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
 	currentFormat = Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
 
-	-- If the load was upgraded, backup the old file and save a new one
+	-- Backup the old save file and create a new one with the convertion
 	if isDupStarting and
 		not isGModSave and
-		savedTableOld and (
-			not savedTableOld.savingFormat or 
-	   		savedTableOld.savingFormat ~= MR.SV.Save:GetCurrentVersion()
-	   	) then
+		startFormat ~= currentFormat then
 
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
-		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..(savedTableOld.savingFormat and savedTableOld.savingFormat or "1.0")..".txt"
+		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..startFormat..".txt"
 
 		file.Rename(pathCurrent, pathBackup)
 		file.Write(pathCurrent, util.TableToJSON(savedTable, true))

@@ -6,7 +6,7 @@
   |
    \   Garry's Mod Brasil
  =< |   http://www.gmbrblog.blogspot.com.br/
- =b |   https://github.com/xalalau/GMod/tree/master/Map%20Retexturizer
+ =b |   https://github.com/Xalalau/Map-Retexturizer
    /   Enjoy! - Aproveitem!
 
 ----- Special thanks to testers:

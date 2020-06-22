@@ -418,17 +418,18 @@ function PPanel:SetSelectedMaterialTextentry(panel, materialInfo)
 
 			MR.Materials:SetNew(LocalPlayer(), self:GetText())
 
-			if not MR.Materials:Validate(input) and PPanel:Preview_GetSelf():IsVisible() then
-				PPanel:Preview_GetSelf():Hide()
-			else
-				timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
-					MR.CL.Materials:SetPreview()
-				end)
+			if input == "" or not MR.Materials:Validate(input) then
+				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
+				materialText:SetText(MR.Materials:GetMissing())
+			end
+
+			timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+				MR.CL.Materials:SetPreview()
 
 				if not PPanel:Preview_GetSelf():IsVisible() then
 					PPanel:Preview_GetSelf():Show()
 				end
-			end
+			end)
 		end
 end
 
@@ -596,4 +597,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
--- PPanel:Create()
+PPanel:Create()

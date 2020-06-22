@@ -12,7 +12,7 @@
 ----- Special thanks to testers:
 
  [*] Beckman
- [*] BombermanMaldito
+ [*] Bombermano
  [*] duck
  [*] XxtiozionhoxX
  [*] le0board

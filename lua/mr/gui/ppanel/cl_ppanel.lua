@@ -87,13 +87,8 @@ hook.Add("OnContextMenuClose", "MRClosePPanel", function()
 	if not IsValid(PPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Hide the CPanel if the mouse isn't hovering any panel
-	if not MR.CL.GUI:IsCursorHovering(PPanel:GetSelf()) and not MR.CL.GUI:IsCursorHovering(MR.CL.CPanel:GetContextSelf()) then
-		PPanel:Hide()
-	-- Or keep the panels visible until the mouse gets out of panels bounds and stops moving
-	else
-		MR.CL.GUI:OnCursorStoppedHoveringAndMoving("PPanel", { PPanel:GetSelf(), MR.CL.CPanel:GetContextSelf() }, PPanel.Hide)
-	end
+	-- Hide the panel when the player is done
+	MR.CL.GUI:OnContextFinished("PPanel", { PPanel:GetSelf(), MR.CL.CPanel:GetContextSelf() }, PPanel.Hide)
 end)
 
 hook.Add("OnTextEntryGetFocus", "MRTextIn", function()
@@ -410,6 +405,7 @@ function PPanel:SetSelectedMaterialTextentry(panel, materialInfo)
 	-- Selected material text
 	--------------------------
 	local materialText = vgui.Create("DTextEntry", panel)
+		MR.CL.GUI:SetMRFocus(materialText)
 		materialText:SetSize(materialInfo.width, materialInfo.height)
 		materialText:SetPos(materialInfo.x, materialInfo.y)
 		materialText:SetConVar("internal_mr_material")
@@ -463,6 +459,7 @@ function PPanel:SetProperties(panel, materialInfo)
 	-- Alpha bar
 	--------------------------
 	local alphaBar = vgui.Create("DAlphaBar", panel)
+		MR.CL.GUI:SetMRFocus(alphaBar)
 		alphaBar:SetPos(alphaBarInfo.x, alphaBarInfo.y)
 		alphaBar:SetSize(alphaBarInfo.width, alphaBarInfo.height)
 		alphaBar:SetValue(1)
@@ -479,8 +476,10 @@ function PPanel:SetProperties(panel, materialInfo)
 			propertiesPanel:SetPos(propertiesPanelInfo.x, propertiesPanelInfo.y)
 			propertiesPanel:SetSize(propertiesPanelInfo.width, propertiesPanelInfo.height)
 
-
 			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
+				timer.Create("MRWaitWM", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(witdhMagnification.Inner)
+				end)
 				witdhMagnification:Setup("Float", { min = 0.01, max = 6 })
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
@@ -493,6 +492,9 @@ function PPanel:SetProperties(panel, materialInfo)
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
+				timer.Create("MRWaitHM", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(heightMagnification.Inner)
+				end)
 				heightMagnification:Setup("Float", { min = 0.01, max = 6 })
 				heightMagnification:SetValue(GetConVar("internal_mr_scaley"):GetFloat())
 				heightMagnification.DataChanged = function(self, data)
@@ -505,6 +507,9 @@ function PPanel:SetProperties(panel, materialInfo)
 				end
 
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
+				timer.Create("MRWaitHT", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(horizontalTranslation.Inner)
+				end)
 				horizontalTranslation:Setup("Float", { min = -1, max = 1 })
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
@@ -517,6 +522,9 @@ function PPanel:SetProperties(panel, materialInfo)
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
+				timer.Create("MRWaitVT", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(verticalTranslation.Inner)
+				end)
 				verticalTranslation:Setup("Float", { min = -1, max = 1 })
 				verticalTranslation:SetValue(GetConVar("internal_mr_offsety"):GetFloat())
 				verticalTranslation.DataChanged = function(self, data)
@@ -529,6 +537,9 @@ function PPanel:SetProperties(panel, materialInfo)
 				end
 
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
+				timer.Create("MRWaitRotation", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(rotation.Inner)
+				end)
 				rotation:Setup("Float", { min = -180, max = 180 })
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
@@ -541,12 +552,16 @@ function PPanel:SetProperties(panel, materialInfo)
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
+				timer.Create("MRWaitDetails", 0.03, 1, function()
+					MR.CL.GUI:SetMRFocus(details.Inner)
+				end)
 				PPanel:SetDetail(details)
 				details:Setup("Combo", { text = GetConVar("internal_mr_detail"):GetString() })
 				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 					details:AddChoice(k, { k, v })
-				end	
+				end
 				details.DataChanged = function(self, data)
+					MR.CL.GUI:SetElementFocused(false)
 					RunConsoleCommand("internal_mr_detail", data[1])
 					if not timer.Exists("MRWaitPropertie") then
 						timer.Create("MRWaitPropertie", 0.03, 1, function()
@@ -555,7 +570,7 @@ function PPanel:SetProperties(panel, materialInfo)
 					end
 				end
 
-		return propertiesPanel
+			return propertiesPanel
 	end
 
 	local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
@@ -597,4 +612,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
-PPanel:Create()
+--PPanel:Create()

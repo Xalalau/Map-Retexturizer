@@ -31,7 +31,8 @@ local gui = {
 	},
 	checkbox = {
 		height = 18
-	}
+	},
+	elementFocused
 }
 
 -- Networking
@@ -85,6 +86,61 @@ end
 
 function GUI:GetCheckboxHeight()
 	return gui.checkbox.height
+end
+
+function GUI:GetElementFocused()
+	return gui.elementFocused
+end
+
+function GUI:SetElementFocused(value)
+	gui.elementFocused = value
+end
+
+-- Panel focus locking controls
+hook.Add("VGUIMousePressed", "MRVGUIMousePressed", function(panel)
+	if panel then
+		-- Select the correct panel with it's a DProperties panel
+		if panel:GetParent() then
+			if string.find(panel:GetParent():GetName(), "DProperty_") then
+				panel = panel:GetParent()
+			elseif panel:GetParent():GetParent() then
+				if string.find(panel:GetParent():GetParent():GetName(), "DProperty_") then
+					panel = panel:GetParent():GetParent()
+				end
+			end
+		end
+
+		-- No menu selected
+		if panel:GetName() == "GModBase" then
+			if GUI:GetElementFocused() then
+				GUI:SetElementFocused(nil)
+			end
+		else
+			-- It it's a GetMRFocus() menu, lock the focus
+			if not GUI:GetElementFocused() then
+				if GUI:GetMRFocus(panel) then
+					GUI:SetElementFocused(panel)
+				end
+			-- For other menus, unlock the focus if it's locked
+			elseif not GUI:GetMRFocus(panel) then
+				GUI:SetElementFocused(nil)
+			end
+		end
+	end
+end)
+
+function GUI:SetMRFocus(panel)
+	if panel then
+		panel.MRFocus = true
+	end
+end
+
+function GUI:GetMRFocus(panel)
+	if panel then
+		return panel.MRFocus or false
+	end
+
+	return false
 end
 
 -- Check if the cursor is inside bounds of a selected panel
@@ -141,31 +197,33 @@ function GUI:OnCursorStoppedMoving(panelIn, callback, arg1, arg2)
 	end
 end
 
--- Call a function when the cursor exits the bounds of a selected
--- panel, stops moving and isn't hovering any panel
-function GUI:OnCursorStoppedHoveringAndMoving(identifier, panelInfo, callback, arg1, arg2)
+-- Call a function when the cursor exits the bounds of a selected panel, stops moving,
+-- isn't hovering any other given panel and there aren't elements marked as focused
+function GUI:OnContextFinished(identifier, panelInfo, callback, arg1, arg2)
 	local panel1 =  panelInfo[1]
 
 	function panel1:Think()
 		if not timer.Exists("MRCursorSetEvents"..identifier) then
 			local lastX, lastY = input.GetCursorPos()
 
-			timer.Create("MRCursorSetEvents"..identifier, 0.01, 1, function()
-				local isCursorHovering = false
+			timer.Create("MRCursorSetEvents"..identifier, 0.05, 1, function()
+				if not GUI:GetElementFocused() then
+					local isCursorHovering = false
 
-				for _,panel in pairs(panelInfo) do
-					if GUI:IsCursorHovering(panel) then
-						isCursorHovering = true
+					for _,panel in pairs(panelInfo) do
+						if GUI:IsCursorHovering(panel) then
+							isCursorHovering = true
+						end
 					end
-				end
 
-				if not isCursorHovering then
-					local curX, curY = input.GetCursorPos()
+					if not isCursorHovering then
+						local curX, curY = input.GetCursorPos()
 
-					if lastX == curX and lastY == curY then
-						callback(self, arg1, arg2)
+						if lastX == curX and lastY == curY then
+							callback(self, arg1, arg2)
 
-						function panel1:Think() end
+							function panel1:Think() end
+						end
 					end
 				end
 			end)

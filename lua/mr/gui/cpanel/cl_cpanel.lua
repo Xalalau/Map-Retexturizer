@@ -78,13 +78,8 @@ hook.Add("OnContextMenuClose", "MRCloseCPanel", function()
 	if not IsValid(CPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Hide the CPanel if the mouse isn't hovering any panel
-	if not MR.CL.GUI:IsCursorHovering(CPanel:GetContextSelf()) and not MR.CL.GUI:IsCursorHovering(MR.CL.PPanel:GetSelf()) then
-		CPanel:Hide(CPanel:GetContextSelf())
-	-- Or keep the panels visible until the mouse gets out of panels bounds and stops moving
-	else
-		MR.CL.GUI:OnCursorStoppedHoveringAndMoving("CPanel", { CPanel:GetContextSelf(), MR.CL.PPanel:GetSelf() }, CPanel.Hide, CPanel:GetContextSelf())
-	end
+	-- Hide the panel when the player is done
+	MR.CL.GUI:OnContextFinished("CPanel", { CPanel:GetContextSelf(), MR.CL.PPanel:GetSelf() }, CPanel.Hide, CPanel:GetContextSelf())
 end)
 
 function CPanel:GetSelf()
@@ -539,7 +534,7 @@ function CPanel:SetGeneral(parent, paddingTop, setDFrame)
 				end
 		end
 
-		--------------------------
+	--------------------------
 	-- Save
 	--------------------------
 	local save = vgui.Create("DButton", panel)
@@ -1112,6 +1107,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		displacementsLabel:SetTextColor(Color(0, 0, 0, 255))
 
 	local displacementsCombobox = vgui.Create("DComboBox", panel)
+		MR.CL.GUI:SetMRFocus(displacementsCombobox)
 		CPanel:SetDisplacementsCombo(displacementsCombobox)
 		displacementsCombobox:SetSize(displacementsComboboxInfo.width, displacementsComboboxInfo.height)
 		displacementsCombobox:SetPos(displacementsComboboxInfo.x, displacementsComboboxInfo.y)
@@ -1157,6 +1153,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		path1Label:SetTextColor(Color(0, 0, 0, 255))
 
 	local path1Text = vgui.Create("DTextEntry", panel)
+		MR.CL.GUI:SetMRFocus(path1Text)
 		CPanel:SetDisplacementsText1(path1Text)
 		path1Text:SetSize(path1TextInfo.width, path1TextInfo.height)
 		path1Text:SetPos(path1TextInfo.x, path1TextInfo.y)
@@ -1175,6 +1172,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		path2Label:SetTextColor(Color(0, 0, 0, 255))
 
 	local path2Text = vgui.Create("DTextEntry", panel)
+		MR.CL.GUI:SetMRFocus(path2Text)
 		CPanel:SetDisplacementsText2(path2Text)
 		path2Text:SetSize(path2TextInfo.width, path2TextInfo.height)
 		path2Text:SetPos(path2TextInfo.x, path2TextInfo.y)
@@ -1264,6 +1262,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 		skyboxLabel:SetTextColor(Color(0, 0, 0, 255))
 
 	local skyboxCombobox = vgui.Create("DComboBox", panel)
+		MR.CL.GUI:SetMRFocus(skyboxCombobox)
 		CPanel:SetSkyboxCombo(skyboxCombobox)
 		skyboxCombobox:SetSize(HL2LComboboxInfo.width, HL2LComboboxInfo.height)
 		skyboxCombobox:SetPos(HL2LComboboxInfo.x, HL2LComboboxInfo.y)
@@ -1292,6 +1291,7 @@ function CPanel:SetSkybox(parent, paddingTop, setDFrame)
 		skyboxPathLabel:SetTextColor(Color(0, 0, 0, 255))
 
 	local skyboxPath = vgui.Create("DTextEntry", panel)
+		MR.CL.GUI:SetMRFocus(skyboxPath)
 		MR.CPanel:Set("skybox", "text", skyboxPath)
 		skyboxPath:SetSize(skyboxPathInfo.width, skyboxPathInfo.height)
 		skyboxPath:SetPos(skyboxPathInfo.x, skyboxPathInfo.y)

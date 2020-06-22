@@ -29,37 +29,42 @@ end)
 -- Generate map displacements list
 function Displacements:Init(retrying)
 	local map_data = MR.OpenBSP()
-	local found = map_data:ReadLumpTextDataStringData()
 
-	timer.Create("MRWaitToGetDisplacementsList", 0.5, 1, function()
-		for k,v in pairs(found) do
-			if Material(v):GetString("$surfaceprop2") or Material(v):GetMatrix("$basetexturetransform2") then
-				-- I usually have trouble initializing this list at the beginning of the game because the time these
-				-- materials are ready is not consistent, so I try to re-add them a few times if they are invalid yet
-				if not Material(v):GetTexture("$basetexture") or not Material(v):GetTexture("$basetexture2") then
-					if not retrying then
-						retrying = 1
-					elseif retrying == 10 then
-						return
-					else
-						retrying = retrying + 1
-					end
+	print("[Map Retexturizer] Building displacements list...")
 
-					break
-				else
-					v = v:sub(1, #v - 1) -- Remove last char (line break?)
+	local faces = map_data:ReadLumpFaces()
+	local texInfo = map_data:ReadLumpTexInfo()
+	local texData = map_data:ReadLumpTexData()
+	local texDataTranslated = map_data:GetTranslatedTextDataStringTable()
 
-					MR.Displacements:SetDetected(v)
+	local displacements = {
+		faces = {},
+		materials = {}
+	}
 
-					retrying = nil
-				end
+	-- Search for displacements
+	for k,v in pairs(faces) do
+		-- dispinfos 65535 are normal faces
+		if v.dispinfo ~= 65535 then
+			-- Store the related texinfo index incremented by 1 because Lua tables start with 1
+			if not displacements.faces[v.texinfo + 1] then
+				displacements.faces[v.texinfo + 1] = true
 			end
 		end
+	end
 
-		if retrying then
-			Displacements:Init(retrying)
+	-- For each displacement found...
+	for k,v in pairs(displacements.faces) do
+		-- Get the material name from the texdata inside the texinfo
+		local material = texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1] -- More increments to adjust C tables to Lua
+
+		-- Register the material once and initialize it in the tool
+		if not displacements.materials[material] then
+			displacements.materials[material] = true
+
+			MR.Displacements:SetDetected(material:sub(1, #material - 1)) -- Important: remove the last char
 		end
-	end)
+	end
 end
 
 -- Get duplicator name

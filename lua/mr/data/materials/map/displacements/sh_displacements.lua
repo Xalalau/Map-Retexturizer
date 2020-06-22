@@ -26,14 +26,23 @@ function Displacements:GetDetected()
 end
 
 -- Manually manage the map displacements list
-function Displacements:SetDetected(value, remove)
+function Displacements:SetDetected(value, remove, retrying)
 	if remove then
 		displacements.detected[value] = nil
 	else
-		displacements.detected[value] = {
-			Material(value):GetTexture("$basetexture"):GetName(),
-			Material(value):GetTexture("$basetexture2"):GetName()
-		}
+		if not Material(value):GetTexture("$basetexture") then
+			retrying = not retrying and 1 or retrying + 1
+			if retrying > 9 then return; end
+
+			timer.Create("MRRetryAddDisplacement"..value, 0.5, 1, function()
+				Displacements:SetDetected(value, false, retrying)
+			end)
+		else
+			displacements.detected[value] = {
+				Material(value):GetTexture("$basetexture"):GetName(),
+				Material(value):GetTexture("$basetexture2"):GetName()
+			}
+		end
 	end
 end
 

@@ -406,7 +406,7 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 	local desciptionHint = vgui.Create("DLabel", panel)
 		desciptionHint:SetPos(desciptionHintInfo.x, desciptionHintInfo.y)
 		desciptionHint:SetSize(desciptionHintInfo.width, desciptionHintInfo.height)
-		desciptionHint:SetText("\nUse the Context Menu (C) to edit material\nproperties!")
+		desciptionHint:SetText("\n" .. Base:GetVersion())
 		desciptionHint:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom

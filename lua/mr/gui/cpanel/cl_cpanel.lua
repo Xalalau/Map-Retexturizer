@@ -1102,13 +1102,6 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		y = displacementsButtonInfo.y + displacementsButtonInfo.height + MR.CL.GUI:GetGeneralBorders()
 	}
 
-	local displacementsHint2Info = {
-		width = displacementsHintInfo.width,
-		height = MR.CL.GUI:GetTextHeight() * 3 + MR.CL.GUI:GetTextHeight()/2,
-		x =  displacementsHintInfo.x,
-		y = displacementsHintInfo.y + displacementsHintInfo.height + MR.CL.GUI:GetGeneralBorders()
-	}
-
 	--------------------------
 	-- Displacements combobox
 	--------------------------
@@ -1209,15 +1202,6 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		displacementsHint:SetSize(displacementsHintInfo.width, displacementsHintInfo.height)
 		displacementsHint:SetText("\nTo reset a field erase it and press enter.")
 		displacementsHint:SetTextColor(MR.CL.GUI:GetHintColor())
-
-	--------------------------
-	-- Displacements hint 2
-	--------------------------
-	local displacementsHint2 = vgui.Create("DLabel", panel)
-		displacementsHint2:SetPos(displacementsHint2Info.x, displacementsHint2Info.y)
-		displacementsHint2:SetSize(displacementsHint2Info.width, displacementsHint2Info.height)
-		displacementsHint2:SetText("Use mr_help in the console to help you add\nmore items to the list manually. In addition,\nyou can do this more easily by setting\nsv_cheats to 1 and 'trying to modify any\ndisplacement with the tool.")
-		displacementsHint2:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)

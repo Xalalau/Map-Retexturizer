@@ -7,6 +7,7 @@ Base.__index = Base
 MR.Base = Base
 
 local base = {
+	version = "GitHub, Version 15+",
 	materials = {
 		folder = "mr/"
 	},
@@ -61,6 +62,10 @@ function Base:Init()
 		CreateDir(base.data.save.converted.folder)
 		CreateDir(base.data.save.auto.load.folder)
 	end
+end
+
+function Base:GetVersion()
+	return base.version
 end
 
 function Base:GetMaterialsFolder()

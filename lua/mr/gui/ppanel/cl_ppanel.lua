@@ -562,7 +562,6 @@ function PPanel:SetProperties(panel, materialInfo)
 					details:AddChoice(k, { k, v })
 				end
 				details.DataChanged = function(self, data)
-					MR.CL.GUI:SetElementFocused(false)
 					RunConsoleCommand("internal_mr_detail", data[1])
 					if not timer.Exists("MRWaitPropertie") then
 						timer.Create("MRWaitPropertie", 0.03, 1, function()
@@ -613,4 +612,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
---PPanel:Create()
+PPanel:Create()

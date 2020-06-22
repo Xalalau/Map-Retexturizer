@@ -5,14 +5,14 @@
 	http://steamcommunity.com/profiles/76561197967919092
 	And then was taken from 
 	https://github.com/CapsAdmin/tod/blob/master/lua/tod/bsp.lua
-	Which now is being used/improved for Map Retexturizer by Xalalau Xubilozo
+	Which now is being improved for Map Retexturizer by Xalalau Xubilozo
 
 	Great sources to help us understand these interfaces:
 	https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/public/bspfile.h
 	https://csharp.hotexamples.com/site/file?hash=0x929844e2eaa63910340254a31bf9ff4c998856f7145967140a5d1e1b9c49345d&fullName=ProjectMoretz/BSPParser.cs&project=oxters168/ProjectMoretz
 	https://github.com/EstevanTH/GMod-map_manipulation_tool/blob/master/lua/autorun/map_manipulation_tool_api.lua
 
-	Changelog for Map Ratexturizer:
+	Changelog (since MR v.16):
 		-- Minor syntax changes, merely visual
 		-- Enabled methods:ReadLumpDispInfo()
 		-- Added SIZEOF_UINT, toUInt() and ReadUInt()
@@ -196,10 +196,8 @@ function methods:ReadLumpFaces()
 	return faces
 end
 
--- Displacements loading:
--- https://github.com/TheAlePower/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/engine/disp_mapload.cpp#L551
--- Materiais estão aqui:
--- https://github.com/TheAlePower/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/engine/disp_mapload.cpp#L628
+-- Displacements: https://github.com/TheAlePower/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/engine/disp_mapload.cpp#L551
+-- Start: https://github.com/TheAlePower/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/engine/disp_mapload.cpp#L628
 function methods:ReadLumpDispInfo()
 	local f = self.m_file
 	if(!f) then return end

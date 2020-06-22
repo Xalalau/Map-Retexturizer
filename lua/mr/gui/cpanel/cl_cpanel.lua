@@ -281,6 +281,7 @@ end
 function CPanel:Show(frame)
 	if IsValid(frame) and not frame:IsVisible() then
 		frame:Show()
+		frame:MoveToFront()
 	end
 end
 

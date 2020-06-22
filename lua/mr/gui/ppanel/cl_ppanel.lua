@@ -318,6 +318,7 @@ function PPanel:Show()
 		else
 			timer.Create("MRWaitToGetFocus", 0.01, 1, function()
 				PPanel:Preview_GetSelf():MakePopup()
+				PPanel:GetSelf():MoveToFront()
 			end)
 		end
 	end

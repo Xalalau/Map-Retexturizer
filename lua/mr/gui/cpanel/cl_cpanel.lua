@@ -386,9 +386,9 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 
 	local desciptionHintInfo = {
 		width = width - MR.CL.GUI:GetGeneralBorders() * 2,
-		height = MR.CL.GUI:GetTextHeight() * 2,
+		height = MR.CL.GUI:GetTextHeight(),
 		x = desciptionInfo.x + MR.CL.GUI:GetTextMarginLeft(),
-		y = desciptionInfo.y + desciptionInfo.height/2
+		y = desciptionInfo.y + desciptionInfo.height/2 + MR.CL.GUI:GetGeneralBorders()/2
 	}
 
 	--------------------------
@@ -406,7 +406,7 @@ function CPanel:SetDescription(parent, paddingTop, setDFrame)
 	local desciptionHint = vgui.Create("DLabel", panel)
 		desciptionHint:SetPos(desciptionHintInfo.x, desciptionHintInfo.y)
 		desciptionHint:SetSize(desciptionHintInfo.width, desciptionHintInfo.height)
-		desciptionHint:SetText("\n" .. Base:GetVersion())
+		desciptionHint:SetText("\n" .. MR.Base:GetVersion())
 		desciptionHint:SetTextColor(MR.CL.GUI:GetHintColor())
 
 	-- Margin bottom
@@ -1099,7 +1099,7 @@ function CPanel:SetDisplacements(parent, paddingTop, setDFrame)
 		width = panel:GetWide() - MR.CL.GUI:GetGeneralBorders() * 2,
 		height = MR.CL.GUI:GetTextHeight(),
 		x = path2LabelInfo.x + MR.CL.GUI:GetTextMarginLeft(),
-		y = displacementsButtonInfo.y + displacementsButtonInfo.height + MR.CL.GUI:GetGeneralBorders()
+		y = displacementsButtonInfo.y + displacementsButtonInfo.height/2 + MR.CL.GUI:GetGeneralBorders() * 2
 	}
 
 	--------------------------
@@ -1502,4 +1502,4 @@ function CPanel:Test()
 	end)
 end
 
---CPanel:Test()
+CPanel:Test()

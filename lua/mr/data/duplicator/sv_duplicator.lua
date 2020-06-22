@@ -313,7 +313,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or MR.Duplicator:IsStopping() then
 		-- Next material
-		if position < #savedTable then
+		if not MR.Duplicator:IsStopping() and position < #savedTable then
 			timer.Create("MRDuplicatorDelay"..section..tostring(ply), 0, 1, function()
 				Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
 			end)

@@ -27,7 +27,7 @@ net.Receive("SV.Displacements:RemoveAll", function(_, ply)
 end)
 
 -- Generate map displacements list
-function Displacements:Init(retrying)
+function Displacements:Init()
 	local map_data = MR.OpenBSP()
 
 	print("[Map Retexturizer] Building displacements list...")

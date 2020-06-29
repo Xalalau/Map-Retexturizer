@@ -487,6 +487,14 @@ function PPanel:SetProperties(panel, materialInfo)
 					end
 				end
 
+				local function setValueFromText(command, value)
+					setValue(command, value)
+
+					timer.Create("MRWaitSlider", 0.03, 1, function()
+						setValue(command, value)
+					end)
+				end
+
 				timer.Create("MRWaitWM", 0.03, 1, function()
 					MR.CL.GUI:SetMRFocus(witdhMagnification.Inner)
 				end)
@@ -494,6 +502,10 @@ function PPanel:SetProperties(panel, materialInfo)
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
 					setValue("internal_mr_scalex", data)
+				end
+
+				witdhMagnification.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
+					setValueFromText("internal_mr_scalex", self:GetValue())
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
@@ -506,6 +518,10 @@ function PPanel:SetProperties(panel, materialInfo)
 					setValue("internal_mr_scaley", data)
 				end
 
+				heightMagnification.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
+					setValueFromText("internal_mr_scaley", self:GetValue())
+				end
+
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
 				timer.Create("MRWaitHT", 0.03, 1, function()
 					MR.CL.GUI:SetMRFocus(horizontalTranslation.Inner)
@@ -514,6 +530,10 @@ function PPanel:SetProperties(panel, materialInfo)
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
 					setValue("internal_mr_offsetx", data)
+				end
+
+				horizontalTranslation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
+					setValueFromText("internal_mr_offsetx", self:GetValue())
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
@@ -526,6 +546,10 @@ function PPanel:SetProperties(panel, materialInfo)
 					setValue("internal_mr_offsety", data)
 				end
 
+				verticalTranslation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
+					setValueFromText("internal_mr_offsety", self:GetValue())
+				end
+
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
 				timer.Create("MRWaitRotation", 0.03, 1, function()
 					MR.CL.GUI:SetMRFocus(rotation.Inner)
@@ -534,6 +558,10 @@ function PPanel:SetProperties(panel, materialInfo)
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
 					setValue("internal_mr_rotation", data)
+				end
+
+				rotation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
+					setValueFromText("internal_mr_rotation", self:GetValue())
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")

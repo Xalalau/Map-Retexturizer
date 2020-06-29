@@ -478,18 +478,22 @@ function PPanel:SetProperties(panel, materialInfo)
 			propertiesPanel:SetSize(propertiesPanelInfo.width, propertiesPanelInfo.height)
 
 			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
+				local function setValue(command, value)
+					RunConsoleCommand(command, value)
+					if not timer.Exists("MRWaitPropertie") then
+						timer.Create("MRWaitPropertie", 0.03, 1, function()
+							MR.CL.Materials:SetPreview()
+						end)
+					end
+				end
+
 				timer.Create("MRWaitWM", 0.03, 1, function()
 					MR.CL.GUI:SetMRFocus(witdhMagnification.Inner)
 				end)
 				witdhMagnification:Setup("Float", { min = 0.01, max = 6 })
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_scalex", data)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_scalex", data)
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
@@ -499,12 +503,7 @@ function PPanel:SetProperties(panel, materialInfo)
 				heightMagnification:Setup("Float", { min = 0.01, max = 6 })
 				heightMagnification:SetValue(GetConVar("internal_mr_scaley"):GetFloat())
 				heightMagnification.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_scaley", data)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_scaley", data)
 				end
 
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
@@ -514,12 +513,7 @@ function PPanel:SetProperties(panel, materialInfo)
 				horizontalTranslation:Setup("Float", { min = -1, max = 1 })
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_offsetx", data)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_offsetx", data)
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
@@ -529,12 +523,7 @@ function PPanel:SetProperties(panel, materialInfo)
 				verticalTranslation:Setup("Float", { min = -1, max = 1 })
 				verticalTranslation:SetValue(GetConVar("internal_mr_offsety"):GetFloat())
 				verticalTranslation.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_offsety", data)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_offsety", data)
 				end
 
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
@@ -544,12 +533,7 @@ function PPanel:SetProperties(panel, materialInfo)
 				rotation:Setup("Float", { min = -180, max = 180 })
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_rotation", data)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_rotation", data)
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
@@ -562,12 +546,7 @@ function PPanel:SetProperties(panel, materialInfo)
 					details:AddChoice(k, { k, v })
 				end
 				details.DataChanged = function(self, data)
-					RunConsoleCommand("internal_mr_detail", data[1])
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
+					setValue("internal_mr_detail", data[1])
 				end
 
 			return propertiesPanel

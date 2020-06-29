@@ -480,8 +480,8 @@ function PPanel:SetProperties(panel, materialInfo)
 			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
 				local function setValue(command, value)
 					RunConsoleCommand(command, value)
-					if not timer.Exists("MRWaitPropertie") then
-						timer.Create("MRWaitPropertie", 0.03, 1, function()
+					if not timer.Exists("MRWaitProperty") then
+						timer.Create("MRWaitProperty", 0.03, 1, function()
 							MR.CL.Materials:SetPreview()
 						end)
 					end

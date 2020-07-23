@@ -193,14 +193,6 @@ function PPanel:Properties_SetResetCallback(func)
 	ppanel.properties.resetCallback = func
 end
 
-function PPanel:GetPreviewInfo()
-	return ppanel.preview.info
-end
-
-function PPanel:SetPreviewInfo(info)
-	ppanel.preview.info = info
-end
-
 function PPanel:GetPreviewFrameInfo()
 	return ppanel.preview.frameInfo
 end
@@ -221,18 +213,6 @@ end
 function PPanel:Create()
 	--PPanel:Preview_SetBoxSize(PPanel:Preview_GetBoxMinSize() * ScrH() / 768)
 	PPanel:Preview_SetBoxSize(PPanel:Preview_GetBoxMinSize())
-
-	local previewInfo = {
-		width,
-		height,
-		x = 0,
-		y = 0
-	}
-	
-	PPanel:SetPreviewInfo(previewInfo)
-
-	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(PPanel:Preview_GetBoxSize(), Material(MR.Materials:GetNew()):Width(), Material(MR.Materials:GetNew()):Height())
-
 	PPanel:Sheet_SetPaddingLeft(PPanel:Preview_GetBoxSize() + MR.CL.GUI:GetGeneralBorders())
 
 	local materialInfo = {
@@ -244,7 +224,7 @@ function PPanel:Create()
 
 	local sheetFrameInfo = {
 		width = 520 + (PPanel:Preview_GetBoxSize() - PPanel:Preview_GetBoxMinSize()),
-		height = previewInfo.height + materialInfo.height + MR.CL.GUI:GetFrameTopBar() * 2 + PPanel:Sheet_GetExternalBorder() * 4,
+		height = PPanel:Preview_GetBoxSize() + materialInfo.height + MR.CL.GUI:GetFrameTopBar() * 2 + PPanel:Sheet_GetExternalBorder() * 4,
 		x = 15,
 		y = 182
 	}
@@ -342,6 +322,17 @@ end
 
 -- Create the preview box
 function PPanel:SetPreviewBox()
+	local previewInfo = {
+		width,
+		height,
+		x = 0,
+		y = 0
+	}
+
+	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(PPanel:Preview_GetBoxSize(), Material(MR.Materials:GetNew()):Width(), Material(MR.Materials:GetNew()):Height())
+	previewInfo.x = (PPanel:Preview_GetBoxSize() - previewInfo.width) / 2
+	previewInfo.y = (PPanel:Preview_GetBoxSize() - previewInfo.height) / 2
+
 	--------------------------
 	-- Preview Box
 	--------------------------
@@ -361,8 +352,8 @@ function PPanel:SetPreviewBox()
 
 		local Preview = vgui.Create("DImageButton", previewFrame)
 			Preview:SetImage(MR.CL.Materials:GetPreviewName())
-			Preview:SetSize(PPanel:GetPreviewInfo().width, PPanel:GetPreviewInfo().height)
-			Preview:SetPos(PPanel:GetPreviewInfo().x, PPanel:GetPreviewInfo().y)
+			Preview:SetSize(previewInfo.width, previewInfo.height)
+			Preview:SetPos(previewInfo.x, previewInfo.y)
 
 	PPanel:Preview_SetSelf(previewFrame)
 end

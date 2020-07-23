@@ -81,14 +81,6 @@ function Materials:SetPreview(newData, isDecal)
 	if not MR.Data:IsEqual(oldData, newData) then
 		Materials:SetPreviewMaterial(newData.newMaterial)
 		MR.CL.Map:Set(newData)
-
-		if MR.CL.PPanel:Preview_GetSelf() then
-			MR.CL.PPanel:Hide()
-			MR.CL.PPanel:Preview_GetSelf():Remove()
-			timer.Create("MRSetPreview", 0.01, 1, function()
-				MR.CL.PPanel:SetPreviewBox() 
-				MR.CL.PPanel:Show()
-			end)
-		end
+		MR.CL.PPanel:UpdatePreviewBox()
 	end
 end

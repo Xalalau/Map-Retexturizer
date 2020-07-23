@@ -320,6 +320,17 @@ function PPanel:Hide()
 	end
 end
 
+-- Update the panel
+function PPanel:UpdatePreviewBox()
+	if PPanel:GetSelf():IsVisible() then
+		PPanel:Hide()
+
+		timer.Create("MRSetPreview", 0.1, 1, function()
+			PPanel:Show()
+		end)
+	end
+end
+
 -- Create the preview box
 function PPanel:SetPreviewBox()
 	local previewInfo = {

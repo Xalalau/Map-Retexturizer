@@ -29,6 +29,9 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 	-- Get the basic properties
 	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
 
+	-- Adjustments for an already modified newMaterial
+	MR.Materials:FixCurrentPath(data)
+
 	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		-- Set the duplicator

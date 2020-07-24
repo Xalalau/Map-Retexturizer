@@ -79,6 +79,7 @@ function Materials:SetPreview(newData, isDecal)
 
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
+		MR.Materials:FixCurrentPath(newData)
 		Materials:SetPreviewMaterial(newData.newMaterial)
 		MR.CL.Map:Set(newData)
 		MR.CL.PPanel:UpdatePreviewBox()

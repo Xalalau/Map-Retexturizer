@@ -176,6 +176,9 @@ function Map:Set(ply, data, isBroadcasted)
 		local element = MR.DataList:GetElement(selected.list, data.oldMaterial)
 		local i
 
+		-- Adjustments for an already modified newMaterial
+		MR.Materials:FixCurrentPath(data)
+
 		-- Set the backup:
 		-- If we are modifying an already modified material
 		if element then

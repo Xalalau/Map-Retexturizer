@@ -237,6 +237,9 @@ function Models:Set(ply, data, isBroadcasted)
 			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
 		end
 
+		-- Adjustments for an already modified newMaterial
+		MR.Materials:FixCurrentPath(data)
+
 		-- Create the new material
 		data.newMaterial = Models:Create(data)
 

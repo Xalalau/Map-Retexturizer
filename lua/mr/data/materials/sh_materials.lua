@@ -183,6 +183,26 @@ function Materials:GetCurrent(tr)
 			""
 end
 
+-- Get the full path from the backup material containing the current material texture
+--   If a meterial is modified we have to pick its correct texture from a backup
+function Materials:FixCurrentPath(data)
+	local materialLists = {
+		MR.Displacements:GetList(),
+		MR.Skybox:GetList(),
+		MR.Map:GetList()
+	}
+
+	for k,v in pairs(materialLists) do
+		local modifiedNewMaterial = MR.DataList:GetElement(v, data.newMaterial)
+
+		if modifiedNewMaterial then
+			data.newMaterial = modifiedNewMaterial.backup.newMaterial
+
+			break
+		end
+	end
+end
+
 -- Get the current data
 function Materials:GetData(tr)
 	return MR.Models:GetData(tr.Entity) or MR.Map:GetData(tr)

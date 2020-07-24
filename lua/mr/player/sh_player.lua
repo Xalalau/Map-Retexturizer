@@ -20,6 +20,15 @@ local MRPlayer = {
 	dup = { -- Note: this should be in the duplicator files, not here
 		-- If a save is being loaded, the file name keeps stored here until it's done
 		running = "",
+		-- Table to hold modifications made while the player is loading
+		newSavedTable = {
+			decals = {},
+			map = {},
+			displacements = {},
+			skybox = {},
+			models = {},
+			savingFormat = "4.0" -- TODO: again, the dup table should be in the duplicator files, not here!
+		},
 		-- Number of elements
 		count = {
 			total = 0,
@@ -242,6 +251,10 @@ end
 
 function Ply:SetDupRunning(ply, value)
 	ply.mr.dup.running = value
+end
+
+function Ply:GetNewDupTable(ply)
+	return ply.mr.dup.newSavedTable
 end
 
 function Ply:GetDupTotal(ply)

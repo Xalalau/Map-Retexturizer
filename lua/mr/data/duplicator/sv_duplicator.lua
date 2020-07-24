@@ -166,9 +166,9 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
-		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() or nil
-		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.Map:GetList() or nil
-		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.Displacements:GetList() or nil
+		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() and table.Copy(MR.Decals:GetList()) or nil
+		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.Map:GetList() and table.Copy(MR.Map:GetList()) or nil
+		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.Displacements:GetList() and table.Copy(MR.Displacements:GetList()) or nil
 		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { MR.Skybox:GetList()[1] } or nil
 		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
 
@@ -440,10 +440,26 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
+			-- Start a new (partial) load if modifications were made while the player was entering
+			if MR.Ply:GetNewDupTable() then
+				-- Create a copy
+				local newSavedTable = table.Copy(MR.Ply:GetNewDupTable())
+
+				-- Empty the original table, so we can repeat this process if it's necessary
+				for k,v in pairs(MR.Ply:GetNewDupTable()) do
+					if not k == "savingFormat" then
+						table.Empty(v)
+					end
+				end
+
+				-- Start
+				Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), Duplicator:GetEnt(), newSavedTable, "noMrLoadFile")
 			-- Disable the first spawn state
-			MR.Ply:SetFirstSpawn(ply)
-			net.Start("Ply:SetFirstSpawn")
-			net.Send(ply)
+			else				
+				MR.Ply:SetFirstSpawn(ply)
+				net.Start("Ply:SetFirstSpawn")
+				net.Send(ply)
+			end
 		end
 
 		return true

@@ -109,6 +109,7 @@ function Map:Set(ply, data, isBroadcasted)
 	if MR.Materials:IsDisplacement(data.oldMaterial) then
 		selected.isDisplacement = true
 		selected.list = MR.Displacements:GetList()
+		selected.dupList = MR.Ply:GetNewDupTable(ply).displacements
 		selected.limit = MR.Displacements:GetLimit()
 		selected.filename = MR.Displacements:GetFilename()
 		selected.filename2 = MR.Displacements:GetFilename2()
@@ -118,6 +119,7 @@ function Map:Set(ply, data, isBroadcasted)
 	elseif MR.Materials:IsSkybox(data.oldMaterial) then
 		selected.isSkybox = true
 		selected.list = MR.Skybox:GetList()
+		selected.dupList = MR.Ply:GetNewDupTable(ply).skybox
 		selected.limit = MR.Skybox:GetLimit()
 		selected.filename = MR.Skybox:GetFilename()
 		if SERVER then
@@ -125,6 +127,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	else
 		selected.list = Map:GetList()
+		selected.dupList = MR.Ply:GetNewDupTable(ply).map
 		selected.limit = Map:GetLimit()
 		selected.filename = Map:GetFilename()
 		if SERVER then
@@ -153,6 +156,11 @@ function Map:Set(ply, data, isBroadcasted)
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+		-- If the player is loading for the first time, store this change to apply it later
+		if MR.Ply:GetFirstSpawn(ply) then
+			MR.DataList:InsertElement(selected.dupList, data)
+		end
+
 		return
 	end
 

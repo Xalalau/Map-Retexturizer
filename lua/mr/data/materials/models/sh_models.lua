@@ -214,6 +214,11 @@ function Models:Set(ply, data, isBroadcasted)
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+		-- If the player is loading for the first time, store this change to apply it later
+		if MR.Ply:GetFirstSpawn(ply) then
+			MR.DataList:InsertElement(MR.Ply:GetNewDupTable(ply).models, data)
+		end
+
 		return false
 	end
 

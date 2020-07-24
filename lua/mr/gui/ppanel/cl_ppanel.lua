@@ -322,7 +322,7 @@ end
 
 -- Update the panel
 function PPanel:UpdatePreviewBox()
-	if PPanel:GetSelf():IsVisible() then
+	if PPanel:GetSelf() and PPanel:GetSelf():IsVisible() then
 		PPanel:Hide()
 
 		timer.Create("MRSetPreview", 0.1, 1, function()
@@ -621,4 +621,4 @@ end
 
 
 -- Test the menus. Uncomment and save while the game is running
-PPanel:Create()
+--PPanel:Create()

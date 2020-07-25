@@ -23,7 +23,7 @@ end
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
-	return SERVER and MR.SV.Duplicator:GetDupRunning() or CLIENT and ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or nil
+	return ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or SERVER and MR.SV.Duplicator:GetDupRunning() or nil
 end
 
 -- Set duplicator stopping state

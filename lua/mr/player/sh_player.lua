@@ -244,7 +244,7 @@ function Ply:SetUsingTheTool(ply, value)
 end
 
 function Ply:GetDupRunning(ply)
-	local state =  ply.mr.dup.running
+	local state =  ply.mr.dup.running -- Don't change this strange check or this is not going to work
 	if state == "" then state = false; end
 	return state
 end

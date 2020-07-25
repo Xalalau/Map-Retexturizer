@@ -93,7 +93,8 @@ function TOOL_BasicChecks(ply, tr)
 	end
 
 	-- Don't use in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
+	-- TODO, fix: MR.Ply:GetDupRunning(ply) is an extra check for the first spawn because for some reason MR.Duplicator:IsRunning(ply) doesn't work at this point
+	if MR.Ply:GetDupRunning(ply) or MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the loading finishes.")
 		end

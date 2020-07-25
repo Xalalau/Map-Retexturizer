@@ -39,7 +39,7 @@ TOOL.Information = {
 
 if CLIENT then
 	language.Add("tool.mr.name", "Map Retexturizer")
-	MR.CL.GUI:SetName("Map Retexturizer") -- Tool name again. Used to make an internal comparison, since #tool.mr.name isn't helping
+	MR.CL.Panels:SetName("Map Retexturizer") -- Tool name again. Used to make an internal comparison, since #tool.mr.name isn't helping
 	language.Add("tool.mr.left", "Set material")
 	language.Add("tool.mr.right", "Copy material")
 	language.Add("tool.mr.reload", "Remove material")
@@ -288,7 +288,7 @@ function TOOL:RightClick(tr)
 			net.Send(ply)
 	
 			-- Update the properties panel
-			net.Start("CL.PPanel:ResetProperties")
+			net.Start("CL.Panels:RefreshProperties")
 			net.Send(ply)
 		end)
 	end
@@ -335,7 +335,7 @@ function TOOL.BuildCPanel(CPanel)
 		v:Hide()
 	end
 
-	timer.Create("MRWaitForMenuData", 0.5, 1, function()
+	timer.Create("MRWaitForMenuData", 0.65, 1, function() -- 0.5 works, but... slow PCs
 		MR.CL.CPanel:Create(CPanel)
 	end)
 

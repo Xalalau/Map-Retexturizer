@@ -108,7 +108,7 @@ function Skybox:Remove(ply)
 		return
 	-- Reset the combobox
 	else
-		net.Start("CL.CPanel:ResetSkyboxComboValue")
+		net.Start("CL.Panels:ResetSkyboxComboValue")
 		net.Broadcast()
 	end
 

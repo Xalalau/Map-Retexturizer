@@ -82,6 +82,5 @@ function Materials:SetPreview(newData, isDecal)
 		MR.Materials:FixCurrentPath(newData)
 		Materials:SetPreviewMaterial(newData.newMaterial)
 		MR.CL.Map:Set(newData)
-		MR.CL.PPanel:UpdatePreviewBox()
 	end
 end

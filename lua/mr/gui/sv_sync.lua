@@ -37,9 +37,9 @@ function Sync:Replicate(ply, command, value, field1, field2)
 
 	-- Change field values on server
 	if field1 and field2 then
-		MR.CPanel:Set(field1, field2, value)
+		MR.Sync:Set(field1, field2, value)
 	elseif field1 then
-		MR.CPanel:Set(field1, nil, value)
+		MR.Sync:Set(field1, nil, value)
 	else
 		return false
 	end
@@ -58,7 +58,7 @@ end
 
 -- Sync menu fields once after first spawn
 function Sync:ReplicateFirstSpawn(ply)
-	for k,v in pairs(MR.GUI:GetTable()) do
+	for k,v in pairs(MR.Panels:GetTable()) do
 		if istable(v) then
 			for k2,v2 in pairs(v) do
 				net.Start("CL.Sync:Replicate")

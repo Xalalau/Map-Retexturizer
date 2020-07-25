@@ -59,15 +59,15 @@ end
 
 -- Change the displacements: client
 function Displacements:Set(applyProperties)
-	local displacement, _ = MR.CL.CPanel:GetDisplacementsCombo():GetSelected()
+	local displacement, _ = MR.CL.ExposedPanels:Get("displacements", "combo"):GetSelected()
 
 	-- No displacement selected
 	if not displacement or displacement == "" then
 		return false
 	end
 
-	local newMaterial = MR.CL.CPanel:GetDisplacementsText1():GetValue()
-	local newMaterial2 = MR.CL.CPanel:GetDisplacementsText2():GetValue()
+	local newMaterial = MR.CL.ExposedPanels:Get("displacements", "text1"):GetValue()
+	local newMaterial2 = MR.CL.ExposedPanels:Get("displacements", "text2"):GetValue()
 	local data = applyProperties and MR.Data:Create(LocalPlayer(), { oldMaterial = displacement }) or MR.DataList:GetElement(MR.Displacements:GetList(), displacement) or {}
 
 	-- Validate the fields
@@ -75,7 +75,7 @@ function Displacements:Set(applyProperties)
 		newMaterial = MR.Displacements:GetDetected()[displacement][1]
 
 		timer.Create("MRText1Update", 0.5, 1, function()
-			MR.CL.CPanel:GetDisplacementsText1():SetValue(newMaterial)
+			MR.CL.ExposedPanels:Get("displacements", "text1"):SetValue(newMaterial)
 		end)
 	end
 	MR.Materials:Validate(newMaterial)
@@ -84,7 +84,7 @@ function Displacements:Set(applyProperties)
 		newMaterial2 = MR.Displacements:GetDetected()[displacement][2]
 
 		timer.Create("MRText2Update", 0.5, 1, function()
-			MR.CL.CPanel:GetDisplacementsText2():SetValue(newMaterial2)
+			MR.CL.ExposedPanels:Get("displacements", "text2"):SetValue(newMaterial2)
 		end)
 	end
 	MR.Materials:Validate(newMaterial2)

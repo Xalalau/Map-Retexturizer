@@ -135,7 +135,7 @@ function Displacements:RemoveAll(ply)
 	MR.SV.Duplicator:ForceStop()
 
 	-- Reset the combobox and its text fields
-	net.Start("CL.CPanel:ResetDisplacementsComboValue")
+	net.Start("CL.Panels:ResetDisplacementsComboValue")
 	net.Broadcast()
 
 	-- Remove

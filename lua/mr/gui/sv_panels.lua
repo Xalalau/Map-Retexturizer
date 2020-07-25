@@ -3,4 +3,4 @@
 -------------------------------------
 
 -- Networking
-util.AddNetworkString("CL.GUI:DisableSpawnmenuActiveControlPanel")
+util.AddNetworkString("CL.Panels:DisableSpawnmenuActiveControlPanel")

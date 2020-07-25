@@ -278,7 +278,7 @@ function Map:Set(ply, data, isBroadcasted)
 		if SERVER and MR.DataList:IsActive(data) then
 			-- Reset the displacements combobox
 			if selected.isDisplacement then
-				net.Start("CL.CPanel:ResetDisplacementsComboValue")
+				net.Start("CL.Panels:ResetDisplacementsComboValue")
 				net.Broadcast()
 			end
 

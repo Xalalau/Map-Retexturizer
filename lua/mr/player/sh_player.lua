@@ -131,7 +131,7 @@ function Ply:ValidateTool(ply, weapon)
 
 			if CLIENT then
 				-- Inhibit GMod's spawn menu context panel
-				MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
+				MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
 			end
 
 			if SERVER then
@@ -141,12 +141,12 @@ function Ply:ValidateTool(ply, weapon)
 				net.Send(ply)
 
 				-- Inhibit GMod's spawn menu context panel
-				net.Start("CL.GUI:DisableSpawnmenuActiveControlPanel")
+				net.Start("CL.Panels:DisableSpawnmenuActiveControlPanel")
 				net.Send(ply)
 
 				-- Restart the preview box rendering
 				if not MR.Ply:GetDecalMode(ply) then
-					net.Start("CL.PPanel:RestartPreviewBox")
+					net.Start("CL.Panels:RestartPreviewBox")
 					net.Send(ply)
 				end
 			end
@@ -210,7 +210,7 @@ function Ply:SetFirstSpawn(ply)
 
 	if CLIENT then
 		-- Inhibit GMod's spawn menu context panel
-		MR.CL.GUI:DisableSpawnmenuActiveControlPanel()
+		MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
 	end
 end
 

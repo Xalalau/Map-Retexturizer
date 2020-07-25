@@ -14,13 +14,13 @@ end)
 function Load:Delete(loadName)
 	MR.Load:SetOption(loadName, nil)
 
-	if not isstring(MR.CL.CPanel:GetLoadText()) and IsValid(MR.CL.CPanel:GetLoadText()) then
-		MR.CL.CPanel:GetLoadText():Clear()
+	if not isstring(MR.CL.ExposedPanels:Get("load", "text")) and IsValid(MR.CL.ExposedPanels:Get("load", "text")) then
+		MR.CL.ExposedPanels:Get("load", "text"):Clear()
 
 		for k,v in pairs(MR.Load:GetList()) do
-			MR.CL.CPanel:GetLoadText():AddLine(k)
+			MR.CL.ExposedPanels:Get("load", "text"):AddLine(k)
 		end
 
-		MR.CL.CPanel:GetLoadText():SortByColumn(1)
+		MR.CL.ExposedPanels:Get("load", "text"):SortByColumn(1)
 	end
 end

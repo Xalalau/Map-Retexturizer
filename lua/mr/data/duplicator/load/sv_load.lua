@@ -57,7 +57,7 @@ function Load:Init()
 
 	if value then
 		RunConsoleCommand("internal_mr_autoload", value)
-		MR.CPanel:Set("load", "autoloadtext", value)
+		MR.Sync:Set("load", "autoloadtext", value)
 	else
 		RunConsoleCommand("internal_mr_autoload", "")
 	end

@@ -19,12 +19,12 @@ function Panels:SetGeneral(parent, frameType, info)
 	}
 
 	local decalsModeInfo = {
-		x = 100,
+		x = 89,
 		y = previewInfo.y
 	}
 
 	local autoSaveBox = {
-		x = 198,
+		x = 176,
 		y = previewInfo.y
 	}
 

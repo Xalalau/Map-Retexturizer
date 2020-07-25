@@ -212,15 +212,11 @@ function CPanel:Test()
 		contextFrame:MakePopup()
 		contextFrame:Hide()
 
-	MR.CL.Panels:SetLoad(nil, 3, { width = 400, height = 245 })
-	MR.CL.Panels:SetSave(nil, 3, { width = 275, height = 120 })
+	-- Force to create some menus to check them easyly
+	--MR.CL.Panels:SetLoad(nil, 2, { width = 400, height = 245 })
+	--MR.CL.Panels:SetSave(nil, 2, { width = 275, height = 120 })
 
 	CPanel:Create(contextFrame, true)
-
-	-- Force to close command
-	concommand.Add("close_test", function (_1, _2, _3, arguments)
-		frame:Remove()
-	end)
 end
 
 --CPanel:Test()

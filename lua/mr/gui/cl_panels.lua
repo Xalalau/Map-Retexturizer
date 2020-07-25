@@ -297,7 +297,6 @@ function Panels:StartContainer(name, parent, frameType, info)
 	-- DCollapsibleCategory
 	elseif frameType == 3 then
 		frame = vgui.Create("DCollapsibleCategory", parent)
-			if parent then frame:SetParent(parent); end
 			frame:SetLabel(name or "")
 			frame:SetPos(0, info.y or 0)
 			frame:SetSize(parent:GetWide(), 0)

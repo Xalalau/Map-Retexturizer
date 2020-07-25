@@ -196,7 +196,7 @@ end
 -- Test the menus. Uncomment and save while the game is running
 function CPanel:Test()
 	local contextFrameInfo = {
-		width = 275,
+		width = 252,
 		height = 700,
 		externalPadding = {
 			right = 20,

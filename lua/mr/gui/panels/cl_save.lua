@@ -38,12 +38,7 @@ function Panels:SetSave(parent, frameType, info)
 		width = width - MR.CL.Panels:GetGeneralBorders() * 2,
 		height = MR.CL.Panels:GetTextHeight(),
 		x = saveButtonInfo.x + MR.CL.Panels:GetTextMarginLeft(),
-		y = saveButtonInfo.y + saveButtonInfo.height
-	}
-
-	local decalsBoxInfo = {
-		x = saveDLabelInfo.x + 180,
-		y = saveDLabelHintInfo.y + MR.CL.Panels:GetTextHeight()/2
+		y = saveButtonInfo.y + saveButtonInfo.height - MR.CL.Panels:GetGeneralBorders()
 	}
 
 	--------------------------
@@ -70,37 +65,6 @@ function Panels:SetSave(parent, frameType, info)
 		saveDLabelHint:SetTextColor(MR.CL.Panels:GetHintColor())
 
 	--------------------------
-	-- Autosave
-	--------------------------
-	local autosaveBox = vgui.Create("DCheckBoxLabel", panel)
-		MR.Sync:Set("save", "box", autosaveBox)
-		autosaveBox:SetPos(decalsBoxInfo.x, decalsBoxInfo.y)
-		autosaveBox:SetText("Autosave")
-		autosaveBox:SetTextColor(Color(0, 0, 0, 255))
-		autosaveBox:SetValue(true)
-		autosaveBox.OnChange = function(self, val)
-			-- Force the field to update and disable a sync loop block
-			if MR.CL.CVars:GetLoopBlock() then
-				if val ~= autosaveBox:GetValue() then
-					autosaveBox:SetChecked(val)
-				else
-					MR.CL.Sync:SetLoopBlock(false)
-				end
-
-				return
-			-- Admin only: reset the option if it's not being synced and return
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
-				autosaveBox:SetChecked(GetConVar("internal_mr_autosave"):GetBool())
-
-				return
-			end
-
-			net.Start("SV.Save:SetAuto")
-				net.WriteBool(val)
-			net.SendToServer()
-		end
-
-	--------------------------
 	-- Save button
 	--------------------------
 	local saveButton = vgui.Create("DButton", panel)
@@ -114,7 +78,7 @@ function Panels:SetSave(parent, frameType, info)
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.Panels:GetGeneralBorders(), MR.CL.Panels:GetGeneralBorders())
-		extraBorder:SetPos(0, decalsBoxInfo.y)
+		extraBorder:SetPos(0, saveButtonInfo.y)
 		extraBorder:SetBackgroundColor(Color(0, 0, 0, 0))
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)

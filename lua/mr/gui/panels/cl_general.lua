@@ -19,7 +19,12 @@ function Panels:SetGeneral(parent, frameType, info)
 	}
 
 	local decalsModeInfo = {
-		x = parent:GetWide()/2 + 20,
+		x = 100,
+		y = previewInfo.y
+	}
+
+	local autoSaveBox = {
+		x = 198,
 		y = previewInfo.y
 	}
 
@@ -56,7 +61,7 @@ function Panels:SetGeneral(parent, frameType, info)
 	--------------------------
 	local preview = vgui.Create("DCheckBoxLabel", panel)
 		preview:SetPos(previewInfo.x, previewInfo.y)
-		preview:SetText("Preview Material")
+		preview:SetText("Preview")
 		preview:SetTextColor(Color(0, 0, 0, 255))
 		preview:SetValue(true)
 		preview.OnChange = function(self, val)
@@ -72,7 +77,7 @@ function Panels:SetGeneral(parent, frameType, info)
 	--------------------------
 	local decalsMode = vgui.Create("DCheckBoxLabel", panel)
 		decalsMode:SetPos(decalsModeInfo.x, decalsModeInfo.y)
-		decalsMode:SetText("Decal Mode")
+		decalsMode:SetText("Decals")
 		decalsMode:SetTextColor(Color(0, 0, 0, 255))
 		decalsMode:SetValue(false)
 		decalsMode.OnChange = function(self, val)
@@ -80,6 +85,37 @@ function Panels:SetGeneral(parent, frameType, info)
 
 			RunConsoleCommand("internal_mr_decal", val and 1 or 0)
 			MR.CL.Decals:Toogle(val)
+		end
+
+	--------------------------
+	-- Autosave
+	--------------------------
+	local autosaveBox = vgui.Create("DCheckBoxLabel", panel)
+		MR.Sync:Set("save", "box", autosaveBox)
+		autosaveBox:SetPos(autoSaveBox.x, autoSaveBox.y)
+		autosaveBox:SetText("Autosave")
+		autosaveBox:SetTextColor(Color(0, 0, 0, 255))
+		autosaveBox:SetValue(true)
+		autosaveBox.OnChange = function(self, val)
+			-- Force the field to update and disable a sync loop block
+			if MR.CL.CVars:GetLoopBlock() then
+				if val ~= autosaveBox:GetValue() then
+					autosaveBox:SetChecked(val)
+				else
+					MR.CL.Sync:SetLoopBlock(false)
+				end
+
+				return
+			-- Admin only: reset the option if it's not being synced and return
+			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+				autosaveBox:SetChecked(GetConVar("internal_mr_autosave"):GetBool())
+
+				return
+			end
+
+			net.Start("SV.Save:SetAuto")
+				net.WriteBool(val)
+			net.SendToServer()
 		end
 
 	--------------------------

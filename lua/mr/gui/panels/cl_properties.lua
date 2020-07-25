@@ -195,7 +195,7 @@ end
 
 -- Reset the properties values
 function Panels:RefreshProperties(panel)
-	if panel and panel.DoReset then
+	if panel and panel ~= "" and panel.DoReset then
 		panel.DoReset(nil, true)
 	end
 end

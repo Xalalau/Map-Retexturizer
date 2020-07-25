@@ -441,13 +441,23 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
 			-- Start a new (partial) load if modifications were made while the player was entering
-			if MR.Ply:GetNewDupTable(ply) then
+			local newElements = false
+
+			for k,v in pairs(MR.Ply:GetNewDupTable(ply)) do
+				if k ~= "savingFormat" and #v > 0 then
+					newElements = true
+
+					break
+				end
+			end
+
+			if newElements then
 				-- Create a copy
 				local newSavedTable = table.Copy(MR.Ply:GetNewDupTable(ply))
 
 				-- Empty the original table, so we can repeat this process if it's necessary
 				for k,v in pairs(MR.Ply:GetNewDupTable(ply)) do
-					if not k == "savingFormat" then
+					if k ~= "savingFormat" and #v > 0 then
 						table.Empty(v)
 					end
 				end

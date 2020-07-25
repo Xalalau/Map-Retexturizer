@@ -336,9 +336,26 @@ function TOOL.BuildCPanel(CPanel)
 		v:Hide()
 	end
 
-	timer.Create("MRWaitForMenuData", 0.65, 1, function() -- 0.5 works, but... slow PCs
-		MR.CL.CPanel:Create(CPanel)
-	end)
-
+	-- Create the PPanel
 	MR.CL.PPanel:Create()
+
+	-- Create my custom CPanel (when Garry's CPanel gives me the correct values)
+	local retrying = 0
+
+	local function WhenCPanelGetsReady()
+		-- 15s retrying
+		if retrying == 100 then
+			return
+		-- I want the real panel width, but I get 16 for some time. I check for a higher value just to be sure
+		elseif CPanel:GetWide() > 128 then
+			MR.CL.CPanel:Create(CPanel)
+		else
+			timer.Create("MRWaitForMenuData", 0.15, 1, function()
+				retrying = retrying + 1
+				WhenCPanelGetsReady()
+			end)
+		end
+	end
+
+	WhenCPanelGetsReady()
 end

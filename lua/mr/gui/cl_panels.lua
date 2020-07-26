@@ -225,6 +225,8 @@ function Panels:OnContextFinished(identifier, panelInfo, callback, arg1, arg2)
 						if lastX == curX and lastY == curY then
 							callback(self, arg1, arg2)
 
+							RememberCursorPosition()
+
 							function panel1:Think() end
 						end
 					end

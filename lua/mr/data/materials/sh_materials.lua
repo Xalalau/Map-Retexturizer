@@ -362,7 +362,7 @@ end
 	Must be clientside and serverside - on the top
 
 	ply = player
-	isBroadcasted = true if the modification is being made on all clients
+	isBroadcasted = true (if the modification is being made on all clients)
 	check = {
 		material = data.newMaterial
 		material2 = data.newMaterial2
@@ -371,18 +371,24 @@ end
 		limit = limit for the above list
 		type = the kind of the material
 	}
+	data = data table (will be stored for future application if needed)
 ]]
 function Materials:SetFirstSteps(ply, isBroadcasted, check)
-	-- Admin only
+	-- Admin only and first spawn only
 	if SERVER then
 		if not MR.Ply:IsAdmin(ply) and not MR.Ply:GetFirstSpawn(ply) then
 			return false
 		end
 	end
 
-	-- Block an ongoing load for a player in his first spawn. He'll start it from the beggining
-	if CLIENT then
-		if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
+	-- Block an ongoing load for a player at his first spawn - he'll start it from the beggining
+	-- Block a new data applications for a player at his first spawn - register it to apply later
+	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
+		if SERVER and data and not MR.SV.Duplicator:IsRunning() then
+			MR.SV.Duplicator:InsertNewDupTable(ply, string.lower(check.type), data)
+		end
+
+		if CLIENT then
 			return false
 		end
 	end
@@ -450,7 +456,7 @@ function Materials:SetFinalSteps()
 			MR.Base:SetInitialized()
 
 			-- Register the current save version on the duplicator
-			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.SV.Save:GetCurrentVersion() } )
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.Save:GetCurrentVersion() } )
 		end
 
 		-- Auto save
@@ -465,4 +471,35 @@ function Materials:SetFinalSteps()
 			end
 		end
 	end
+end
+
+-- Get the current modified materials lists
+-- clean = bool, removes disabled elements
+function Materials:GetCurrentModifications(clean)
+	local currentMaterialsLists = {
+		decals = MR.Decals:GetList(),
+		map = MR.Map:GetList(),
+		displacements = MR.Displacements:GetList(),
+		skybox = { MR.Skybox:GetList()[1] } ,
+		models = {},
+		savingFormat = MR.Save:GetCurrentVersion()
+	}
+
+	-- Check for changed models
+	for k,v in pairs(ents.GetAll()) do
+		if MR.Models:GetData(v) then
+			table.insert(currentMaterialsLists.models, v)
+		end
+	end
+
+	-- Remove all the disabled elements
+	if clean then
+		for k,v in pairs(currentMaterialsLists) do
+			if k ~= "savingFormat" and #v > 0 then
+				MR.DataList:Clean(v)
+			end
+		end
+	end
+
+	return currentMaterialsLists
 end

@@ -64,6 +64,15 @@ function Duplicator:InitNewDupTable(ply)
 	dup.newSavedTable.list[ply:EntIndex()].savingFormat = MR.Save:GetCurrentVersion()
 end
 
+-- Store changes to apply after the current load (with a new load)
+function Duplicator:InsertNewDupTable(ply, field, data)
+	local list = MR.SV.Duplicator:GetNewDupTable(ply, field)
+
+	if list then
+		MR.DataList:InsertElement(list, data)
+	end
+end
+
 function Duplicator:SetCurrentTable(savedTable)
 	dup.currentTable = savedTable
 end
@@ -152,7 +161,9 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 end
 
 -- Duplicator start
-function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
+-- Note: we must have a valid savedTable
+-- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
+function Duplicator:Start(ply, ent, savedTable, loadName) 
 	-- Finish upgrading the format (if it's necessary)
 	if not dup.recreatedTable.initialized then
 		savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized, true, loadName)
@@ -175,7 +186,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 
 		-- There is no use for it here, but set the version to finish the conversion
 		if not savedTable.savingFormat then
-			savedTable.savingFormat = MR.SV.Save:GetCurrentVersion()
+			savedTable.savingFormat = MR.Save:GetCurrentVersion()
 		end
 	end
 
@@ -193,50 +204,19 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 	-- Adjust the duplicator generic spawn entity
 	Duplicator:SetEnt(ent)
 
+	-- Save a reference of the current loading table
+	Duplicator:SetCurrentTable(savedTable)
+
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
 	timer.Create("MRDuplicatorStart", 0.5, 1, function()
-		local decalsTable = savedTable and savedTable.decals or MR.Ply:GetFirstSpawn(ply) and MR.Decals:GetList() and table.Copy(MR.Decals:GetList()) or nil
-		local mapTable = savedTable and savedTable.map or MR.Ply:GetFirstSpawn(ply) and MR.Map:GetList() and table.Copy(MR.Map:GetList()) or nil
-		local displacementsTable = savedTable and savedTable.displacements or MR.Ply:GetFirstSpawn(ply) and MR.Displacements:GetList() and table.Copy(MR.Displacements:GetList()) or nil
-		local skyboxTable = savedTable and savedTable.skybox or MR.Ply:GetFirstSpawn(ply) and { MR.Skybox:GetList()[1] } or nil
-		local modelsTable = { list = savedTable and savedTable.models or MR.Ply:GetFirstSpawn(ply) and "" or nil, count = 0 }
-
-		-- Remove all the disabled elements from the map materials tables
-		-- if we are sending the current modifications to a new player
-		if not savedTable then
-			MR.DataList:Clean(mapTable.map)
-			MR.DataList:Clean(mapTable.displacements)
-		end
-
-		-- Get the changed models for new players
-		if modelsTable.list and modelsTable.list == "" then
-			local newList = {}
-
-			for k,v in pairs(ents.GetAll()) do
-				if MR.Models:GetData(v) then
-					table.insert(newList, v)
-				end
-			end
-
-			if #newList == 0 then
-				newList = nil
-			end
-
-			modelsTable.list = newList
-		end
-
-		-- Count the changed models
-		if modelsTable.list then
-			modelsTable.count = #modelsTable.list
-		end
-
 		-- Get the total modifications to do
-		local decalsTotal = decalsTable and istable(decalsTable) and table.Count(decalsTable) or 0
-		local mapTotal = mapTable and istable(mapTable) and MR.DataList:Count(mapTable) or 0
-		local displacementsTotal = displacementsTable and istable(displacementsTable) and MR.DataList:Count(displacementsTable) or 0
-		local skyboxTotal = skyboxTable and istable(skyboxTable) and MR.DataList:Count(skyboxTable) or 0
-		local total = decalsTotal + mapTotal + displacementsTotal + modelsTable.count + skyboxTotal
+		local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
+		local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0
+		local displacementsTotal = savedTable.displacements and istable(savedTable.displacements) and MR.DataList:Count(savedTable.displacements) or 0
+		local skyboxTotal = savedTable.skybox and istable(savedTable.skybox) and MR.DataList:Count(savedTable.skybox) or 0
+		local modelsTotal = savedTable.models and istable(savedTable.models) and MR.DataList:Count(savedTable.models) or 0
+		local total = decalsTotal + mapTotal + displacementsTotal + modelsTotal + skyboxTotal
 
 		-- Print server alert
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
@@ -270,28 +250,28 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end
 
 		-- Apply model materials
-		if modelsTable.count > 0 then
-			Duplicator:LoadMaterials(ply, modelsTable.list, 1, "model")
+		if modelsTotal > 0 then
+			Duplicator:LoadMaterials(ply, savedTable.models, 1, "model")
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, decalsTable, 1, "decal")
+			Duplicator:LoadMaterials(ply, savedTable.decals, 1, "decal")
 		end
 
 		-- Apply map materials
 		if mapTotal > 0 then
-			Duplicator:LoadMaterials(ply, mapTable, 1, "map")
+			Duplicator:LoadMaterials(ply, savedTable.map, 1, "map")
 		end
 
 		-- Apply displacements
 		if displacementsTotal > 0 then		
-			Duplicator:LoadMaterials(ply, displacementsTable, 1, "displacements")
+			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, "displacements")
 		end
 
 		-- Apply the skybox
 		if skyboxTotal > 0 then
-			Duplicator:LoadMaterials(ply, skyboxTable, 1, "skybox")
+			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, "skybox")
 		end
 	end)
 end
@@ -427,6 +407,9 @@ end
 -- Finish the duplication process
 function Duplicator:Finish(ply, isGModLoadOverriding)
 	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
+		-- Remove the reference of the current loading table
+		Duplicator:SetCurrentTable()
+
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()

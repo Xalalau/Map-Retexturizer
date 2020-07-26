@@ -65,7 +65,7 @@ function Materials:SetAll(ply)
 			map = {},
 			displacements = {},
 			skybox = {},
-			savingFormat = MR.SV.Save:GetCurrentVersion()
+			savingFormat = MR.Save:GetCurrentVersion()
 		}
 
 		-- Fill the fake save table with the correct structures
@@ -118,7 +118,7 @@ function Materials:SetAll(ply)
 		end
 
 		-- Apply the fake save
-		MR.SV.Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, newTable, "noMrLoadFile")
+		MR.SV.Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, newTable, "changeAllMaterials")
 	end)
 end
 

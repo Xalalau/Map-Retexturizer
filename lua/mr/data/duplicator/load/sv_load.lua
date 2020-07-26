@@ -65,6 +65,8 @@ end
 
 -- Load modifications
 function Load:Start(ply, loadName)
+	local loadTable
+
 	-- General first steps
 	local check = {
 		type = "Load"
@@ -79,16 +81,25 @@ function Load:Start(ply, loadName)
 		return false
 	end
 
-	-- Get the load file
-	local loadFile = MR.Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"
+	-- The current map modifications
+	if loadName == "currentMaterials" then
+		loadTable = table.Copy(MR.Materials:GetCurrentModifications(true))
+	-- Ongoing loads
+	elseif loadName == "changeAllMaterials" or loadName == "currentLoading" then
+		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable())
+	-- Loadings from files
+	else
+		-- Get the load file
+		local loadFile = MR.Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"
 
-	-- Check if it exists
-	if !file.Exists(loadFile, "Data") then
-		return false
+		-- Check if it exists
+		if !file.Exists(loadFile, "Data") then
+			return false
+		end
+
+		-- Get the its contents
+		loadTable = util.JSONToTable(file.Read(loadFile, "Data"))
 	end
-
-	-- Get the its contents
-	loadTable = util.JSONToTable(file.Read(loadFile, "Data"))
 
 	-- Start the loading
 	if loadTable then
@@ -125,10 +136,10 @@ function Load:FirstSpawn(ply)
 
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then
-		Load:Start(ply, MR.Duplicator:IsRunning())
+		Load:Start(ply, "currentLoading")
 	-- Send the current modifications
 	elseif MR.Base:GetInitialized() then
-		MR.SV.Duplicator:Start(ply)
+		Load:Start(ply, "currentMaterials")
 	-- Run an autoload
 	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
 		-- Set the spawn as done since The fakeHostPly will take care of this load

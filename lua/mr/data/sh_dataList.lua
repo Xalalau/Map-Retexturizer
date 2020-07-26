@@ -101,3 +101,14 @@ function DataList:Clean(list)
 		i = i + 1
 	end
 end
+
+-- Remove the backups from a list
+function DataList:DeleteBackups(list)
+	for _,section in pairs(list) do
+		if istable(section) then
+			for _,data in pairs(section) do
+				data.backup = nil
+			end
+		end
+	end
+end

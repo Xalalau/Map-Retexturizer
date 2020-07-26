@@ -24,8 +24,12 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		-- If the player is loading for the first time, store this change to apply it later
-		if MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:GetDupRunning() then
-			MR.DataList:InsertElement(MR.Ply:GetNewDupTable(ply).decals, data)
+		if MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:IsRunning() then
+			local list = MR.SV.Duplicator:GetNewDupTable(ply, "decals")
+
+			if list then
+				MR.DataList:InsertElement(list, data)
+			end
 		end
 
 		return false

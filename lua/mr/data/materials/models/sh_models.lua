@@ -215,8 +215,12 @@ function Models:Set(ply, data, isBroadcasted)
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		-- If the player is loading for the first time, store this change to apply it later
-		if SERVER and MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:GetDupRunning() then
-			MR.DataList:InsertElement(MR.Ply:GetNewDupTable(ply).models, data)
+		if SERVER and MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:IsRunning() then
+			local list = MR.SV.Duplicator:GetNewDupTable(ply, "models")
+
+			if list then
+				MR.DataList:InsertElement(list, data)
+			end
 		end
 
 		return false

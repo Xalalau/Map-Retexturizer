@@ -12,23 +12,104 @@ local dup = {
 	-- Get the recreated table format version
 	recreateTableSaveFormat,
 	-- Controls the timer from RecreateTable
-	recreateTimerIncrement = 0
+	recreateTimerIncrement = 0,
+	-- The save identifier if a save is being loaded
+		-- Index: [1] = server, [player ent index + 1] = player
+		-- running[Index] = load name or "" (relative to a player (shared) or the server (serverside only))
+	running = {},
+	-- Status of the loading
+	processed = {
+		-- Default counting control
+		default = {
+			total = 0, -- total materials
+			current = 0, -- current material
+			errors = {} -- simple string list (material names) of errors
+		},
+		-- Index: [1] = server, [player ent index + 1] = player
+		-- processed.list[Index] = { copy of the default couting control } (relative to a player (shared) or the server (serverside only))
+		list = {}
+	}
 }
+
+-- Networking
+net.Receive("Duplicator:SetRunning", function(_, ply)
+	Duplicator:SetRunning(ply or LocalPlayer(), net.ReadString())
+end)
+
+net.Receive("Duplicator:InitProcessedList", function()
+	if SERVER then return; end
+	
+	Duplicator:InitProcessedList(LocalPlayer(), net.ReadInt(8))
+end)
+
+function Duplicator:InitProcessedList(ply, forceIndex)
+	dup.processed.list[forceIndex or Duplicator:GetControlIndex(ply)] = table.Copy(dup.processed.default)
+
+	if SERVER then
+		net.Start("Duplicator:InitProcessedList")
+			net.WriteInt(Duplicator:GetControlIndex(ply), 8)
+		net.Send(ply)
+	end
+end
+
+function Duplicator:GetControlIndex(ply)
+	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1
+end
 
 -- Check if the duplicator is stopping
 function Duplicator:IsStopping()
 	return dup.forceStop
 end
 
--- Check if the duplicator is running
--- Must return the name of the loading or nil
-function Duplicator:IsRunning(ply)
-	return ply and IsValid(ply) and ply:IsPlayer() and MR.Ply:GetDupRunning(ply) or SERVER and MR.SV.Duplicator:GetDupRunning() or nil
-end
-
 -- Set duplicator stopping state
 function Duplicator:SetStopping(value)
 	dup.forceStop = value
+end
+
+-- Check if the duplicator is running
+-- Must return the name of the loading or nil
+function Duplicator:IsRunning(ply)
+	return dup.running[Duplicator:GetControlIndex(ply)]
+end
+
+function Duplicator:SetRunning(ply, value)
+	dup.running[Duplicator:GetControlIndex(ply)] = value ~= "" and value
+end
+
+function Duplicator:GetTotal(ply)
+	return dup.processed.list[Duplicator:GetControlIndex(ply)].total
+end
+
+function Duplicator:SetTotal(ply, value)
+	dup.processed.list[Duplicator:GetControlIndex(ply)].total = value
+end
+
+function Duplicator:GetCurrent(ply)
+	return dup.processed.list[Duplicator:GetControlIndex(ply)].current
+end
+
+function Duplicator:SetCurrent(ply, value)
+	dup.processed.list[Duplicator:GetControlIndex(ply)].current = value
+end
+
+function Duplicator:IncrementCurrent(ply)
+	dup.processed.list[Duplicator:GetControlIndex(ply)].current = dup.processed.list[Duplicator:GetControlIndex(ply)].current + 1
+end
+
+function Duplicator:GetErrorsCurrent(ply)
+	return #dup.processed.list[Duplicator:GetControlIndex(ply)].errors
+end
+
+function Duplicator:GetErrorsList(ply)
+	return dup.processed.list[Duplicator:GetControlIndex(ply)].errors
+end
+
+function Duplicator:InsertErrorsList(ply, value)
+	table.insert(dup.processed.list[Duplicator:GetControlIndex(ply)].errors, value)
+end
+
+function Duplicator:EmptyErrorsList(ply, value)
+	table.Empty(dup.processed.list[Duplicator:GetControlIndex(ply)].errors)
 end
 
 -- Load a GMod save

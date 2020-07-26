@@ -53,11 +53,11 @@ function Duplicator:SetProgress(current, total, isBroadcasted)
 
 	-- Update values
 	if current ~= -1 then
-		MR.Ply:SetDupCurrent(ply, current)
+		MR.Duplicator:SetCurrent(ply, current)
 	end
 
 	if total ~= -1 then
-		MR.Ply:SetDupTotal(ply, total)
+		MR.Duplicator:SetTotal(ply, total)
 	end
 end
 
@@ -70,33 +70,27 @@ function Duplicator:SetErrorProgress(mat, isBroadcasted)
 		return
 	end
 
-	-- Set the error count
-	MR.Ply:IncrementDupErrorsN(ply)
-
 	-- Set the missing material name
-	MR.Ply:InsertDupErrorsList(ply, mat)
+	MR.Duplicator:InsertErrorsList(ply, mat)
 end
 
 function Duplicator:FinishErrorProgress()
 	local ply = LocalPlayer()
 
 	-- If there are errors
-	if table.Count(MR.Ply:GetDupErrorsList(ply)) > 0 then
-		-- Set the error count to 0
-		MR.Ply:SetDupErrorsN(ply, 0)
-
+	if table.Count(MR.Duplicator:GetErrorsList(ply)) > 0 then
 		-- Print the failed materials table
 		LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the console for the errors.")
 		print("")
 		print("-------------------------------------------------------------")
 		print("[MAP RETEXTURIZER] - Failed to load these materials:")
 		print("-------------------------------------------------------------")
-		print(table.ToString(MR.Ply:GetDupErrorsList(ply), "List ", true))
+		print(table.ToString(MR.Duplicator:GetErrorsList(ply), "List ", true))
 		print("-------------------------------------------------------------")
 		print("")
 
 		-- Delete it
-		MR.Ply:EmptyDupErrorsList(ply)
+		MR.Duplicator:EmptyErrorsList(ply)
 	end
 end
 
@@ -104,7 +98,7 @@ end
 function Duplicator:RenderProgress()
 	local ply = LocalPlayer()
 
-	if MR.Ply:IsInitialized(ply) and MR.Ply:GetDupTotal(ply) > 0 and MR.Ply:GetDupCurrent(ply) > 0 then				
+	if ply and IsValid(ply) and MR.Duplicator:GetTotal(ply) > 0 and MR.Duplicator:GetCurrent(ply) > 0 then				
 		local borderOut = 2
 		local border = 5
 
@@ -148,18 +142,18 @@ function Duplicator:RenderProgress()
 
 		-- Error counter
 		local errors = ""
-		if MR.Ply:GetDupErrorsN(ply) > 0 then
-			errors = " - Errors: "..tostring(MR.Ply:GetDupErrorsN(ply))
+		if MR.Duplicator:GetErrorsCurrent(ply) > 0 then
+			errors = " - Errors: "..tostring(MR.Duplicator:GetErrorsCurrent(ply))
 		end
 
 		-- Text - Counter
-		draw.DrawText(tostring(MR.Ply:GetDupCurrent(ply) + MR.Ply:GetDupErrorsN(ply)).." / "..tostring(MR.Ply:GetDupTotal(ply))..errors, "CenterPrintText", text.x + window.w / 2 - border, text.y + line.h, Color(255, 255, 255, 255), 1)
+		draw.DrawText(tostring(MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply)).." / "..tostring(MR.Duplicator:GetTotal(ply))..errors, "CenterPrintText", text.x + window.w / 2 - border, text.y + line.h, Color(255, 255, 255, 255), 1)
 
 		-- Bar background
 		draw.RoundedBox(5, progress.x, progress.y, progress.w, progress.h, Color(0, 0, 0, 230))
 
 		-- Bar progress
-		draw.RoundedBox(5, progress.x + 2, progress.y + 2, window.w * (MR.Ply:GetDupCurrent(ply) / MR.Ply:GetDupTotal(ply)) - border * 2 - 4, progress.h - 4, Color(200, 0, 0, 255))
+		draw.RoundedBox(5, progress.x + 2, progress.y + 2, window.w * (MR.Duplicator:GetCurrent(ply) / MR.Duplicator:GetTotal(ply)) - border * 2 - 4, progress.h - 4, Color(200, 0, 0, 255))
 	end
 end
 

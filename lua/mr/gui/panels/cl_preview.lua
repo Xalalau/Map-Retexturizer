@@ -137,7 +137,7 @@ function Panels:SetPreview(parent, frameType, info)
 		previewFrame:SetSize(Panels:Preview_GetBoxSize(), Panels:Preview_GetBoxSize())
 		previewFrame:SetBackgroundColor(Color(255, 255, 255, 255))
 		previewFrame.Think = function()
-			if MR.Ply:IsInitialized(LocalPlayer()) and not MR.Ply:GetUsingTheTool(LocalPlayer()) then
+			if not MR.Ply:GetUsingTheTool(LocalPlayer()) then
 				frame:Hide()
 			end
 

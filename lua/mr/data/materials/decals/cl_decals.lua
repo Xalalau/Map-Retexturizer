@@ -15,7 +15,7 @@ end)
 hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 	local ply = LocalPlayer()
 
-	if ply and MR.Ply:IsInitialized(ply) and MR.Ply:GetUsingTheTool(ply) and MR.Ply:GetDecalMode(ply) then
+	if ply and MR.Ply:GetUsingTheTool(ply) and MR.Ply:GetDecalMode(ply) then
 		Decals:Preview()
 	end
 end)

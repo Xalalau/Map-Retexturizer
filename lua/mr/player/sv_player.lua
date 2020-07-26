@@ -10,8 +10,7 @@ MR.SV.Ply = Ply
 local fakeHostPly = {}
 
 -- Networking
-util.AddNetworkString("Ply:Set")
-util.AddNetworkString("Ply:SetDupRunning")
+util.AddNetworkString("Ply:InitStatesList")
 util.AddNetworkString("Ply:SetFirstSpawn")
 util.AddNetworkString("Ply:SetPreviewMode")
 util.AddNetworkString("Ply:SetDecalMode")
@@ -19,7 +18,8 @@ util.AddNetworkString("Ply:SetUsingTheTool")
 
 -- Set the fake player
 function Ply:Init()
-	MR.Ply:Set(fakeHostPly)
+    MR.Ply:InitStatesList(fakeHostPly) -- TODO: check if this line is still needed
+    MR.Duplicator:InitProcessedList(fakeHostPly)
 end
 
 function Ply:GetFakeHostPly()

@@ -7,8 +7,6 @@ Duplicator.__index = Duplicator
 MR.SV.Duplicator = Duplicator
 
 local dup = {
-	-- Holds the name of a loading or 
-	running = nil,
 	entity = { 
 		-- Workaround to duplicate map and decal materials
 		object = nil,
@@ -20,7 +18,9 @@ local dup = {
 		delay = 0.3,
 		startTime = 0
 	},
-	-- A auxiliar table recreated by GMod duplicator calls (GMod save)
+	-- Store a reference to the current loading table
+	currentTable,
+	-- A table reconstructed from GMod duplicator calls (GMod saves)
 	recreatedTable = {
 		initialized = false,
 		map,
@@ -28,18 +28,48 @@ local dup = {
 		decals,
 		models = {},
 		skybox
-	}
+	},
+	-- Table to hold modifications made while the player is loading
+	-- newSavedTable.list[player index] = { copy of a default save table }
+	newSavedTable = {
+		default = {
+			decals = {},
+			map = {},
+			displacements = {},
+			skybox = {},
+			models = {},
+			savingFormat
+		},
+		list = {}
+	},
 }
 
 -- Networking
+util.AddNetworkString("Duplicator:SetRunning")
+util.AddNetworkString("Duplicator:InitProcessedList")
 util.AddNetworkString("CL.Duplicator:SetProgress")
 util.AddNetworkString("CL.Duplicator:CheckForErrors")
 util.AddNetworkString("CL.Duplicator:FinishErrorProgress")
 util.AddNetworkString("CL.Duplicator:ForceStop")
 
--- Get if the server is running a duplication/load
-function Duplicator:GetDupRunning()
-	return dup.running
+-- Modifications made while a new player is loading
+function Duplicator:GetNewDupTable(ply, field)
+	if ply == MR.SV.Ply:GetFakeHostPly() then return nil; end
+
+	return not field and dup.newSavedTable.list[ply:EntIndex()] or dup.newSavedTable.list[ply:EntIndex()][field]
+end
+
+function Duplicator:InitNewDupTable(ply)
+	dup.newSavedTable.list[ply:EntIndex()] = table.Copy(dup.newSavedTable.default)
+	dup.newSavedTable.list[ply:EntIndex()].savingFormat = MR.Save:GetCurrentVersion()
+end
+
+function Duplicator:SetCurrentTable(savedTable)
+	dup.currentTable = savedTable
+end
+
+function Duplicator:GetCurrentTable()
+	return dup.currentTable
 end
 
 -- Create a single loading table with the duplicator calls (GMod save)
@@ -214,22 +244,23 @@ function Duplicator:Start(ply, ent, savedTable, loadName) -- Note: we MUST defin
 		end
 
 		-- Set the duplicator running state
-		net.Start("Ply:SetDupRunning")
 		if loadName then
+			net.Start("Duplicator:SetRunning")
 			net.WriteString(loadName)
 			net.Broadcast()
 
-			dup.running = loadName
+			MR.Duplicator:SetRunning(nil, loadName)
 		else
+			net.Start("Duplicator:SetRunning")
 			net.WriteString("Syncing...")
 			net.Send(ply)
 
-			MR.Ply:SetDupRunning(ply, "Syncing...")
+			MR.Duplicator:SetRunning(ply, "Syncing...")
 		end
 
 		-- Set the total modifications to do
-		MR.Ply:SetDupTotal(ply, total)
-		Duplicator:SetProgress(ply, nil, MR.Ply:GetDupTotal(ply))
+		MR.Duplicator:SetTotal(ply, total)
+		Duplicator:SetProgress(ply, nil, MR.Duplicator:GetTotal(ply))
 
 		-- For some reason there are no modifications to do, so finish it
 		if total == 0 then
@@ -326,8 +357,8 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	end
 
 	-- Count
-	MR.Ply:IncrementDupCurrent(ply)
-	Duplicator:SetProgress(ply, MR.Ply:GetDupCurrent(ply))
+	MR.Duplicator:IncrementCurrent(ply)
+	Duplicator:SetProgress(ply, MR.Duplicator:GetCurrent(ply))
 
 	-- Apply map material
 	if section == "map" then
@@ -395,7 +426,7 @@ end
 
 -- Finish the duplication process
 function Duplicator:Finish(ply, isGModLoadOverriding)
-	if MR.Duplicator:IsStopping() or MR.Ply:GetDupCurrent(ply) + MR.Ply:GetDupErrorsN(ply) >= MR.Ply:GetDupTotal(ply) then
+	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()
@@ -403,8 +434,8 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 		timer.Create("MRDuplicatorFinish"..tostring(ply), 0.4, 1, function()
 			-- Reset the progress bar
-			MR.Ply:SetDupTotal(ply, 0)
-			MR.Ply:SetDupCurrent(ply, 0)
+			MR.Duplicator:SetTotal(ply, 0)
+			MR.Duplicator:SetCurrent(ply, 0)
 			Duplicator:SetProgress(ply, 0, 0)
 
 			-- Print the errors on the console and reset the counting on...
@@ -423,14 +454,14 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		dup.models.startTime = 0
 
 		-- Set "running" to nothing
-		net.Start("Ply:SetDupRunning")
+		net.Start("Duplicator:SetRunning")
 		net.WriteString("")
-		if dup.running then
-			dup.running = nil
+		if MR.Duplicator:IsRunning() then
 			net.Broadcast()
+			MR.Duplicator:SetRunning()
 		else
-			MR.Ply:SetDupRunning(ply, false)
 			net.Send(ply)
+			MR.Duplicator:SetRunning(ply)
 		end
 
 		-- Print alert
@@ -443,7 +474,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			-- Start a new (partial) load if modifications were made while the player was entering
 			local newElements = false
 
-			for k,v in pairs(MR.Ply:GetNewDupTable(ply)) do
+			for k,v in pairs(Duplicator:GetNewDupTable(ply)) do
 				if k ~= "savingFormat" and #v > 0 then
 					newElements = true
 
@@ -453,10 +484,10 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 			if newElements then
 				-- Create a copy
-				local newSavedTable = table.Copy(MR.Ply:GetNewDupTable(ply))
+				local newSavedTable = table.Copy(Duplicator:GetNewDupTable(ply))
 
 				-- Empty the original table, so we can repeat this process if it's necessary
-				for k,v in pairs(MR.Ply:GetNewDupTable(ply)) do
+				for k,v in pairs(Duplicator:GetNewDupTable(ply)) do
 					if k ~= "savingFormat" and #v > 0 then
 						table.Empty(v)
 					end

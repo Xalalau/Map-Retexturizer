@@ -157,7 +157,7 @@ function Map:Set(ply, data, isBroadcasted)
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
 		-- If the player is loading for the first time, store this change to apply it later
-		if SERVER and MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:GetDupRunning() then
+		if SERVER and MR.Ply:GetFirstSpawn(ply) and not MR.SV.Duplicator:IsRunning() then
 			MR.DataList:InsertElement(selected.dupList, data)
 		end
 

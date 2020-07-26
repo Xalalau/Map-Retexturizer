@@ -7,7 +7,8 @@ Ply.__index = Ply
 MR.Ply = Ply
 
 local MRPlayer = {
-	state = {
+	-- Player states
+	default = {
 		-- The player is spawning for the first time
 		firstSpawn = true,
 		-- If the preview box is always showing
@@ -17,36 +18,14 @@ local MRPlayer = {
 		-- If the player is using Map Retexturizer
 		usingTheTool = false
 	},
-	dup = { -- Note: this should be in the duplicator files, not here
-		-- If a save is being loaded, the file name keeps stored here until it's done
-		running = "",
-		-- Table to hold modifications made while the player is loading
-		newSavedTable = {
-			decals = {},
-			map = {},
-			displacements = {},
-			skybox = {},
-			models = {},
-			savingFormat = "4.0" -- TODO: again, the dup table should be in the duplicator files, not here!
-		},
-		-- Number of elements
-		count = {
-			total = 0,
-			current = 0,
-			-- Number of errors and a simple table listing the bad material names
-			errors = {
-				n = 0,
-				list = {}
-			}
-		}
-	}
+	-- MRPlayer.list[player index] = { copy of the default states }
+	list = {}
 }
 
--- Networking
-net.Receive("Ply:SetDupRunning", function(_, ply)
-	Ply:SetDupRunning(ply or LocalPlayer(), net.ReadString())
-end)
+-- Generic table to be used very fast on the first spawn if the player isn't ready
+MRPlayer.list[999] = table.Copy(MRPlayer.default)
 
+-- Networking
 net.Receive("Ply:SetFirstSpawn", function(_, ply)
 	if Ply:GetFirstSpawn(ply or LocalPlayer()) then
 		Ply:SetFirstSpawn(ply or LocalPlayer())
@@ -61,22 +40,20 @@ net.Receive("Ply:SetDecalMode", function(_, ply)
 	Ply:SetDecalMode(ply or LocalPlayer(), net.ReadBool())
 end)
 
-net.Receive("Ply:Set", function()
-	if SERVER then return; end
-
-	Ply:Set(LocalPlayer())
-end)
-
 net.Receive("Ply:SetUsingTheTool", function(_, ply)
 	Ply:SetUsingTheTool(ply or LocalPlayer(), net.ReadBool())
+end)
+
+net.Receive("Ply:InitStatesList", function()
+	if SERVER then return; end
+
+	Ply:InitStatesList(LocalPlayer(), net.ReadInt(8))
 end)
 
 -- Auto detect if the player is using the tool (weapon switched)
 if SERVER then
 	hook.Add("PlayerSwitchWeapon", "MRIsTheToolActive", function(ply, oldWeapon, newWeapon)
-		if ply and MR.Ply:IsInitialized(ply) then
-			Ply:ValidateTool(ply, newWeapon)
-		end
+		Ply:ValidateTool(ply, newWeapon)
 	end)
 end
 
@@ -85,15 +62,70 @@ if CLIENT then
 	hook.Add("OnSpawnMenuClose", "MRIsTheToolActive2", function() -- 
 		local ply = LocalPlayer()
 
-		if ply and MR.Ply:IsInitialized(ply) then
-			Ply:ValidateTool(ply, ply:GetActiveWeapon())
-		end
+		Ply:ValidateTool(ply, ply:GetActiveWeapon())
 	end)
+end
+
+function Ply:InitStatesList(ply, forceIndex)
+	MRPlayer.list[forceIndex or Ply:GetControlIndex(ply)] = table.Copy(MRPlayer.default)
+
+	if SERVER and ply ~= MR.SV.Ply:GetFakeHostPly() then
+		net.Start("Ply:InitStatesList")
+			net.WriteInt(Ply:GetControlIndex(ply), 8)
+		net.Send(ply)
+	end
+end
+
+function Ply:GetControlIndex(ply)
+	local index = ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1
+
+	if not MRPlayer.list[index] then
+		index = 999
+	end
+
+	return index
+end
+
+function Ply:GetFirstSpawn(ply)
+	return MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn
+end
+
+function Ply:SetFirstSpawn(ply)
+	MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn = false
+
+	if CLIENT then
+		-- Inhibit GMod's spawn menu context panel
+		MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
+	end
+end
+
+function Ply:GetPreviewMode(ply)
+	return MRPlayer.list[Ply:GetControlIndex(ply)].previewMode
+end
+
+function Ply:SetPreviewMode(ply, value)
+	MRPlayer.list[Ply:GetControlIndex(ply)].previewMode = value
+end
+
+function Ply:GetDecalMode(ply)
+	return MRPlayer.list[Ply:GetControlIndex(ply)].decalMode
+end
+
+function Ply:SetDecalMode(ply, value)
+	MRPlayer.list[Ply:GetControlIndex(ply)].decalMode = value
+end
+
+function Ply:GetUsingTheTool(ply)
+	return MRPlayer.list[Ply:GetControlIndex(ply)].usingTheTool
+end
+
+function Ply:SetUsingTheTool(ply, value)
+	MRPlayer.list[Ply:GetControlIndex(ply)].usingTheTool = value
 end
 
 -- Detect admin privileges 
 function Ply:IsAdmin(ply)
-	-- fakeHostPly
+	-- MR.SV.Ply:GetFakeHostPly() from server
 	if SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
 		return true
 	end
@@ -163,7 +195,6 @@ function Ply:ValidateTool(ply, weapon)
 			return 
 		end
 
-		-- 
 		if Ply:GetUsingTheTool(ply) then
 			-- Register that the player isn't using this addon 
 			Ply:SetUsingTheTool(ply, false)
@@ -183,120 +214,4 @@ function Ply:ValidateTool(ply, weapon)
 			end
 		end
 	end
-end
-
--- Set some new values in the player entity
-function Ply:Set(ply)
-	ply.mr = table.Copy(MRPlayer)
-
-	if SERVER then
-		if ply ~= MR.SV.Ply:GetFakeHostPly() then
-			net.Start("Ply:Set")
-			net.Send(ply)
-		end
-	end
-end
-
-function Ply:IsInitialized(ply)
-	return ply.mr and true or false
-end
-
-function Ply:GetFirstSpawn(ply)
-	return ply.mr.state.firstSpawn
-end
-
-function Ply:SetFirstSpawn(ply)
-	ply.mr.state.firstSpawn = false
-
-	if CLIENT then
-		-- Inhibit GMod's spawn menu context panel
-		MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
-	end
-end
-
-function Ply:GetPreviewMode(ply)
-	return ply.mr.state.previewMode
-end
-
-function Ply:SetPreviewMode(ply, value)
-	ply.mr.state.previewMode = value
-end
-
-function Ply:GetDecalMode(ply)
-	return ply.mr.state.decalMode
-end
-
-function Ply:SetDecalMode(ply, value)
-	ply.mr.state.decalMode = value
-end
-
-function Ply:GetUsingTheTool(ply)
-	-- This check is used very early sometimes, so check if it's ready first
-	if not Ply:IsInitialized(ply) then
-		return false
-	end
-
-	return ply.mr.state.usingTheTool
-end
-
-function Ply:SetUsingTheTool(ply, value)
-	ply.mr.state.usingTheTool = value
-end
-
-function Ply:GetDupRunning(ply)
-	local state =  ply.mr.dup.running -- Don't change this strange check or this is not going to work
-	if state == "" then state = false; end
-	return state
-end
-
-function Ply:SetDupRunning(ply, value)
-	ply.mr.dup.running = value
-end
-
-function Ply:GetNewDupTable(ply)
-	return ply.mr.dup.newSavedTable
-end
-
-function Ply:GetDupTotal(ply)
-	return ply.mr.dup.count.total
-end
-
-function Ply:SetDupTotal(ply, value)
-	ply.mr.dup.count.total = value
-end
-
-function Ply:GetDupCurrent(ply)
-	return ply.mr.dup.count.current
-end
-
-function Ply:SetDupCurrent(ply, value)
-	ply.mr.dup.count.current = value
-end
-
-function Ply:IncrementDupCurrent(ply)
-	ply.mr.dup.count.current = ply.mr.dup.count.current + 1
-end
-
-function Ply:GetDupErrorsN(ply)
-	return ply.mr.dup.count.errors.n
-end
-
-function Ply:SetDupErrorsN(ply, value)
-	ply.mr.dup.count.errors.n = value
-end
-
-function Ply:IncrementDupErrorsN(ply)
-	ply.mr.dup.count.errors.n = ply.mr.dup.count.errors.n + 1
-end
-
-function Ply:GetDupErrorsList(ply)
-	return ply.mr.dup.count.errors.list
-end
-
-function Ply:InsertDupErrorsList(ply, value)
-	table.insert(ply.mr.dup.count.errors.list, value)
-end
-
-function Ply:EmptyDupErrorsList(ply, value)
-	table.Empty(ply.mr.dup.count.errors.list)
 end

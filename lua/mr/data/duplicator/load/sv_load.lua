@@ -102,6 +102,11 @@ end
 
 -- Load tool modifications BEFORE the player is fully ready
 function Load:PlayerJoined(ply)
+	-- Set the player internal controls
+	MR.SV.Duplicator:InitNewDupTable(ply)
+	MR.Duplicator:InitProcessedList(ply)
+	MR.Ply:InitStatesList(ply)
+
 	-- Set the player load list
 	net.Start("Load:SetList")
 		net.WriteTable(MR.Load:GetList())
@@ -115,47 +120,29 @@ end
 
 -- Load tool modifications AFTER the player is fully ready
 function Load:FirstSpawn(ply)
-	-- Index the player control
-	MR.Ply:Set(ply)
-
 	-- Validate the preview material
 	MR.Materials:Validate(ply:GetInfo("internal_mr_material"))
 
-	local function StartLoading()
-		-- Start an ongoing load from the beggining
-		if MR.Duplicator:IsRunning() then
-			Load:Start(ply, MR.Duplicator:IsRunning())
-		-- Send the current modifications
-		elseif MR.Base:GetInitialized() then
-			MR.SV.Duplicator:Start(ply)
-		-- Run an autoload
-		elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
-			-- Set the spawn as done since The fakeHostPly will take care of this load
-			MR.Ply:SetFirstSpawn(ply)
-			net.Start("Ply:SetFirstSpawn")
-			net.Send(ply)
+	-- Start an ongoing load from the beggining
+	if MR.Duplicator:IsRunning() then
+		Load:Start(ply, MR.Duplicator:IsRunning())
+	-- Send the current modifications
+	elseif MR.Base:GetInitialized() then
+		MR.SV.Duplicator:Start(ply)
+	-- Run an autoload
+	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
+		-- Set the spawn as done since The fakeHostPly will take care of this load
+		MR.Ply:SetFirstSpawn(ply)
+		net.Start("Ply:SetFirstSpawn")
+		net.Send(ply)
 
-			Load:Start(MR.SV.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
-		-- Nothing to send, finish the joining process
-		else
-			MR.Ply:SetFirstSpawn(ply)
-			net.Start("Ply:SetFirstSpawn")
-			net.Send(ply)
-		end
+		Load:Start(MR.SV.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
+	-- Nothing to send, finish the joining process
+	else
+		MR.Ply:SetFirstSpawn(ply)
+		net.Start("Ply:SetFirstSpawn")
+		net.Send(ply)
 	end
-
-	local function WaitForPlayerSetup()
-		-- wait until the player has our table attached to him
-		timer.Create("WaitForPlayerSetup"..tostring(ply), 0.2, 1, function()
-			if MR.Ply:IsInitialized(ply) then 
-				StartLoading()
-			else
-				WaitForPlayerSetup()
-			end
-		end)
-	end
-
-	WaitForPlayerSetup()
 end
 
 -- Delete a saved file

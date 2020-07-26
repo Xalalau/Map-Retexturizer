@@ -5,6 +5,7 @@
 local Panels = MR.CL.Panels
 
 local previewbox = {
+	previewImage,
 	focusOnText = false,
 	minSize = 200,
 	size
@@ -17,12 +18,12 @@ end)
 
 hook.Add("OnTextEntryGetFocus", "MRPreviewTextIn", function()
 	-- Textentry selected
-	Panels:SetFocusOnText(true)
+	Panels:Preview_SetFocusOnText(true)
 end)
 
 hook.Add("OnTextEntryLoseFocus", "MRPreviewTextOut", function()
 	-- Textentry unselected
-	Panels:SetFocusOnText(false)
+	Panels:Preview_SetFocusOnText(false)
 end)
 
 function Panels:Preview_GetBoxMinSize()
@@ -37,12 +38,20 @@ function Panels:Preview_SetBoxSize(value)
 	previewbox.size = value
 end
 
-function Panels:GetFocusOnText()
+function Panels:Preview_GetFocusOnText()
 	return previewbox.focusOnText
 end
 
-function Panels:SetFocusOnText(value)
+function Panels:Preview_SetFocusOnText(value)
 	previewbox.focusOnText = value
+end
+
+function Panels:Preview_GetImage()
+	return previewbox.previewImage
+end
+
+function Panels:Preview_SetImage(panel)
+	previewbox.previewImage = panel
 end
 
 --Panels:Preview_SetBoxSize(Panels:Preview_GetBoxMinSize() * ScrH() / 768)
@@ -120,6 +129,8 @@ function Panels:SetPreview(parent, frameType, info)
 	info.width = Panels:Preview_GetBoxSize()
 	info.height = Panels:Preview_GetBoxSize()
 
+	local material = Material(MR.Materials:IsFullSkybox(MR.Materials:GetNew()) and MR.Skybox:SetSuffix(MR.Materials:GetNew()) or MR.Materials:GetNew())
+
 	local frame = MR.CL.Panels:StartContainer("Preview", parent, frameType, info)
 	MR.CL.ExposedPanels:Set("preview", nil, frame)
 
@@ -128,7 +139,7 @@ function Panels:SetPreview(parent, frameType, info)
 		height
 	}
 
-	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(Panels:Preview_GetBoxSize(), Material(MR.Materials:GetNew()):Width(), Material(MR.Materials:GetNew()):Height())
+	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(Panels:Preview_GetBoxSize(), material:Width(), material:Height())
 
 	--------------------------
 	-- Preview Box
@@ -141,15 +152,32 @@ function Panels:SetPreview(parent, frameType, info)
 				frame:Hide()
 			end
 
-			if frame:IsVisible() and not Panels:GetFocusOnText() then
+			if frame:IsVisible() and not Panels:Preview_GetFocusOnText() then
 				frame:MoveToFront() -- Keep the preview box ahead of the panel
 			end
 		end
 
 		local Preview = vgui.Create("DImageButton", previewFrame)
+			Panels:Preview_SetImage(Preview)
 			Preview:SetSize(previewInfo.width, previewInfo.height)
 			Preview:SetPos((Panels:Preview_GetBoxSize() - previewInfo.width) / 2, (Panels:Preview_GetBoxSize() - previewInfo.height) / 2)
 			Preview:SetImage(MR.CL.Materials:GetPreviewName())
 
 	return MR.CL.Panels:FinishContainer(frame, previewFrame, frameType)
+end
+
+-- Refresh the size and position of the preview image
+function Panels:RefreshPreview()
+	local panel = Panels:Preview_GetImage()
+
+	if panel then
+		local material = Material(MR.Materials:IsSkybox(MR.Materials:GetNew()) and MR.Skybox:SetSuffix(MR.Materials:GetNew()) or MR.Materials:GetNew())
+
+		local width, height = MR.Materials:ResizeInABox(Panels:Preview_GetBoxSize(), material:Width(), material:Height())
+		local x = (Panels:Preview_GetBoxSize() - width) / 2
+		local y = (Panels:Preview_GetBoxSize() - height) / 2
+
+		panel:SetSize(width, height)
+		panel:SetPos(x, y)
+	end
 end

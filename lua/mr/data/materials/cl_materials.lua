@@ -81,6 +81,7 @@ function Materials:SetPreview(newData, isDecal)
 	if not MR.Data:IsEqual(oldData, newData) then
 		MR.Materials:FixCurrentPath(newData)
 		Materials:SetPreviewMaterial(newData.newMaterial)
+		MR.CL.Panels:RefreshPreview()
 		MR.CL.Map:Set(newData)
 	end
 end

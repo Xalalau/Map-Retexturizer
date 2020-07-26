@@ -98,7 +98,7 @@ function Panels:SetGeneral(parent, frameType, info)
 		autosaveBox:SetValue(true)
 		autosaveBox.OnChange = function(self, val)
 			-- Force the field to update and disable a sync loop block
-			if MR.CL.CVars:GetLoopBlock() then
+			if MR.CL.Sync:GetLoopBlock() then
 				if val ~= autosaveBox:GetValue() then
 					autosaveBox:SetChecked(val)
 				else

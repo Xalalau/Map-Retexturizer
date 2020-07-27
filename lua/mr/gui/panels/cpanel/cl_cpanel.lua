@@ -47,7 +47,7 @@ hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
 	-- Show the custom CPanel inside the Spawn Panel
 	CPanel:GetSpawnListSelf():Add(CPanel:GetSelf())
 
-	-- Show the properties panel in the custom CPanel
+	-- Show the materials panel in the custom CPanel
 	MR.CL.ExposedPanels:Get("properties", "frame"):Show()
 	MR.CL.ExposedPanels:Get("properties", "panel"):Add(MR.CL.ExposedPanels:Get("properties", "detach"))
 
@@ -94,7 +94,7 @@ hook.Add("OnContextMenuClose", "MRCloseCPanel", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Hide the context CPanel frame
-	MR.CL.Panels:OnContextFinished("CPanel", { CPanel:GetContextSelf(), MR.CL.PPanel:GetSelf() }, CPanel.Hide, CPanel:GetContextSelf())
+	MR.CL.Panels:OnContextFinished("CPanel", { CPanel:GetContextSelf(), MR.CL.MPanel:GetSelf() }, CPanel.Hide, CPanel:GetContextSelf())
 end)
 
 function CPanel:GetSelf()

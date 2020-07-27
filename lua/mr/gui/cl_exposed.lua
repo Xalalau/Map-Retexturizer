@@ -28,7 +28,7 @@ local exposed = {
         frame = "", -- The entire menu, collapsable
         panel = "", -- The entire menu, can retach elements
         detach = "", -- Block to detach
-        self = "" -- The properties panel
+        self = "" -- The materials panel
     },
     cleanup = {
         frame = ""

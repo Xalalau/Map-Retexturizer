@@ -209,7 +209,7 @@ function Ply:ValidateTool(ply, weapon)
 				net.Start("CL.CPanel:ForceHide")
 				net.Send(ply)
 
-				net.Start("CL.PPanel:ForceHide")
+				net.Start("CL.MPanel:ForceHide")
 				net.Send(ply)
 			end
 		end

@@ -3,4 +3,4 @@
 -------------------------------------
 
 -- Networking 
-util.AddNetworkString("CL.PPanel:ForceHide")
+util.AddNetworkString("CL.MPanel:ForceHide")

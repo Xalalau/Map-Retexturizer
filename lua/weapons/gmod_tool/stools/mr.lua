@@ -287,7 +287,7 @@ function TOOL:RightClick(tr)
 			net.Start("CL.Materials:SetPreview")
 			net.Send(ply)
 	
-			-- Update the properties panel
+			-- Update the materials panel
 			net.Start("CL.Panels:RefreshProperties")
 			net.Send(ply)
 		end)
@@ -335,8 +335,8 @@ function TOOL.BuildCPanel(CPanel)
 		v:Hide()
 	end
 
-	-- Create the PPanel
-	MR.CL.PPanel:Create()
+	-- Create the MPanel
+	MR.CL.MPanel:Create()
 
 	-- Create my custom CPanel (when Garry's CPanel gives me the correct values)
 	local retrying = 0

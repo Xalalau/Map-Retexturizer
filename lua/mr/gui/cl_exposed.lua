@@ -24,10 +24,11 @@ local exposed = {
     preview = {
         frame = ""
     },
-    properties = { -- Frame > Panel > Self
-        self = "",
-        panel = "",
-        frame = ""
+    properties = { -- frame > panel > detach || self
+        frame = "", -- The entire menu, collapsable
+        panel = "", -- The entire menu, can retach elements
+        detach = "", -- Block to detach
+        self = "" -- The properties panel
     },
     cleanup = {
         frame = ""

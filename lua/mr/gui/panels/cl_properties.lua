@@ -11,43 +11,123 @@ end)
 
 -- Section: change material properties
 function Panels:SetProperties(parent, frameType, info)
-	local frame = MR.CL.Panels:StartContainer("Preview", parent, frameType, info)
+	local frame = MR.CL.Panels:StartContainer("Material", parent, frameType, info)
 	MR.CL.ExposedPanels:Set("properties", "frame", frame)
 
 	local width = frame:GetWide()
 
-	local panel = vgui.Create("DPanel")
+	local panel = vgui.Create("DIconLayout")
 		MR.CL.ExposedPanels:Set("properties", "panel", panel)
 		panel:SetSize(width, 0)
 		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
-	local alphaBarInfo = {
-		width = 20, 
-		height = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight() - MR.CL.Panels:GetGeneralBorders() * 2,
+	local topPanelInfo = {
+		width = width,
+		height = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders() * 3,
+		x = 0,
+		y = 0
+	}
+
+	local previewInfo = {
+		width = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders(),
+		height = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders(),
 		x = MR.CL.Panels:GetGeneralBorders(),
 		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
+	local textentryInfo = {
+		width = width - previewInfo.width - MR.CL.Panels:GetGeneralBorders() * 3,
+		height =  MR.CL.Panels:GetTextHeight(),
+		x = previewInfo.x + previewInfo.width + MR.CL.Panels:GetGeneralBorders(),
+		y = previewInfo.y
+	}
+
+	local detachInfo = {
+		width = width,
+		height = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight() - MR.CL.Panels:GetGeneralBorders() * 2,
+		x = MR.CL.Panels:GetGeneralBorders(),
+		y = previewInfo.height + previewInfo.y + MR.CL.Panels:GetGeneralBorders()
+	}
+
+	local alphaBarInfo = {
+		width = MR.CL.Panels:GetTextHeight(), 
+		height = detachInfo.height,
+		x = MR.CL.Panels:GetGeneralBorders(),
+		y = 0
+	}
+
 	local propertiesPanelInfo = {
-		width = width - alphaBarInfo.x - alphaBarInfo.width - MR.CL.Panels:GetGeneralBorders() * 2,
-		height = alphaBarInfo.height + MR.CL.Panels:GetGeneralBorders(),
+		width = detachInfo.width - alphaBarInfo.width - MR.CL.Panels:GetGeneralBorders() * 3,
+		height = detachInfo.height,
 		x = alphaBarInfo.x + alphaBarInfo.width + MR.CL.Panels:GetGeneralBorders(),
-		y = MR.CL.Panels:GetGeneralBorders()
+		y = alphaBarInfo.y
 	}
 
 	local resetButtonInfo = {
 		width = 16,
 		height = 16,
-		x = alphaBarInfo.x + propertiesPanelInfo.width + MR.CL.Panels:GetGeneralBorders(),
-		y = MR.CL.Panels:GetGeneralBorders() + 4
+		x = propertiesPanelInfo.x + propertiesPanelInfo.width - 16 - 4,
+		y = alphaBarInfo.y + 4
 	}
 
 	local totalHeight = alphaBarInfo.y + alphaBarInfo.height + MR.CL.Panels:GetGeneralBorders()
 
 	--------------------------
+	-- Top panels
+	--------------------------
+	local topPanels = vgui.Create("DPanel", panel)
+		topPanels:SetSize(topPanelInfo.width, topPanelInfo.height)
+		topPanels:SetPos(topPanelInfo.x, topPanelInfo.y)
+
+	--------------------------
+	-- Preview Image
+	--------------------------
+	local previewFrame = vgui.Create("DPanel", topPanels)
+		previewFrame:SetSize(previewInfo.width, previewInfo.height)
+		previewFrame:SetPos(previewInfo.x, previewInfo.y)
+		previewFrame:SetBackgroundColor(Color(255, 255, 255, 255))
+
+		local previewImage = vgui.Create("DImageButton", topPanels)
+			Panels:Preview_SetImage(previewImage2)
+			previewImage:SetSize(previewInfo.width, previewInfo.height)
+			previewImage:SetPos(previewInfo.x, previewInfo.y)
+			previewImage:SetImage(MR.CL.Materials:GetPreviewName())
+
+	--------------------------
+	-- Selected material text
+	--------------------------
+	local materialText = vgui.Create("DTextEntry", topPanels)
+		MR.CL.Panels:SetMRFocus(materialText)
+		materialText:SetSize(textentryInfo.width, textentryInfo.height)
+		materialText:SetPos(textentryInfo.x, textentryInfo.y)
+		materialText:SetConVar("internal_mr_material")
+		materialText.OnEnter = function(self)
+			local input = self:GetText()
+
+			MR.Materials:SetNew(LocalPlayer(), self:GetText())
+
+			if input == "" or not MR.Materials:Validate(input) then
+				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
+				materialText:SetText(MR.Materials:GetMissing())
+			end
+
+			timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+				MR.CL.Materials:SetPreview()
+			end)
+		end
+
+	--------------------------
+	-- Detach panel
+	--------------------------
+	local detach = vgui.Create("DPanel", panel)
+		MR.CL.ExposedPanels:Set("properties", "detach", detach)
+		detach:SetSize(detachInfo.width, detachInfo.height)
+		detach:SetPos(detachInfo.x, detachInfo.y)
+
+	--------------------------
 	-- Alpha bar
 	--------------------------
-	local alphaBar = vgui.Create("DAlphaBar", panel)
+	local alphaBar = vgui.Create("DAlphaBar", detach)
 		MR.CL.Panels:SetMRFocus(alphaBar)
 		alphaBar:SetPos(alphaBarInfo.x, alphaBarInfo.y)
 		alphaBar:SetSize(alphaBarInfo.width, alphaBarInfo.height)
@@ -167,13 +247,13 @@ function Panels:SetProperties(parent, frameType, info)
 			return propertiesPanel
 	end
 
-	local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
+	local propertiesPanel = SetProperties(detach, propertiesPanelInfo)
 		MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
 
 	--------------------------
 	-- Reset button
 	--------------------------
-	local resetButton = vgui.Create("DImageButton", panel)
+	local resetButton = vgui.Create("DImageButton", detach)
 		resetButton:SetSize(resetButtonInfo.width, resetButtonInfo.height)
 		resetButton:SetPos(resetButtonInfo.x, resetButtonInfo.y)
 		resetButton:SetImage("icon16/cancel.png")
@@ -183,14 +263,14 @@ function Panels:SetProperties(parent, frameType, info)
 				MR.CL.CVars:SetPropertiesToDefaults(LocalPlayer())
 			end
 			timer.Create("MRWaitForPropertiesDeleteion", 0.01, 1, function()
-				 local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
-				 propertiesPanel.DoReset = resetButton.DoClick
-				 MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
-				 alphaBar:SetValue(1)
-				 timer.Create("MRWaitForPropertiesRecreation", 0.01, 1, function()
+				local propertiesPanel = SetProperties(detach, propertiesPanelInfo)
+				propertiesPanel.DoReset = resetButton.DoClick
+				MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
+				alphaBar:SetValue(1)
+				timer.Create("MRWaitForPropertiesRecreation", 0.01, 1, function()
 					MR.CL.Materials:SetPreview()
 					resetButton:MoveToFront()
-				 end)
+				end)
 			end)
 		end
 		-- Reset callback

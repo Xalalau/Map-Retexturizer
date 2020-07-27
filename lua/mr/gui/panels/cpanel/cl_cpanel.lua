@@ -44,13 +44,14 @@ hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
 	if not IsValid(CPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Get the properties panel
-	MR.CL.ExposedPanels:Get("properties", "frame"):Add(MR.CL.ExposedPanels:Get("properties", "panel"))
-
-	-- Show the panel inside the Spawn menu
+	-- Show the custom CPanel inside the Spawn Panel
 	CPanel:GetSpawnListSelf():Add(CPanel:GetSelf())
 
-	-- Resize the CPanel
+	-- Show the properties panel in the custom CPanel
+	MR.CL.ExposedPanels:Get("properties", "frame"):Show()
+	MR.CL.ExposedPanels:Get("properties", "panel"):Add(MR.CL.ExposedPanels:Get("properties", "detach"))
+
+	-- Resize the custom CPanel height
 	CPanel:GetSelf():SetTall(CPanel:Spawn_GetFrameTall())
 	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Spawn_GetSkyboxTop())
 	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Spawn_GetDisplacementsTop())
@@ -72,13 +73,16 @@ hook.Add("OnContextMenuOpen", "MROpenCPanel", function()
 	if not IsValid(CPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Show the context CPanel frame
+	-- Show the Context Panel
 	CPanel:Show(CPanel:GetContextSelf())
 
-	-- Show the panel inside the CPanel frame
+	-- Show the custom CPanel inside the Context Panel
 	CPanel:GetContextListSelf():Add(CPanel:GetSelf())
 
-	-- Resize the CPanel
+	-- Hide the descriptions frame
+	MR.CL.ExposedPanels:Get("properties", "frame"):Hide()
+
+	-- Resize the custom CPanel height
 	CPanel:GetSelf():SetTall(CPanel:Context_GetFrameTall())
 	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Context_GetSkyboxTop())
 	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Context_GetDisplacementsTop())
@@ -223,9 +227,9 @@ function CPanel:Create(parent, isTest)
 		panel:SetWidth(scroll:GetWide())
 
 	paddingTop = MR.CL.Panels:SetDescription(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
-	paddingTop = MR.CL.Panels:SetGeneral(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop
-	CPanel:Spawn_SetPropertiesTop(paddingTop + verticalPadding)
-	paddingTop = MR.CL.Panels:SetProperties(panel, "DIconLayout", { y = paddingTop }) + paddingTop + verticalPadding
+	paddingTop = MR.CL.Panels:SetGeneral(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	CPanel:Spawn_SetPropertiesTop(paddingTop)
+	paddingTop = MR.CL.Panels:SetProperties(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
 	CPanel:Spawn_SetSkyboxTop(paddingTop)
 	paddingTop = MR.CL.Panels:SetSkybox(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
 	CPanel:Spawn_SetDisplacementsTop(paddingTop)

@@ -47,11 +47,11 @@ hook.Add("OnContextMenuOpen", "MROpenPPanel", function()
 	if not IsValid(PPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Show the panel
+	-- Show the PPanel
 	PPanel:Show()
 
-	-- Get the properties panel
-	PPanel:Sheet_GetListSelf():Add(MR.CL.ExposedPanels:Get("properties", "panel"))
+	-- Show the properties panel inside the PPanel
+	PPanel:Sheet_GetListSelf():Add(MR.CL.ExposedPanels:Get("properties", "detach"))
 end)
 
 hook.Add("OnContextMenuClose", "MRClosePPanel", function()
@@ -120,6 +120,13 @@ function PPanel:Create()
 		y = sheetFrameInfo.y + MR.CL.Panels:GetFrameTopBar() * 2 + PPanel:GetExternalBorder()
 	}
 
+	local sheetListInfo = {
+		width = sheetFrameInfo.width - MR.CL.Panels:Preview_GetBoxSize(),
+		height = MR.CL.Panels:Preview_GetBoxSize(),
+		x = MR.CL.Panels:Preview_GetBoxSize(),
+		y = MR.CL.Panels:GetGeneralBorders()
+	}
+
 	PPanel:SetPreviewFrameInfo(previewFrameInfo)
 
 	-- Create the preview
@@ -147,8 +154,8 @@ function PPanel:Create()
 
 				local sheetList = vgui.Create("DIconLayout", panel1)
 					PPanel:Sheet_SetListSelf(sheetList)
-					sheetList:SetSize(sheetFrameInfo.width - MR.CL.Panels:Preview_GetBoxSize(), MR.CL.Panels:Preview_GetBoxSize())
-					sheetList:SetPos(MR.CL.Panels:Preview_GetBoxSize(), 0)
+					sheetList:SetSize(sheetListInfo.width, sheetListInfo.height)
+					sheetList:SetPos(sheetListInfo.x, sheetListInfo.y)
 end
 
 -- Show the panel

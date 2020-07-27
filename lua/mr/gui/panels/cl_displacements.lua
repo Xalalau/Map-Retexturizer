@@ -12,6 +12,8 @@ end)
 -- Section: change map displacements
 function Panels:SetDisplacements(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Displacements", parent, frameType, info)
+	MR.CL.ExposedPanels:Set("displacements", "frame", frame)
+
 	local width = frame:GetWide()
 
 	local panel = vgui.Create("DPanel")

@@ -7,7 +7,7 @@ local Panels = MR.CL.Panels
 local previewbox = {
 	previewImage,
 	focusOnText = false,
-	minSize = 200,
+	minSize = 177,
 	size
 }
 
@@ -60,16 +60,16 @@ Panels:Preview_SetBoxSize(Panels:Preview_GetBoxMinSize())
 -- Show the preview box
 function Panels:RestartPreviewBox()
 	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		if MR.CL.ExposedPanels:Get("preview") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview")) then
-			MR.CL.ExposedPanels:Get("preview"):Show()
+		if MR.CL.ExposedPanels:Get("preview", "frame") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview", "frame")) then
+			MR.CL.ExposedPanels:Get("preview", "frame"):Show()
 		end
 	end
 end
 
 -- Hide the preview box
 function Panels:StopPreviewBox()
-	if MR.CL.ExposedPanels:Get("preview") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview")) then
-		MR.CL.ExposedPanels:Get("preview"):Hide()
+	if MR.CL.ExposedPanels:Get("preview", "frame") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview", "frame")) then
+		MR.CL.ExposedPanels:Get("preview", "frame"):Hide()
 	end
 end
 
@@ -117,8 +117,8 @@ function Panels:SetPreviewBack(panel)
 			timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
 				MR.CL.Materials:SetPreview()
 
-				if not MR.CL.ExposedPanels:Get("preview"):IsVisible() then
-					MR.CL.ExposedPanels:Get("preview"):Show()
+				if not MR.CL.ExposedPanels:Get("preview", "frame"):IsVisible() then
+					MR.CL.ExposedPanels:Get("preview", "frame"):Show()
 				end
 			end)
 		end
@@ -132,7 +132,7 @@ function Panels:SetPreview(parent, frameType, info)
 	local material = Material(MR.Materials:IsFullSkybox(MR.Materials:GetNew()) and MR.Skybox:SetSuffix(MR.Materials:GetNew()) or MR.Materials:GetNew())
 
 	local frame = MR.CL.Panels:StartContainer("Preview", parent, frameType, info)
-	MR.CL.ExposedPanels:Set("preview", nil, frame)
+	MR.CL.ExposedPanels:Set("preview", "frame", frame)
 
 	local previewInfo = {
 		width,

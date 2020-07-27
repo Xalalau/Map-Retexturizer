@@ -12,6 +12,8 @@ end)
 -- Section: change map skybox
 function Panels:SetSkybox(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Skybox", parent, frameType, info)
+	MR.CL.ExposedPanels:Set("skybox", "frame", frame)
+
 	local width = frame:GetWide()
 
 	local panel = vgui.Create("DPanel")

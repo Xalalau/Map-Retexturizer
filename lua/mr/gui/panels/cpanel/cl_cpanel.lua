@@ -10,12 +10,25 @@ local cpanel = {
 	-- Base panels
 	self,
 	spawn = {
+		size = {
+			frame,
+			properties,
+			skybox,
+			displacements,
+			cleanup
+		},
 		list = {
 			self
 		}
 	},
 	context = {
 		self,
+		size = {
+			frame,
+			skybox,
+			displacements,
+			cleanup
+		},
 		list = {
 			self
 		}
@@ -31,8 +44,17 @@ hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
 	if not IsValid(CPanel:GetSelf()) then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
+	-- Get the properties panel
+	MR.CL.ExposedPanels:Get("properties", "frame"):Add(MR.CL.ExposedPanels:Get("properties", "panel"))
+
 	-- Show the panel inside the Spawn menu
 	CPanel:GetSpawnListSelf():Add(CPanel:GetSelf())
+
+	-- Resize the CPanel
+	CPanel:GetSelf():SetTall(CPanel:Spawn_GetFrameTall())
+	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Spawn_GetSkyboxTop())
+	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Spawn_GetDisplacementsTop())
+	MR.CL.ExposedPanels:Get("cleanup", "frame"):SetPos(0, CPanel:Spawn_GetCleanupTop())
 end)
 
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
@@ -55,6 +77,12 @@ hook.Add("OnContextMenuOpen", "MROpenCPanel", function()
 
 	-- Show the panel inside the CPanel frame
 	CPanel:GetContextListSelf():Add(CPanel:GetSelf())
+
+	-- Resize the CPanel
+	CPanel:GetSelf():SetTall(CPanel:Context_GetFrameTall())
+	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Context_GetSkyboxTop())
+	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Context_GetDisplacementsTop())
+	MR.CL.ExposedPanels:Get("cleanup", "frame"):SetPos(0, CPanel:Context_GetCleanupTop())
 end)
 
 hook.Add("OnContextMenuClose", "MRCloseCPanel", function()
@@ -97,6 +125,78 @@ function CPanel:SetSpawnListSelf(panel)
 	cpanel.spawn.list.self = panel
 end
 
+function CPanel:Spawn_GetFrameTall()
+	return cpanel.spawn.size.frame
+end
+
+function CPanel:Spawn_SetFrameTall(value)
+	cpanel.spawn.size.frame = value
+end
+
+function CPanel:Spawn_GetPropertiesTop()
+	return cpanel.spawn.size.properties
+end
+
+function CPanel:Spawn_SetPropertiesTop(value)
+	cpanel.spawn.size.properties = value
+end
+
+function CPanel:Spawn_GetSkyboxTop()
+	return cpanel.spawn.size.skybox
+end
+
+function CPanel:Spawn_SetSkyboxTop(value)
+	cpanel.spawn.size.skybox = value
+end
+
+function CPanel:Spawn_GetDisplacementsTop()
+	return cpanel.spawn.size.displacements
+end
+
+function CPanel:Spawn_SetDisplacementsTop(value)
+	cpanel.spawn.size.displacements = value
+end
+
+function CPanel:Spawn_GetCleanupTop()
+	return cpanel.spawn.size.cleanup
+end
+
+function CPanel:Spawn_SetCleanupTop(value)
+	cpanel.spawn.size.cleanup = value
+end
+
+function CPanel:Context_GetFrameTall()
+	return cpanel.context.size.frame
+end
+
+function CPanel:Context_SetFrameTall(value)
+	cpanel.context.size.frame = value
+end
+
+function CPanel:Context_GetSkyboxTop()
+	return cpanel.context.size.skybox
+end
+
+function CPanel:Context_SetSkyboxTop(value)
+	cpanel.context.size.skybox = value
+end
+
+function CPanel:Context_GetDisplacementsTop()
+	return cpanel.context.size.displacements
+end
+
+function CPanel:Context_SetDisplacementsTop(value)
+	cpanel.context.size.displacements = value
+end
+
+function CPanel:Context_GetCleanupTop()
+	return cpanel.context.size.cleanup
+end
+
+function CPanel:Context_SetCleanupTop(value)
+	cpanel.context.size.cleanup = value
+end
+
 -- Create the panel
 function CPanel:Create(parent, isTest)
 	local paddingTop = 0
@@ -122,20 +222,33 @@ function CPanel:Create(parent, isTest)
 		panel:SetBackgroundColor(Color(255, 255, 255, 255))
 		panel:SetWidth(scroll:GetWide())
 
-	paddingTop = MR.CL.Panels:SetDescription(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	paddingTop = MR.CL.Panels:SetGeneral(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	paddingTop = MR.CL.Panels:SetSkybox(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	paddingTop = MR.CL.Panels:SetDisplacements(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	--paddingTop = MR.CL.Panels:SetSave(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	--paddingTop = MR.CL.Panels:SetLoad(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
-	paddingTop = MR.CL.Panels:SetCleanup(panel, 3, { y = paddingTop }) + paddingTop + verticalPadding
+	paddingTop = MR.CL.Panels:SetDescription(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	paddingTop = MR.CL.Panels:SetGeneral(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop
+	CPanel:Spawn_SetPropertiesTop(paddingTop + verticalPadding)
+	paddingTop = MR.CL.Panels:SetProperties(panel, "DIconLayout", { y = paddingTop }) + paddingTop + verticalPadding
+	CPanel:Spawn_SetSkyboxTop(paddingTop)
+	paddingTop = MR.CL.Panels:SetSkybox(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	CPanel:Spawn_SetDisplacementsTop(paddingTop)
+	paddingTop = MR.CL.Panels:SetDisplacements(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	--paddingTop = MR.CL.Panels:SetSave(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	--paddingTop = MR.CL.Panels:SetLoad(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	CPanel:Spawn_SetCleanupTop(paddingTop)
+	paddingTop = MR.CL.Panels:SetCleanup(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
+	CPanel:Spawn_SetFrameTall(paddingTop)
+
+	local propertiesSize = CPanel:Spawn_GetSkyboxTop() - CPanel:Spawn_GetPropertiesTop()
+
+	CPanel:Context_SetFrameTall(paddingTop - propertiesSize)
+	CPanel:Context_SetSkyboxTop(CPanel:Spawn_GetSkyboxTop() - propertiesSize)
+	CPanel:Context_SetDisplacementsTop(CPanel:Spawn_GetDisplacementsTop() - propertiesSize)
+	CPanel:Context_SetCleanupTop(CPanel:Spawn_GetCleanupTop() - propertiesSize)
 
 	scroll:SetHeight(not isTest and parent:GetParent():GetParent():GetTall() - 5 or parent:GetTall())
 	panel:SetHeight(paddingTop)
 
 	spawnList:Add(panel)
 
-	CPanel:CreateContext(panel, panel:GetSize())
+	CPanel:CreateContext(panel, panel:GetWide(), CPanel:Context_GetFrameTall())
 end
 
 -- Create a frame to show the panel in the context menu
@@ -213,8 +326,8 @@ function CPanel:Test()
 		contextFrame:Hide()
 
 	-- Force to create some menus to check them easyly
-	--MR.CL.Panels:SetLoad(nil, 2, { width = 400, height = 245 })
-	--MR.CL.Panels:SetSave(nil, 2, { width = 275, height = 120 })
+	--MR.CL.Panels:SetLoad(nil, "DPanel", { width = 400, height = 245 })
+	--MR.CL.Panels:SetSave(nil, "DPanel", { width = 275, height = 120 })
 
 	CPanel:Create(contextFrame, true)
 end

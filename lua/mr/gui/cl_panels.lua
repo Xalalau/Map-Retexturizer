@@ -265,24 +265,21 @@ end
 	if frameType = 3, parent is required
 	else only frameType is required
 ]]
-function Panels:StartContainer(name, parent, frameType, info)
+function Panels:StartContainer(name, parent, frameType, infoIn)
 	local frame
+	local info = infoIn and table.Copy(infoIn) or {}
 
-	info = info or {}
-	info.width = info.width or 275
-	info.height = info.height or 300
-
-	-- DPanel
-	if frameType == 1 then
-		frame = vgui.Create("DPanel")
+	-- DPanel and DIconLayout
+	if frameType == "DPanel" or frameType == "DIconLayout" then
+		frame = vgui.Create(frameType)
 			if parent then frame:SetParent(parent); end
-			frame:SetSize(info.width, info.height)
+			frame:SetSize(info.width or parent and parent:GetWide() or 275, info.height or 0)
 			frame:SetPos(info.x or 0, info.y or 0)
 			frame:SetBackgroundColor(Color(0, 0, 0, 0))
 	-- DFrame
-	elseif frameType == 2 then
-		local window = vgui.Create("DFrame")
-			window:SetSize(info.width, info.height)
+	elseif frameType == "DFrame" then
+		local window = vgui.Create(frameType)
+			window:SetSize(info.width or 275, info.height or 300)
 			window:SetPos(info.y or ScrW()/2 - info.width/2, info.x or ScrH()/2 - info.height/2)
 			window:SetTitle(name or "")
 			window:ShowCloseButton(true)
@@ -297,8 +294,8 @@ function Panels:StartContainer(name, parent, frameType, info)
 			frame:SetPos(MR.CL.Panels:GetGeneralBorders(), MR.CL.Panels:GetFrameTopBar())
 			frame:SetBackgroundColor(MR.CL.Panels:GetFrameBackgroundColor())
 	-- DCollapsibleCategory
-	elseif frameType == 3 then
-		frame = vgui.Create("DCollapsibleCategory", parent)
+	elseif frameType == "DCollapsibleCategory" then
+		frame = vgui.Create(frameType, parent)
 			frame:SetLabel(name or "")
 			frame:SetPos(0, info.y or 0)
 			frame:SetSize(parent:GetWide(), 0)
@@ -309,13 +306,19 @@ function Panels:StartContainer(name, parent, frameType, info)
 end
 
 -- Finish a container creation
-function Panels:FinishContainer(frame, panel, frameType)
-	if frameType == 3 then
+function Panels:FinishContainer(frame, panel, frameType, forceHeight)
+	if forceHeight then
+		frame:SetHeight(forceHeight)
+	end
+
+	if frameType == "DCollapsibleCategory" then
 		frame:SetContents(panel)
 
 		return frame:GetTall()
 	else
 		panel:SetParent(frame)
 		panel:SetHeight(frame:GetTall())
+
+		return frame:GetTall()
 	end
 end

@@ -6,26 +6,30 @@ local Panels = MR.CL.Panels
 
 -- Networkings
 net.Receive("CL.Panels:RefreshProperties", function()
-	Panels:RefreshProperties(MR.CL.ExposedPanels:Get("properties"))
+	Panels:RefreshProperties(MR.CL.ExposedPanels:Get("properties", "self"))
 end)
 
 -- Section: change material properties
 function Panels:SetProperties(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Preview", parent, frameType, info)
+	MR.CL.ExposedPanels:Set("properties", "frame", frame)
+
+	local width = frame:GetWide()
 
 	local panel = vgui.Create("DPanel")
-		panel:SetSize(info.width, 0)
+		MR.CL.ExposedPanels:Set("properties", "panel", panel)
+		panel:SetSize(width, 0)
 		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
 	local alphaBarInfo = {
 		width = 20, 
 		height = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight() - MR.CL.Panels:GetGeneralBorders() * 2,
-		x = 0,
+		x = MR.CL.Panels:GetGeneralBorders(),
 		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
 	local propertiesPanelInfo = {
-		width = info.width - MR.CL.Panels:Preview_GetBoxSize() - alphaBarInfo.x - alphaBarInfo.width  - MR.CL.Panels:GetGeneralBorders() * 8,
+		width = width - alphaBarInfo.x - alphaBarInfo.width - MR.CL.Panels:GetGeneralBorders() * 2,
 		height = alphaBarInfo.height + MR.CL.Panels:GetGeneralBorders(),
 		x = alphaBarInfo.x + alphaBarInfo.width + MR.CL.Panels:GetGeneralBorders(),
 		y = MR.CL.Panels:GetGeneralBorders()
@@ -37,6 +41,8 @@ function Panels:SetProperties(parent, frameType, info)
 		x = alphaBarInfo.x + propertiesPanelInfo.width + MR.CL.Panels:GetGeneralBorders(),
 		y = MR.CL.Panels:GetGeneralBorders() + 4
 	}
+
+	local totalHeight = alphaBarInfo.y + alphaBarInfo.height + MR.CL.Panels:GetGeneralBorders()
 
 	--------------------------
 	-- Alpha bar
@@ -162,7 +168,7 @@ function Panels:SetProperties(parent, frameType, info)
 	end
 
 	local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
-		MR.CL.ExposedPanels:Set("properties", nil, propertiesPanel)
+		MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
 
 	--------------------------
 	-- Reset button
@@ -179,7 +185,7 @@ function Panels:SetProperties(parent, frameType, info)
 			timer.Create("MRWaitForPropertiesDeleteion", 0.01, 1, function()
 				 local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
 				 propertiesPanel.DoReset = resetButton.DoClick
-				 MR.CL.ExposedPanels:Set("properties", nil, propertiesPanel)
+				 MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
 				 alphaBar:SetValue(1)
 				 timer.Create("MRWaitForPropertiesRecreation", 0.01, 1, function()
 					MR.CL.Materials:SetPreview()
@@ -190,7 +196,7 @@ function Panels:SetProperties(parent, frameType, info)
 		-- Reset callback
 		propertiesPanel.DoReset = resetButton.DoClick
 
-	return MR.CL.Panels:FinishContainer(frame, panel, frameType)
+	return MR.CL.Panels:FinishContainer(frame, panel, frameType, totalHeight)
 end
 
 -- Reset the properties values

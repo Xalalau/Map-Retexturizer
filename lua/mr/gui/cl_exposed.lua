@@ -12,15 +12,26 @@ local exposed = {
         text = ""
     },
     skybox = {
+        frame = "",
         combo = ""
     },
     displacements = {
+        frame = "",
         text1 = "",
         text2 = "",
         combo = ""
     },
-    preview = "",
-    properties = ""
+    preview = {
+        frame = ""
+    },
+    properties = { -- Frame > Panel > Self
+        self = "",
+        panel = "",
+        frame = ""
+    },
+    cleanup = {
+        frame = ""
+    }
 }
 
 -- Set the menu elements

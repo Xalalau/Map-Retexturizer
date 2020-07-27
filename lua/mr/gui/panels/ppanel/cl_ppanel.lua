@@ -14,7 +14,11 @@ local ppanel = {
 		-- Border between the sheet and the sheetFrame
 		externalBorder = 5,
 		-- The space where the preview box ends
-		paddingLeft
+		paddingLeft,
+		-- The right space where the properties will be placed
+		list = {
+			self
+		} 
 	},
 	-- Preview box
 	previewFrameInfo
@@ -45,6 +49,9 @@ hook.Add("OnContextMenuOpen", "MROpenPPanel", function()
 
 	-- Show the panel
 	PPanel:Show()
+
+	-- Get the properties panel
+	PPanel:Sheet_GetListSelf():Add(MR.CL.ExposedPanels:Get("properties", "panel"))
 end)
 
 hook.Add("OnContextMenuClose", "MRClosePPanel", function()
@@ -79,6 +86,14 @@ function PPanel:Sheet_SetPaddingLeft(value)
 	ppanel.sheet.paddingLeft = value
 end
 
+function PPanel:Sheet_SetListSelf(panel)
+	ppanel.sheet.list.self = panel
+end
+
+function PPanel:Sheet_GetListSelf()
+	return ppanel.sheet.list.self
+end
+
 function PPanel:GetPreviewFrameInfo()
 	return ppanel.previewFrameInfo
 end
@@ -92,7 +107,7 @@ function PPanel:Create()
 	PPanel:Sheet_SetPaddingLeft(MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetGeneralBorders())
 
 	local sheetFrameInfo = {
-		width = 520 + (MR.CL.Panels:Preview_GetBoxSize() - MR.CL.Panels:Preview_GetBoxMinSize()),
+		width = 455 + (MR.CL.Panels:Preview_GetBoxSize() - MR.CL.Panels:Preview_GetBoxMinSize()),
 		height = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetFrameTopBar() * 2 + PPanel:Sheet_GetExternalBorder() * 4,
 		x = 15,
 		y = 182
@@ -109,7 +124,7 @@ function PPanel:Create()
 
 	-- Create the preview
 	MR.CL.Materials:SetPreview()
-	MR.CL.Panels:SetPreview(nil, 1, { x = previewFrameInfo.x + 3, y = previewFrameInfo.y + 2 })
+	MR.CL.Panels:SetPreview(nil, "DPanel", { x = previewFrameInfo.x + 3, y = previewFrameInfo.y + 2 })
 
 	-- Create the frame for the sheet
 	local sheetFrame = vgui.Create("DFrame")
@@ -129,14 +144,18 @@ function PPanel:Create()
 				sheet:AddSheet("Properties", panel1, "icon16/pencil.png")
 
 				MR.CL.Panels:SetPreviewBack(panel1)
-				MR.CL.Panels:SetProperties(panel1, 1, { width = PPanel:GetSelf():GetWide(), x =  PPanel:Sheet_GetPaddingLeft()})
+
+				local sheetList = vgui.Create("DIconLayout", panel1)
+					PPanel:Sheet_SetListSelf(sheetList)
+					sheetList:SetSize(sheetFrameInfo.width - MR.CL.Panels:Preview_GetBoxSize(), MR.CL.Panels:Preview_GetBoxSize())
+					sheetList:SetPos(MR.CL.Panels:Preview_GetBoxSize(), 0)
 end
 
 -- Show the panel
 function PPanel:Show()
 	if not IsValid(PPanel:GetSelf()) then return; end
 
-	local previewPanel = MR.CL.ExposedPanels:Get("preview")
+	local previewPanel = MR.CL.ExposedPanels:Get("preview", "frame")
 
 	PPanel:GetSelf():Show()
 
@@ -159,11 +178,11 @@ function PPanel:Hide()
 	PPanel:GetSelf():Hide()
 
 	if not MR.Ply:GetPreviewMode(LocalPlayer()) or MR.Ply:GetDecalMode(LocalPlayer()) then
-		MR.CL.ExposedPanels:Get("preview"):Hide()
+		MR.CL.ExposedPanels:Get("preview", "frame"):Hide()
 	else
-		MR.CL.ExposedPanels:Get("preview"):Remove()
+		MR.CL.ExposedPanels:Get("preview", "frame"):Remove()
 		timer.Create("MRWaitPreviewRemotion", 0.01, 1, function()
-			MR.CL.Panels:SetPreview(nil, 1, { x = PPanel:GetPreviewFrameInfo().x + 3, y = PPanel:GetPreviewFrameInfo().y + 2 })
+			MR.CL.Panels:SetPreview(nil, "DPanel", { x = PPanel:GetPreviewFrameInfo().x + 3, y = PPanel:GetPreviewFrameInfo().y + 2 })
 		end)
 	end
 end

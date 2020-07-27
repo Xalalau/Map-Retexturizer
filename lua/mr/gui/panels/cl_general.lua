@@ -169,7 +169,7 @@ function Panels:SetGeneral(parent, frameType, info)
 		save:SetPos(saveInfo.x, saveInfo.y)
 		save:SetText("Save")
 		save.DoClick = function()
-			Panels:SetSave(nil, 2, { width = 275, height = 120 })
+			Panels:SetSave(nil, "DFrame", { width = 275, height = 120 })
 		end
 
 	--------------------------
@@ -180,7 +180,7 @@ function Panels:SetGeneral(parent, frameType, info)
 		load:SetPos(loadInfo.x, loadInfo.y)
 		load:SetText("Load")
 		load.DoClick = function()
-			Panels:SetLoad(nil, 2, { width = 400, height = 245, title })
+			Panels:SetLoad(nil, "DFrame", { width = 400, height = 245, title })
 		end
 
 	--------------------------

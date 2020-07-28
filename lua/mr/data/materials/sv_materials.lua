@@ -39,7 +39,7 @@ end
 -- Change all the materials to a single one
 function Materials:SetAll(ply)
 	-- Get the material
-	local material = MR.Materials:GetNew(ply)
+	local material = MR.Materials:GetSelected(ply)
 
 	-- General first steps
 	local check = {

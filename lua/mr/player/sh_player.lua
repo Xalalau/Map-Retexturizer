@@ -178,7 +178,7 @@ function Ply:ValidateTool(ply, weapon)
 
 				-- Restart the preview box rendering
 				if not MR.Ply:GetDecalMode(ply) then
-					net.Start("CL.Panels:RestartPreviewBox")
+					net.Start("CL.MPanel:RestartPreviewBox")
 					net.Send(ply)
 				end
 			end

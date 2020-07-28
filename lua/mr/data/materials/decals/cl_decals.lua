@@ -40,7 +40,7 @@ function Decals:Set(data, isBroadcasted)
 
 	-- General first steps
 	local check = {
-		material = data and data.newMaterial or MR.Materials:GetNew(ply),
+		material = data and data.newMaterial or MR.Materials:GetSelected(ply),
 		type = "Decals"
 	}
 

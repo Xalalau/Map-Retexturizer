@@ -252,7 +252,7 @@ end
 	name = name of the container panel
 	parent = where to attach the container
 	frameType
-		1 = DPanel
+		1 = DPanel or DIconLayout
 		2 = DFrame
 		3 = DCollapsibleCategory
 	info = {
@@ -262,7 +262,7 @@ end
 		y = number
 	}
 
-	if frameType = 3, parent is required
+	if frameType = "DCollapsibleCategory", parent is required
 	else only frameType is required
 ]]
 function Panels:StartContainer(name, parent, frameType, infoIn)
@@ -279,8 +279,8 @@ function Panels:StartContainer(name, parent, frameType, infoIn)
 	-- DFrame
 	elseif frameType == "DFrame" then
 		local window = vgui.Create(frameType)
-			window:SetSize(info.width or 275, info.height or 300)
-			window:SetPos(info.y or ScrW()/2 - info.width/2, info.x or ScrH()/2 - info.height/2)
+			window:SetSize(info.width or 400, info.height or 300)
+			window:SetPos(info.x or (ScrW()/2 - (info.width or 275)/2), info.y or (ScrH()/2 - (info.height or 300)/2))
 			window:SetTitle(name or "")
 			window:ShowCloseButton(true)
 			window:MakePopup()
@@ -306,7 +306,11 @@ function Panels:StartContainer(name, parent, frameType, infoIn)
 end
 
 -- Finish a container creation
-function Panels:FinishContainer(frame, panel, frameType, forceHeight)
+function Panels:FinishContainer(frame, panel, frameType, forceWidth, forceHeight)
+	if forceWidth then
+		frame:SetHeight(forceHeight)
+	end
+
 	if forceHeight then
 		frame:SetHeight(forceHeight)
 	end
@@ -314,11 +318,11 @@ function Panels:FinishContainer(frame, panel, frameType, forceHeight)
 	if frameType == "DCollapsibleCategory" then
 		frame:SetContents(panel)
 
-		return frame:GetTall()
+		return frame:GetTall(), frame
 	else
 		panel:SetParent(frame)
 		panel:SetHeight(frame:GetTall())
 
-		return frame:GetTall()
+		return frame:GetTall(), frame
 	end
 end

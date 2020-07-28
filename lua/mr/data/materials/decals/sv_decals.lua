@@ -18,7 +18,7 @@ end)
 function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 	-- General first steps
 	local check = {
-		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetNew(ply),
+		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetSelected(ply),
 		type = "Decals"
 	}
 

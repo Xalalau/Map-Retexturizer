@@ -20,9 +20,16 @@ local mpanel = {
 			self
 		} 
 	},
-	-- Preview box
-	previewFrameInfo
+	-- Floating preview
+	floatingPreview  = {
+		self
+	}
 }
+
+-- Networking
+net.Receive("CL.MPanel:RestartPreviewBox", function()
+	MR.CL.MPanel:RestartPreviewBox()
+end)
 
 net.Receive("CL.MPanel:ForceHide", function()
 	MPanel:Hide()
@@ -33,14 +40,14 @@ hook.Add("OnSpawnMenuOpen", "MRMPanelHandleSpawnMenuOpenned", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Stop the preview
-	MR.CL.Panels:StopPreviewBox()
+	MPanel:StopPreviewBox()
 end)
 
 hook.Add("OnSpawnMenuClose", "MRMPanelHandleSpawnMenuClosed", function()
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Restart the preview
-	MR.CL.Panels:RestartPreviewBox()
+	MPanel:RestartPreviewBox()
 end)
 
 hook.Add("OnContextMenuOpen", "MROpenMPanel", function()
@@ -51,7 +58,7 @@ hook.Add("OnContextMenuOpen", "MROpenMPanel", function()
 	MPanel:Show()
 
 	-- Show the materials panel inside the MPanel
-	MPanel:Sheet_GetListSelf():Add(MR.CL.ExposedPanels:Get("properties", "detach"))
+	MPanel:Sheet_GetListSelf():Add(MR.CL.ExposedPanels:Get("materials", "detach"))
 end)
 
 hook.Add("OnContextMenuClose", "MRCloseMPanel", function()
@@ -94,12 +101,12 @@ function MPanel:Sheet_GetListSelf()
 	return mpanel.sheet.list.self
 end
 
-function MPanel:GetPreviewFrameInfo()
-	return mpanel.previewFrameInfo
+function MPanel:GetFloatingPreviewSelf()
+	return mpanel.floatingPreview.self
 end
 
-function MPanel:SetPreviewFrameInfo(info)
-	mpanel.previewFrameInfo = info
+function MPanel:SetFloatingPreviewSelf(panel)
+	mpanel.floatingPreview.self = panel
 end
 
 -- Create the panel
@@ -107,33 +114,40 @@ function MPanel:Create()
 	MPanel:Sheet_SetPaddingLeft(MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetGeneralBorders())
 
 	local sheetFrameInfo = {
-		width = 455 + (MR.CL.Panels:Preview_GetBoxSize() - MR.CL.Panels:Preview_GetBoxMinSize()),
-		height = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetFrameTopBar() * 2 + MPanel:Sheet_GetExternalBorder() * 4,
+		width = 475,
+		height = MR.CL.Panels:GetFrameTopBar()*2 + MPanel:Sheet_GetExternalBorder()*4 + MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetTextHeight()*2 + MR.CL.Panels:GetGeneralBorders()*4,
 		x = 15,
 		y = 182
 	}
 
-	local previewFrameInfo = {
+	local floatingPreviewInfo = {
 		width = MR.CL.Panels:Preview_GetBoxSize(),
 		height = MR.CL.Panels:Preview_GetBoxSize(),
-		x = sheetFrameInfo.x + MPanel:Sheet_GetExternalBorder() + MPanel:GetExternalBorder(),
-		y = sheetFrameInfo.y + MR.CL.Panels:GetFrameTopBar() * 2 + MPanel:GetExternalBorder()
+		x = sheetFrameInfo.x + MPanel:Sheet_GetExternalBorder() + MPanel:GetExternalBorder() * 2 + 3,
+		y = sheetFrameInfo.y + MR.CL.Panels:GetFrameTopBar() * 2 + MPanel:GetExternalBorder() * 2 + 2
+	}
+
+	local previewFrameInfo = {
+		width = floatingPreviewInfo.width,
+		height = floatingPreviewInfo.height,
+		x = MR.CL.Panels:GetGeneralBorders(),
+		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
 	local sheetListInfo = {
 		width = sheetFrameInfo.width - MR.CL.Panels:Preview_GetBoxSize(),
 		height = MR.CL.Panels:Preview_GetBoxSize(),
-		x = MR.CL.Panels:Preview_GetBoxSize(),
+		x = MR.CL.Panels:Preview_GetBoxSize() + MR.CL.Panels:GetGeneralBorders(),
 		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
-	MPanel:SetPreviewFrameInfo(previewFrameInfo)
+	local textentriesInfo = {
+		width = sheetFrameInfo.width - MPanel:Sheet_GetExternalBorder() * 2 - MPanel:GetExternalBorder() * 3,
+		height = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders() * 3,
+		y = previewFrameInfo.height + MR.CL.Panels:GetGeneralBorders()
+	}
 
-	-- Create the preview
-	MR.CL.Materials:SetPreview()
-	MR.CL.Panels:SetPreview(nil, "DPanel", { x = previewFrameInfo.x + 3, y = previewFrameInfo.y + 2 })
-
-	-- Create the frame for the sheet
+	-- Create the materials sheet
 	local sheetFrame = vgui.Create("DFrame")
 		MPanel:SetSelf(sheetFrame)
 		sheetFrame:SetSize(sheetFrameInfo.width, sheetFrameInfo.height)
@@ -148,34 +162,47 @@ function MPanel:Create()
 			sheet:Dock(FILL)
  
 			local panel1 = vgui.Create("DPanel", sheet)
-				sheet:AddSheet("Material", panel1, "icon16/pencil.png")
+				sheet:AddSheet("Materials", panel1, "icon16/pencil.png")
 
-				MR.CL.Panels:SetPreviewBack(panel1)
+				local _, contextPreview = MR.CL.Panels:SetPreview(panel1, "DPanel", previewFrameInfo)
+					MR.CL.Panels:SetPreviewVisibility(contextPreview, false, false, true)
+
+				MR.CL.Panels:SetPropertiesPath(panel1, "DPanel", textentriesInfo)
 
 				local sheetList = vgui.Create("DIconLayout", panel1)
 					MPanel:Sheet_SetListSelf(sheetList)
 					sheetList:SetSize(sheetListInfo.width, sheetListInfo.height)
 					sheetList:SetPos(sheetListInfo.x, sheetListInfo.y)
+
+	-- Create the floating preview
+	MR.CL.Materials:SetPreview()
+	local _, floatingPreview = MR.CL.Panels:SetPreview(nil, "DPanel", floatingPreviewInfo)
+		MR.CL.Panels:SetPreviewVisibility(floatingPreview, false, false, false)
+		MPanel:SetFloatingPreviewSelf(floatingPreview)
+end
+
+-- Show the preview box
+function MPanel:RestartPreviewBox()
+	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
+		if MPanel:GetFloatingPreviewSelf() and IsValid(MPanel:GetFloatingPreviewSelf()) then
+			MPanel:GetFloatingPreviewSelf():Show()
+		end
+	end
+end
+
+-- Hide the preview box
+function MPanel:StopPreviewBox()
+	if MPanel:GetFloatingPreviewSelf() and IsValid(MPanel:GetFloatingPreviewSelf()) then
+		MPanel:GetFloatingPreviewSelf():Hide()
+	end
 end
 
 -- Show the panel
 function MPanel:Show()
 	if not IsValid(MPanel:GetSelf()) then return; end
 
-	local previewPanel = MR.CL.ExposedPanels:Get("preview", "frame")
-
 	MPanel:GetSelf():Show()
-
-	if IsValid(previewPanel) then
-		if not previewPanel:IsVisible() then
-			previewPanel:Show()
-		else
-			timer.Create("MRWaitToGetFocus", 0.01, 1, function()
-				previewPanel:MakePopup()
-				previewPanel:MoveToFront()
-			end)
-		end
-	end
+	MPanel:GetFloatingPreviewSelf():Hide()
 end
 
 -- Hide the panel
@@ -183,15 +210,7 @@ function MPanel:Hide()
 	if not IsValid(MPanel:GetSelf()) then return; end
 
 	MPanel:GetSelf():Hide()
-
-	if not MR.Ply:GetPreviewMode(LocalPlayer()) or MR.Ply:GetDecalMode(LocalPlayer()) then
-		MR.CL.ExposedPanels:Get("preview", "frame"):Hide()
-	else
-		MR.CL.ExposedPanels:Get("preview", "frame"):Remove()
-		timer.Create("MRWaitPreviewRemotion", 0.01, 1, function()
-			MR.CL.Panels:SetPreview(nil, "DPanel", { x = MPanel:GetPreviewFrameInfo().x + 3, y = MPanel:GetPreviewFrameInfo().y + 2 })
-		end)
-	end
+	MPanel:GetFloatingPreviewSelf():Show()
 end
 
 -- Test the menus. Uncomment and save while the game is running

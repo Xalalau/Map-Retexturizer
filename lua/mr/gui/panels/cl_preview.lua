@@ -5,179 +5,139 @@
 local Panels = MR.CL.Panels
 
 local previewbox = {
-	previewImage,
-	focusOnText = false,
-	minSize = 177,
-	size
+	previewImages = {},
+	size = 192,
+	miniSize = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders()
 }
-
--- Networking
-net.Receive("CL.Panels:RestartPreviewBox", function()
-	MR.CL.Panels:RestartPreviewBox()
-end)
-
-hook.Add("OnTextEntryGetFocus", "MRPreviewTextIn", function()
-	-- Textentry selected
-	Panels:Preview_SetFocusOnText(true)
-end)
-
-hook.Add("OnTextEntryLoseFocus", "MRPreviewTextOut", function()
-	-- Textentry unselected
-	Panels:Preview_SetFocusOnText(false)
-end)
-
-function Panels:Preview_GetBoxMinSize()
-	return previewbox.minSize
-end
 
 function Panels:Preview_GetBoxSize()
 	return previewbox.size
 end
 
-function Panels:Preview_SetBoxSize(value)
-	previewbox.size = value
+function Panels:Preview_GetBoxMiniSize()
+	return previewbox.miniSize
 end
 
-function Panels:Preview_GetFocusOnText()
-	return previewbox.focusOnText
+function Panels:Preview_GetImages()
+	return previewbox.previewImages
 end
 
-function Panels:Preview_SetFocusOnText(value)
-	previewbox.focusOnText = value
-end
-
-function Panels:Preview_GetImage()
-	return previewbox.previewImage
-end
-
-function Panels:Preview_SetImage(panel)
-	previewbox.previewImage = panel
-end
-
---Panels:Preview_SetBoxSize(Panels:Preview_GetBoxMinSize() * ScrH() / 768)
-Panels:Preview_SetBoxSize(Panels:Preview_GetBoxMinSize())
-
--- Show the preview box
-function Panels:RestartPreviewBox()
-	if MR.Ply:GetPreviewMode(LocalPlayer()) and not MR.Ply:GetDecalMode(LocalPlayer()) then
-		if MR.CL.ExposedPanels:Get("preview", "frame") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview", "frame")) then
-			MR.CL.ExposedPanels:Get("preview", "frame"):Show()
-		end
-	end
-end
-
--- Hide the preview box
-function Panels:StopPreviewBox()
-	if MR.CL.ExposedPanels:Get("preview", "frame") ~= "" and IsValid(MR.CL.ExposedPanels:Get("preview", "frame")) then
-		MR.CL.ExposedPanels:Get("preview", "frame"):Hide()
-	end
-end
-
--- Create the selected material field and preview box background
-function Panels:SetPreviewBack(panel)
-	local materialInfo = {
-		width = MR.CL.Panels:Preview_GetBoxSize(),
-		height = MR.CL.Panels:GetTextHeight(),
-		x = 0,
-		y = MR.CL.Panels:Preview_GetBoxSize()
-	}
-
-	--------------------------
-	-- Background 
-	--------------------------
-	-- For the temporary "disabled" preview
-	local previewBackground = vgui.Create("DPanel", panel)
-		previewBackground:SetSize(Panels:Preview_GetBoxSize(), Panels:Preview_GetBoxSize())
-		previewBackground:SetBackgroundColor(Color(0, 0, 0, 100))
-
-		local saveDLabel = vgui.Create("DLabel", panel)
-			saveDLabel:SetSize(40, MR.CL.Panels:GetTextHeight())
-			saveDLabel:SetPos(Panels:Preview_GetBoxSize()/2 - saveDLabel:GetWide()/2, Panels:Preview_GetBoxSize()/2 - MR.CL.Panels:GetTextHeight()/2)
-			saveDLabel:SetText("Paused")
-			saveDLabel:SetTextColor(Color(0, 0, 0, 200))
-
-	--------------------------
-	-- Selected material text
-	--------------------------
-	local materialText = vgui.Create("DTextEntry", panel)
-		MR.CL.Panels:SetMRFocus(materialText)
-		materialText:SetSize(materialInfo.width, materialInfo.height)
-		materialText:SetPos(materialInfo.x, materialInfo.y)
-		materialText:SetConVar("internal_mr_material")
-		materialText.OnEnter = function(self)
-			local input = self:GetText()
-
-			MR.Materials:SetNew(LocalPlayer(), self:GetText())
-
-			if input == "" or not MR.Materials:Validate(input) then
-				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
-				materialText:SetText(MR.Materials:GetMissing())
-			end
-
-			timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
-				MR.CL.Materials:SetPreview()
-
-				if not MR.CL.ExposedPanels:Get("preview", "frame"):IsVisible() then
-					MR.CL.ExposedPanels:Get("preview", "frame"):Show()
-				end
-			end)
-		end
+function Panels:Preview_SetImages(panel)
+	table.insert(previewbox.previewImages, panel)
 end
 
 -- Section: preview
 function Panels:SetPreview(parent, frameType, info)
-	info.width = Panels:Preview_GetBoxSize()
-	info.height = Panels:Preview_GetBoxSize()
-
-	local material = Material(MR.Materials:IsFullSkybox(MR.Materials:GetNew()) and MR.Skybox:SetSuffix(MR.Materials:GetNew()) or MR.Materials:GetNew())
+	local material = Material(MR.Materials:IsFullSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
 
 	local frame = MR.CL.Panels:StartContainer("Preview", parent, frameType, info)
-	MR.CL.ExposedPanels:Set("preview", "frame", frame)
+
+	local width = frame:GetWide()
+
+	local panel = vgui.Create("DPanel")
+		panel:SetSize(width, 0)
+		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
 	local previewInfo = {
 		width,
-		height
+		height,
+		x,
+		y
 	}
 
-	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(Panels:Preview_GetBoxSize(), material:Width(), material:Height())
+	previewInfo.width, previewInfo.height = MR.Materials:ResizeInABox(width, material:Width(), material:Height())
+	previewInfo.x = (width - previewInfo.width) / 2
+	previewInfo.y = (width - previewInfo.height) / 2
 
 	--------------------------
 	-- Preview Box
 	--------------------------
-	local previewFrame = vgui.Create("DPanel")
-		previewFrame:SetSize(Panels:Preview_GetBoxSize(), Panels:Preview_GetBoxSize())
+	local previewFrame = vgui.Create("DPanel", panel)
+		previewFrame:SetSize(width, width)
 		previewFrame:SetBackgroundColor(Color(255, 255, 255, 255))
-		previewFrame.Think = function()
-			if not MR.Ply:GetUsingTheTool(LocalPlayer()) then
-				frame:Hide()
-			end
 
-			if frame:IsVisible() and not Panels:Preview_GetFocusOnText() then
-				frame:MoveToFront() -- Keep the preview box ahead of the panel
-			end
-		end
+		local preview = vgui.Create("DImageButton", previewFrame)
+			Panels:Preview_SetImages(preview)
+			preview:SetSize(previewInfo.width, previewInfo.height)
+			preview:SetPos(previewInfo.x, previewInfo.y)
+			preview:SetImage(MR.CL.Materials:GetPreviewName())
 
-		local Preview = vgui.Create("DImageButton", previewFrame)
-			Panels:Preview_SetImage(Preview)
-			Preview:SetSize(previewInfo.width, previewInfo.height)
-			Preview:SetPos((Panels:Preview_GetBoxSize() - previewInfo.width) / 2, (Panels:Preview_GetBoxSize() - previewInfo.height) / 2)
-			Preview:SetImage(MR.CL.Materials:GetPreviewName())
+	return MR.CL.Panels:FinishContainer(frame, panel, frameType)
+end
 
-	return MR.CL.Panels:FinishContainer(frame, previewFrame, frameType)
+-- Set preview visibility
+-- Used to avoid unnecessary rendering by selecting which previews are visible on the player screens
+--   Initial visibility
+--   Show on: context panel only, spawn panel only, both or none
+function Panels:SetPreviewVisibility(frame, start, spawn, context)
+	local panel = frame:GetChild(0):GetChild(0):GetChild(0)
+
+	panel.MRVisible = start
+
+	if spawn or not spawn and not context then
+		hook.Add("OnSpawnMenuOpen", "MROpenSpawn" .. tostring(panel), function()
+			panel.MRVisible = spawn
+		end)
+
+		hook.Add("OnSpawnMenuClose", "MRCloseSpawn" .. tostring(panel), function()
+			panel.MRVisible = not spawn
+		end)
+	end
+
+	if context or not spawn and not context then
+		hook.Add("OnContextMenuOpen", "MROpenContext" .. tostring(panel), function()
+			panel.MRVisible = context
+		end)
+
+		hook.Add("OnContextMenuClose", "MRCloseContext" .. tostring(panel), function()
+			panel.MRVisible = not context
+		end)
+	end
 end
 
 -- Refresh the size and position of the preview image
-function Panels:RefreshPreview()
-	local panel = Panels:Preview_GetImage()
+function Panels:RefreshPreviews()
+	local panels = Panels:Preview_GetImages()
 
-	if panel then
-		local material = Material(MR.Materials:IsSkybox(MR.Materials:GetNew()) and MR.Skybox:SetSuffix(MR.Materials:GetNew()) or MR.Materials:GetNew())
+	if #panels then
+		for _,panel in pairs(panels) do
+			if panel.MRVisible then
+				local material = Material(MR.Materials:IsSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
 
-		local width, height = MR.Materials:ResizeInABox(Panels:Preview_GetBoxSize(), material:Width(), material:Height())
-		local x = (Panels:Preview_GetBoxSize() - width) / 2
-		local y = (Panels:Preview_GetBoxSize() - height) / 2
+				local width, height = MR.Materials:ResizeInABox(panel:GetTall(), material:Width(), material:Height())
+				local x = (panel:GetTall() - width) / 2
+				local y = (panel:GetTall() - height) / 2
 
-		panel:SetSize(width, height)
-		panel:SetPos(x, y)
+				panel:SetSize(width, height)
+				panel:SetPos(x, y)
+			end
+		end
 	end
 end
+
+-- Automatically refresh previews after screem modes switches
+function Panels:AutoRefreshPreviews()
+	local function Refresh()
+		timer.Create("MRWaitPreviews", 0.06, 1, function()
+			MR.CL.Panels:RefreshPreviews()
+		end)
+	end
+
+	hook.Add("OnSpawnMenuOpen", "MROpenSpawnMPanelAutoRefresh", function()
+		Refresh()
+	end)
+
+	hook.Add("OnSpawnMenuClose", "MRCloseSpawnMPanelAutoRefresh", function()
+		Refresh()
+	end)
+
+	hook.Add("OnContextMenuOpen", "MROpenContextMPanelAutoRefresh", function()
+		Refresh()
+	end)
+
+	hook.Add("OnContextMenuClose", "MRCloseContextMPanelAutoRefresh", function()
+		Refresh()
+	end)
+end
+
+Panels:AutoRefreshPreviews()

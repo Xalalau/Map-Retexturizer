@@ -94,8 +94,8 @@ end
 function Data:Create(ply, materialInfo, decalInfo, blockCleanup)
 	local data = {
 		ent = materialInfo and materialInfo.tr and materialInfo.tr.Entity or game.GetWorld(),
-		oldMaterial = decalInfo and MR.Materials:GetNew(ply) or materialInfo and materialInfo.tr and MR.Materials:GetOriginal(materialInfo.tr) or materialInfo.oldMaterial or "",
-		newMaterial = MR.Materials:GetNew(ply),
+		oldMaterial = decalInfo and MR.Materials:GetSelected(ply) or materialInfo and materialInfo.tr and MR.Materials:GetOriginal(materialInfo.tr) or materialInfo.oldMaterial or "",
+		newMaterial = MR.Materials:GetSelected(ply),
 		offsetX = not decalInfo and string.format("%.2f", ply:GetInfo("internal_mr_offsetx")) or nil,
 		offsetY = not decalInfo and string.format("%.2f", ply:GetInfo("internal_mr_offsety")) or nil,
 		scaleX = ply:GetInfo("internal_mr_scalex") ~= "0" and string.format("%.2f", ply:GetInfo("internal_mr_scalex")) or nil,

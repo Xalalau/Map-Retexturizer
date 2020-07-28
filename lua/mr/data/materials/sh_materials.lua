@@ -159,15 +159,33 @@ function Materials:GetMissing()
 	return materials.missing
 end
 
--- Get the new material from mr_material cvar
+-- Get the new material
 function Materials:GetNew(ply)
-	return CLIENT and GetConVar("internal_mr_material"):GetString() or
-			SERVER and ply:GetInfo("internal_mr_material")
+	return CLIENT and GetConVar("internal_mr_new_material"):GetString() or
+			SERVER and ply:GetInfo("internal_mr_new_material")
 end
 
--- Set the new material on mr_material cvar
+-- Set the new material
 function Materials:SetNew(ply, value)
-	ply:ConCommand("internal_mr_material "..value)
+	ply:ConCommand("internal_mr_new_material " .. (value == "" and "\"\"" or value))
+end
+
+-- Get the old material
+function Materials:GetOld(ply)
+	return CLIENT and GetConVar("internal_mr_old_material"):GetString() or
+			SERVER and ply:GetInfo("internal_mr_old_material")
+end
+
+-- Set the old material
+function Materials:SetOld(ply, value)
+	ply:ConCommand("internal_mr_old_material " .. (value == "" and "\"\"" or value))
+end
+
+-- Get the selected material
+function Materials:GetSelected(ply)
+	return Materials:GetNew(ply) ~= "" and Materials:GetNew(ply) or
+		   Materials:GetOld(ply) ~= "" and Materials:GetOld(ply) or
+		   ""
 end
 
 -- Get the original material full path

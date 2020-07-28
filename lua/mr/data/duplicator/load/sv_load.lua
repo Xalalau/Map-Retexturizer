@@ -132,7 +132,7 @@ end
 -- Load tool modifications AFTER the player is fully ready
 function Load:FirstSpawn(ply)
 	-- Validate the preview material
-	MR.Materials:Validate(ply:GetInfo("internal_mr_material"))
+	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then

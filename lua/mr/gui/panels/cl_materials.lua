@@ -7,12 +7,12 @@ local Panels = MR.CL.Panels
 -- Section: manage materials
 function Panels:SetMaterials(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Materials", parent, frameType, info)
-	MR.CL.ExposedPanels:Set("materials", "frame", frame)
+	MR.CL.ExposedPanels:Set(frame, "materials", "frame")
 
 	local width = frame:GetWide()
 
 	local panel = vgui.Create("DIconLayout")
-		MR.CL.ExposedPanels:Set("materials", "panel", panel)
+		MR.CL.ExposedPanels:Set(panel, "materials", "panel")
 		panel:SetSize(width, 0)
 		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
@@ -55,7 +55,7 @@ function Panels:SetMaterials(parent, frameType, info)
 	-- Properties
 	--------------------------
     local _, detach = MR.CL.Panels:SetProperties(panel, "DPanel", propertiesInfo)
-        MR.CL.ExposedPanels:Set("materials", "detach", detach)
+        MR.CL.ExposedPanels:Set(detach, "materials", "detach")
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType, nil, totalHeight)
 end

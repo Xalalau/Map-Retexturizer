@@ -78,7 +78,7 @@ function Panels:SetLoad(parent, frameType, info)
 	-- List
 	--------------------------
 	local loadList = vgui.Create("DListView", panel)
-		MR.CL.ExposedPanels:Set("load", "text", loadList)
+		MR.CL.ExposedPanels:Set(loadList, "load", "text")
 		loadList:SetSize(loadListInfo.width, loadListInfo.height)
 		loadList:SetPos(loadListInfo.x, loadListInfo.y)
 		loadList:SetMultiSelect(false)

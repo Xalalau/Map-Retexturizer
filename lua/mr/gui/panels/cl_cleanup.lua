@@ -7,7 +7,7 @@ local Panels = MR.CL.Panels
 -- Section: clean up modifications
 function Panels:SetCleanup(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Cleanup", parent, frameType, info)
-	MR.CL.ExposedPanels:Set("cleanup", "frame", frame)
+	MR.CL.ExposedPanels:Set(frame, "cleanup", "frame")
 
 	local width = frame:GetWide()
 

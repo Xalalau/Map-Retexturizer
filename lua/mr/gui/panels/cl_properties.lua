@@ -226,7 +226,7 @@ function Panels:SetProperties(parent, frameType, info)
 	end
 
 	local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
-		MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
+		MR.CL.ExposedPanels:Set(propertiesPanel, "properties", "self")
 
 	--------------------------
 	-- Reset button
@@ -243,7 +243,7 @@ function Panels:SetProperties(parent, frameType, info)
 			timer.Create("MRWaitForPropertiesDeleteion", 0.01, 1, function()
 				local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
 				propertiesPanel.DoReset = resetButton.DoClick
-				MR.CL.ExposedPanels:Set("properties", "self", propertiesPanel)
+				MR.CL.ExposedPanels:Set(propertiesPanel, "properties", "self")
 				alphaBar:SetValue(1)
 				timer.Create("MRWaitForPropertiesRecreation", 0.01, 1, function()
 					MR.CL.Materials:SetPreview()

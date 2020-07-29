@@ -38,11 +38,11 @@ local exposed = {
 }
 
 -- Set the menu elements
-function ExposedPanels:Set(field1, field2, value)
+function ExposedPanels:Set(panel, field1, field2)
 	if field1 and not field2 and exposed[field1] then
-		exposed[field1] = value
+		exposed[field1] = panel
 	elseif field1 and field2 and exposed[field1] and exposed[field1][field2] then
-		exposed[field1][field2] = value
+		exposed[field1][field2] = panel
 	else
 		return false
 	end

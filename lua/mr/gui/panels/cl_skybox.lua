@@ -12,7 +12,7 @@ end)
 -- Section: change map skybox
 function Panels:SetSkybox(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Skybox", parent, frameType, info)
-	MR.CL.ExposedPanels:Set("skybox", "frame", frame)
+	MR.CL.ExposedPanels:Set(frame, "skybox", "frame")
 
 	local width = frame:GetWide()
 
@@ -64,7 +64,7 @@ function Panels:SetSkybox(parent, frameType, info)
 
 	local skyboxCombobox = vgui.Create("DComboBox", panel)
 		MR.CL.Panels:SetMRFocus(skyboxCombobox)
-		MR.CL.ExposedPanels:Set("skybox", "combo", skyboxCombobox)
+		MR.CL.ExposedPanels:Set(skyboxCombobox, "skybox", "combo")
 		skyboxCombobox:SetSize(HL2LComboboxInfo.width, HL2LComboboxInfo.height)
 		skyboxCombobox:SetPos(HL2LComboboxInfo.x, HL2LComboboxInfo.y)
 		skyboxCombobox.OnSelect = function(self, index, value, data)

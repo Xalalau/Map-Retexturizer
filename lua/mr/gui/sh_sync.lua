@@ -24,11 +24,11 @@ local sync = {
 }
 
 -- Set the menu elements
-function Sync:Set(field1, field2, value)
+function Sync:Set(panel, field1, field2)
 	if field1 and not field2 and sync[field1] then
-		sync[field1] = value
+		sync[field1] = panel
 	elseif field1 and field2 and sync[field1] and sync[field1][field2] then
-		sync[field1][field2] = value
+		sync[field1][field2] = panel
 	else
 		return false
 	end

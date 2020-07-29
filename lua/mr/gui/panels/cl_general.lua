@@ -91,7 +91,7 @@ function Panels:SetGeneral(parent, frameType, info)
 	-- Autosave
 	--------------------------
 	local autosaveBox = vgui.Create("DCheckBoxLabel", panel)
-		MR.Sync:Set("save", "box", autosaveBox)
+		MR.Sync:Set(autosaveBox, "save", "box")
 		autosaveBox:SetPos(autoSaveBox.x, autoSaveBox.y)
 		autosaveBox:SetText("Autosave")
 		autosaveBox:SetTextColor(Color(0, 0, 0, 255))

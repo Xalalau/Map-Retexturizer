@@ -38,9 +38,9 @@ function Sync:Replicate(ply, command, value, field1, field2)
 
 	-- Change field values on server
 	if field1 and field2 then
-		MR.Sync:Set(field1, field2, value)
+		MR.Sync:Set(value, field1, field2)
 	elseif field1 then
-		MR.Sync:Set(field1, nil, value)
+		MR.Sync:Set(value, field1)
 	else
 		return false
 	end

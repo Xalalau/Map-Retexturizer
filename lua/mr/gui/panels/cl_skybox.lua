@@ -93,7 +93,7 @@ function Panels:SetSkybox(parent, frameType, info)
 
 	local skyboxPath = vgui.Create("DTextEntry", panel)
 		MR.CL.Panels:SetMRFocus(skyboxPath)
-		MR.Sync:Set("skybox", "text", skyboxPath)
+		MR.Sync:Set(skyboxPath, "skybox", "text")
 		skyboxPath:SetSize(skyboxPathInfo.width, skyboxPathInfo.height)
 		skyboxPath:SetPos(skyboxPathInfo.x, skyboxPathInfo.y)
 		skyboxPath.OnEnter = function()
@@ -129,7 +129,7 @@ function Panels:SetSkybox(parent, frameType, info)
 	-- Skybox tool gun
 	--------------------------
 	local skyboxCheckbox = vgui.Create("DCheckBoxLabel", panel)
-		MR.Sync:Set("skybox", "box", skyboxCheckbox)
+		MR.Sync:Set(skyboxCheckbox, "skybox", "box")
 		skyboxCheckbox:SetPos(skyboxToolGunInfo.x, skyboxToolGunInfo.y)
 		skyboxCheckbox:SetText("Edit with the tool gun")
 		skyboxCheckbox:SetTextColor(Color(0, 0, 0, 255))

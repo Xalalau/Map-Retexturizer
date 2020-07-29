@@ -226,7 +226,7 @@ function Panels:SetLoad(parent, frameType, info)
 	-- Auto load path
 	--------------------------
 	local autoLoadPath = vgui.Create("DTextEntry", panel)
-		MR.Sync:Set("load", "autoloadtext", autoLoadPath)
+		MR.Sync:Set(autoLoadPath, "load", "autoloadtext")
 		autoLoadPath:SetSize(autoLoadPathInfo.width, autoLoadPathInfo.height)
 		autoLoadPath:SetPos(autoLoadPathInfo.x, autoLoadPathInfo.y)
 		autoLoadPath:SetFont("Default")
@@ -247,7 +247,7 @@ function Panels:SetLoad(parent, frameType, info)
 	-- Cleanup checkbox
 	--------------------------
 	local loadCleanupBox = vgui.Create("DCheckBoxLabel", panel)
-		MR.Sync:Set("load", "box", loadCleanupBox)
+		MR.Sync:Set(loadCleanupBox, "load", "box")
 		loadCleanupBox:SetPos(loadCleanupBoxInfo.x, loadCleanupBoxInfo.y)
 		loadCleanupBox:SetText("Cleanup")
 		loadCleanupBox:SetTextColor(Color(0, 0, 0, 255))
@@ -305,7 +305,7 @@ function Panels:SetLoad(parent, frameType, info)
 	end
 
 	local speedCombobox = vgui.Create("DComboBox", panel)
-		MR.Sync:Set("load", "speed", speedCombobox)
+		MR.Sync:Set(speedCombobox, "load", "speed")
 		speedCombobox:SetSize(speedComboboxInfo.width, speedComboboxInfo.height)
 		speedCombobox:SetPos(speedComboboxInfo.x, speedComboboxInfo.y)
 

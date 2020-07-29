@@ -99,7 +99,7 @@ end
 -- Panel focus locking controls
 hook.Add("VGUIMousePressed", "MRVGUIMousePressed", function(panel)
 	if panel then
-		-- Select the correct panel with it's a DProperties panel
+		-- Select the correct panel with its a DProperties panel
 		if panel:GetParent() then
 			if string.find(panel:GetParent():GetName(), "DProperty_") then
 				panel = panel:GetParent()
@@ -307,14 +307,16 @@ end
 
 -- Finish a container creation
 function Panels:FinishContainer(frame, panel, frameType, forceWidth, forceHeight)
+	-- Force frame sizes
 	if forceWidth then
-		frame:SetHeight(forceHeight)
+		frame:SetWidth(forceWidth)
 	end
 
 	if forceHeight then
 		frame:SetHeight(forceHeight)
 	end
 
+	-- Join the frame and the panel
 	if frameType == "DCollapsibleCategory" then
 		frame:SetContents(panel)
 

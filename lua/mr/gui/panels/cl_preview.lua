@@ -71,27 +71,31 @@ end
 --   Show on: context panel only, spawn panel only, both or none
 function Panels:SetPreviewVisibility(frame, start, spawn, context)
 	local panel = frame:GetChild(0):GetChild(0):GetChild(0)
+	local both = spawn and context
+	local none = not spawn and not context
 
 	panel.MRVisible = start
 
-	if spawn or not spawn and not context then
-		hook.Add("OnSpawnMenuOpen", "MROpenSpawn" .. tostring(panel), function()
-			panel.MRVisible = spawn
-		end)
+	if not both then -- If the menu is always visible, it's always with the correct properties. There's no need to refresh it
+		if spawn or none then
+			hook.Add("OnSpawnMenuOpen", "MROpenSpawn" .. tostring(panel), function()
+				panel.MRVisible = spawn
+			end)
 
-		hook.Add("OnSpawnMenuClose", "MRCloseSpawn" .. tostring(panel), function()
-			panel.MRVisible = not spawn
-		end)
-	end
+			hook.Add("OnSpawnMenuClose", "MRCloseSpawn" .. tostring(panel), function()
+				panel.MRVisible = not spawn
+			end)
+		end
 
-	if context or not spawn and not context then
-		hook.Add("OnContextMenuOpen", "MROpenContext" .. tostring(panel), function()
-			panel.MRVisible = context
-		end)
+		if context or none then
+			hook.Add("OnContextMenuOpen", "MROpenContext" .. tostring(panel), function()
+				panel.MRVisible = context
+			end)
 
-		hook.Add("OnContextMenuClose", "MRCloseContext" .. tostring(panel), function()
-			panel.MRVisible = not context
-		end)
+			hook.Add("OnContextMenuClose", "MRCloseContext" .. tostring(panel), function()
+				panel.MRVisible = not context
+			end)
+		end
 	end
 end
 
@@ -115,7 +119,7 @@ function Panels:RefreshPreviews()
 	end
 end
 
--- Automatically refresh previews after screem modes switches
+-- Automatically refresh previews after screen mode switches
 function Panels:AutoRefreshPreviews()
 	local function Refresh()
 		timer.Create("MRWaitPreviews", 0.06, 1, function()

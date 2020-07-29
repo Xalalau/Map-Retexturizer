@@ -141,7 +141,7 @@ function MPanel:Create()
 		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
-	local textentriesInfo = {
+	local textEntriesInfo = {
 		width = sheetFrameInfo.width - MPanel:Sheet_GetExternalBorder() * 2 - MPanel:GetExternalBorder() * 3,
 		height = MR.CL.Panels:GetTextHeight() * 2 + MR.CL.Panels:GetGeneralBorders() * 3,
 		y = previewFrameInfo.height + MR.CL.Panels:GetGeneralBorders()
@@ -167,7 +167,7 @@ function MPanel:Create()
 				local _, contextPreview = MR.CL.Panels:SetPreview(panel1, "DPanel", previewFrameInfo)
 					MR.CL.Panels:SetPreviewVisibility(contextPreview, false, false, true)
 
-				MR.CL.Panels:SetPropertiesPath(panel1, "DPanel", textentriesInfo)
+				MR.CL.Panels:SetPropertiesPath(panel1, "DPanel", textEntriesInfo)
 
 				local sheetList = vgui.Create("DIconLayout", panel1)
 					MPanel:Sheet_SetListSelf(sheetList)

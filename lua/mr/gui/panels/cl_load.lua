@@ -212,7 +212,6 @@ function Panels:SetLoad(parent, frameType, info)
 			local panel = MR.CL.ExposedPanels:Get("load", "text")
 			local loadName = panel:GetSelected()[1] and panel:GetSelected()[1]:GetColumnText(1) or ""
 
-
 			net.Start("SV.Load:SetAuto")
 				net.WriteString(loadName)
 			net.SendToServer()

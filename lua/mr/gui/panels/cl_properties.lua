@@ -124,24 +124,24 @@ function Panels:SetProperties(parent, frameType, info)
 			propertiesPanel:SetPos(propertiesPanelInfo.x, propertiesPanelInfo.y)
 			propertiesPanel:SetSize(propertiesPanelInfo.width, propertiesPanelInfo.height)
 
-			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
-				local function setValue(command, value)
-					RunConsoleCommand(command, value)
-					if not timer.Exists("MRWaitProperty") then
-						timer.Create("MRWaitProperty", 0.03, 1, function()
-							MR.CL.Materials:SetPreview()
-						end)
-					end
-				end
-
-				local function setValueFromText(command, value)
-					setValue(command, value)
-
-					timer.Create("MRWaitSlider", 0.03, 1, function()
-						setValue(command, value)
+			local function setValue(command, value)
+				RunConsoleCommand(command, value)
+				if not timer.Exists("MRWaitProperty") then
+					timer.Create("MRWaitProperty", 0.03, 1, function()
+						MR.CL.Materials:SetPreview()
 					end)
 				end
+			end
 
+			local function setValueFromText(command, value)
+				setValue(command, value)
+
+				timer.Create("MRWaitSlider", 0.03, 1, function()
+					setValue(command, value)
+				end)
+			end
+
+			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
 				timer.Create("MRWaitWM", 0.03, 1, function()
 					MR.CL.Panels:SetMRFocus(witdhMagnification.Inner)
 				end)
@@ -150,7 +150,6 @@ function Panels:SetProperties(parent, frameType, info)
 				witdhMagnification.DataChanged = function(self, data)
 					setValue("internal_mr_scalex", data)
 				end
-
 				witdhMagnification.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_scalex", self:GetValue())
 				end

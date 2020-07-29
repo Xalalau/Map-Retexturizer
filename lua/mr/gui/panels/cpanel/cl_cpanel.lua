@@ -7,30 +7,32 @@ CPanel.__index = CPanel
 MR.CL.CPanel = CPanel
 
 local cpanel = {
-	-- Base panels
+	-- Base panels (self(s))
 	self,
 	spawn = {
+		list = {
+			self
+		},
+		-- Panels heights
 		size = {
 			frame,
 			properties,
 			skybox,
 			displacements,
 			cleanup
-		},
-		list = {
-			self
 		}
 	},
 	context = {
 		self,
+		list = {
+			self
+		},
+		-- Panels heights
 		size = {
 			frame,
 			skybox,
 			displacements,
 			cleanup
-		},
-		list = {
-			self
 		}
 	}
 }
@@ -209,13 +211,13 @@ function CPanel:Create(parent, isTest)
 	local scroll = vgui.Create("DScrollPanel", parent)
 		scroll:Dock(TOP)
 
-	local sbar = scroll:GetVBar()
-		sbar:SetWidth(3)
-		sbar.btnGrip.Paint = function(self, w, h)
-			draw.RoundedBox(0, 0, 0, w, h, MR.CL.Panels:GetScrollBarColor())
-		end
+		local sbar = scroll:GetVBar()
+			sbar:SetWidth(3)
+			sbar.btnGrip.Paint = function(self, w, h)
+				draw.RoundedBox(0, 0, 0, w, h, MR.CL.Panels:GetScrollBarColor())
+			end
 
-	scroll:SetWidth(parent:GetWide())
+		scroll:SetWidth(parent:GetWide())
 
 	local spawnList = vgui.Create("DIconLayout", scroll)
 		CPanel:SetSpawnListSelf(spawnList)

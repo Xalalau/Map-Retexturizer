@@ -13,42 +13,42 @@ function Panels:SetDescription(parent, frameType, info)
 		panel:SetSize(width, 0)
 		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
-	local desciptionInfo = {
+	local descriptionInfo = {
 		width = width,
 		height = MR.CL.Panels:GetTextHeight(),
 		x = MR.CL.Panels:GetTextMarginLeft(),
 		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
-	local desciptionHintInfo = {
+	local descriptionHintInfo = {
 		width = width - MR.CL.Panels:GetGeneralBorders() * 2,
 		height = MR.CL.Panels:GetTextHeight(),
-		x = desciptionInfo.x + MR.CL.Panels:GetTextMarginLeft(),
-		y = desciptionInfo.y + desciptionInfo.height/2 + MR.CL.Panels:GetGeneralBorders()/2
+		x = descriptionInfo.x + MR.CL.Panels:GetTextMarginLeft(),
+		y = descriptionInfo.y + descriptionInfo.height/2 + MR.CL.Panels:GetGeneralBorders()/2
 	}
 
 	--------------------------
 	-- Description
 	--------------------------
-	local desciption = vgui.Create("DLabel", panel)
-		desciption:SetPos(desciptionInfo.x, desciptionInfo.y)
-		desciption:SetSize(desciptionInfo.width, desciptionInfo.height)
-		desciption:SetText("#tool.mr.desc")
-		desciption:SetTextColor(Color(0, 0, 0, 255))
+	local description = vgui.Create("DLabel", panel)
+		description:SetPos(descriptionInfo.x, descriptionInfo.y)
+		description:SetSize(descriptionInfo.width, descriptionInfo.height)
+		description:SetText("#tool.mr.desc")
+		description:SetTextColor(Color(0, 0, 0, 255))
 
 	--------------------------
-	-- Desciption hint
+	-- Description hint
 	--------------------------
-	local desciptionHint = vgui.Create("DLabel", panel)
-		desciptionHint:SetPos(desciptionHintInfo.x, desciptionHintInfo.y)
-		desciptionHint:SetSize(desciptionHintInfo.width, desciptionHintInfo.height)
-		desciptionHint:SetText("\n" .. MR.Base:GetVersion())
-		desciptionHint:SetTextColor(MR.CL.Panels:GetHintColor())
+	local descriptionHint = vgui.Create("DLabel", panel)
+		descriptionHint:SetPos(descriptionHintInfo.x, descriptionHintInfo.y)
+		descriptionHint:SetSize(descriptionHintInfo.width, descriptionHintInfo.height)
+		descriptionHint:SetText("\n" .. MR.Base:GetVersion())
+		descriptionHint:SetTextColor(MR.CL.Panels:GetHintColor())
 
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.Panels:GetGeneralBorders(), MR.CL.Panels:GetGeneralBorders())
-		extraBorder:SetPos(0, desciptionInfo.y + desciptionInfo.height)
+		extraBorder:SetPos(0, descriptionInfo.y + descriptionInfo.height)
 		extraBorder:SetBackgroundColor(Color(0, 0, 0, 0))
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)

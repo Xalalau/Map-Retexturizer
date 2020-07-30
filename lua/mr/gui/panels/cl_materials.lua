@@ -47,7 +47,6 @@ function Panels:SetMaterials(parent, frameType, info)
 		topPanels:SetSize(topPanelInfo.width, topPanelInfo.height)
 
         local _, preview = MR.CL.Panels:SetPreview(topPanels, "DPanel", previewInfo)
-            MR.CL.Panels:SetPreviewVisibility(preview, true, true, false)
 
         MR.CL.Panels:SetPropertiesPath(topPanels, "DPanel", pathInfo)
 

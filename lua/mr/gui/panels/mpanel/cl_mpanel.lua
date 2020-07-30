@@ -165,7 +165,6 @@ function MPanel:Create()
 				sheet:AddSheet("Materials", panel1, "icon16/pencil.png")
 
 				local _, contextPreview = MR.CL.Panels:SetPreview(panel1, "DPanel", previewFrameInfo)
-					MR.CL.Panels:SetPreviewVisibility(contextPreview, false, false, true)
 
 				MR.CL.Panels:SetPropertiesPath(panel1, "DPanel", textEntriesInfo)
 
@@ -177,7 +176,6 @@ function MPanel:Create()
 	-- Create the floating preview
 	MR.CL.Materials:SetPreview()
 	local _, floatingPreview = MR.CL.Panels:SetPreview(nil, "DPanel", floatingPreviewInfo)
-		MR.CL.Panels:SetPreviewVisibility(floatingPreview, false, false, false)
 		MPanel:SetFloatingPreviewSelf(floatingPreview)
 end
 

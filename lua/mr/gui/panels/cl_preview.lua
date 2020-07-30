@@ -65,6 +65,26 @@ function Panels:SetPreview(parent, frameType, info)
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)
 end
 
+-- Refresh the size and position of the preview image
+function Panels:RefreshPreviews()
+	local panels = Panels:Preview_GetImages()
+
+	if #panels then
+		for _,panel in pairs(panels) do
+			if panel.MRVisible then
+				local material = Material(MR.Materials:IsSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
+
+				local width, height = MR.Materials:ResizeInABox(panel:GetTall(), material:Width(), material:Height())
+				local x = (panel:GetTall() - width) / 2
+				local y = (panel:GetTall() - height) / 2
+
+				panel:SetSize(width, height)
+				panel:SetPos(x, y)
+			end
+		end
+	end
+end
+
 -- Set preview visibility
 -- Used to avoid unnecessary rendering by selecting which previews are visible on the player screens
 --   Initial visibility
@@ -95,26 +115,6 @@ function Panels:SetPreviewVisibility(frame, start, spawn, context)
 			hook.Add("OnContextMenuClose", "MRCloseContext" .. tostring(panel), function()
 				panel.MRVisible = not context
 			end)
-		end
-	end
-end
-
--- Refresh the size and position of the preview image
-function Panels:RefreshPreviews()
-	local panels = Panels:Preview_GetImages()
-
-	if #panels then
-		for _,panel in pairs(panels) do
-			if panel.MRVisible then
-				local material = Material(MR.Materials:IsSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
-
-				local width, height = MR.Materials:ResizeInABox(panel:GetTall(), material:Width(), material:Height())
-				local x = (panel:GetTall() - width) / 2
-				local y = (panel:GetTall() - height) / 2
-
-				panel:SetSize(width, height)
-				panel:SetPos(x, y)
-			end
 		end
 	end
 end

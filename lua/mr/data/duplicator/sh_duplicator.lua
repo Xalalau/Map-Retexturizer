@@ -45,7 +45,7 @@ end)
 function Duplicator:InitProcessedList(ply, forceIndex)
 	dup.processed.list[forceIndex or Duplicator:GetControlIndex(ply)] = table.Copy(dup.processed.default)
 
-	if SERVER then
+	if SERVER and ply and ply:IsPlayer() then
 		net.Start("Duplicator:InitProcessedList")
 			net.WriteInt(Duplicator:GetControlIndex(ply), 8)
 		net.Send(ply)
@@ -53,7 +53,7 @@ function Duplicator:InitProcessedList(ply, forceIndex)
 end
 
 function Duplicator:GetControlIndex(ply)
-	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1
+	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
 end
 
 -- Check if the duplicator is stopping
@@ -69,7 +69,7 @@ end
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
-	return dup.running[Duplicator:GetControlIndex(ply)]
+	return dup.running[Duplicator:GetControlIndex(ply)] or dup.running[Duplicator:GetControlIndex()]
 end
 
 function Duplicator:SetRunning(ply, value)

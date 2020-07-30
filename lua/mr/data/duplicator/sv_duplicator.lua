@@ -218,36 +218,31 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		local modelsTotal = savedTable.models and istable(savedTable.models) and MR.DataList:Count(savedTable.models) or 0
 		local total = decalsTotal + mapTotal + displacementsTotal + modelsTotal + skyboxTotal
 
+		-- For some reason there are no modifications to do, so finish it
+		if total == 0 then
+			Duplicator:Finish(ply)
+
+			return
+		end
+
 		-- Print server alert
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 			print("[Map Retexturizer] Loading started...")
 		end
 
 		-- Set the duplicator running state
-		if loadName then
-			net.Start("Duplicator:SetRunning")
-			net.WriteString(loadName)
+		net.Start("Duplicator:SetRunning")
+		net.WriteString(loadName)
+		if loadName ~= "currentMaterials" then
 			net.Broadcast()
-
-			MR.Duplicator:SetRunning(nil, loadName)
 		else
-			net.Start("Duplicator:SetRunning")
-			net.WriteString("Syncing...")
 			net.Send(ply)
-
-			MR.Duplicator:SetRunning(ply, "Syncing...")
 		end
+		MR.Duplicator:SetRunning(loadName == "currentMaterials" and ply, loadName)
 
 		-- Set the total modifications to do
 		MR.Duplicator:SetTotal(ply, total)
 		Duplicator:SetProgress(ply, nil, MR.Duplicator:GetTotal(ply))
-
-		-- For some reason there are no modifications to do, so finish it
-		if total == 0 then
-			Duplicator:Finish(ply)
-			
-			return
-		end
 
 		-- Apply model materials
 		if modelsTotal > 0 then
@@ -439,13 +434,12 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		-- Set "running" to nothing
 		net.Start("Duplicator:SetRunning")
 		net.WriteString("")
-		if MR.Duplicator:IsRunning() then
+		if MR.Duplicator:IsRunning() ~= "currentMaterials" then
 			net.Broadcast()
-			MR.Duplicator:SetRunning()
 		else
 			net.Send(ply)
-			MR.Duplicator:SetRunning(ply)
 		end
+		MR.Duplicator:SetRunning(loadName == "currentMaterials" and ply)
 
 		-- Print alert
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then

@@ -77,7 +77,7 @@ end
 function Ply:InitStatesList(ply, forceIndex)
 	MRPlayer.list[forceIndex or Ply:GetControlIndex(ply)] = table.Copy(MRPlayer.default)
 
-	if SERVER and ply ~= MR.SV.Ply:GetFakeHostPly() then
+	if SERVER and ply and ply:IsPlayer() then
 		net.Start("Ply:InitStatesList")
 			net.WriteInt(Ply:GetControlIndex(ply), 8)
 		net.Send(ply)
@@ -85,7 +85,7 @@ function Ply:InitStatesList(ply, forceIndex)
 end
 
 function Ply:GetControlIndex(ply)
-	local index = ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1
+	local index = ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
 
 	if not MRPlayer.list[index] then
 		index = 999

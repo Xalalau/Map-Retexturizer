@@ -18,8 +18,8 @@ util.AddNetworkString("Ply:SetUsingTheTool")
 
 -- Set the fake player
 function Ply:Init()
-    MR.Ply:InitStatesList(fakeHostPly) -- TODO: check if this line is still needed
-    MR.Duplicator:InitProcessedList(fakeHostPly)
+    MR.Ply:InitStatesList()
+    MR.Duplicator:InitProcessedList()
 end
 
 function Ply:GetFakeHostPly()

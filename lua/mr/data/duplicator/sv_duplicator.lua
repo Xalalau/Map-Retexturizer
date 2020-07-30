@@ -434,12 +434,12 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		-- Set "running" to nothing
 		net.Start("Duplicator:SetRunning")
 		net.WriteString("")
-		if MR.Duplicator:IsRunning() ~= "currentMaterials" then
+		if MR.Duplicator:IsRunning(ply) ~= "currentMaterials" then
 			net.Broadcast()
 		else
 			net.Send(ply)
 		end
-		MR.Duplicator:SetRunning(loadName == "currentMaterials" and ply)
+		MR.Duplicator:SetRunning(MR.Duplicator:IsRunning(ply) == "currentMaterials" and ply)
 
 		-- Print alert
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then

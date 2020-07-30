@@ -162,7 +162,7 @@ end
 
 -- Run a MR focus locked panel callback
 function Panels:RunMRDefocusCallback(panel)
-	if panel then
+	if panel and panel.MRDefocus then
 		return panel.MRDefocus.callback(panel.MRDefocus.arg1, panel.MRDefocus.arg2)
 	end
 

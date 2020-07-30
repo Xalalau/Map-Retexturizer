@@ -97,7 +97,7 @@ function Panels:SetElementFocused(value)
 end
 
 -- Panel focus locking controls
-hook.Add("VGUIMousePressed", "MRVGUIMousePressed", function(panel)
+hook.Add("VGUIMousePressed", "MRVGUIMousePressedPanelLocking", function(panel)
 	if panel then
 		-- Select the correct panel with its a DProperties panel
 		if panel:GetParent() then
@@ -110,24 +110,17 @@ hook.Add("VGUIMousePressed", "MRVGUIMousePressed", function(panel)
 			end
 		end
 
-		-- No menu selected
-		if panel:GetName() == "GModBase" then
-			if Panels:GetElementFocused() then
+		-- If it's a GetMRFocus() menu, lock the focus
+		if not Panels:GetElementFocused() then
+			if Panels:GetMRFocus(panel) then
+				Panels:SetElementFocused(panel)
+			end
+		-- For other menus, unlock the focus if it's locked
+		-- Note: wait a bit so we can apply any selected value
+		elseif not Panels:GetMRFocus(panel) then
+			timer.Create("MRWaitSetValue", 0.2, 1, function()
 				Panels:SetElementFocused(nil)
-			end
-		else
-			-- If it's a GetMRFocus() menu, lock the focus
-			if not Panels:GetElementFocused() then
-				if Panels:GetMRFocus(panel) then
-					Panels:SetElementFocused(panel)
-				end
-			-- For other menus, unlock the focus if it's locked
-			-- Note: wait a bit so we can apply any selected value
-			elseif not Panels:GetMRFocus(panel) then
-				timer.Create("MRWaitSetValue", 0.2, 1, function()
-					Panels:SetElementFocused(nil)
-				end)
-			end
+			end)
 		end
 	end
 end)

@@ -22,8 +22,8 @@ function Panels:Preview_GetImages()
 	return previewbox.previewImages
 end
 
-function Panels:Preview_SetImages(panel)
-	table.insert(previewbox.previewImages, panel)
+function Panels:Preview_SetImages(panel, size)
+	table.insert(previewbox.previewImages, { panel = panel, size = size })
 end
 
 -- Section: preview
@@ -57,7 +57,7 @@ function Panels:SetPreview(parent, frameType, info)
 		previewFrame:SetBackgroundColor(Color(255, 255, 255, 255))
 
 		local preview = vgui.Create("DImageButton", previewFrame)
-			Panels:Preview_SetImages(preview)
+			Panels:Preview_SetImages(preview, width)
 			preview:SetSize(previewInfo.width, previewInfo.height)
 			preview:SetPos(previewInfo.x, previewInfo.y)
 			preview:SetImage(MR.CL.Materials:GetPreviewName())
@@ -70,16 +70,16 @@ function Panels:RefreshPreviews()
 	local panels = Panels:Preview_GetImages()
 
 	if #panels then
-		for _,panel in pairs(panels) do
-			if panel.MRVisible then
+		for _,v in pairs(panels) do
+			if v.panel.MRVisible then
 				local material = Material(MR.Materials:IsSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
 
-				local width, height = MR.Materials:ResizeInABox(panel:GetTall(), material:Width(), material:Height())
-				local x = (panel:GetTall() - width) / 2
-				local y = (panel:GetTall() - height) / 2
+				local width, height = MR.Materials:ResizeInABox(v.size, material:Width(), material:Height())
+				local x = (v.size - width) / 2
+				local y = (v.size - height) / 2
 
-				panel:SetSize(width, height)
-				panel:SetPos(x, y)
+				v.panel:SetSize(width, height)
+				v.panel:SetPos(x, y)
 			end
 		end
 	end

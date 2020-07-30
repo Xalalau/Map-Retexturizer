@@ -97,8 +97,16 @@ function Panels:SetElementFocused(value)
 end
 
 -- Panel focus locking controls
+-- Set a custom focus lock so that the context menu does not close on its own
 hook.Add("VGUIMousePressed", "MRVGUIMousePressedPanelLocking", function(panel)
 	if panel then
+		-- Run any defocus callback
+		local oldPanel = Panels:GetElementFocused()
+
+		if oldPanel ~= panel then
+			Panels:RunMRDefocusCallback(oldPanel)
+		end
+
 		-- Select the correct panel with its a DProperties panel
 		if panel:GetParent() then
 			if string.find(panel:GetParent():GetName(), "DProperty_") then
@@ -125,15 +133,37 @@ hook.Add("VGUIMousePressed", "MRVGUIMousePressedPanelLocking", function(panel)
 	end
 end)
 
+-- Set a panel to lock our custom focus
 function Panels:SetMRFocus(panel)
 	if panel then
 		panel.MRFocus = true
 	end
 end
 
+-- Get if the panel has a custom focus lock
 function Panels:GetMRFocus(panel)
 	if panel then
-		return panel.MRFocus or false
+		return panel.MRFocus
+	end
+
+	return false
+end
+
+-- Set a function to run after a MR focus locked panel is unlocked
+function Panels:SetMRDefocusCallback(panel, callback, arg1, arg2)
+	if panel and callback then
+		panel.MRDefocus = {
+			callback = callback,
+			arg1 = arg1,
+			arg2 = arg2
+		}
+	end
+end
+
+-- Run a MR focus locked panel callback
+function Panels:RunMRDefocusCallback(panel)
+	if panel then
+		return panel.MRDefocus.callback(panel.MRDefocus.arg1, panel.MRDefocus.arg2)
 	end
 
 	return false

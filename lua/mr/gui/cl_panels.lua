@@ -110,14 +110,14 @@ hook.Add("VGUIMousePressed", "MRVGUIMousePressedPanelLocking", function(panel)
 			end
 		end
 
-		-- If it's a GetMRFocus() menu, lock the focus
+		-- If the MRFocus lock is down and it's a GetMRFocus() menu, lock it up
 		if not Panels:GetElementFocused() then
 			if Panels:GetMRFocus(panel) then
 				Panels:SetElementFocused(panel)
 			end
-		-- For other menus, unlock the focus if it's locked
-		-- Note: wait a bit so we can apply any selected value
+		-- If the MRFocus lock is up and it's not a GetMRFocus() menu, unlock it
 		elseif not Panels:GetMRFocus(panel) then
+			-- Note: wait a bit so we can apply any selected value
 			timer.Create("MRWaitSetValue", 0.2, 1, function()
 				Panels:SetElementFocused(nil)
 			end)

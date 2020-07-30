@@ -47,26 +47,30 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 	-- New material
 	--------------------------
 	local materialText = vgui.Create("DTextEntry", panel)
-		MR.CL.Panels:SetMRFocus(materialText)
-		materialText:SetSize(materialInfo.width, materialInfo.height)
-		materialText:SetPos(materialInfo.x, materialInfo.y)
-		materialText:SetConVar("internal_mr_new_material")
-		materialText:SetTooltip("New material")
-		materialText.OnEnter = function(self)
-			local input = self:GetText()
+		local function validateEntry(panel)
+			local input = panel:GetText()
 
-			MR.Materials:SetNew(LocalPlayer(), self:GetText())
+			MR.Materials:SetNew(LocalPlayer(), panel:GetText())
 			MR.Materials:SetOld(LocalPlayer(), "")
 
 			if input == "" or not MR.Materials:Validate(input) then
 				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
 				MR.Materials:SetOld(LocalPlayer(), "")
-				materialText:SetText(MR.Materials:GetMissing())
+				panel:SetText(MR.Materials:GetMissing())
 			end
 
 			timer.Create("MRWaitMaterialSetup", 0.05, 1, function()
 				MR.CL.Materials:SetPreview()
 			end)
+		end
+		MR.CL.Panels:SetMRFocus(materialText)
+		MR.CL.Panels:SetMRDefocusCallback(materialText, validateEntry, materialText)
+		materialText:SetSize(materialInfo.width, materialInfo.height)
+		materialText:SetPos(materialInfo.x, materialInfo.y)
+		materialText:SetConVar("internal_mr_new_material")
+		materialText:SetTooltip("New material")
+		materialText.OnEnter = function(self)
+			validateEntry(self)
 		end
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)

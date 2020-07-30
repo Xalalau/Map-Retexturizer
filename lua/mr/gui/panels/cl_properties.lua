@@ -64,7 +64,9 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 				materialText:SetText(MR.Materials:GetMissing())
 			end
 
-			MR.CL.Materials:SetPreview()
+			timer.Create("MRWaitMaterialSetup", 0.05, 1, function()
+				MR.CL.Materials:SetPreview()
+			end)
 		end
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)

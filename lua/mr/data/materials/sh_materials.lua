@@ -215,7 +215,7 @@ function Materials:FixCurrentPath(data)
 		if element and -- Found
 		   element.newMaterial ~= element.oldMaterial then -- if it's a material applied over itself we don't need to correct the name
 
-			data.newMaterial = modifiedNewMaterial.backup.newMaterial
+			data.newMaterial = element.backup.newMaterial
 
 			break
 		end

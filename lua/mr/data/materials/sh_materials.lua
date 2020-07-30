@@ -211,9 +211,10 @@ function Materials:FixCurrentPath(data)
 	}
 
 	for k,v in pairs(materialLists) do
-		local modifiedNewMaterial = MR.DataList:GetElement(v, data.newMaterial)
+		local element = MR.DataList:GetElement(v, data.newMaterial)
+		if element and -- Found
+		   element.newMaterial ~= element.oldMaterial then -- if it's a material applied over itself we don't need to correct the name
 
-		if modifiedNewMaterial then
 			data.newMaterial = modifiedNewMaterial.backup.newMaterial
 
 			break

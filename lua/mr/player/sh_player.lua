@@ -59,10 +59,18 @@ end
 
 -- Auto detect if the player is using the tool (Spawnmenu closed: has the player changed the tool?)
 if CLIENT then
-	hook.Add("OnSpawnMenuClose", "MRIsTheToolActive2", function() -- 
+	hook.Add("OnSpawnMenuClose", "MRIsTheToolActive2", function()
 		local ply = LocalPlayer()
+		local weapon = ply:GetActiveWeapon()
 
-		Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		Ply:ValidateTool(ply, weapon)
+
+		-- If the player switches the selected tool and closes the spawn menu too fast, we end validating the old weapon
+		-- To workaround it wait a bit longer and revalidate (0.7s was the minimium for me)
+		-- To make use of this, set a timer with at leat 0.1s of delay. I'll recommend 0.2s for safety.
+		timer.Create("MRWaitToolSwitch", 0.07, 1, function()
+			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		end)
 	end)
 end
 
@@ -156,7 +164,7 @@ end
 -- Check if a given weapon is the tool
 function Ply:ValidateTool(ply, weapon)
 	-- It's the tool gun, it's using this addon and  the player isn't just reselecting it
-	if IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
+	if weapon and IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
 		if not Ply:GetUsingTheTool(ply) then
 			-- Register that the player is using this addon 
 			Ply:SetUsingTheTool(ply, true)

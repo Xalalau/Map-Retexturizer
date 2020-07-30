@@ -28,7 +28,7 @@ local mpanel = {
 
 -- Networking
 net.Receive("CL.MPanel:RestartPreviewBox", function()
-	MR.CL.MPanel:RestartPreviewBox()
+	MPanel:RestartPreviewBox()
 end)
 
 net.Receive("CL.MPanel:ForceHide", function()
@@ -44,10 +44,12 @@ hook.Add("OnSpawnMenuOpen", "MRMPanelHandleSpawnMenuOpenned", function()
 end)
 
 hook.Add("OnSpawnMenuClose", "MRMPanelHandleSpawnMenuClosed", function()
-	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
+	timer.Create("MRPreviewRestartDelay", 0.2, 1, function() -- To make sure that we'll have time to validate the tool
+		if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Restart the preview
-	MPanel:RestartPreviewBox()
+		-- Restart the preview
+		MPanel:RestartPreviewBox()
+	end)
 end)
 
 hook.Add("OnContextMenuOpen", "MROpenMPanel", function()

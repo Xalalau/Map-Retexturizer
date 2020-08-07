@@ -132,17 +132,6 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	end
 
-	-- Validation for broadcasted materials
-	if CLIENT and (data.newMaterial or data.newMaterial2) and (isBroadcasted or MR.Ply:GetFirstSpawn(ply)) then
-		if data.newMaterial then
-			data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
-		end
-
-		if data.newMaterial2 then
-			data.newMaterial2 = MR.CL.Materials:ValidateBroadcasted(data.newMaterial2)
-		end
-	end
-
 	-- General first steps (part 1)
 	local check = {
 		material = data.newMaterial,
@@ -175,9 +164,6 @@ function Map:Set(ply, data, isBroadcasted)
 	if CLIENT or SERVER and not MR.Ply:GetFirstSpawn(ply) or SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
 		local element = MR.DataList:GetElement(selected.list, data.oldMaterial)
 		local i
-
-		-- Adjustments for an already modified newMaterial
-		MR.Materials:FixCurrentPath(data)
 
 		-- Set the backup:
 		-- If we are modifying an already modified material

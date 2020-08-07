@@ -17,7 +17,7 @@ net.Receive("CL.Duplicator:SetProgress", function()
 end)
 
 net.Receive("CL.Duplicator:FinishErrorProgress", function()
-	Duplicator:FinishErrorProgress()
+	Duplicator:FinishErrorProgress(net.ReadBool())
 end)
 
 net.Receive("CL.Duplicator:ForceStop", function()
@@ -33,11 +33,9 @@ end)
 
 -- Load materials from saves
 function Duplicator:CheckForErrors(material, isBroadcasted)
-	if MR.Materials:IsValid(material) == nil then
-		material = MR.CL.Materials:ValidateBroadcasted(material)
-	end
+	material = MR.CL.Materials:ValidateReceived(material)
 
-	if not MR.Materials:IsValid(material) and not MR.Materials:IsSkybox(material) then
+	if material == MR.Materials:GetMissing() then
 		Duplicator:SetErrorProgress(material, isBroadcasted)
 	end
 end
@@ -74,8 +72,13 @@ function Duplicator:SetErrorProgress(mat, isBroadcasted)
 	MR.Duplicator:InsertErrorsList(ply, mat)
 end
 
-function Duplicator:FinishErrorProgress()
+function Duplicator:FinishErrorProgress(isBroadcasted)
 	local ply = LocalPlayer()
+
+	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
+		return
+	end
 
 	-- If there are errors
 	if table.Count(MR.Duplicator:GetErrorsList(ply)) > 0 then

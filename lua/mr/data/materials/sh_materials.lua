@@ -203,7 +203,7 @@ end
 
 -- Get the full path from the backup material containing the current material texture
 --   If a meterial is modified we have to pick its correct texture from a backup
-function Materials:FixCurrentPath(data)
+function Materials:FixCurrentPath(material)
 	local materialLists = {
 		MR.Displacements:GetList(),
 		MR.Skybox:GetList(),
@@ -211,15 +211,15 @@ function Materials:FixCurrentPath(data)
 	}
 
 	for k,v in pairs(materialLists) do
-		local element = MR.DataList:GetElement(v, data.newMaterial)
+		local element = MR.DataList:GetElement(v, material)
 		if element and -- Found
 		   element.newMaterial ~= element.oldMaterial then -- if it's a material applied over itself we don't need to correct the name
 
-			data.newMaterial = element.backup.newMaterial
-
-			break
+			return element.backup.newMaterial
 		end
 	end
+
+	return material
 end
 
 -- Get the current data
@@ -390,9 +390,11 @@ end
 		limit = limit for the above list
 		type = the kind of the material
 	}
-	data = data table (will be stored for future application if needed)
+	data = data table
+		will be stored for future application if needed
+		data.newMaterial and data.newMaterial2 will be validated and can be modified
 ]]
-function Materials:SetFirstSteps(ply, isBroadcasted, check)
+function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 	-- Admin only and first spawn only
 	if SERVER then
 		if not MR.Ply:IsAdmin(ply) and not MR.Ply:GetFirstSpawn(ply) then
@@ -403,7 +405,11 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	-- Block an ongoing load for a player at his first spawn - he'll start it from the beggining
 	-- Block a new data applications for a player at his first spawn - register it to apply later
 	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
-		if SERVER and data and not MR.SV.Duplicator:IsRunning() then
+		if SERVER and
+		   data and
+		   not MR.Duplicator:IsRunning() and
+		   not MR.Duplicator:IsRunning(ply) then
+
 			MR.SV.Duplicator:InsertNewDupTable(ply, string.lower(check.type), data)
 		end
 
@@ -418,26 +424,26 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check)
 	end
 
 	if check then
-		-- Don't apply bad materials
+		-- Materials validation
 		if CLIENT then
-			if check.material and
-				not Materials:IsValid(check.material) and
-				not Materials:IsSkybox(check.material) and
-				not check.material == Materials:GetMissing() then
+			local function checkMaterial(material, field)
+				if material then
+					material = MR.CL.Materials:ValidateReceived(material)
 
-					print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
+					if material == Materials:GetMissing() then
+						print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
 
-				return false
+						return false
+					elseif data and data[field] and material ~= data[field] then
+						data[field] = material
+					end
+				end
+
+				return true
 			end
 
-			if check.material2 and
-				not Materials:IsValid(check.material2) and
-				not check.material == Materials:GetMissing() then
-
-					print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
-
-				return false
-			end
+			if not checkMaterial(check.material, "newMaterial") then return false; end
+			if not checkMaterial(check.material2, "newMaterial2") then return false; end
 		end
 
 		-- Don't modify bad entities

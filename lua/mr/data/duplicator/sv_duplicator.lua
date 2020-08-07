@@ -231,14 +231,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 
 		-- Set the duplicator running state
-		net.Start("Duplicator:SetRunning")
-		net.WriteString(loadName)
-		if loadName ~= "currentMaterials" then
-			net.Broadcast()
-		else
-			net.Send(ply)
-		end
-		MR.Duplicator:SetRunning(loadName == "currentMaterials" and ply, loadName)
+		MR.Duplicator:SetRunning(ply, loadName)
 
 		-- Set the total modifications to do
 		MR.Duplicator:SetTotal(ply, total)
@@ -420,9 +413,11 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			net.Start("CL.Duplicator:FinishErrorProgress")
 			-- all players
 			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+				net.WriteBool(true)
 				net.Broadcast()
 			-- the player
 			else
+				net.WriteBool(false)
 				net.Send(ply)
 			end
 		end)
@@ -431,15 +426,11 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		dup.models.delay = 0
 		dup.models.startTime = 0
 
+		-- Set the duplicator running state
+		MR.Duplicator:SetRunning(ply, loadName)
+
 		-- Set "running" to nothing
-		net.Start("Duplicator:SetRunning")
-		net.WriteString("")
-		if MR.Duplicator:IsRunning(ply) ~= "currentMaterials" then
-			net.Broadcast()
-		else
-			net.Send(ply)
-		end
-		MR.Duplicator:SetRunning(MR.Duplicator:IsRunning(ply) == "currentMaterials" and ply)
+		MR.Duplicator:SetRunning(ply)
 
 		-- Print alert
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
@@ -454,7 +445,6 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			for k,v in pairs(Duplicator:GetNewDupTable(ply)) do
 				if k ~= "savingFormat" and #v > 0 then
 					newElements = true
-
 					break
 				end
 			end

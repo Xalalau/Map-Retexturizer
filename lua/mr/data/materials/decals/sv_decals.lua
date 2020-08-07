@@ -16,21 +16,18 @@ end)
 
 -- Apply decal materials
 function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
+	-- Get the basic properties
+	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
+
 	-- General first steps
 	local check = {
-		material = duplicatorData and duplicatorData.newMaterial or MR.Materials:GetSelected(ply),
+		material = data.newMaterial,
 		type = "Decals"
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data) then
 		return false
 	end
-
-	-- Get the basic properties
-	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
-
-	-- Adjustments for an already modified newMaterial
-	MR.Materials:FixCurrentPath(data)
 
 	-- Save the data
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then

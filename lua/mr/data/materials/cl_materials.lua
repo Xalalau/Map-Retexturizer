@@ -33,7 +33,9 @@ end
 
 -- Set a broadcasted material as (in)valid
 -- Returns the material path if it's valid or a custom missing texture if it's invalid
-function Materials:ValidateBroadcasted(material)
+function Materials:ValidateReceived(material)
+	material = MR.Materials:FixCurrentPath(material)
+
 	if MR.Materials:IsValid(material) == nil then
 		MR.Materials:Validate(material)
 	end
@@ -79,7 +81,7 @@ function Materials:SetPreview(newData, isDecal)
 
 	-- Update the material if necessary
 	if not MR.Data:IsEqual(oldData, newData) then
-		MR.Materials:FixCurrentPath(newData)
+		newData.newMaterial = MR.Materials:FixCurrentPath(newData.newMaterial)
 		Materials:SetPreviewMaterial(newData.newMaterial)
 		MR.CL.Panels:RefreshPreviews()
 		MR.CL.Map:Set(newData)

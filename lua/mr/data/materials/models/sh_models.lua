@@ -201,11 +201,6 @@ end
 
 -- Set model material
 function Models:Set(ply, data, isBroadcasted)
-	-- Validation for broadcasted materials
-	if CLIENT and isBroadcasted then
-		data.newMaterial = MR.CL.Materials:ValidateBroadcasted(data.newMaterial)
-	end
-
 	-- General first steps
 	local check = {
 		material = data.newMaterial,
@@ -236,9 +231,6 @@ function Models:Set(ply, data, isBroadcasted)
 			-- Set the duplicator
 			duplicator.StoreEntityModifier(data.ent, "MapRetexturizer_Models", data)
 		end
-
-		-- Adjustments for an already modified newMaterial
-		MR.Materials:FixCurrentPath(data)
 
 		-- Create the new material
 		data.newMaterial = Models:Create(data)

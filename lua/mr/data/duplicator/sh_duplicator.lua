@@ -33,7 +33,7 @@ local dup = {
 
 -- Networking
 net.Receive("Duplicator:SetRunning", function(_, ply)
-	Duplicator:SetRunning(ply or LocalPlayer(), net.ReadString())
+	Duplicator:SetRunning(ply or LocalPlayer(), net.ReadString(), net.ReadBool())
 end)
 
 net.Receive("Duplicator:InitProcessedList", function()
@@ -72,7 +72,24 @@ function Duplicator:IsRunning(ply)
 	return dup.running[Duplicator:GetControlIndex(ply)] or dup.running[Duplicator:GetControlIndex()]
 end
 
-function Duplicator:SetRunning(ply, value)
+function Duplicator:SetRunning(ply, value, isBroadcasted)
+	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
+	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
+		return
+	end
+
+	if SERVER then
+		net.Start("Duplicator:SetRunning")
+		net.WriteString(value or "")
+		if IsEntity(ply) and ply:IsPlayer() then -- Only fully individual loads are managed by players
+			net.WriteBool(false)
+			net.Send(ply)
+		else
+			net.WriteBool(true)
+			net.Broadcast()
+		end
+	end
+
 	dup.running[Duplicator:GetControlIndex(ply)] = value ~= "" and value
 end
 

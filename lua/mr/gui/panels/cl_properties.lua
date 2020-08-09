@@ -51,12 +51,16 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 			local input = panel:GetText()
 
 			MR.Materials:SetNew(LocalPlayer(), panel:GetText())
-			MR.Materials:SetOld(LocalPlayer(), "")
+			--MR.Materials:SetOld(LocalPlayer(), "")
+
+			-- I was restarting the fields if a wrong information was entered, but it's better to
+			-- leave them until the player fixes the material name on his own. So if the menu is
+			-- closed and the material is still invalid, it changes to our missing material.
 
 			if input == "" or not MR.Materials:Validate(input) then
 				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
-				MR.Materials:SetOld(LocalPlayer(), "")
-				panel:SetText(MR.Materials:GetMissing())
+				--MR.Materials:SetOld(LocalPlayer(), "")
+				--panel:SetText(MR.Materials:GetMissing())
 			end
 
 			timer.Create("MRWaitMaterialSetup", 0.05, 1, function()

@@ -210,7 +210,14 @@ function MPanel:Hide()
 	if not IsValid(MPanel:GetSelf()) then return; end
 
 	MPanel:GetSelf():Hide()
-	MPanel:GetFloatingPreviewSelf():Show()
+
+	if MPanel:GetFloatingPreviewSelf() then
+		if MR.Ply:GetUsingTheTool(LocalPlayer()) then
+			MPanel:GetFloatingPreviewSelf():Show()
+		else
+			MPanel:GetFloatingPreviewSelf():Hide()
+		end
+	end
 end
 
 -- Test the menus. Uncomment and save while the game is running

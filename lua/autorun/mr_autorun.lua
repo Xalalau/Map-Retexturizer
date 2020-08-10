@@ -98,12 +98,12 @@ end
 -- Initialization
 MR.Base:Init()
 MR.Skybox:Init()
+MR.Materials:Init()
 
 if SERVER then
 	MR.SV.Displacements:Init()
 	MR.SV.Ply:Init()
 	MR.SV.Load:Init()
 else
-	MR.Materials:Init()
 	MR.CL.Save:Init()
 end

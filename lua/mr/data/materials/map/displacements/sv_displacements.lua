@@ -28,42 +28,57 @@ end)
 
 -- Generate map displacements list
 function Displacements:Init()
-	local map_data = MR.OpenBSP()
+	-- Check if it exists
+	local dispFile = MR.Base:GetDetectedDisplacementsFile()
 
-	print("[Map Retexturizer] Building displacements list...")
+	if file.Exists(dispFile, "Data") then
+		print("[Map Retexturizer] Loading displacements list...")
 
-	local faces = map_data:ReadLumpFaces()
-	local texInfo = map_data:ReadLumpTexInfo()
-	local texData = map_data:ReadLumpTexData()
-	local texDataTranslated = map_data:GetTranslatedTextDataStringTable()
+		for k,v in pairs(util.JSONToTable(file.Read(dispFile, "Data"))) do
+			MR.Displacements:SetDetected(v)
+		end
+	else
+		print("[Map Retexturizer] Building displacements list for the first time...")
 
-	local displacements = {
-		faces = {},
-		materials = {}
-	}
+		local map_data = MR.OpenBSP()
+		local faces = map_data:ReadLumpFaces()
+		local texInfo = map_data:ReadLumpTexInfo()
+		local texData = map_data:ReadLumpTexData()
+		local texDataTranslated = map_data:GetTranslatedTextDataStringTable()
 
-	-- Search for displacements
-	for k,v in pairs(faces) do
-		-- dispinfos 65535 are normal faces
-		if v.dispinfo ~= 65535 then
-			-- Store the related texinfo index incremented by 1 because Lua tables start with 1
-			if not displacements.faces[v.texinfo + 1] then
-				displacements.faces[v.texinfo + 1] = true
+		local displacements = {
+			faces = {},
+			materials = {}
+		}
+
+		-- Search for displacements
+		for k,v in pairs(faces) do
+			-- dispinfos 65535 are normal faces
+			if v.dispinfo ~= 65535 then
+				-- Store the related texinfo index incremented by 1 because Lua tables start with 1
+				if not displacements.faces[v.texinfo + 1] then
+					displacements.faces[v.texinfo + 1] = true
+				end
 			end
 		end
-	end
 
-	-- For each displacement found...
-	for k,v in pairs(displacements.faces) do
-		-- Get the material name from the texdata inside the texinfo
-		local material = texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1] -- More increments to adjust C tables to Lua
+		-- For each displacement found...
+		for k,v in pairs(displacements.faces) do
+			-- Get the material name from the texdata inside the texinfo
+			local material = texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1] -- More increments to adjust C tables to Lua
 
-		-- Register the material once and initialize it in the tool
-		if not displacements.materials[material] then
-			displacements.materials[material] = true
+			-- Register the material once and initialize it in the tool
+			if not displacements.materials[material] then
+				displacements.materials[material] = material:sub(1, #material - 1)
 
-			MR.Displacements:SetDetected(material:sub(1, #material - 1)) -- Important: remove the last char
+				MR.Displacements:SetDetected(displacements.materials[material]) -- Important: remove the last char
+			end
 		end
+
+		-- Save the list
+		print("[Map Retexturizer] Displacements list saved.")
+
+		file.Write(dispFile, util.TableToJSON(displacements.materials, true))
 	end
 end
 

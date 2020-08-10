@@ -17,6 +17,12 @@ local base = {
 		save = {
 			-- Save files main folder
 			folder = game.GetMap().."/",
+			-- Detected stuff
+			detected = {
+				folder = "detected/",
+				file1 = "details.txt",
+				file2 = "displacements.txt"
+			},
 			-- Save default name
 			defaultName = game.GetMap().."_save",
 			-- Backup folder for save files with older formats
@@ -44,6 +50,9 @@ local base = {
 function Base:Init()
 	-- Set paths
 	base.data.save.folder = base.data.folder..base.data.save.folder
+	base.data.save.detected.folder = base.data.save.folder..base.data.save.detected.folder
+	base.data.save.detected.file1 = base.data.save.detected.folder..base.data.save.detected.file1
+	base.data.save.detected.file2 = base.data.save.detected.folder..base.data.save.detected.file2
 	base.data.save.converted.folder = base.data.save.folder..base.data.save.converted.folder
 	base.data.save.auto.load.folder = base.data.save.folder..base.data.save.auto.load.folder
 	base.data.save.auto.save.file = base.data.save.folder..base.data.save.auto.save.file
@@ -58,6 +67,7 @@ function Base:Init()
 		end
 
 		CreateDir(base.data.folder)
+		CreateDir(base.data.save.detected.folder)
 		CreateDir(base.data.save.folder)
 		CreateDir(base.data.save.converted.folder)
 		CreateDir(base.data.save.auto.load.folder)
@@ -70,6 +80,18 @@ end
 
 function Base:GetMaterialsFolder()
 	return base.materials.folder
+end
+
+function Base:GetDetectedFolder()
+	return base.data.save.detected.folder
+end
+
+function Base:GetDetectedDetailsFile()
+	return base.data.save.detected.file1
+end
+
+function Base:GetDetectedDisplacementsFile()
+	return base.data.save.detected.file2
 end
 
 function Base:GetSaveFolder()

@@ -41,10 +41,19 @@ function Materials:Init()
 		Materials:GetDetailList()["Plaster"] = MR.CL.Materials:Create("detail/plaster_detail_01")
 		Materials:GetDetailList()["Rock"] = MR.CL.Materials:Create("detail/rock_detail_01")
 	elseif SERVER then
-		Materials:GetDetailList()["Concrete"] = "detail/noise_detail_01"
-		Materials:GetDetailList()["Metal"] = "detail/metal_detail_01"
-		Materials:GetDetailList()["Plaster"] = "detail/plaster_detail_01"
-		Materials:GetDetailList()["Rock"] = "detail/rock_detail_01"
+		Materials:GetDetailList()["Concrete"] = Material("detail/noise_detail_01")
+		Materials:GetDetailList()["Metal"] = Material("detail/metal_detail_01")
+		Materials:GetDetailList()["Plaster"] = Material("detail/plaster_detail_01")
+		Materials:GetDetailList()["Rock"] = Material("detail/rock_detail_01")
+
+		-- Serverside details list
+		if file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") then
+			print("[Map Retexturizer] Loading details list...")
+
+			for k,v in pairs(util.JSONToTable(file.Read(MR.Base:GetDetectedDetailsFile(), "Data"))) do
+				MR.SV.Materials:SetDetailFix(k, v)
+			end
+		end
 	end
 end
 

@@ -51,6 +51,17 @@ function Materials:SetDetailFixList(detailFixList)
 	for k,v in pairs(detailFixList) do
 		Materials:SetDetailFix(k, v)
 	end
+
+	if timer.Exists("MRSaveDetailsList") then
+		timer.Destroy("MRSaveDetailsList")
+	end
+
+	-- Save the details list in a file
+	timer.Create("MRSaveDetailsList", 1, 1, function()
+		print("[Map Retexturizer] Details list saved.")
+
+		file.Write(MR.Base:GetDetectedDetailsFile(), util.TableToJSON(Materials:GetDetailFixList(), true))
+	end)
 end
 
 -- Change all the materials to a single one

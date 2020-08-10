@@ -135,7 +135,7 @@ function Load:FirstSpawn(ply)
 	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
 	-- Initialize server materials detail list
-	if not MR.SV.Materials:GetDetailFix("Initialized") then
+	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
 		MR.SV.Materials:SetDetailFix("Initialized", 1)
 
 		net.Start("CL.Materials:SetDetailFixList")

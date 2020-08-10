@@ -179,6 +179,7 @@ function MPanel:Create()
 	MR.CL.Materials:SetPreview()
 	local _, floatingPreview = MR.CL.Panels:SetPreview(nil, "DPanel", floatingPreviewInfo)
 		MPanel:SetFloatingPreviewSelf(floatingPreview)
+		floatingPreview:Hide()
 end
 
 -- Show the preview box

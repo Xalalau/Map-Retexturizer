@@ -32,12 +32,12 @@ end
 
 function Displacements:InsertDetected(displacement)
 	MR.Displacements:SetDetected(displacement)
-	MR.CL.CPanel:InsertInDisplacementsCombo(displacement)
+	MR.CL.Panels:InsertInDisplacementsCombo(displacement)
 end
 
 function Displacements:RemoveDetected(displacement, list)
 	MR.Displacements:SetDetected(displacement, true)
-	MR.CL.CPanel:RecreateDisplacementsCombo(list)
+	MR.CL.Panels:RecreateDisplacementsCombo(list)
 end
 
 function Displacements:InitHack()

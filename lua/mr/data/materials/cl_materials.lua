@@ -40,8 +40,6 @@ function Materials:SetDetailFixList()
 	local delay = 0
 	local delayIncrement = 0.04
 
-	print("[Map Retexturizer] Building details list for the first time...")
-
 	-- Get all the faces
 	for k,v in pairs(faces) do
 		-- Store the related texinfo index incremented by 1 because Lua tables start with 1

@@ -136,6 +136,8 @@ function Load:FirstSpawn(ply)
 
 	-- Initialize server materials detail list
 	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
+		print("[Map Retexturizer] Building details list for the first time...")
+
 		MR.SV.Materials:SetDetailFix("Initialized", 1)
 
 		net.Start("CL.Materials:SetDetailFixList")

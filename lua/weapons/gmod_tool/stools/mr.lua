@@ -291,7 +291,7 @@ function TOOL:RightClick(tr)
 		-- Set the cvars to the copied values
 		MR.SV.CVars:SetPropertiesToData(ply, oldData)
 
-		timer.Create("MRWaitToSetNewMaterial", "0.2", 1, function()
+		timer.Simple(0.2, function()
 			-- Set the preview
 			net.Start("CL.Materials:SetPreview")
 			net.Send(ply)
@@ -358,7 +358,7 @@ function TOOL.BuildCPanel(CPanel)
 		elseif CPanel:GetWide() > 128 then
 			MR.CL.CPanel:Create(CPanel)
 		else
-			timer.Create("MRWaitForMenuData", 0.15, 1, function()
+			timer.Simple(0.15, function()
 				retrying = retrying + 1
 				WhenCPanelGetsReady()
 			end)

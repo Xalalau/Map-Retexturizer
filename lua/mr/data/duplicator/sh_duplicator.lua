@@ -137,7 +137,7 @@ local function RecreateTable(ply, ent, savedTable)
 			recreateTableSaveFormat = savedTable.savingFormat
 			
 			-- Auto disable it
-			timer.Create("MRRemoveSavedFormatVersion", 0.2, 1, function()
+			timer.Simple(0.2, function()
 				recreateTableSaveFormat = nil
 			end)
 		end
@@ -146,7 +146,7 @@ local function RecreateTable(ply, ent, savedTable)
 		dup.recreateTimerIncrement = dup.recreateTimerIncrement + 1
 
 		-- Start with the saving format, then send the rest
-		timer.Create("MRSendFormatFirst"..tostring(dup.recreateTimerIncrement), savedTable.savingFormat and 0 or 0.01, 1, function()
+		timer.Simple(savedTable.savingFormat and 0 or 0.01, function()
 			-- Remove some disabled elements (because duplicator allways gets these tables full of trash)
 			MR.DataList:Clean(savedTable.map or savedTable.displacements or nil)
 

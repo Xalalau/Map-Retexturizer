@@ -100,7 +100,7 @@ function Panels:SetSkybox(parent, frameType, info)
 			local value = MR.Sync:Get("skybox", "text"):GetValue()
 
 			-- This field doesn't have problems with a sync loop, so disable the block
-			timer.Create("MRDisableSyncLoolBlock", 0.3, 1, function()
+			timer.Simple(0.3, function()
 				MR.CL.Sync:SetLoopBlock(false)
 			end)
 

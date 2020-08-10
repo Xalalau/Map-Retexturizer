@@ -74,7 +74,7 @@ function Displacements:Set(applyProperties)
 	if newMaterial == "" then
 		newMaterial = MR.Displacements:GetDetected()[displacement][1]
 
-		timer.Create("MRText1Update", 0.5, 1, function()
+		timer.Simple(0.5, function()
 			MR.CL.ExposedPanels:Get("displacements", "text1"):SetValue(newMaterial)
 		end)
 	end
@@ -83,7 +83,7 @@ function Displacements:Set(applyProperties)
 	if newMaterial2 == "" then
 		newMaterial2 = MR.Displacements:GetDetected()[displacement][2]
 
-		timer.Create("MRText2Update", 0.5, 1, function()
+		timer.Simple(0.5, function()
 			MR.CL.ExposedPanels:Get("displacements", "text2"):SetValue(newMaterial2)
 		end)
 	end

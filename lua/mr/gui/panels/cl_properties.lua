@@ -63,7 +63,7 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 				--panel:SetText(MR.Materials:GetMissing())
 			end
 
-			timer.Create("MRWaitMaterialSetup", 0.05, 1, function()
+			timer.Simple(0.05, function()
 				MR.CL.Materials:SetPreview()
 			end)
 		end
@@ -146,15 +146,13 @@ function Panels:SetProperties(parent, frameType, info)
 			local function setValueFromText(command, value)
 				setValue(command, value)
 
-				timer.Create("MRWaitSlider", 0.03, 1, function()
+				timer.Simple(0.03, function()
 					setValue(command, value)
 				end)
 			end
 
 			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
-				timer.Create("MRWaitWM", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(witdhMagnification.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(witdhMagnification.Inner)
 				witdhMagnification:Setup("Float", { min = 0.01, max = 6 })
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
@@ -165,9 +163,7 @@ function Panels:SetProperties(parent, frameType, info)
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
-				timer.Create("MRWaitHM", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(heightMagnification.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(heightMagnification.Inner)
 				heightMagnification:Setup("Float", { min = 0.01, max = 6 })
 				heightMagnification:SetValue(GetConVar("internal_mr_scaley"):GetFloat())
 				heightMagnification.DataChanged = function(self, data)
@@ -179,9 +175,7 @@ function Panels:SetProperties(parent, frameType, info)
 				end
 
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
-				timer.Create("MRWaitHT", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(horizontalTranslation.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(horizontalTranslation.Inner)
 				horizontalTranslation:Setup("Float", { min = -1, max = 1 })
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
@@ -193,9 +187,7 @@ function Panels:SetProperties(parent, frameType, info)
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
-				timer.Create("MRWaitVT", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(verticalTranslation.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(verticalTranslation.Inner)
 				verticalTranslation:Setup("Float", { min = -1, max = 1 })
 				verticalTranslation:SetValue(GetConVar("internal_mr_offsety"):GetFloat())
 				verticalTranslation.DataChanged = function(self, data)
@@ -207,9 +199,7 @@ function Panels:SetProperties(parent, frameType, info)
 				end
 
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
-				timer.Create("MRWaitRotation", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(rotation.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(rotation.Inner)
 				rotation:Setup("Float", { min = -180, max = 180 })
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
@@ -221,9 +211,7 @@ function Panels:SetProperties(parent, frameType, info)
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
-				timer.Create("MRWaitDetails", 0.03, 1, function()
-					MR.CL.Panels:SetMRFocus(details.Inner)
-				end)
+				MR.CL.Panels:SetMRFocus(details.Inner)
 				details:Setup("Combo", { text = GetConVar("internal_mr_detail"):GetString() })
 				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 					details:AddChoice(k, { k, v })
@@ -250,12 +238,12 @@ function Panels:SetProperties(parent, frameType, info)
 			if not isRightClick then
 				MR.CL.CVars:SetPropertiesToDefaults(LocalPlayer())
 			end
-			timer.Create("MRWaitForPropertiesDeleteion", 0.01, 1, function()
+			timer.Simple(0.01, function()
 				local propertiesPanel = SetProperties(panel, propertiesPanelInfo)
 				propertiesPanel.DoReset = resetButton.DoClick
 				MR.CL.ExposedPanels:Set(propertiesPanel, "properties", "self")
 				alphaBar:SetValue(1)
-				timer.Create("MRWaitForPropertiesRecreation", 0.01, 1, function()
+				timer.Simple(0.01, function()
 					MR.CL.Materials:SetPreview()
 					resetButton:MoveToFront()
 				end)

@@ -113,7 +113,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		end
 
 		-- Set a timer with a different delay for each entity  (and faster than the other duplicator calls)
-		timer.Create("MRDuplicatorWaiting1"..tostring(dup.models.delay)..tostring(ply), dup.models.delay, 1, function()
+		timer.Simple(dup.models.delay, function()
 			-- Store the changed model
 			table.insert(dup.recreatedTable.models, savedTable)
 
@@ -152,7 +152,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	end
 
 	-- Call our duplicator
-	timer.Create("MRDuplicatorWaiting2"..tostring(notModelDelay)..tostring(ply), notModelDelay, 1, function()
+	timer.Simple(notModelDelay, function()
 		if not dup.recreatedTable.initialized then
 			dup.recreatedTable.initialized = true
 			Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "noMrLoadFile")
@@ -178,7 +178,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		-- Copy and clean our GMod duplicator reconstructed table
 		savedTable = table.Copy(dup.recreatedTable)
 
-		timer.Create("MRDuplicatorCleanRecTable", 0.6, 1, function()
+		timer.Simple(0.6, function()
 			table.Empty(dup.recreatedTable)
 			dup.recreatedTable.models = {}
 		end)
@@ -209,7 +209,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
-	timer.Create("MRDuplicatorStart", 0.5, 1, function()
+	timer.Simple(0.5, function()
 		-- Get the total modifications to do
 		local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
 		local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0
@@ -313,9 +313,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	if not savedTable[position] or MR.Duplicator:IsStopping() then
 		-- Next material
 		if not MR.Duplicator:IsStopping() and position < #savedTable then
-			timer.Create("MRDuplicatorDelay"..section..tostring(ply), 0, 1, function()
-				Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
-			end)
+			Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
 		-- There are no more entries
 		else
 			Duplicator:Finish(ply)
@@ -369,7 +367,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	end
 
 	-- Next material
-	timer.Create("MRDuplicatorDelay"..section..tostring(ply), GetConVar("internal_mr_delay"):GetFloat(), 1, function()
+	timer.Simple(GetConVar("internal_mr_delay"):GetFloat(), function()
 		Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
 	end)
 end
@@ -379,7 +377,7 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	if MR.Duplicator:IsRunning() or isGModLoadStarting then
 		MR.Duplicator:SetStopping(true)
 
-		timer.Create("MRDuplicatorForceStop", 0.25, 1, function()
+		timer.Simple(0.25, function()
 			MR.Duplicator:SetStopping(false)
 		end)
 
@@ -403,7 +401,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			MR.Base:SetInitialized()
 		end
 
-		timer.Create("MRDuplicatorFinish"..tostring(ply), 0.4, 1, function()
+		timer.Simple(0.4, function()
 			-- Reset the progress bar
 			MR.Duplicator:SetTotal(ply, 0)
 			MR.Duplicator:SetCurrent(ply, 0)

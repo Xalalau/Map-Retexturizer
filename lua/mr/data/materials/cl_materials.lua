@@ -71,7 +71,7 @@ function Materials:SetDetailFixList()
 
 	-- Send the detail chunks to the server
 	for _,currentChunk in pairs(list.materials) do
-		timer.Create("MRDetailChunks" .. tostring(delay), delay, 1, function()
+		timer.Simple(delay, function()
 			net.Start("SV.Materials:SetDetailFixList")
 				net.WriteTable(currentChunk)
 			net.SendToServer()

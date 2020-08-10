@@ -68,7 +68,7 @@ if CLIENT then
 		-- If the player switches the selected tool and closes the spawn menu too fast, we end validating the old weapon
 		-- To workaround it wait a bit longer and revalidate (0.7s was the minimium for me)
 		-- To make use of this, set a timer with at leat 0.1s of delay. I'll recommend 0.2s for safety.
-		timer.Create("MRWaitToolSwitch", 0.07, 1, function()
+		timer.Simple(0.07, function()
 			Ply:ValidateTool(ply, ply:GetActiveWeapon())
 		end)
 	end)
@@ -196,7 +196,7 @@ function Ply:ValidateTool(ply, weapon)
 		-- It's a tool gun but the mode is empty. this occurs when
 		-- the player (re)spawns and to ensure success I'll revalidate
 		if SERVER and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
-			timer.Create("MRRevalidateTool", 0.05, 1, function()
+			timer.Simple(0.05, function()
 				Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
 			end)
 

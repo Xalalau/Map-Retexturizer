@@ -44,7 +44,7 @@ hook.Add("OnSpawnMenuOpen", "MRMPanelHandleSpawnMenuOpenned", function()
 end)
 
 hook.Add("OnSpawnMenuClose", "MRMPanelHandleSpawnMenuClosed", function()
-	timer.Create("MRPreviewRestartDelay", 0.2, 1, function() -- To make sure that we'll have time to validate the tool
+	timer.Simple(0.2, function() -- To make sure that we'll have time to validate the tool
 		if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 		-- Restart the preview

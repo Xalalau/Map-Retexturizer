@@ -61,7 +61,7 @@ local skybox = {
 }
 
 function Skybox:Init()
-	timer.Create("MRWaitToGetSkyName", 2, 1, function()
+	timer.Simple(2, function()
 		-- Get the sky name
 		skybox.name = "skybox/"..GetConVar("sv_skyname"):GetString() --Doing this quickly above has returned me the default sky name instead of the current one
 		-- Check if it's a painted one

@@ -191,7 +191,7 @@ function Panels:SetLoad(parent, frameType, info)
 		if GetConVar("internal_mr_autoload"):GetString() == "" then
 			autoLoadReset:Hide()
 		else
-			timer.Create("MRAutoLoadResetWaitToGoToFront", 0.01, 1, function()
+			timer.Simple(0.01, function()
 				autoLoadReset:MoveToFront()
 			end)
 		end

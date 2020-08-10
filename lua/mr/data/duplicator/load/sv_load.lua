@@ -35,7 +35,7 @@ hook.Add("PlayerInitialSpawn", "MRPlyfirstSpawn", function(ply)
 	hook.Add("SetupMove", ply, function(self, ply, _, cmd)
 		if self == ply and not cmd:IsForced() then
 			-- Wait just a bit more for players with weaker hardware
-			timer.Create("MRFirstSpawnApplyDelay"..tostring(ply), 1, 1, function()
+			timer.Simple(1, function()
 				Load:FirstSpawn(ply);
 			end)
 
@@ -214,7 +214,7 @@ function Load:SetAuto(ply, loadName)
 	-- Apply the value to every client
 	MR.SV.Sync:Replicate(ply, "internal_mr_autoload", loadName, "load", "autoloadtext")
 
-	timer.Create("MRWaitToSave", 0.3, 1, function()
+	timer.Simple(0.3, function()
 		file.Write(MR.Base:GetAutoLoadFile(), GetConVar("internal_mr_autoload"):GetString())
 	end)
 

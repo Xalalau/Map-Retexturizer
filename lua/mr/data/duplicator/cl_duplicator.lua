@@ -164,7 +164,7 @@ end
 function Duplicator:ForceStop()
 	MR.Duplicator:SetStopping(true)
 
-	timer.Create("MRDuplicatorForceStop", 0.25, 1, function()
+	timer.Simple(0.25, function()
 		MR.Duplicator:SetStopping(false)
 	end)
 end

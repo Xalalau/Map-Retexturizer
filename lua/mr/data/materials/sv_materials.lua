@@ -87,7 +87,7 @@ function Materials:SetAll(ply)
 	-- Clean the map
 	Materials:RemoveAll(ply, true)
 
-	timer.Create("MRChangeAllDelay"..tostring(math.random(999))..tostring(ply), not MR.Ply:GetFirstSpawn(ply) and  MR.SV.Duplicator:ForceStop() and 0.15 or 0, 1, function() -- Wait for the map cleanup
+	timer.Simple(not MR.Ply:GetFirstSpawn(ply) and MR.SV.Duplicator:ForceStop() and 0.15 or 0, function() -- Wait for the map cleanup
 		-- Create a fake save table
 		local newTable = {
 			map = {},

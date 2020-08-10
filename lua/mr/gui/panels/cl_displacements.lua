@@ -211,7 +211,7 @@ end
 -- Reset the displacements combobox material and its text fields
 function Panels:ResetDisplacementsComboValue()
 	-- Wait the cleanup
-	timer.Create("MRWaitCleanupDispCombo", 0.3, 1, function()
+	timer.Simple(0.3,  function()
 		if MR.CL.ExposedPanels:Get("displacements", "combo") ~= "" and MR.CL.ExposedPanels:Get("displacements", "combo"):GetSelectedID() then
 			MR.CL.ExposedPanels:Get("displacements", "combo"):ChooseOptionID(MR.CL.ExposedPanels:Get("displacements", "combo"):GetSelectedID())
 		end

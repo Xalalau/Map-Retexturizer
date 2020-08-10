@@ -191,7 +191,7 @@ function Browser:Create()
 			sendButton.DoClick = function()
 				MR.Materials:SetNew(LocalPlayer(), selectedMaterial:GetText())
 				MR.Materials:SetOld(LocalPlayer(), "")
-				timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+				timer.Simple(0.03, function()
 					MR.CL.Materials:SetPreview()
 				end)
 			end
@@ -214,7 +214,7 @@ function Browser:Create()
 				scroll:Remove()
 				treeList:Remove()
 
-				timer.Create("MRWaitDeletionReload", 0.1, 1, function()
+				timer.Simple(0.1, function()
 					scroll = Browser:Create_IconsPanel(scrollPanelInfo)
 					treeList = Browser:Create_DTreePanel(treeListInfo)
 
@@ -353,7 +353,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							pressed = 108
 							MR.Materials:SetNew(LocalPlayer(), arq)
 							MR.Materials:SetOld(LocalPlayer(), "")
-							timer.Create("MRWaitForMaterialToChange", 0.03, 1, function()
+							timer.Simple(0.03, function()
 								MR.CL.Materials:SetPreview()
 							end)
 							Browser:ParseDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorMiddle())
@@ -449,7 +449,7 @@ function Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, 
 					copiedMsg:SetText(message)
 					copiedMsg:SetColor(Color(0, 0, 0, 255))
 					
-					timer.Create(tostring(pressed)..arq, 0.7, 1, function()
+					timer.Simple(0.7, function()
 						iconOverlay:Hide()
 						copiedMsg:Remove()
 						copiedMsgBackground:Remove()
@@ -488,7 +488,7 @@ function Browser:ParseDir_CreateResetIconsPanel(Scroll, setOnly, n, dir, fdir, e
 	end
 
 	-- Restart the scroll after some time
-	timer.Create("MRWaitScrollRebuild", 0.12, 1, function()
+	timer.Simple(0.12, function()
 		Scroll:Rebuild()
 	end)
 end

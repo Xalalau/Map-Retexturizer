@@ -34,7 +34,7 @@ function Displacements:SetDetected(value, remove, retrying)
 			retrying = not retrying and 1 or retrying + 1
 			if retrying > 9 then return; end
 
-			timer.Create("MRRetryAddDisplacement"..value, 0.5, 1, function()
+			timer.Simple(0.5, function()
 				Displacements:SetDetected(value, false, retrying)
 			end)
 		else

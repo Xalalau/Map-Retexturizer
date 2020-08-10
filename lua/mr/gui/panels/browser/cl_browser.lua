@@ -249,11 +249,11 @@ function Browser:Create_IconsPanel(scrollPanelInfo)
 		Scroll:SetSize(scrollPanelInfo.width, scrollPanelInfo.height)
 		Scroll:SetPos(scrollPanelInfo.x, scrollPanelInfo.y)
 
-		Scroll.IconsList = vgui.Create("DIconLayout", Scroll)
-			Scroll.IconsList:Dock(FILL)
-			Scroll.IconsList:SetSpaceY(5)
-			Scroll.IconsList:SetSpaceX(5)
-			Scroll.IconsList:IsHovered()
+	Scroll.IconsList = vgui.Create("DIconLayout", Scroll)
+		Scroll.IconsList:Dock(FILL)
+		Scroll.IconsList:SetSpaceY(5)
+		Scroll.IconsList:SetSpaceX(5)
+		Scroll.IconsList:IsHovered()
 
 	return Scroll
 end
@@ -440,20 +440,20 @@ function Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, 
 			copiedMsgBackground:SetPos(iconOverlay:GetWide()/2 - copiedMsgBackground:GetWide()/2, iconOverlay:GetTall()/2 - copiedMsgBackground:GetTall()/2)
 			copiedMsgBackground:SetBackgroundColor(Color(0, 0, 0, 255))
 
-			local copiedMsgBackground2 = vgui.Create("DPanel", copiedMsgBackground)
-				copiedMsgBackground2:SetSize(copiedMsgBackground:GetWide() - 4, copiedMsgBackground:GetTall() - 4)
-				copiedMsgBackground2:SetPos(2, 2)
+		local copiedMsgBackground2 = vgui.Create("DPanel", copiedMsgBackground)
+			copiedMsgBackground2:SetSize(copiedMsgBackground:GetWide() - 4, copiedMsgBackground:GetTall() - 4)
+			copiedMsgBackground2:SetPos(2, 2)
+	
+		local copiedMsg = vgui.Create("DLabel", copiedMsgBackground2)
+			copiedMsg:SetPos(marginLeft, 1)
+			copiedMsg:SetText(message)
+			copiedMsg:SetColor(Color(0, 0, 0, 255))
 			
-				local copiedMsg = vgui.Create("DLabel", copiedMsgBackground2)
-					copiedMsg:SetPos(marginLeft, 1)
-					copiedMsg:SetText(message)
-					copiedMsg:SetColor(Color(0, 0, 0, 255))
-					
-					timer.Simple(0.7, function()
-						iconOverlay:Hide()
-						copiedMsg:Remove()
-						copiedMsgBackground:Remove()
-					end)
+		timer.Simple(0.7, function()
+			iconOverlay:Hide()
+			copiedMsg:Remove()
+			copiedMsgBackground:Remove()
+		end)
 	end
 end
 

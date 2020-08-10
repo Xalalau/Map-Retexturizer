@@ -203,7 +203,7 @@ function MPanel:Show()
 	if not IsValid(MPanel:GetSelf()) then return; end
 
 	MPanel:GetSelf():Show()
-	MPanel:GetFloatingPreviewSelf():Hide()
+	MPanel:StopPreviewBox()
 end
 
 -- Hide the panel
@@ -214,9 +214,9 @@ function MPanel:Hide()
 
 	if MPanel:GetFloatingPreviewSelf() then
 		if MR.Ply:GetUsingTheTool(LocalPlayer()) then
-			MPanel:GetFloatingPreviewSelf():Show()
+			MPanel:RestartPreviewBox()
 		else
-			MPanel:GetFloatingPreviewSelf():Hide()
+			MPanel:StopPreviewBox()
 		end
 	end
 end

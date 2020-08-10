@@ -89,7 +89,9 @@ end
 -- Get the current data
 function Map:GetData(tr)
 	local oldData
-	local dataList = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or MR.Map:GetList()
+	local dataList = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or
+					 MR.Materials:IsDisplacement(MR.Materials:GetOriginal(tr)) and MR.Displacements:GetList() or
+					 MR.Map:GetList()
 
 	if dataList then
 		local oldMaterial = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)

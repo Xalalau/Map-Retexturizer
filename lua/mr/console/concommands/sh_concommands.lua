@@ -6,15 +6,6 @@ local Concommands = {}
 Concommands.__index = Concommands
 MR.Concommands = Concommands
 
--- Split the command argument from the player entity index
-function Concommands:CleanUpArguments(arguments)
-	arguments = arguments:gsub('"','') -- Clean double quotes from an ingame console command 
-
-	local words = string.Explode(" @@", arguments)
-
-	return words[1], words[2]
-end
-
 -- ---------------------------------------------------------
 -- mr_help
 concommand.Add("mr_help", function ()
@@ -44,8 +35,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_admin
-concommand.Add("mr_admin", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_admin", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_admin", value)
@@ -66,7 +58,7 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_materials
-concommand.Add("mr_materials", function (_1, _2, _3, arguments)
+concommand.Add("mr_materials", function ()
 	local map_data = MR.OpenBSP()
 	local found = map_data:ReadLumpTextDataStringData()
 
@@ -82,8 +74,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_delay
-concommand.Add("mr_delay", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_delay", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_delay", value)
@@ -112,17 +105,18 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_load
-concommand.Add("mr_load", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_load", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
-		MR.CL.Concommands:RunOnSV("mr_load", loadName)
+		MR.CL.Concommands:RunOnSV("mr_load", value)
 		
 		return
 	end
 
-	if MR.SV.Load:Start(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: loading \""..loadName.."\"...")
+	if MR.SV.Load:Start(MR.SV.Ply:GetFakeHostPly(), value) then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: loading \"" .. value .. "\"...")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
@@ -130,17 +124,18 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_autoload
-concommand.Add("mr_autoload", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_autoload", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
-		MR.CL.Concommands:RunOnSV("mr_autoload", loadName)
+		MR.CL.Concommands:RunOnSV("mr_autoload", value)
 		
 		return
 	end
 
-	if MR.SV.Load:SetAuto(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: autoload set to \""..loadName.."\".")
+	if MR.SV.Load:SetAuto(MR.SV.Ply:GetFakeHostPly(), value) then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: autoload set to \"" .. value .. "\".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
@@ -148,23 +143,24 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_save
-concommand.Add("mr_save", function (_1, _2, _3, arguments)
-	local saveName, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_save", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
-		MR.CL.Concommands:RunOnSV("mr_save", saveName)
+		MR.CL.Concommands:RunOnSV("mr_save", value)
 		
 		return
 	end
 
-	if saveName == "" then
+	if value == "" then
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to save because the name is empty.")
 
 		return
 	end
 
-	if MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), saveName, true) then
-		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \""..saveName.."\".")
+	if MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), value, true) then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: saved the current materials as \"" .. value .. "\".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to save.")
 	end
@@ -172,8 +168,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_autosave
-concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_autosave", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_autosave", value)
@@ -188,7 +185,7 @@ concommand.Add("mr_autosave", function (_1, _2, _3, arguments)
 	end
 
 	if MR.SV.Save:SetAuto(MR.SV.Ply:GetFakeHostPly(), value) then
-		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: autosaving "..(value == "1" and "enabled" or "disabled")..".")
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: autosaving " .. (value == "1" and "enabled" or "disabled") .. ".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to set the option.")
 	end
@@ -196,17 +193,18 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_delete
-concommand.Add("mr_delete", function (_1, _2, _3, arguments)
-	local loadName, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_delete", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
-		MR.CL.Concommands:RunOnSV("mr_delete", loadName)
+		MR.CL.Concommands:RunOnSV("mr_delete", value)
 		
 		return
 	end
 
-	if MR.SV.Load:Delete(MR.SV.Ply:GetFakeHostPly(), loadName) then
-		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: deleted the save \""..loadName.."\".")
+	if MR.SV.Load:Delete(MR.SV.Ply:GetFakeHostPly(), value) then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: deleted the save \"" .. value .. "\".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] File not found.")
 	end
@@ -214,8 +212,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_dup_cleanup
-concommand.Add("mr_dup_cleanup", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_dup_cleanup", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_dup_cleanup", value)
@@ -238,8 +237,8 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_cleanup
-concommand.Add("mr_cleanup", function (_1, _2, _3, arguments)
-	local _, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_cleanup", function (ply)
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_cleanup")
@@ -256,8 +255,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_add_disp
-concommand.Add("mr_add_disp", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_add_disp", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_add_disp", value)
@@ -280,8 +280,9 @@ end)
 
 -- ---------------------------------------------------------
 -- mr_rem_disp
-concommand.Add("mr_rem_disp", function (_1, _2, _3, arguments)
-	local value, plyIndex = Concommands:CleanUpArguments(arguments)
+concommand.Add("mr_rem_disp", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
 
 	if CLIENT then
 		MR.CL.Concommands:RunOnSV("mr_rem_disp", value)

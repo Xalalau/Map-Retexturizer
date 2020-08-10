@@ -134,6 +134,14 @@ function Load:FirstSpawn(ply)
 	-- Validate the preview material
 	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
+	-- Initialize server materials detail list
+	if not MR.SV.Materials:GetDetailFix("Initialized") then
+		MR.SV.Materials:SetDetailFix("Initialized", 1)
+
+		net.Start("CL.Materials:SetDetailFixList")
+		net.Send(ply)
+	end
+
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then
 		Load:Start(ply, "currentLoading")

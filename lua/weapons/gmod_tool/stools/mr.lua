@@ -182,6 +182,13 @@ end
 		return false
 	end
 
+	-- Get the correct detail for the oldData in the server
+	if SERVER then
+		if MR.SV.Materials:GetDetailFix(oldData.oldMaterial) then
+			oldData.detail = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		end
+	end
+
 	-- Skybox...
 	if MR.Materials:IsSkybox(newData.oldMaterial) then
 		-- Adjustments

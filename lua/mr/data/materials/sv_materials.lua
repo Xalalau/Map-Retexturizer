@@ -9,11 +9,14 @@ MR.SV.Materials = Materials
 local materials = {
 	-- Store the real $detail keyvalue (collected from the clients)
 	-- ["material"] = "detail"
-	detailFix = {}
+	detailFix = {},
+	detailsQueue = {}
 }
 
 -- Networking
 util.AddNetworkString("Materials:SetValid")
+util.AddNetworkString("SV.Materials:SetDetailFixList")
+util.AddNetworkString("CL.Materials:SetDetailFixList")
 util.AddNetworkString("CL.Materials:SetPreview")
 util.AddNetworkString("SV.Materials:RemoveAll")
 util.AddNetworkString("SV.Materials:SetAll")
@@ -26,13 +29,27 @@ net.Receive("SV.Materials:SetAll", function(_,ply)
 	Materials:SetAll(ply)
 end)
 
+net.Receive("SV.Materials:SetDetailFixList", function()
+	Materials:SetDetailFixList(net.ReadTable())
+end)
+
 function Materials:GetDetailFix(material)
-	return materials.detailFix[material]
+	return materials.detailFix[Material(material):GetName()]
 end
 
 function Materials:SetDetailFix(material, detail)
 	if not materials.detailFix[material] then
 		materials.detailFix[material] = detail
+	end
+end
+
+function Materials:GetDetailFixList()
+	return materials.detailFix
+end
+
+function Materials:SetDetailFixList(detailFixList)
+	for k,v in pairs(detailFixList) do
+		Materials:SetDetailFix(k, v)
 	end
 end
 

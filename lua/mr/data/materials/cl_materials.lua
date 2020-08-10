@@ -19,6 +19,70 @@ net.Receive("CL.Materials:SetPreview", function()
 	Materials:SetPreview()
 end)
 
+net.Receive("CL.Materials:SetDetailFixList", function()
+	Materials:SetDetailFixList()
+end)
+
+-- Fix to set details correctely
+function Materials:SetDetailFixList()
+	local map_data = MR.OpenBSP()
+	local faces = map_data:ReadLumpFaces()
+	local texInfo = map_data:ReadLumpTexInfo()
+	local texData = map_data:ReadLumpTexData()
+	local texDataTranslated = map_data:GetTranslatedTextDataStringTable()
+	local list = {
+		faces = {},
+		materials = {}
+	}
+
+	local chunk, current = 1, 1
+	local chunkSize = 5
+	local delay = 0
+	local delayIncrement = 0.04
+
+	print("[Map Retexturizer] Building details list for the first time...")
+
+	-- Get all the faces
+	for k,v in pairs(faces) do
+		-- Store the related texinfo index incremented by 1 because Lua tables start with 1
+		if not list.faces[v.texinfo + 1] then
+			list.faces[v.texinfo + 1] = true
+		end
+	end
+
+	-- Get the face details
+	for k,v in pairs(list.faces) do
+		-- Get the material name from the texdata inside the texinfo
+		local material = string.lower(texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1]) -- More increments to adjust C tables to Lua
+
+		-- Create the chunk
+		if not list.materials[chunk] then
+			list.materials[chunk] = {}
+		end
+
+		-- Register the material detail in the chunk
+		if not list.materials[chunk][material] then
+			list.materials[chunk][material] = MR.Materials:GetDetail(material)
+
+			if current == chunk * chunkSize then
+				chunk = chunk + 1
+			end
+			current = current + 1
+		end
+	end
+
+	-- Send the detail chunks to the server
+	for _,currentChunk in pairs(list.materials) do
+		timer.Create("MRDetailChunks" .. tostring(delay), delay, 1, function()
+			net.Start("SV.Materials:SetDetailFixList")
+				net.WriteTable(currentChunk)
+			net.SendToServer()
+		end)
+
+		delay = delay + delayIncrement
+	end
+end
+
 function Materials:GetPreviewName()
 	return materials.preview.name
 end

@@ -174,7 +174,9 @@ end
 	end
 
 	-- Don't apply bad materials
-	if not MR.Materials:Validate(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
+	if newData.newMaterial == MR.Materials:GetMissing() or
+	   not MR.Materials:Validate(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
+
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
 		end

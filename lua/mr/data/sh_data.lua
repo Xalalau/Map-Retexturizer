@@ -67,6 +67,17 @@ function Data:RemoveDefaultValues(data)
 	if data.detail == MR.CVars:GetDefaultDetail() then data.detail = nil; end
 end
 
+-- Remove unused fields from older data tables
+function Data:RemoveDefaultValuesOld(data)
+	if tonumber(data.offsetX) == tonumber(MR.CVars:GetDefaultOffsetX()) then data.offsetX = nil; end
+	if tonumber(data.offsetY) == tonumber(MR.CVars:GetDefaultOffsetY()) then data.offsetY = nil; end
+	if tonumber(data.scaleX) == tonumber(MR.CVars:GetDefaultScaleX()) then data.scaleX = nil; end
+	if tonumber(data.scaleY) == tonumber(MR.CVars:GetDefaultScaleY()) then data.scaleY = nil; end
+	if tonumber(data.rotation) == tonumber(MR.CVars:GetDefaultRotation()) then data.rotation = nil; end
+	if tonumber(data.alpha) == tonumber(MR.CVars:GetDefaultAlpha()) then data.alpha = nil; end
+	if tonumber(data.detail) == tonumber(MR.CVars:GetDefaultDetail()) then data.detail = nil; end
+end
+
 -- Reinsert unused fields
 function Data:ReinsertDefaultValues(data)
 	if not data.offsetX then data.offsetX = MR.CVars:GetDefaultOffsetX(); end

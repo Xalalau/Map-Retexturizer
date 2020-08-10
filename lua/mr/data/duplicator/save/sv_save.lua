@@ -72,9 +72,9 @@ function Save:SetAuto(ply, value)
 			timer.Remove("MRAutoSave")
 		end
 	end
- 
+
 	-- Apply the change on clients
-	MR.SV.Sync:Replicate(ply, "internal_mr_autosave", value and "1" or "0", "save", "box")
+	MR.SV.Sync:Replicate(ply, "internal_mr_autosave", value, "save", "box")
 
 	return true
 end

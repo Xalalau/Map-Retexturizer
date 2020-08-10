@@ -127,12 +127,6 @@ function Load:PlayerJoined(ply)
 	net.Start("CL.Displacements:InitDetected")
 		net.WriteTable(MR.Displacements:GetDetected())
 	net.Send(ply)
-end
-
--- Load tool modifications AFTER the player is fully ready
-function Load:FirstSpawn(ply)
-	-- Validate the preview material
-	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
 	-- Initialize server materials detail list
 	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
@@ -143,6 +137,12 @@ function Load:FirstSpawn(ply)
 		net.Start("CL.Materials:SetDetailFixList")
 		net.Send(ply)
 	end
+end
+
+-- Load tool modifications AFTER the player is fully ready
+function Load:FirstSpawn(ply)
+	-- Validate the preview material
+	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then

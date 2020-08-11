@@ -330,10 +330,16 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 				-- Note: this is the ONLY panel that rendered the materials correctly
 				-- for me. Anyway, it isn't perfect... Maybe my video card is too old.
 				local icon = vgui.Create("DImageButton", iconBackground)
-					icon:SetImage(arq)
+					local iconMaterial = Material(arq .. "_fixed")
+					if iconMaterial:IsError() then 
+						iconMaterial = MR.CL.Materials:Create(arq .. "_fixed", "VertexLitGeneric", "")
+						iconMaterial:SetTexture("$basetexture", Material(arq):GetTexture("$basetexture"))
+					end
+					icon:SetMaterial(iconMaterial)
 					icon:SetSize(info.width, info.height)
 					icon:SetPos(info.x, info.y)
 					icon:SetTooltip(arq)
+					icon:GetChildren()[1]:FixVertexLitMaterial()
 
 					--[[ Note: BUTTON_CODE Enums
 

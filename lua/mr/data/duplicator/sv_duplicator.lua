@@ -310,7 +310,7 @@ end
 -- Load materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, section)
 	-- If the field is nil or the duplicator is being forced to stop, finish
-	if not savedTable[position] or MR.Duplicator:IsStopping() then
+	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
 		if not MR.Duplicator:IsStopping() and position < #savedTable then
 			Duplicator:LoadMaterials(ply, savedTable, position + 1, section)

@@ -172,7 +172,7 @@ function Skybox:GetOriginal(tr)
 		-- Instead of tools/toolsskybox, return...
 		if MR.Materials:IsSkybox(originalMaterial) then
 			-- our custom env_skypainted material 
-			if Skybox:IsPainted() and originalMaterial == Skybox:GetGenericName() then
+			if Skybox:IsPainted() then
 				return Skybox:GetFilename2()
 			-- The current sky material
 			else
@@ -183,7 +183,7 @@ function Skybox:GetOriginal(tr)
 
 	return nil
 end
-
+Skybox:Init()
 -- Remove a sky material suffix
 function Skybox:HasSuffix(material)
 	if material then

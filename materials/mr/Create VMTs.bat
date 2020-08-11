@@ -8,6 +8,15 @@ pause
 
 echo.
 
+:: Missing material
+echo "VertexlitGeneric" >> missing.vmt
+echo { >> missing.vmt
+echo 	"$basetexture" "mr/missing" >> missing.vmt
+echo } >> missing.vmt
+echo missing.vmt
+
+echo.
+
 :: General skybox backup
 for /l %%x in (1, 1, 6) do (
 	echo "UnlitGeneric" >> sky_backup%%x.vmt

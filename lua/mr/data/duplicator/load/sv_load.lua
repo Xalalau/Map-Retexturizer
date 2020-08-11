@@ -128,10 +128,6 @@ function Load:PlayerJoined(ply)
 		net.WriteTable(MR.Displacements:GetDetected())
 	net.Send(ply)
 
-	-- Initialize skybox materials base on the client
-	net.Start("Skybox:Init")
-	net.Send(ply)
-
 	-- Initialize server materials detail list
 	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
 		print("[Map Retexturizer] Building details list for the first time...")
@@ -283,7 +279,7 @@ end
 
 -- Upgrade format 2.0 to 3.0
 function Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
-	if savedTable and tonumber(savedTable.savingFormat) == 2 or currentFormat == "2.0" then
+	if savedTable and savedTable.savingFormat == "2.0" or currentFormat == "2.0" then
 		-- Update decals structure
 		if savedTable.decals then
 			for k,v in pairs(savedTable.decals) do
@@ -322,7 +318,7 @@ end
 
 -- Upgrade format 3.0 to 4.0
 function Load:Upgrade3to4(savedTable, isDupStarting, currentFormat)
-	if savedTable and tonumber(savedTable.savingFormat) == 3 or currentFormat == "3.0" then
+	if savedTable and savedTable.savingFormat == "3.0" or currentFormat == "3.0" then
 		-- For each data block...
 		for _,section in pairs(savedTable) do
 			if istable(section) then
@@ -357,7 +353,7 @@ function Load:Upgrade3to4(savedTable, isDupStarting, currentFormat)
 					end
 
 					-- Disable unused fields
-					MR.Data:RemoveDefaultValuesOld(data)
+					MR.Data:RemoveDefaultValues(data)
 				end
 			end
 		end

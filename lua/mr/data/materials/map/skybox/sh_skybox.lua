@@ -12,9 +12,9 @@ local skybox = {
 	-- Generic skybox name
 	genericName = "tools/toolsskybox",
 	-- Skybox material backup files
-	filename = MR.Base:GetMaterialsFolder().."backup",
+	filename = MR.Base:GetMaterialsFolder().."sky_backup",
 	-- Skybox material application on maps with env_skypainted
-	filename2 = MR.Base:GetMaterialsFolder().."backup_aux",
+	filename2 = MR.Base:GetMaterialsFolder().."skypainted",
 	-- True if the map has a env_skypainted entity
 	painted = nil,
 	-- 6 side skybox suffixes
@@ -60,12 +60,26 @@ local skybox = {
 	}
 }
 
+-- Networking
+net.Receive("Skybox:Init", function()
+	Skybox:Init()
+end)
+
 function Skybox:Init()
 	timer.Simple(2, function()
 		-- Get the sky name
-		skybox.name = "skybox/"..GetConVar("sv_skyname"):GetString() --Doing this quickly above has returned me the default sky name instead of the current one
+		Skybox:SetName("skybox/"..GetConVar("sv_skyname"):GetString()) --Doing this quickly above has returned me the default sky name instead of the current one
 		-- Check if it's a painted one
-		skybox.painted = skybox.name == "skybox/painted" and true or false
+		Skybox:SetPainted(skybox.name == "skybox/painted" and true or false)
+
+		-- Initialize the painted skybox
+		if CLIENT then
+			if Skybox:IsPainted() then
+				for i=1,6,1 do
+					Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
+				end
+			end
+		end
 	end)
 end
 
@@ -82,6 +96,11 @@ function Skybox:IsPainted(material)
 	end
 
 	return skybox.painted
+end
+
+-- Set if the map has an env_skypainted entity
+function Skybox:SetPainted(value)
+	skybox.painted = value
 end
 
 -- Get HL2 skies list
@@ -104,14 +123,20 @@ function Skybox:GetName()
 	return skybox.name
 end
 
--- Get current sky name
-function Skybox:GetCurrentName()
-	return GetConVar("internal_mr_skybox"):GetString()
+-- Set sky name
+function Skybox:SetName(value)
+	skybox.name = value
 end
 
 -- Get valid sky name
-function Skybox:GetValidName()
-	return Skybox:SetSuffix(Skybox:GetName())
+function Skybox:ValidatePath(material)
+	if MR.Materials:IsSkybox(material) then
+		if not Skybox:HasSuffix(material) then
+			material = Skybox:SetSuffix(material)
+		end
+	end
+
+	return material
 end
 
 -- Get generic skybox name
@@ -134,9 +159,49 @@ function Skybox:GetList()
 	return skybox.list
 end
 
+-- Get current sky name
+function Skybox:GetCurrent()
+	return GetConVar("internal_mr_skybox"):GetString()
+end
+
+-- Get the original skybox full path
+function Skybox:GetOriginal(tr)
+	if tr.Entity:IsWorld() then
+		local originalMaterial = string.Trim(tr.HitTexture):lower()
+
+		-- Instead of tools/toolsskybox, return...
+		if MR.Materials:IsSkybox(originalMaterial) then
+			-- our custom env_skypainted material 
+			if Skybox:IsPainted() and originalMaterial == Skybox:GetGenericName() then
+				return Skybox:GetFilename2()
+			-- The current sky material
+			else
+				return Skybox:ValidatePath(Skybox:GetName())
+			end
+		end
+	end
+
+	return nil
+end
+
+-- Remove a sky material suffix
+function Skybox:HasSuffix(material)
+	if material then
+		local aux = string.sub(material, -2)
+
+		for k,v in pairs(Skybox:GetSuffixes()) do
+			if aux == v then
+				return true
+			end
+		end
+	end
+
+	return false
+end
+
 -- Insert a sky material suffix
 function Skybox:SetSuffix(material)
-	return material..skybox.suffixes[1]
+	return material .. skybox.suffixes[1]
 end
 
 -- Remove a sky material suffix

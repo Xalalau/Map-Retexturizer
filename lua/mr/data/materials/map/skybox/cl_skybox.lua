@@ -8,7 +8,9 @@ MR.CL.Skybox = Skybox
 
 -- Skybox rendering hook
 hook.Add("PostDraw2DSkyBox", "Skybox:Render", function()
-	Skybox:Render()
+	if MR and MR.Skybox and MR.Skybox:IsPainted() then
+		Skybox:Render()
+	end
 end)
 
 -- Render 6 side skybox materials on every map or simple materials on the skybox on maps with env_skypainted entity
@@ -16,29 +18,21 @@ function Skybox:Render()
 	local distance = 200
 	local width = distance * 2.01
 	local height = distance * 2.01
-	local newMaterial = MR.Skybox:GetCurrentName()
-	local suffixes = { "", "", "", "", "", "" }
+	local newMaterial = MR.Skybox:GetCurrent()
+	local suffixes = MR.Skybox:GetSuffixes()
 
 	-- Stop renderind if there is no material
 	if newMaterial == "" then
 		return
-	-- It's a HL2 sky (Render box on clientside)
-	elseif MR.Skybox:GetHL2List()[newMaterial] then
-		suffixes = MR.Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox (Render box on clientside)
 	elseif MR.Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(newMaterial)) then
 		newMaterial = MR.Skybox:RemoveSuffix(newMaterial)
-		suffixes = MR.Skybox:GetSuffixes()
 	-- It's an invalid material
 	elseif not MR.Materials:Validate(newMaterial) then
-		return
-	-- It's a single material but we don't need to render if there isn't an env_skypainted in the map
-	elseif not MR.Skybox:IsPainted() then
 		return
 	-- It's a single material
 	else
 		newMaterial = MR.Skybox:GetFilename2()
-		suffixes = { "1", "2", "3", "4", "5", "6" }
 	end
 
 	-- Render our sky box around the player

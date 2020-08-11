@@ -71,10 +71,14 @@ end
 -- Is it the skybox material?
 function Materials:IsSkybox(material)
 	if material and (
-		string.lower(material) == MR.Skybox:GetGenericName() or
-			Materials:IsFullSkybox(material) or
-			Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
-	   ) then
+		  string.lower(material) == MR.Skybox:GetGenericName() or
+		  MR.Skybox:IsPainted() and (
+			 material == MR.Skybox:GetFilename2() or 
+			 MR.Skybox:RemoveSuffix(material) == MR.Skybox:GetFilename2()
+		  ) or
+		  Materials:IsFullSkybox(material) or
+	      Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
+	  ) then
 
 		return true
 	end
@@ -199,7 +203,7 @@ end
 
 -- Get the original material full path
 function Materials:GetOriginal(tr)
-	return MR.Models:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
+	return MR.Models:GetOriginal(tr) or MR.Skybox:GetOriginal(tr) or MR.Map:GetOriginal(tr) or nil
 end
 
 -- Get the current material full path

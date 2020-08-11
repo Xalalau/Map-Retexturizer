@@ -96,11 +96,13 @@ if SERVER then
 end
 
 -- Initialization
+-- See sv_load.lua for more
+
 MR.Base:Init()
-MR.Skybox:Init()
 MR.Materials:Init()
 
 if SERVER then
+	MR.Skybox:Init()
 	MR.SV.Displacements:Init()
 	MR.SV.Ply:Init()
 	MR.SV.Load:Init()

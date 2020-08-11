@@ -128,6 +128,10 @@ function Load:PlayerJoined(ply)
 		net.WriteTable(MR.Displacements:GetDetected())
 	net.Send(ply)
 
+	-- Initialize skybox materials base on the client
+	net.Start("Skybox:Init")
+	net.Send(ply)
+
 	-- Initialize server materials detail list
 	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
 		print("[Map Retexturizer] Building details list for the first time...")

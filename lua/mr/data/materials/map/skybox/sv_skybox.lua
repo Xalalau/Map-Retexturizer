@@ -12,6 +12,7 @@ local skybox = {
 }
 
 -- Networking
+util.AddNetworkString("Skybox:Init")
 util.AddNetworkString("SV.Skybox:Set")
 util.AddNetworkString("SV.Skybox:Remove")
 
@@ -30,7 +31,6 @@ end
 
 -- Change the skybox
 function Skybox:Set(ply, data, isBroadcasted)
-	local suffixes = { "", "", "", "", "", "" }
 	local i
 
 	-- Admin only
@@ -38,20 +38,25 @@ function Skybox:Set(ply, data, isBroadcasted)
 		return false
 	end
 
-	-- It's the default map sky or it's empty
+	-- It's the default map sky or
+	-- it's the generic sky material or
+	-- it's our custom env_skypainted material or
+	-- it's empty
 	if data.newMaterial == MR.Skybox:GetName() or
-		MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
-		data.newMaterial == "" then
+	   MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
+	   data.newMaterial == MR.Skybox:GetGenericName() or
+	   MR.Skybox:IsPainted() and (
+	      data.newMaterial == MR.Skybox:GetFilename2() or
+		  MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetFilename2()
+       ) or
+	   data.newMaterial == "" then
 
 		Skybox:Remove(ply)
+
 		return
-	-- It's a HL2 sky (Render box on clientside)
-	elseif MR.Skybox:GetHL2List()[data.newMaterial] then
-		suffixes = MR.Skybox:GetSuffixes()
 	-- It's a full 6-sided skybox (Render box on clientside)
 	elseif MR.Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(data.newMaterial)) then
 		data.newMaterial = MR.Skybox:RemoveSuffix(data.newMaterial)
-		suffixes = MR.Skybox:GetSuffixes()
 	-- It's an invalid material
 	elseif not MR.Materials:Validate(data.newMaterial) then
 		return
@@ -66,28 +71,9 @@ function Skybox:Set(ply, data, isBroadcasted)
 
 	-- Apply the material(s)
 	for i = 1,6 do
-		-- Next line:
-		-- 	All maps: generate backup information
-		-- 	Maps without env_skypainted: change the sky
-		data.oldMaterial = MR.Skybox:GetName()..MR.Skybox:GetSuffixes()[i]
-
+		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial
+		data.oldMaterial = (MR.Skybox:IsPainted() and MR.Skybox:GetFilename2() or MR.Skybox:GetName()) .. MR.Skybox:GetSuffixes()[i]
 		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
-
-		-- Change the auxiliar sky material (for maps with env_skypainted)
-		if MR.Skybox:IsPainted() then
-			data.oldMaterial = MR.Skybox:GetFilename2()..tostring(i)
-
-			-- Send to
-			net.Start("CL.Map:Set")
-				net.WriteTable(data) 
-			-- every player
-			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
-				net.Broadcast()
-			-- player
-			else
-				net.Send(ply)
-			end
-		end
 	end
 
 	-- Replicate
@@ -104,7 +90,7 @@ function Skybox:Remove(ply)
 	end
 
 	-- Check if we need to go ahead
-	if MR.Skybox:GetCurrentName() == "" then
+	if MR.Skybox:GetCurrent() == "" then
 		return
 	-- Reset the combobox
 	else

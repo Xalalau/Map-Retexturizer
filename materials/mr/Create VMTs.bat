@@ -8,28 +8,35 @@ pause
 
 echo.
 
-:: Skybox
+:: General skybox backup
 for /l %%x in (1, 1, 6) do (
-	echo "UnlitGeneric" >> backup%%x.vmt
-	echo { >> backup%%x.vmt
-	echo 	"$basetexture" "mr/backup%%x" >> backup%%x.vmt
-	echo 	"$nofog" 1 >> backup%%x.vmt
-	echo 	"$ignorez" 1 >> backup%%x.vmt
-	echo } >> backup%%x.vmt
-	echo backup%%x.vmt
+	echo "UnlitGeneric" >> sky_backup%%x.vmt
+	echo { >> sky_backup%%x.vmt
+	echo 	"$basetexture" "mr/sky_backup%%x" >> sky_backup%%x.vmt
+	echo 	"$nofog" 1 >> sky_backup%%x.vmt
+	echo 	"$ignorez" 1 >> sky_backup%%x.vmt
+	echo } >> sky_backup%%x.vmt
+	echo sky_backup%%x.vmt
 )
 
 echo.
 
-:: Skybox auxiliar
-for /l %%x in (1, 1, 6) do (
-	echo "UnlitGeneric" >> backup_aux%%x.vmt
-	echo { >> backup_aux%%x.vmt
-	echo 	"$basetexture" "mr/backup_aux%%x" >> backup_aux%%x.vmt
-	echo 	"$nofog" 1 >> backup_aux%%x.vmt
-	echo 	"$ignorez" 1 >> backup_aux%%x.vmt
-	echo } >> backup_aux%%x.vmt
-	echo backup_aux%%x.vmt
+:: env_skypainted skybox changing
+for %%x in (
+ft
+bk
+lf
+rt
+up
+dn
+) do (
+	echo "UnlitGeneric" >> skypainted%%x.vmt
+	echo { >> skypainted%%x.vmt
+	echo 	"$basetexture" "mr/skypainted%%x" >> skypainted%%x.vmt
+	echo 	"$nofog" 1 >> skypainted%%x.vmt
+	echo 	"$ignorez" 1 >> skypainted%%x.vmt
+	echo } >> skypainted%%x.vmt
+	echo skypainted%%x.vmt
 )
 
 echo.

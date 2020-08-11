@@ -61,26 +61,17 @@ end
 function Map:GetCurrent(tr)
 	if tr.Entity:IsWorld() then
 		local selected = {}
+		local material = MR.Materials:GetOriginal(tr)
 
-		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		if MR.Materials:IsSkybox(material) then
 			selected.list = MR.Skybox:GetList()
-			selected.oldMaterial = MR.Skybox:GetValidName()
 		else
 			selected.list = Map:GetList()
-			selected.oldMaterial = MR.Materials:GetOriginal(tr)
 		end
 
-		local path = ""
+		local element = MR.DataList:GetElement(selected.list, material)
 
-		local element = MR.DataList:GetElement(selected.list, selected.oldMaterial)
-
-		if element then
-			path = element.newMaterial
-		else
-			path = selected.oldMaterial
-		end
-
-		return path
+		return element and element.newMaterial or material
 	end
 
 	return nil
@@ -88,19 +79,15 @@ end
 
 -- Get the current data
 function Map:GetData(tr)
-	local oldData
-	local dataList = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetList() or
-					 MR.Materials:IsDisplacement(MR.Materials:GetOriginal(tr)) and MR.Displacements:GetList() or
+	local material = MR.Skybox:ValidatePath(MR.Materials:GetOriginal(tr))
+
+	local dataList = MR.Materials:IsSkybox(material) and MR.Skybox:GetList() or
+					 MR.Materials:IsDisplacement(material) and MR.Displacements:GetList() or
 					 MR.Map:GetList()
 
-	if dataList then
-		local oldMaterial = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) and MR.Skybox:GetValidName() or MR.Materials:GetOriginal(tr)
-		local aux = MR.DataList:GetElement(dataList, oldMaterial)
+	local element = dataList and MR.DataList:GetElement(dataList, material)
 
-		oldData = table.Copy(aux)
-	end
-
-	return oldData
+	return element and table.Copy(element)
 end
 
 -- Set map material

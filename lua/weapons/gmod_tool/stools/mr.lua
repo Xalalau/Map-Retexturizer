@@ -191,23 +191,11 @@ end
 		end
 	end
 
-	-- Skybox...
-	if MR.Materials:IsSkybox(newData.oldMaterial) then
-		-- Adjustments
-		newData.oldMaterial = oldData.oldMaterial
-
-		oldData.newMaterial = MR.Skybox:RemoveSuffix(oldData.newMaterial)
-		newData.newMaterial = MR.Skybox:RemoveSuffix(newData.newMaterial)
-
-		if MR.Skybox:IsPainted() then
-			oldData.newMaterial = MR.Materials:GetCurrent(tr)
-		end
-
-		-- Don't apply the default sky over itself
-		if newData.newMaterial == MR.Skybox:GetName() and oldData.newMaterial == "" then
-			return false
-		end
-	end
+	-- Adjustment for skybox materials
+	newData.oldMaterial = MR.Skybox:ValidatePath(newData.oldMaterial)
+	newData.newMaterial = MR.Skybox:ValidatePath(newData.newMaterial)
+	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
+	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
@@ -267,18 +255,10 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Adjustment for skybox materials
-	if MR.Materials:IsSkybox(newData.oldMaterial) then
-		newData.oldMaterial = oldData.oldMaterial
-
-		if newData.oldMaterial == MR.Skybox:GetGenericName() and
-		oldData.newMaterial == MR.Skybox:GetGenericName() then
-			oldData.newMaterial = MR.Skybox:GetValidName()
-		end
-
-		if MR.Skybox:IsPainted() then
-			oldData.newMaterial = MR.Materials:GetCurrent(tr)
-		end
-	end
+	newData.oldMaterial = MR.Skybox:ValidatePath(newData.oldMaterial)
+	newData.newMaterial = MR.Skybox:ValidatePath(newData.newMaterial)
+	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
+	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then

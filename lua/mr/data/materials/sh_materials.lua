@@ -408,8 +408,6 @@ end
 		data.newMaterial and data.newMaterial2 will be validated and can be modified
 ]]
 
-Materials:Init()
-
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 	-- Admin only and first spawn only
 	if SERVER then

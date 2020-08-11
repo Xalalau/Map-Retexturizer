@@ -33,9 +33,7 @@ end)
 
 -- Load materials from saves
 function Duplicator:CheckForErrors(material, isBroadcasted)
-	material = MR.CL.Materials:ValidateReceived(material)
-
-	if material == MR.Materials:GetMissing() then
+	if MR.CL.Materials:ValidateReceived(material) == MR.Materials:GetMissing() then
 		Duplicator:SetErrorProgress(material, isBroadcasted)
 	end
 end

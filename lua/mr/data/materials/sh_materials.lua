@@ -407,6 +407,9 @@ end
 		will be stored for future application if needed
 		data.newMaterial and data.newMaterial2 will be validated and can be modified
 ]]
+
+Materials:Init()
+
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 	-- Admin only and first spawn only
 	if SERVER then
@@ -443,11 +446,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 				if material then
 					material = MR.CL.Materials:ValidateReceived(material)
 
-					if material == Materials:GetMissing() then
-						print("[Map Retexturizer]["..check.type.."] Bad material blocked.")
-
-						return false
-					elseif data and data[field] and material ~= data[field] then
+					if data and data[field] and material ~= data[field] then
 						data[field] = material
 					end
 				end

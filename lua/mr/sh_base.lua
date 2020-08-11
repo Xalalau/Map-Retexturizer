@@ -7,7 +7,7 @@ Base.__index = Base
 MR.Base = Base
 
 local base = {
-	version = "Version 16.1",
+	version = "GitHub, Version 16.1+",
 	materials = {
 		folder = "mr/"
 	},

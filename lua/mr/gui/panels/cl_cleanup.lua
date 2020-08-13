@@ -47,6 +47,13 @@ function Panels:SetCleanup(parent, frameType, info)
 		y = cleanBox2Info.y + MR.CL.Panels:GetTextHeight()
 	}
 
+	local instantCleanupInfo = {
+		width = cleanupButtonInfo.width,
+		height = MR.CL.Panels:GetTextHeight(),
+		x = cleanupButtonInfo.x,
+		y = cleanupButtonInfo.y + cleanupButtonInfo.height + MR.CL.Panels:GetGeneralBorders() * 2
+	}
+
 	--------------------------
 	-- Cleanup options
 	--------------------------
@@ -102,6 +109,37 @@ function Panels:SetCleanup(parent, frameType, info)
 					net.SendToServer()
 				end
 			end
+		end
+
+	--------------------------
+	-- Instant cleanup
+	--------------------------
+	local instantCleanup = vgui.Create("DCheckBoxLabel", panel)
+		MR.Sync:Set(instantCleanup, "cleanup", "instant")
+		instantCleanup:SetPos(instantCleanupInfo.x, instantCleanupInfo.y)
+		instantCleanup:SetText("Fast cleanup (freezes the screen for a while)")
+		instantCleanup:SetTextColor(Color(0, 0, 0, 255))
+		instantCleanup:SetValue(GetConVar("internal_mr_instant_cleanup"):GetBool())
+		instantCleanup.OnChange = function(self, val)
+			-- Force the field to update and disable a sync loop block
+			if MR.CL.Sync:GetLoopBlock() then
+				MR.Sync:Get("cleanup", "instant"):SetChecked(val)
+				MR.CL.Sync:SetLoopBlock(false)
+
+				return
+			-- Admin only: reset the option if it's not being synced and return
+			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+				MR.Sync:Get("cleanup", "instant"):SetChecked(GetConVar("internal_mr_instant_cleanup"):GetBool())
+
+				return
+			end
+
+			net.Start("SV.Sync:Replicate")
+				net.WriteString("internal_mr_instant_cleanup")
+				net.WriteString(val and "1" or "0")
+				net.WriteString("cleanup")
+				net.WriteString("instant")
+			net.SendToServer()
 		end
 
 	-- Margin bottom

@@ -217,7 +217,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
-	timer.Simple(0.01, function()
+	timer.Simple(0.5, function()
 		-- Get the total modifications to do
 		local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
 		local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0

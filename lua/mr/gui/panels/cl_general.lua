@@ -13,110 +13,43 @@ function Panels:SetGeneral(parent, frameType, info)
 		panel:SetSize(width, 0)
 		panel:SetBackgroundColor(Color(255, 255, 255, 0))
 
-	local previewInfo = {
-		x = MR.CL.Panels:GetGeneralBorders(),
-		y = MR.CL.Panels:GetGeneralBorders()
-	}
-
-	local decalsModeInfo = {
-		x = 89,
-		y = previewInfo.y
-	}
-
-	local autoSaveBox = {
-		x = 176,
-		y = previewInfo.y
-	}
-
 	local changeAllInfo = {
 		width = width - MR.CL.Panels:GetGeneralBorders() * 2,
 		height = MR.CL.Panels:GetTextHeight(),
-		x = previewInfo.x,
-		y = decalsModeInfo.y + MR.CL.Panels:GetTextHeight()
-	}
-
-	local saveInfo = {
-		width = changeAllInfo.width/2 - MR.CL.Panels:GetGeneralBorders()/2,
-		height = MR.CL.Panels:GetTextHeight(),
-		x = previewInfo.x,
-		y = changeAllInfo.y + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetGeneralBorders()
-	}
-
-	local loadInfo = {
-		width = saveInfo.width,
-		height = MR.CL.Panels:GetTextHeight(),
-		x = saveInfo.x + saveInfo.width + MR.CL.Panels:GetGeneralBorders(),
-		y = saveInfo.y
+		x = MR.CL.Panels:GetGeneralBorders(),
+		y = MR.CL.Panels:GetGeneralBorders()
 	}
 
 	local browserInfo = {
 		width = changeAllInfo.width,
 		height = MR.CL.Panels:GetTextHeight(),
-		x = previewInfo.x,
-		y = loadInfo.y + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetGeneralBorders()
+		x = changeAllInfo.x,
+		y = changeAllInfo.y + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetGeneralBorders()
 	}
 
-	--------------------------
-	-- Preview Modifications
-	--------------------------
-	local preview = vgui.Create("DCheckBoxLabel", panel)
-		preview:SetPos(previewInfo.x, previewInfo.y)
-		preview:SetText("Preview")
-		preview:SetTextColor(Color(0, 0, 0, 255))
-		preview:SetValue(true)
-		preview.OnChange = function(self, val)
-			MR.Ply:SetPreviewMode(LocalPlayer(), val)
+	local loadInfo = {
+		width = changeAllInfo.width/2 - MR.CL.Panels:GetGeneralBorders()/2,
+		height = MR.CL.Panels:GetTextHeight(),
+		x = changeAllInfo.x,
+		y = browserInfo.y + MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetGeneralBorders()
+	}
 
-			net.Start("Ply:SetPreviewMode")
-				net.WriteBool(val)
-			net.SendToServer()
-		end
+	local saveInfo = {
+		width = loadInfo.width,
+		height = MR.CL.Panels:GetTextHeight(),
+		x = loadInfo.x + loadInfo.width + MR.CL.Panels:GetGeneralBorders(),
+		y = loadInfo.y
+	}
 
-	--------------------------
-	-- Use as Decal
-	--------------------------
-	local decalsMode = vgui.Create("DCheckBoxLabel", panel)
-		decalsMode:SetPos(decalsModeInfo.x, decalsModeInfo.y)
-		decalsMode:SetText("Decals")
-		decalsMode:SetTextColor(Color(0, 0, 0, 255))
-		decalsMode:SetValue(false)
-		decalsMode.OnChange = function(self, val)
-			preview:SetEnabled(not val)
+	local previewInfo = {
+		x = MR.CL.Panels:GetGeneralBorders(),
+		y = loadInfo.y + loadInfo.height + MR.CL.Panels:GetGeneralBorders() * 2
+	}
 
-			RunConsoleCommand("internal_mr_decal", val and 1 or 0)
-			MR.CL.Decals:Toogle(val)
-		end
-
-	--------------------------
-	-- Autosave
-	--------------------------
-	local autosaveBox = vgui.Create("DCheckBoxLabel", panel)
-		MR.Sync:Set(autosaveBox, "save", "box")
-		autosaveBox:SetPos(autoSaveBox.x, autoSaveBox.y)
-		autosaveBox:SetText("Autosave")
-		autosaveBox:SetTextColor(Color(0, 0, 0, 255))
-		autosaveBox:SetValue(true)
-		autosaveBox.OnChange = function(self, val)
-			-- Force the field to update and disable a sync loop block
-			if MR.CL.Sync:GetLoopBlock() then
-				if val ~= autosaveBox:GetValue() then
-					autosaveBox:SetChecked(val)
-				else
-					MR.CL.Sync:SetLoopBlock(false)
-				end
-
-				return
-			-- Admin only: reset the option if it's not being synced and return
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
-				autosaveBox:SetChecked(GetConVar("internal_mr_autosave"):GetBool())
-
-				return
-			end
-
-			net.Start("SV.Save:SetAuto")
-				net.WriteBool(val)
-			net.SendToServer()
-		end
+	local decalsModeInfo = {
+		x = previewInfo.x,
+		y = previewInfo.y +  MR.CL.Panels:GetTextHeight()
+	}
 
 	--------------------------
 	-- Change all materials
@@ -125,6 +58,7 @@ function Panels:SetGeneral(parent, frameType, info)
 		changeAll:SetSize(changeAllInfo.width, changeAllInfo.height)
 		changeAll:SetPos(changeAllInfo.x, changeAllInfo.y)
 		changeAll:SetText("Change all materials")
+		changeAll:SetIcon("icon16/world.png")
 		changeAll.DoClick = function()
 			local qPanel = vgui.Create( "DFrame" )
 				qPanel:SetTitle("Loading Confirmation")
@@ -162,14 +96,15 @@ function Panels:SetGeneral(parent, frameType, info)
 		end
 
 	--------------------------
-	-- Save
+	-- Open Material Browser
 	--------------------------
-	local save = vgui.Create("DButton", panel)
-		save:SetSize(saveInfo.width, saveInfo.height)
-		save:SetPos(saveInfo.x, saveInfo.y)
-		save:SetText("Save")
-		save.DoClick = function()
-			Panels:SetSave(nil, "DFrame", { width = 275, height = 120 })
+	local browser = vgui.Create("DButton", panel)
+		browser:SetSize(browserInfo.width, browserInfo.height)
+		browser:SetPos(browserInfo.x, browserInfo.y)
+		browser:SetText("Material Browser")
+		browser:SetIcon("icon16/application_view_tile.png")
+		browser.DoClick = function()
+			MR.Browser:Create()
 		end
 
 	--------------------------
@@ -179,19 +114,53 @@ function Panels:SetGeneral(parent, frameType, info)
 		load:SetSize(loadInfo.width, loadInfo.height)
 		load:SetPos(loadInfo.x, loadInfo.y)
 		load:SetText("Load")
+		load:SetIcon("icon16/folder_go.png")
 		load.DoClick = function()
 			Panels:SetLoad(nil, "DFrame", { width = 400, height = 245, title })
 		end
 
+
 	--------------------------
-	-- Open Material Browser
+	-- Save
 	--------------------------
-	local browser = vgui.Create("DButton", panel)
-		browser:SetSize(browserInfo.width, browserInfo.height)
-		browser:SetPos(browserInfo.x, browserInfo.y)
-		browser:SetText("Material Browser")
-		browser.DoClick = function()
-			MR.Browser:Create()
+	local save = vgui.Create("DButton", panel)
+		save:SetSize(saveInfo.width, saveInfo.height)
+		save:SetPos(saveInfo.x, saveInfo.y)
+		save:SetText("Save")
+		save:SetIcon("icon16/disk.png")
+		save.DoClick = function()
+			Panels:SetSave(nil, "DFrame", { width = 275, height = 120 })
+		end
+
+	--------------------------
+	-- Preview Modifications
+	--------------------------
+	local preview = vgui.Create("DCheckBoxLabel", panel)
+		preview:SetPos(previewInfo.x, previewInfo.y)
+		preview:SetText("Preview material modifications")
+		preview:SetTextColor(Color(0, 0, 0, 255))
+		preview:SetValue(true)
+		preview.OnChange = function(self, val)
+			MR.Ply:SetPreviewMode(LocalPlayer(), val)
+
+			net.Start("Ply:SetPreviewMode")
+				net.WriteBool(val)
+			net.SendToServer()
+		end
+
+	--------------------------
+	-- Use as Decal
+	--------------------------
+	local decalsMode = vgui.Create("DCheckBoxLabel", panel)
+		decalsMode:SetPos(decalsModeInfo.x, decalsModeInfo.y)
+		decalsMode:SetText("Start decals mode")
+		decalsMode:SetTextColor(Color(0, 0, 0, 255))
+		decalsMode:SetValue(false)
+		decalsMode.OnChange = function(self, val)
+			preview:SetEnabled(not val)
+
+			RunConsoleCommand("internal_mr_decal", val and 1 or 0)
+			MR.CL.Decals:Toogle(val)
 		end
 
 	-- Margin bottom

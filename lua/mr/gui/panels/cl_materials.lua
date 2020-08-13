@@ -40,7 +40,21 @@ function Panels:SetMaterials(parent, frameType, info)
         x = previewInfo.width
 	}
 
-    --------------------------
+	local materialsHintInfo = {
+		width = panel:GetWide() - MR.CL.Panels:GetGeneralBorders() * 2,
+		height = MR.CL.Panels:GetTextHeight(),
+	}
+
+	--------------------------
+	-- Materials hint
+	--------------------------
+	local materialsHint = vgui.Create("DLabel", panel)
+		materialsHint:SetPos(materialsHintInfo.x, materialsHintInfo.y)
+		materialsHint:SetSize(materialsHintInfo.width, materialsHintInfo.height)
+		materialsHint:SetText("       Use the context menu for greater visibility.")
+		materialsHint:SetTextColor(MR.CL.Panels:GetHintColor())
+
+	--------------------------
 	-- Preview + Path property
 	--------------------------
 	local topPanels = vgui.Create("DPanel", panel)
@@ -56,5 +70,6 @@ function Panels:SetMaterials(parent, frameType, info)
     local _, detach = MR.CL.Panels:SetProperties(panel, "DPanel", propertiesInfo)
         MR.CL.ExposedPanels:Set(detach, "materials", "detach")
 
-	return MR.CL.Panels:FinishContainer(frame, panel, frameType, nil, totalHeight)
+
+	return MR.CL.Panels:FinishContainer(frame, panel, frameType)
 end

@@ -9,7 +9,7 @@ MR.CL.Duplicator = Duplicator
 -- Networking
 
 net.Receive("CL.Duplicator:CheckForErrors", function()
-	Duplicator:CheckForErrors(net.ReadString(), net.ReadBool())
+	Duplicator:CheckForErrors(net.ReadString(), net.ReadString(), net.ReadBool())
 end)
 
 net.Receive("CL.Duplicator:SetProgress", function()
@@ -32,8 +32,9 @@ hook.Add("HUDPaint", "MRDupProgress", function()
 end)
 
 -- Load materials from saves
-function Duplicator:CheckForErrors(material, isBroadcasted)
-	if MR.CL.Materials:ValidateReceived(material) == MR.Materials:GetMissing() then
+function Duplicator:CheckForErrors(material, material2, isBroadcasted)
+	if MR.CL.Materials:ValidateReceived(material) == MR.Materials:GetMissing() and
+	   material2 and MR.CL.Materials:ValidateReceived(material2) == MR.Materials:GetMissing() then
 		Duplicator:SetErrorProgress(material, isBroadcasted)
 	end
 end

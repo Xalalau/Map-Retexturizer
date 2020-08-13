@@ -15,11 +15,15 @@ local sync = {
     load = {
         box = "",
         speed = "",
+        progress = "",
         autoloadtext = ""
     },
     skybox = {
         box = "",
         text = ""
+    },
+    cleanup = {
+        instant = ""
     }
 }
 

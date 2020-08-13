@@ -232,7 +232,7 @@ function Panels:SetProperties(parent, frameType, info)
 	local resetButton = vgui.Create("DImageButton", panel)
 		resetButton:SetSize(resetButtonInfo.width, resetButtonInfo.height)
 		resetButton:SetPos(resetButtonInfo.x, resetButtonInfo.y)
-		resetButton:SetImage("icon16/cancel.png")
+		resetButton:SetImage("icon16/arrow_rotate_anticlockwise.png")
 		resetButton.DoClick = function(self, isRightClick)
 			propertiesPanel:Remove()
 			if not isRightClick then

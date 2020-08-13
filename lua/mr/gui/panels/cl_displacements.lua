@@ -167,6 +167,7 @@ function Panels:SetDisplacements(parent, frameType, info)
 		displacementsButton:SetSize(displacementsButtonInfo.width, displacementsButtonInfo.height)
 		displacementsButton:SetPos(displacementsButtonInfo.x, displacementsButtonInfo.y)
 		displacementsButton:SetText("Apply current material properties")
+		displacementsButton:SetIcon("icon16/page_copy.png")
 		displacementsButton.DoClick = function()
 			MR.CL.Displacements:Set(true)
 		end

@@ -97,6 +97,7 @@ function Panels:SetLoad(parent, frameType, info)
 		loadButton:SetSize(loadButtonInfo.width, loadButtonInfo.height)
 		loadButton:SetPos(loadButtonInfo.x, loadButtonInfo.y)
 		loadButton:SetText("Load")
+		loadButton:SetIcon("icon16/folder_go.png")
 		loadButton.DoClick = function()
 			local panel = MR.CL.ExposedPanels:Get("load", "text")
 			local value = panel:GetSelected()[1] and panel:GetSelected()[1]:GetColumnText(1) or ""
@@ -113,6 +114,7 @@ function Panels:SetLoad(parent, frameType, info)
 		deleteButton:SetSize(deleteButtonInfo.width, deleteButtonInfo.height)
 		deleteButton:SetPos(deleteButtonInfo.x, deleteButtonInfo.y)
 		deleteButton:SetText("Delete")
+		deleteButton:SetIcon("icon16/cancel.png")
 		deleteButton.DoClick = function()
 			local panel = MR.CL.ExposedPanels:Get("load", "text")
 			local loadName = panel:GetSelected()[1] and panel:GetSelected()[1]:GetColumnText(1) or ""
@@ -204,6 +206,7 @@ function Panels:SetLoad(parent, frameType, info)
 		setAutoButton:SetPos(setAutoButtonInfo.x, setAutoButtonInfo.y)
 		setAutoButton:SetText("Set Auto")
 		setAutoButton:SetTooltip("Auto load a saved file when the map starts.")
+		setAutoButton:SetIcon("icon16/add.png")
 		setAutoButton.DoClick = function()
 			if not MR.Ply:IsAdmin(LocalPlayer()) then
 				return
@@ -305,8 +308,15 @@ function Panels:SetLoad(parent, frameType, info)
 		speedCombobox:SetSize(speedComboboxInfo.width, speedComboboxInfo.height)
 		speedCombobox:SetPos(speedComboboxInfo.x, speedComboboxInfo.y)
 
+		local icons = {
+			Fast = "icon16/control_end_blue.png",
+			Normal = "icon16/control_fastforward_blue.png",
+			Slow = "icon16/control_play_blue.png",
+			NotDetected = "icon16/cog.png"
+		}
+
 		for k,v in pairs(options) do
-			speedCombobox:AddChoice(k, v)
+			speedCombobox:AddChoice(k, v, nil, icons[k] or icons["NotDetected"])
 		end
 
 		if selectedID then

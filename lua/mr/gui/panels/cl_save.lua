@@ -71,6 +71,7 @@ function Panels:SetSave(parent, frameType, info)
 		saveButton:SetSize(saveButtonInfo.width, saveButtonInfo.height)
 		saveButton:SetPos(saveButtonInfo.x, saveButtonInfo.y)
 		saveButton:SetText("Save")
+		saveButton:SetIcon("icon16/disk.png")
 		saveButton.DoClick = function()
 			MR.CL.Save:Set()
 		end

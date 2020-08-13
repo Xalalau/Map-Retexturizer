@@ -94,6 +94,7 @@ function Panels:SetCleanup(parent, frameType, info)
 		cleanupButton:SetSize(cleanupButtonInfo.width, cleanupButtonInfo.height)
 		cleanupButton:SetPos(cleanupButtonInfo.x, cleanupButtonInfo.y)
 		cleanupButton:SetText("Cleanup")
+		cleanupButton:SetIcon("icon16/bin.png")
 		cleanupButton.DoClick = function()
 			for k,v in pairs(options) do
 				if v[1]:GetChecked() then

@@ -18,6 +18,7 @@ Map Retexturizer commands
 mr_admin        1/0    =  Turn on/off the admin protections;
 mr_materials           =  List all the map materials;
 mr_delay               =  The delay between each materiall application on a load;
+mr_progress_bar        =  Enable/Disable the progress bar;
 mr_list                =  List the saved game names;
 mr_load        "name"  =  Load the saved game called "name";
 mr_autoload    "name"  =  Set a saved game called "name" to load when the server starts;

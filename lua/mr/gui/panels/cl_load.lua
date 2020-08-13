@@ -69,9 +69,14 @@ function Panels:SetLoad(parent, frameType, info)
 		y = speedComboboxInfo.y - MR.CL.Panels:GetGeneralBorders(),
 	}
 
- 	local loadCleanupBoxInfo = {
+	local loadCleanupBoxInfo = {
 		x = speedLabelInfo.x,
-		y = speedLabelInfo.y - speedLabelInfo.height
+		y = speedLabelInfo.y - speedLabelInfo.height + MR.CL.Panels:GetGeneralBorders()
+	}
+
+	local progressBoxInfo = {
+		x = speedLabelInfo.x,
+		y = loadCleanupBoxInfo.y - MR.CL.Panels:GetTextHeight() + MR.CL.Panels:GetGeneralBorders()
 	}
 
 	--------------------------
@@ -244,6 +249,37 @@ function Panels:SetLoad(parent, frameType, info)
 			else
 				autoLoadReset:Hide()
 			end
+		end
+
+	--------------------------
+	-- Progress checkbox
+	--------------------------
+	local progressBox = vgui.Create("DCheckBoxLabel", panel)
+		MR.Sync:Set(progressBox, "load", "progress")
+		progressBox:SetPos(progressBoxInfo.x, progressBoxInfo.y)
+		progressBox:SetText("Progress bar")
+		progressBox:SetTextColor(Color(0, 0, 0, 255))
+		progressBox:SetValue(GetConVar("internal_mr_progress_bar"):GetBool())
+		progressBox.OnChange = function(self, val)
+			-- Force the field to update and disable a sync loop block
+			if MR.CL.Sync:GetLoopBlock() then
+				MR.CL.Sync:SetLoopBlock(false)
+
+				return
+			-- Admin only: reset the option if it's not being synced and return
+			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+				progressBox:SetChecked(GetConVar("internal_mr_progress_bar"):GetBool())
+
+				return
+			end
+
+			-- Start syncing
+			net.Start("SV.Sync:Replicate")
+				net.WriteString("internal_mr_progress_bar")
+				net.WriteString(val and "1" or "0")
+				net.WriteString("load")
+				net.WriteString("progress")
+			net.SendToServer()
 		end
 
 	--------------------------

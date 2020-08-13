@@ -89,6 +89,11 @@ function Skybox:Remove(ply)
 		return
 	end
 
+	-- Return if a cleanup is already running
+	if MR.Materials:IsRunningProgressiveCleanup() then
+		return false
+	end
+
 	-- Check if we need to go ahead
 	if MR.Skybox:GetCurrent() == "" then
 		return

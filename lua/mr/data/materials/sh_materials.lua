@@ -25,7 +25,12 @@ local materials = {
 	---- detect displacement materials.
 	----
 	---- Format: valid[material name] = true or nil
-	valid = {}
+	valid = {},
+	-- Control a progressive cleanup
+	progressiveCleanup = {
+		time = 0,
+		endCallback
+	}
 }
 
 -- Networking
@@ -55,6 +60,65 @@ function Materials:Init()
 			end
 		end
 	end
+end
+
+-- Instant cleanup
+-- If enabled, clear the map as fast as possible (may cause a temporary freeze)
+function Materials:IsInstantCleanupEnabled()
+	return GetConVar("internal_mr_instant_cleanup"):GetString() == "1" and true
+end
+
+-- Progressive cleanup controls
+-- Clear the map at 0.02s delay speed instead of sending everything at once
+-- Tool usage gets blocked if a progressive cleanup is running
+-- I don't provide a progress bar here
+function Materials:IsRunningProgressiveCleanup()
+	return Materials:GetProgressiveCleanupTime() - CurTime() > 0 and true
+end
+
+function Materials:GetProgressiveCleanupTime()
+	return materials.progressiveCleanup.time
+end
+
+function Materials:SetProgressiveCleanup(callback, ...)
+	local args = { ... }
+	local diff = Materials:GetProgressiveCleanupTime() - CurTime()
+	local delayBase = 0.02
+	local delay = diff > 0 and (diff + delayBase) or delayBase
+	local incrementedTime = diff > 0 and (Materials:GetProgressiveCleanupTime() + delayBase) or CurTime() + delay
+
+	materials.progressiveCleanup.time = incrementedTime
+
+	timer.Simple(delay, function()
+		callback(nil, unpack(args))
+
+		if CurTime() + 0.001 > Materials:GetProgressiveCleanupTime() then
+			local tab = Materials:GetProgressiveCleanupEndCallback()
+
+			if tab and tab.func then
+				-- I guess I'm passing too much information since unpack() is returning an empty result
+				-- So I take the arguments manually
+				arg1 = tab.args[1]
+				arg2 = tab.args[2]
+				arg3 = tab.args[3]
+				arg4 = tab.args[4]
+				arg5 = tab.args[5]
+				arg6 = tab.args[6]
+
+				tab.func(nil, arg1, arg2, arg3, arg4, arg5, arg6)
+
+				tab.func = nil
+			end
+		end
+	end)
+end
+
+function Materials:GetProgressiveCleanupEndCallback()
+	return materials.progressiveCleanup.endCallback
+end
+
+function Materials:SetProgressiveCleanupEndCallback(func, ...)
+	materials.progressiveCleanup.endCallback = { func = func, args = { ... } }
 end
 
 -- Check if a given material path is a displacement
@@ -498,7 +562,7 @@ function Materials:SetFinalSteps()
 		if GetConVar("internal_mr_autosave"):GetString() == "1" then
 			if not timer.Exists("MRAutoSave") then
 				timer.Create("MRAutoSave", 60, 1, function()
-					if not MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() then
+					if not (MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup()) then
 						MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), MR.Base:GetAutoSaveName())
 						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 					end
@@ -506,6 +570,19 @@ function Materials:SetFinalSteps()
 			end
 		end
 	end
+end
+
+-- Get current modifications quantity
+function Materials:GetCurrentModificationsQuantity()
+	local total = 0
+
+	for k,v in pairs(Materials:GetCurrentModifications(clean)) do
+		if k ~= "savingFormat" then
+			total = total + MR.DataList:Count(v)
+		end
+	end
+
+	return total
 end
 
 -- Get the current modified materials lists

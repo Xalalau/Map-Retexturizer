@@ -18,11 +18,6 @@ end
 
 -- Save the modifications to a file: client
 function Save:Set()
-	-- Don't use the tool in the middle of a loading
-	if MR.Duplicator:IsRunning(LocalPlayer()) or MR.Duplicator:IsStopping() then
-		return false
-	end
-
 	-- Send the save name to the sever
 	local saveName = GetConVar("internal_mr_savename"):GetString()
 

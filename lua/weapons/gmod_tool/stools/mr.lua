@@ -64,17 +64,12 @@ function TOOL_BasicChecks(ply, tr)
 		return false
 	end
 
-	-- Don't use in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
+	-- Don't use in the middle of a(n) (un)loading
+	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
 		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the loading finishes.")
+			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the current process finishes.")
 		end
 
-		return false
-	end
-
-	-- Don't do anything if a loading is being stopped
-	if MR.Duplicator:IsStopping() then
 		return false
 	end
 

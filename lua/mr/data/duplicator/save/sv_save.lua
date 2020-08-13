@@ -26,8 +26,8 @@ function Save:Set(ply, saveName, blockAlert)
 		return false
 	end
 
-	-- Don't save in the middle of a loading
-	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() then
+	-- Don't save in the middle of a(n) (un)loading
+	if MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
 		return false
 	end
 

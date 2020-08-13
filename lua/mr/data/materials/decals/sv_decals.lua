@@ -62,6 +62,11 @@ function Decals:RemoveAll(ply)
 		return false
 	end
 
+	-- Return if a cleanup is already running
+	if MR.Materials:IsRunningProgressiveCleanup() then
+		return false
+	end
+	
 	-- Stop the duplicator
 	MR.SV.Duplicator:ForceStop()
 

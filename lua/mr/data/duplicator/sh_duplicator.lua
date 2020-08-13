@@ -28,6 +28,12 @@ local dup = {
 		-- Index: [1] = server, [player ent index + 1] = player
 		-- processed.list[Index] = { copy of the default couting control } (relative to a player (shared) or the server (serverside only))
 		list = {}
+	},
+	-- Default ducplicator speeds (mr_delay)
+	speed = {
+		Normal = "0.035",
+		Fast = "0.01",
+		Slow = "0.1"
 	}
 }
 
@@ -132,6 +138,14 @@ end
 
 function Duplicator:EmptyErrorsList(ply, value)
 	table.Empty(dup.processed.list[Duplicator:GetControlIndex(ply)].errors)
+end
+
+function Duplicator:GetSpeedProfile(field)
+	return dup.speed[field]
+end
+
+function Duplicator:GetSpeeds()
+	return dup.speed
 end
 
 -- Load a GMod save

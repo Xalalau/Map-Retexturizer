@@ -194,7 +194,15 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		-- Cleanup
 		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
-			MR.SV.Materials:RemoveAll(ply)
+			if MR.Materials:GetCurrentModificationsQuantity() ~= 0 then
+				MR.SV.Materials:RemoveAll(ply)
+
+				if not MR.Materials:IsInstantCleanupEnabled() then
+					MR.Materials:SetProgressiveCleanupEndCallback(MR.SV.Duplicator.Start, ply, ent, savedTable, loadName)
+
+					return
+				end
+			end
 		end
 
 		-- Cease ongoing duplications
@@ -209,7 +217,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
-	timer.Simple(0.5, function()
+	timer.Simple(0.01, function()
 		-- Get the total modifications to do
 		local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
 		local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0
@@ -393,7 +401,7 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	if MR.Duplicator:IsRunning() or isGModLoadStarting then
 		MR.Duplicator:SetStopping(true)
 
-		timer.Simple(0.25, function()
+		timer.Simple(0.05, function()
 			MR.Duplicator:SetStopping(false)
 		end)
 

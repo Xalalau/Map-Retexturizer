@@ -146,6 +146,11 @@ function Displacements:RemoveAll(ply)
 		return false
 	end
 
+	-- Return if a cleanup is already running
+	if MR.Materials:IsRunningProgressiveCleanup() then
+		return false
+	end
+	
 	-- Stop the duplicator
 	MR.SV.Duplicator:ForceStop()
 
@@ -154,11 +159,17 @@ function Displacements:RemoveAll(ply)
 	net.Broadcast()
 
 	-- Remove
-	if MR.DataList:Count(MR.Displacements:GetList()) > 0 then
-		for k,v in pairs(MR.Displacements:GetList()) do
-			if MR.DataList:IsActive(v) then
-				MR.Map:Remove(v.oldMaterial)
+	timer.Simple(0.01, function() -- Wait a bit so we can validate all the current progressive cleanings
+		if MR.DataList:Count(MR.Displacements:GetList()) > 0 then
+			for k,v in pairs(MR.Displacements:GetList()) do
+				if MR.DataList:IsActive(v) then
+					if MR.Materials:IsInstantCleanupEnabled() then
+						MR.Map:Remove(v.oldMaterial)
+					else
+						MR.Materials:SetProgressiveCleanup(MR.Map.Remove, v.oldMaterial)
+					end
+				end
 			end
 		end
-	end
+	end)
 end

@@ -67,6 +67,11 @@ end
 function Load:Start(ply, loadName)
 	local loadTable
 
+	-- Don't load in the middle of an unloading
+	if MR.Materials:IsRunningProgressiveCleanup() then
+		return false
+	end
+
 	-- General first steps
 	local check = {
 		type = "Load"

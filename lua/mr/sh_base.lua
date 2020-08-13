@@ -17,6 +17,7 @@ do
 	CreateConVar("internal_mr_duplicator_cleanup", "1", sh_flags)
 	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags)
 	CreateConVar("internal_mr_progress_bar", "1", sh_flags)
+	CreateConVar("internal_mr_instant_cleanup", "0", sh_flags)
 end
 
 do
@@ -35,7 +36,6 @@ do
 	CreateConVar("internal_mr_scaley", "1", cl_flags)
 	CreateConVar("internal_mr_rotation", "0", cl_flags)
 end
-
 
 local base = {
 	version = "GitHub, Version 16.1+",

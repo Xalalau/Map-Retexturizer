@@ -288,11 +288,7 @@ function Panels:SetLoad(parent, frameType, info)
 	--------------------------
 	local delay = GetConVar("internal_mr_delay"):GetString()
 	local selectedID
-	local options = {
-		["Normal"] = "0.035",
-		["Fast"] = "0.01",
-		["Slow"] = "0.1"
-	}
+	local options = MR.Duplicator:GetSpeeds()
 
 	local i = 1
 	for k,v in pairs(options) do

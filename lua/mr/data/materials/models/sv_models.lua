@@ -22,13 +22,24 @@ function Models:RemoveAll(ply)
 		return false
 	end
 
+	-- Return if a cleanup is already running
+	if MR.Materials:IsRunningProgressiveCleanup() then
+		return false
+	end
+
 	-- Stop the duplicator
 	MR.SV.Duplicator:ForceStop()
 
 	-- Cleanup
-	for k,v in pairs(ents.GetAll()) do
-		if IsValid(v) then
-			MR.Models:Remove(v)
+	timer.Simple(0.01, function() -- Wait a bit so we can validate all the current progressive cleanings
+		for k,v in pairs(ents.GetAll()) do
+			if IsValid(v) and v.mr then
+				if MR.Materials:IsInstantCleanupEnabled() then
+					MR.Models:Remove(v)
+				else
+					MR.Materials:SetProgressiveCleanup(MR.Models.Remove, v)
+				end
+			end
 		end
-	end
+	end)
 end

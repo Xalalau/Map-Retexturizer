@@ -15,20 +15,24 @@ concommand.Add("mr_help", function ()
 Map Retexturizer commands
 -------------------------
 
-mr_admin        1/0    =  Turn on/off the admin protections;
-mr_materials           =  List all the map materials;
-mr_delay               =  The delay between each materiall application on a load;
-mr_progress_bar        =  Enable/Disable the progress bar;
-mr_list                =  List the saved game names;
-mr_load        "name"  =  Load the saved game called "name";
-mr_autoload    "name"  =  Set a saved game called "name" to load when the server starts;
-mr_save        "name"  =  Save the current tool modifications into a file called "name";
-mr_autosave     1/0    =  Enable/Disable the autosaving;
-mr_delete      "name"  =  Delete the save called "name";
-mr_dup_cleanup  1/0    =  Enable/Disable cleanup before starting a load;
-mr_cleanup             =  Clean all the modifications;
-mr_add_disp "material" =  Add displacement to the menu;
-mr_rem_disp "material" =  Remove displacement from the menu.
+mr_admin        1/0     =  Turn on/off the admin protections;
+mr_materials            =  List all the map materials;
+mr_cleanup              =  Clean all the modifications;
+
+mr_list                 =  List the saved game names;
+mr_load        "name"   =  Load the saved game called "name";
+mr_autoload    "name"   =  Set a saved game called "name" to load when the server starts;
+mr_save        "name"   =  Save the current tool modifications into a file called "name";
+mr_autosave     1/0     =  Enable/Disable the autosaving;
+mr_delete      "name"   =  Delete the save called "name";
+
+mr_delay                =  The delay between each materiall application on a load;
+mr_dup_cleanup  1/0     =  Enable/Disable cleanup before starting a load;
+mr_progress_bar         =  Enable/Disable the progress bar;
+mr_instant_cleanup      =  Clear the map as fast as possible (may cause a temporary freeze);
+
+mr_add_disp "material"  =  Add displacement to the menu;
+mr_rem_disp "material"  =  Remove displacement from the menu.
 ]]
 
 	print(message)
@@ -247,7 +251,7 @@ concommand.Add("mr_cleanup", function (ply)
 		return
 	end
 
-	if MR.SV.Materials:RemoveAll(MR.SV.Ply:GetFakeHostPly()) then
+	if not MR.Materials:IsRunningProgressiveCleanup() and MR.SV.Materials:RemoveAll(MR.SV.Ply:GetFakeHostPly()) then
 		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: cleaning modifications...")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to run the cleanup.")
@@ -325,6 +329,31 @@ concommand.Add("mr_progress_bar", function (ply, cmd, args)
 
 	if MR.SV.Sync:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_progress_bar", value, "load", "progress") then
 		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: duplicator progress bar " .. (value == "1" and "enabled" or "disabled") .. ".")
+	else
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
+	end
+end)
+
+-- ---------------------------------------------------------
+-- mr_instant_cleanup
+concommand.Add("mr_instant_cleanup", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
+
+	if CLIENT then
+		MR.CL.Concommands:RunOnSV("mr_instant_cleanup", value)
+
+		return
+	end
+
+	if value ~= "1" and value ~= "0" then
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
+
+		return
+	end
+
+	if MR.SV.Sync:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_instant_cleanup", value, "cleanup", "instant") then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: instant cleanup " .. (value == "1" and "enabled" or "disabled") .. ".")
 	else
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
 	end

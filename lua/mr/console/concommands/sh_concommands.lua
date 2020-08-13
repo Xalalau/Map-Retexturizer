@@ -303,3 +303,28 @@ concommand.Add("mr_rem_disp", function (ply, cmd, args)
 		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Failed to remove displacement.")
 	end
 end)
+
+-- ---------------------------------------------------------
+-- mr_progress_bar
+concommand.Add("mr_progress_bar", function (ply, cmd, args)
+	local value = args[1]
+	local plyIndex = ply:EntIndex()
+
+	if CLIENT then
+		MR.CL.Concommands:RunOnSV("mr_progress_bar", value)
+
+		return
+	end
+
+	if value ~= "1" and value ~= "0" then
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Invalid value. Choose 1 or 0.")
+
+		return
+	end
+
+	if MR.SV.Sync:Replicate(MR.SV.Ply:GetFakeHostPly(), "internal_mr_progress_bar", value, "load", "progress") then
+		MR.SV.Concommands:PrintSuccess("[Map Retexturizer] Console: duplicator progress bar " .. (value == "1" and "enabled" or "disabled") .. ".")
+	else
+		MR.SV.Concommands:PrintFail(plyIndex, "[Map Retexturizer] Error synchronizing the value.")
+	end
+end)

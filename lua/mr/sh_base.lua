@@ -16,6 +16,7 @@ do
 	CreateConVar("internal_mr_delay", "0.035", sh_flags)
 	CreateConVar("internal_mr_duplicator_cleanup", "1", sh_flags)
 	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags)
+	CreateConVar("internal_mr_progress_bar", "1", sh_flags)
 end
 
 do

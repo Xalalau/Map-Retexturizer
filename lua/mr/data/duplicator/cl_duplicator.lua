@@ -100,7 +100,7 @@ end
 function Duplicator:RenderProgress()
 	local ply = LocalPlayer()
 
-	if ply and IsValid(ply) and MR.Duplicator:GetTotal(ply) > 0 and MR.Duplicator:GetCurrent(ply) > 0 then				
+	if MR.Duplicator:IsProgressBarEnabled() and ply and IsValid(ply) and MR.Duplicator:GetTotal(ply) > 0 and MR.Duplicator:GetCurrent(ply) > 0 then				
 		local borderOut = 2
 		local border = 5
 

@@ -56,6 +56,11 @@ function Duplicator:GetControlIndex(ply)
 	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
 end
 
+-- Set the old material
+function Duplicator:IsProgressBarEnabled()
+	return GetConVar("internal_mr_progress_bar"):GetString() == "1" and true
+end
+
 -- Check if the duplicator is stopping
 function Duplicator:IsStopping()
 	return dup.forceStop

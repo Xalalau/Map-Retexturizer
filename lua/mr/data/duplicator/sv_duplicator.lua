@@ -237,29 +237,42 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		MR.Duplicator:SetTotal(ply, total)
 		Duplicator:SetProgress(ply, nil, MR.Duplicator:GetTotal(ply))
 
+		--  table.GetLastKey() is deprecated, so I use this just to make sure
+		local function GetLastKey(tab)
+			local last = 1
+
+			for k,v in pairs(tab)do
+				if k > last then
+					last = k
+				end
+			end
+
+			return last
+		end
+
 		-- Apply model materials
 		if modelsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.models, 1, "model")
+			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "model")
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.decals, 1, "decal")
+			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decal")
 		end
 
 		-- Apply map materials
 		if mapTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.map, 1, "map")
+			Duplicator:LoadMaterials(ply, savedTable.map, 1, GetLastKey(savedTable.map), "map")
 		end
 
 		-- Apply displacements
 		if displacementsTotal > 0 then		
-			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, "displacements")
+			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, GetLastKey(savedTable.displacements), "displacements")
 		end
 
 		-- Apply the skybox
 		if skyboxTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, "skybox")
+			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, GetLastKey(savedTable.skybox), "skybox")
 		end
 	end)
 end
@@ -308,12 +321,12 @@ function Duplicator:SetProgress(ply, current, total)
 end
 
 -- Load materials from saves
-function Duplicator:LoadMaterials(ply, savedTable, position, section)
+function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section)
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
-		if not MR.Duplicator:IsStopping() and position <= #savedTable then
-			Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
+		if not MR.Duplicator:IsStopping() and position <= finalPosition then
+			Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section)
 		-- There are no more entries
 		else
 			Duplicator:Finish(ply)
@@ -371,7 +384,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, section)
 
 	-- Next material
 	timer.Simple(GetConVar("internal_mr_delay"):GetFloat(), function()
-		Duplicator:LoadMaterials(ply, savedTable, position + 1, section)
+		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section)
 	end)
 end
 

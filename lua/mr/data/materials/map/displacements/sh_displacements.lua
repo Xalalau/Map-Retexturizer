@@ -39,8 +39,8 @@ function Displacements:SetDetected(value, remove, retrying)
 			end)
 		else
 			displacements.detected[value] = {
-				Material(value):GetTexture("$basetexture"):GetName(),
-				Material(value):GetTexture("$basetexture2"):GetName()
+				Material(value):GetTexture("$basetexture"):GetName() or "error",
+				Material(value):GetTexture("$basetexture2"):GetName() or "error"
 			}
 		end
 	end

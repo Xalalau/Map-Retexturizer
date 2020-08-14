@@ -145,7 +145,7 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDec
 		scaleY = string.format("%.2f", math.ceil((1/scaleY)*1000)/1000),
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
 		rotation = not isDecal and (oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and string.format("%.2f", oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y)) or nil,
-		alpha =  not isDecal and string.format("%.2f", oldMaterial:GetString("$alpha")) or nil,
+		alpha =  not isDecal and string.format("%.2f", oldMaterial:GetString("$alpha") or 1) or nil,
 		detail =  not isDecal and MR.Materials:GetDetail(oldMaterialIn) or nil
 	}
 
@@ -155,6 +155,3 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDec
 
 	return data
 end
-
-
- 

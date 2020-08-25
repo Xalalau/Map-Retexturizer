@@ -91,14 +91,10 @@ function DataList:Clean(list)
 		return
 	end
 
-	local i = 1
-
-	while list[i] do
+	for i=1, #list, 1 do
 		if not DataList:IsActive(list[i]) then
 			list[i] = nil
 		end
-
-		i = i + 1
 	end
 end
 

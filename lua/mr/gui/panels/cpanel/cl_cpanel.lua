@@ -64,7 +64,7 @@ hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
 	-- This situation can only occur at the start of the match:
 	-- Inhibit GMod's spawn menu context panel in case the player opens the spawn
 	-- menu, load our tool menu but don't click on it to load the tool gun
-	if MR.CL.Panels:GetSpawnmenuActiveControlPanel() then
+	if MR.CL.Panels:GetSpawnmenuActiveControlPanel() and MR.CL.Panels:GetSpawnmenuActiveControlPanel().Header then
 		if MR.CL.Panels:GetSpawnmenuActiveControlPanel().Header:GetValue() == MR.CL.Panels:GetName() then
 			MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
 		end

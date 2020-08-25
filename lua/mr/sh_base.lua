@@ -38,7 +38,7 @@ do
 end
 
 local base = {
-	version = "Version 16.4",
+	version = "Version GitHub 16.4+",
 	materials = {
 		folder = "mr/"
 	},

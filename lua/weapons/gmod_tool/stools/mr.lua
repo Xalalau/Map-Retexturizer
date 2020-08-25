@@ -231,18 +231,10 @@ function TOOL:RightClick(tr)
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
-	print()
-	PrintTable(oldData)
-	print()
-	PrintTable(newData)
-	print()
-
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
 		return false
 	end
-
-	print("real")
 
 	if SERVER then
 		-- Copy the material

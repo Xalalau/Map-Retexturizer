@@ -183,7 +183,7 @@ function Skybox:GetOriginal(tr)
 
 	return nil
 end
-Skybox:Init()
+
 -- Remove a sky material suffix
 function Skybox:HasSuffix(material)
 	if material then

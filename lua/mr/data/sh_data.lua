@@ -129,6 +129,10 @@ end
 function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDecal, blockCleanup)
 	local oldMaterial = Material(oldMaterialIn)
 
+	if not oldMaterial then
+		return
+	end
+
 	local scaleX = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetScale() and oldMaterial:GetMatrix("$basetexturetransform"):GetScale()[1] or "1.00"
 	local scaleY = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetScale() and oldMaterial:GetMatrix("$basetexturetransform"):GetScale()[2] or "1.00"
 	local offsetX = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation() and oldMaterial:GetMatrix("$basetexturetransform"):GetTranslation()[1] or "0.00"

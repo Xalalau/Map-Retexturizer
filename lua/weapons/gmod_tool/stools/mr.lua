@@ -207,6 +207,11 @@ function TOOL:RightClick(tr)
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
+
+		if not oldData then -- HACK: If for some reason an original material from the map is non-existent on the client, create a generic Data so that the operation is successful anyway.
+			oldData = MR.Data:Create(ply, { oldMaterial = MR.Materials:GetOriginal(tr) }, nil, true)
+		end
+
 		oldData.newMaterial = oldData.oldMaterial 
 	-- Else fill up the empty fields
 	else
@@ -226,10 +231,18 @@ function TOOL:RightClick(tr)
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
+	print()
+	PrintTable(oldData)
+	print()
+	PrintTable(newData)
+	print()
+
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
 		return false
 	end
+
+	print("real")
 
 	if SERVER then
 		-- Copy the material

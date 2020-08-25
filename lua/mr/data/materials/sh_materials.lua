@@ -199,7 +199,7 @@ function Materials:Validate(material)
 			end
 		elseif SERVER then
 			-- This is the best validation I can make on the server:
-			if not Material(material):IsError() then 
+			if Material(material) and not Material(material):IsError() then 
 				currentTResult = true
 			end
 		end

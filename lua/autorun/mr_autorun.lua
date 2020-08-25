@@ -100,9 +100,9 @@ end
 
 MR.Base:Init()
 MR.Materials:Init()
+MR.Skybox:Init()
 
 if SERVER then
-	MR.Skybox:Init()
 	MR.SV.Displacements:Init()
 	MR.SV.Ply:Init()
 	MR.SV.Load:Init()

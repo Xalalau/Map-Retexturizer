@@ -178,7 +178,8 @@ function Materials:Validate(material)
 
 	-- Ignore post processing and folder returns
 	if 	string.find(material, "../", 1, true) or
-		string.find(material, "pp/", 1, true) then
+		string.find(material, "pp/", 1, true) or
+		not checkWorkaround then
 	else
 		if CLIENT then
 			-- Perfect material validation on the client:

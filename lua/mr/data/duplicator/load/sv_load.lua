@@ -18,7 +18,7 @@ net.Receive("SV.Load:SetAuto", function(_, ply)
 end)
 
 net.Receive("SV.Load:Start", function(_, ply)
-	Load:Start(MR.SV.Ply:GetFakeHostPly(), net.ReadString())
+	Load:Start(ply, net.ReadString())
 end)
 
 net.Receive("SV.Load:Delete", function(_, ply)
@@ -65,6 +65,13 @@ end
 
 -- Load modifications
 function Load:Start(ply, loadName)
+	-- Admin only
+	if not MR.Ply:IsAdmin(ply) then
+		return false
+	elseif ply.IsPlayer then
+		ply = MR.SV.Ply:GetFakeHostPly()
+	end
+
 	local loadTable
 
 	-- Don't load in the middle of an unloading

@@ -92,15 +92,11 @@ function Panels:SetSave(parent, frameType, info)
 			autosaveBox:SetPos(autosaveBoxInfo.x, autosaveBoxInfo.y)
 			autosaveBox:SetText("Autosave")
 			autosaveBox:SetTextColor(Color(0, 0, 0, 255))
-			autosaveBox:SetValue(true)
+			autosaveBox:SetValue(GetConVar("internal_mr_autosave"):GetBool())
 			autosaveBox.OnChange = function(self, val)
 				-- Force the field to update and disable a sync loop block
 				if MR.CL.Sync:GetLoopBlock() then
-					if val ~= autosaveBox:GetValue() then
-						autosaveBox:SetChecked(val)
-					else
-						MR.CL.Sync:SetLoopBlock(false)
-					end
+					MR.CL.Sync:SetLoopBlock(false)
 			
 					return
 				-- Admin only: reset the option if it's not being synced

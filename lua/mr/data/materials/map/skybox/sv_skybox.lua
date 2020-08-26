@@ -55,9 +55,16 @@ function Skybox:Set(ply, data, isBroadcasted)
 
 		return
 	-- It's a full 6-sided skybox (Render box on clientside)
-	elseif MR.Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(data.newMaterial)) then
+	elseif MR.Materials:IsFullSkybox(data.newMaterial) then
 		data.newMaterial = MR.Skybox:RemoveSuffix(data.newMaterial)
-	-- It's an invalid material
+
+		MR.Materials:SetValid(data.newMaterial, true)
+
+		net.Start("Materials:SetValid")
+			net.WriteString(data.newMaterial)
+			net.WriteBool(true)
+		net.Broadcast()
+		-- It's an invalid material
 	elseif not MR.Materials:Validate(data.newMaterial) then
 		return
 	end
@@ -74,15 +81,15 @@ function Skybox:Set(ply, data, isBroadcasted)
 		data.detail = nil
 	end
 
+	-- Replicate
+	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
+
 	-- Apply the material(s)
 	for i = 1,6 do
 		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial
 		data.oldMaterial = (MR.Skybox:IsPainted() and MR.Skybox:GetFilename2() or MR.Skybox:GetName()) .. MR.Skybox:GetSuffixes()[i]
 		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
 	end
-
-	-- Replicate
-	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", MR.Skybox:RemoveSuffix(data.newMaterial), "skybox", "text")
 
 	return
 end

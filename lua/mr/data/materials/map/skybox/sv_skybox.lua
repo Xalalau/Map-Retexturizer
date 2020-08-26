@@ -82,7 +82,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	end
 
 	-- Replicate
-	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", data.newMaterial, "skybox", "text")
+	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", MR.Skybox:RemoveSuffix(data.newMaterial), "skybox", "text")
 
 	return
 end

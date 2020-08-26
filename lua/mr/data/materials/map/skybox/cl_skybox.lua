@@ -24,9 +24,6 @@ function Skybox:Render()
 	-- Stop renderind if there is no material
 	if newMaterial == "" then
 		return
-	-- It's a full 6-sided skybox (Render box on clientside)
-	elseif MR.Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(newMaterial)) then
-		newMaterial = MR.Skybox:RemoveSuffix(newMaterial)
 	-- It's an invalid material
 	elseif not MR.Materials:Validate(newMaterial) then
 		return
@@ -37,7 +34,6 @@ function Skybox:Render()
 
 	-- Render our sky box around the player
 	render.OverrideDepthEnable(true, false)
-	render.SetLightingMode(suffixes[1] == "" and 1 or 2)
 
 	cam.Start3D(Vector(0, 0, 0), EyeAngles())
 		render.SetMaterial(Material(newMaterial..suffixes[1])) -- ft
@@ -55,5 +51,4 @@ function Skybox:Render()
 	cam.End3D()
 
 	render.OverrideDepthEnable(false, false)
-	render.SetLightingMode(0)
 end

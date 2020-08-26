@@ -69,6 +69,11 @@ function Skybox:Set(ply, data, isBroadcasted)
 		data.backup = nil
 	end
 
+	-- HACK: disable the detail field, it's completely buggy
+	if data.detail then
+		data.detail = nil
+	end
+
 	-- Apply the material(s)
 	for i = 1,6 do
 		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial

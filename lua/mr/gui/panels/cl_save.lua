@@ -103,11 +103,9 @@ function Panels:SetSave(parent, frameType, info)
 					end
 			
 					return
-				-- Admin only: reset the option if it's not being synced and return
+				-- Admin only: reset the option if it's not being synced
 				elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 					autosaveBox:SetChecked(GetConVar("internal_mr_autosave"):GetBool())
-			
-					return
 				end
 			
 				net.Start("SV.Save:SetAuto")

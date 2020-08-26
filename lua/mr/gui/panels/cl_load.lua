@@ -184,15 +184,13 @@ function Panels:SetLoad(parent, frameType, info)
 		autoLoadReset:SetPos(autoLoadResetInfo.x, autoLoadResetInfo.y)
 		autoLoadReset:SetImage("icon16/cancel.png")
 		autoLoadReset.DoClick = function()
-			if not MR.Ply:IsAdmin(LocalPlayer()) then
-				return
-			end
-
 			net.Start("SV.Load:SetAuto")
 				net.WriteString("")
 			net.SendToServer()
 
-			autoLoadReset:Hide()
+			if MR.Ply:IsAdmin(LocalPlayer()) then
+				autoLoadReset:Hide()
+			end
 		end
 
 		if GetConVar("internal_mr_autoload"):GetString() == "" then
@@ -213,10 +211,6 @@ function Panels:SetLoad(parent, frameType, info)
 		setAutoButton:SetTooltip("Auto load a saved file when the map starts.")
 		setAutoButton:SetIcon("icon16/add.png")
 		setAutoButton.DoClick = function()
-			if not MR.Ply:IsAdmin(LocalPlayer()) then
-				return
-			end
-
 			local panel = MR.CL.ExposedPanels:Get("load", "text")
 			local loadName = panel:GetSelected()[1] and panel:GetSelected()[1]:GetColumnText(1) or ""
 
@@ -224,9 +218,11 @@ function Panels:SetLoad(parent, frameType, info)
 				net.WriteString(loadName)
 			net.SendToServer()
 
-			if loadName ~= "" then
-				autoLoadReset:Show()
-				autoLoadReset:MoveToFront()
+			if MR.Ply:IsAdmin(LocalPlayer()) then
+				if loadName ~= "" then
+					autoLoadReset:Show()
+					autoLoadReset:MoveToFront()
+				end
 			end
 		end
 
@@ -266,11 +262,9 @@ function Panels:SetLoad(parent, frameType, info)
 				MR.CL.Sync:SetLoopBlock(false)
 
 				return
-			-- Admin only: reset the option if it's not being synced and return
+			-- Admin only: reset the option if it's not being synced
 			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 				progressBox:SetChecked(GetConVar("internal_mr_progress_bar"):GetBool())
-
-				return
 			end
 
 			-- Start syncing
@@ -297,11 +291,9 @@ function Panels:SetLoad(parent, frameType, info)
 				MR.CL.Sync:SetLoopBlock(false)
 
 				return
-			-- Admin only: reset the option if it's not being synced and return
+			-- Admin only: reset the option if it's not being synced
 			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 				loadCleanupBox:SetChecked(GetConVar("internal_mr_duplicator_cleanup"):GetBool())
-
-				return
 			end
 
 			-- Start syncing
@@ -369,11 +361,9 @@ function Panels:SetLoad(parent, frameType, info)
 				MR.CL.Sync:SetLoopBlock(false)
 
 				return
-			-- Admin only: reset the option if it's not being synced and return
+			-- Admin only: reset the option if it's not being synced
 			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 				speedCombobox:ChooseOptionID(GetConVar("internal_mr_delay"):GetInt())
-
-				return
 			end
 
 			net.Start("SV.Sync:Replicate")

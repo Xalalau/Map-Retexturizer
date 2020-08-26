@@ -127,11 +127,9 @@ function Panels:SetCleanup(parent, frameType, info)
 				MR.CL.Sync:SetLoopBlock(false)
 
 				return
-			-- Admin only: reset the option if it's not being synced and return
+			-- Admin only: reset the option if it's not being synced
 			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 				MR.Sync:Get("cleanup", "instant"):SetChecked(GetConVar("internal_mr_instant_cleanup"):GetBool())
-
-				return
 			end
 
 			net.Start("SV.Sync:Replicate")

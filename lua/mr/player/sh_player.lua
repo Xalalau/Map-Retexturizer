@@ -145,13 +145,10 @@ function Ply:IsAdmin(ply)
 
 	-- General admin check
 	if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
-		if CLIENT then
+		if SERVER then
 			if not timer.Exists("MRNotAdminPrint") then
-				if not MR.CL.Sync:GetLoopBlock() then -- Don't print the message if we are checking a syncing
-					timer.Create("MRNotAdminPrint", 2, 1, function() end)
-				
-					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
-				end
+				timer.Create("MRNotAdminPrint", 2, 1, function() end)
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
 			end
 		end
 

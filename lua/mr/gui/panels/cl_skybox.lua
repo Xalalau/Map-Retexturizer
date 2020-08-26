@@ -68,11 +68,6 @@ function Panels:SetSkybox(parent, frameType, info)
 		skyboxCombobox:SetSize(HL2LComboboxInfo.width, HL2LComboboxInfo.height)
 		skyboxCombobox:SetPos(HL2LComboboxInfo.x, HL2LComboboxInfo.y)
 		skyboxCombobox.OnSelect = function(self, index, value, data)
-			-- Admin only
-			if not MR.Ply:IsAdmin(LocalPlayer()) then
-				return false
-			end
-
 			net.Start("SV.Skybox:Set")
 				net.WriteTable(MR.Data:CreateFromMaterial(MR.Skybox:GetGenericName(), MR.Skybox:SetSuffix(value == "" and MR.Skybox:GetName() or value)))
 			net.SendToServer()
@@ -107,8 +102,6 @@ function Panels:SetSkybox(parent, frameType, info)
 			-- Admin only
 			if not MR.Ply:IsAdmin(LocalPlayer()) then
 				MR.Sync:Get("skybox", "text"):SetValue(GetConVar("internal_mr_skybox"):GetString())
-
-				return
 			end
 
 			if value == "" then
@@ -141,11 +134,9 @@ function Panels:SetSkybox(parent, frameType, info)
 				MR.CL.Sync:SetLoopBlock(false)
 
 				return
-			-- Admin only: reset the option if it's not being synced and return
+			-- Admin only: reset the option if it's not being synced
 			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
 				MR.Sync:Get("skybox", "box"):SetChecked(GetConVar("internal_mr_skybox_toolgun"):GetBool())
-
-				return
 			end
 
 			net.Start("SV.Sync:Replicate")

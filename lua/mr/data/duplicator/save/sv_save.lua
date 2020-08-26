@@ -12,7 +12,7 @@ util.AddNetworkString("SV.Save:Set")
 util.AddNetworkString("SV.Save:SetAuto")
 
 net.Receive("SV.Save:SetAuto", function(_, ply)
-	Save:SetAuto(ply, net.ReadBool(value))
+	Save:SetAuto(ply, net.ReadString(value))
 end)
 
 net.Receive("SV.Save:Set", function(_, ply)

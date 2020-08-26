@@ -105,7 +105,7 @@ function Panels:SetSave(parent, frameType, info)
 				end
 			
 				net.Start("SV.Save:SetAuto")
-					net.WriteBool(val)
+					net.WriteString(val and "1" or "0")
 				net.SendToServer()
 			end
 

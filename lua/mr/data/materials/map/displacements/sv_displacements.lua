@@ -32,11 +32,11 @@ function Displacements:Init()
 	local dispFile = MR.Base:GetDetectedDisplacementsFile()
 
 	if file.Exists(dispFile, "Data") then
-		print("[Map Retexturizer] Loading displacements list...")
-
 		for k,v in pairs(util.JSONToTable(file.Read(dispFile, "Data"))) do
 			MR.Displacements:SetDetected(v)
 		end
+
+		print("[Map Retexturizer] Loaded displacements list.")
 	else
 		print("[Map Retexturizer] Building displacements list for the first time...")
 

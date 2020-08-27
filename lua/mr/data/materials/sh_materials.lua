@@ -53,11 +53,11 @@ function Materials:Init()
 
 		-- Serverside details list
 		if file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") then
-			print("[Map Retexturizer] Loading details list...")
-
 			for k,v in pairs(util.JSONToTable(file.Read(MR.Base:GetDetectedDetailsFile(), "Data"))) do
 				MR.SV.Materials:SetDetailFix(k, v)
 			end
+
+			print("[Map Retexturizer] Loaded details list.")
 		end
 	end
 end

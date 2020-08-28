@@ -103,6 +103,13 @@ function Materials:SetAll(ply)
 		}
 
 		local map_data = MR.OpenBSP()
+
+		if not map_data then
+			print("[Map Retexturizer] Error trying to read the BSP file.")
+	
+			return
+		end
+
 		local found = map_data:ReadLumpTextDataStringData()
 		local count = {
 			map = 0,

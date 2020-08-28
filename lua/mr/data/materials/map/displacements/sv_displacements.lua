@@ -38,9 +38,16 @@ function Displacements:Init()
 
 		print("[Map Retexturizer] Loaded displacements list.")
 	else
+		local map_data = MR.OpenBSP()
+
+		if not map_data then
+			print("[Map Retexturizer] Error trying to read the BSP file.")
+	
+			return
+		end
+
 		print("[Map Retexturizer] Building displacements list for the first time...")
 
-		local map_data = MR.OpenBSP()
 		local faces = map_data:ReadLumpFaces()
 		local texInfo = map_data:ReadLumpTexInfo()
 		local texData = map_data:ReadLumpTexData()

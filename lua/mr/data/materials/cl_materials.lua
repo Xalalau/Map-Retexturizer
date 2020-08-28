@@ -26,6 +26,13 @@ end)
 -- Fix to set details correctely
 function Materials:SetDetailFixList()
 	local map_data = MR.OpenBSP()
+
+	if not map_data then
+		print("[Map Retexturizer] Error trying to read the BSP file.")
+
+		return
+	end
+
 	local faces = map_data:ReadLumpFaces()
 	local texInfo = map_data:ReadLumpTexInfo()
 	local texData = map_data:ReadLumpTexData()

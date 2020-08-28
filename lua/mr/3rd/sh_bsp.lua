@@ -140,7 +140,8 @@ function MR.OpenBSP(fName)
 	t.m_version = version
 	t.m_lumps = lumps
 	t.m_file = f
-	return t
+	local isValid = t:GetLumpFacesTotal() == math.floor(t:GetLumpFacesTotal())
+	return isValid and t
 end
 
 function methods:GetLumpInfo(i) return self.m_lumps[i +1] end
@@ -163,6 +164,15 @@ function methods:ReadLump(lumpID)
 	elseif(lumpID == BSP_LUMP_DISPINFO) then return self:ReadLumpDispInfo()
 	elseif(lumpID == BSP_LUMP_FACES) then return self:ReadLumpFaces()
 	end
+end
+
+function methods:GetLumpFacesTotal()
+	local f = self.m_file
+	if(!f) then return end
+	local info = self:GetLumpInfo(BSP_LUMP_FACES)
+	local faces = {}
+	f:Seek(info.fileofs)
+	return info.filelen /SIZE_LUMP_FACE
 end
 
 function methods:ReadLumpFaces()

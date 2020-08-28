@@ -65,6 +65,13 @@ end)
 -- mr_materials
 concommand.Add("mr_materials", function ()
 	local map_data = MR.OpenBSP()
+
+	if not map_data then
+		print("[Map Retexturizer] Error trying to read the BSP file.")
+
+		return
+	end
+
 	local found = map_data:ReadLumpTextDataStringData()
 
 	print()

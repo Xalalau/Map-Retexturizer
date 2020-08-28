@@ -15,6 +15,7 @@ local materials = {
 
 -- Networking
 util.AddNetworkString("Materials:SetValid")
+util.AddNetworkString("Materials:SetProgressiveCleanupTime")
 util.AddNetworkString("SV.Materials:SetDetailFixList")
 util.AddNetworkString("CL.Materials:SetDetailFixList")
 util.AddNetworkString("CL.Materials:SetPreview")

@@ -38,6 +38,12 @@ net.Receive("Materials:SetValid", function()
 	Materials:SetValid(net.ReadString(), net.ReadBool())
 end)
 
+net.Receive("Materials:SetProgressiveCleanupTime", function()
+	if SERVER then return end
+
+	Materials:SetProgressiveCleanupTime(net.ReadFloat())
+end)
+
 function Materials:Init()
 	-- Detail init
 	if CLIENT then
@@ -80,6 +86,10 @@ function Materials:GetProgressiveCleanupTime()
 	return materials.progressiveCleanup.time
 end
 
+function Materials:SetProgressiveCleanupTime(time)
+	materials.progressiveCleanup.time = time
+end
+
 function Materials:SetProgressiveCleanup(callback, ...)
 	local args = { ... }
 	local diff = Materials:GetProgressiveCleanupTime() - CurTime()
@@ -87,13 +97,23 @@ function Materials:SetProgressiveCleanup(callback, ...)
 	local delay = diff > 0 and (diff + delayBase) or delayBase
 	local incrementedTime = diff > 0 and (Materials:GetProgressiveCleanupTime() + delayBase) or CurTime() + delay
 
-	materials.progressiveCleanup.time = incrementedTime
+	if diff < 0 then
+		net.Start("Materials:SetProgressiveCleanupTime")
+		net.WriteFloat(CurTime() + 9999)
+		net.Broadcast()
+	end
+
+	Materials:SetProgressiveCleanupTime(incrementedTime)
 
 	timer.Simple(delay, function()
 		callback(nil, unpack(args))
 
 		if CurTime() + 0.001 > Materials:GetProgressiveCleanupTime() then
 			local tab = Materials:GetProgressiveCleanupEndCallback()
+
+			net.Start("Materials:SetProgressiveCleanupTime")
+			net.WriteFloat(0)
+			net.Broadcast()
 
 			if tab and tab.func then
 				-- I guess I'm passing too much information since unpack() is returning an empty result

@@ -152,70 +152,66 @@ function Panels:SetProperties(parent, frameType, info)
 			end
 
 			local witdhMagnification = propertiesPanel:CreateRow("Magnification", "Width")
-				MR.CL.Panels:SetMRFocus(witdhMagnification.Inner)
 				witdhMagnification:Setup("Float", { min = 0.01, max = 6 })
 				witdhMagnification:SetValue(GetConVar("internal_mr_scalex"):GetFloat())
 				witdhMagnification.DataChanged = function(self, data)
 					setValue("internal_mr_scalex", data)
 				end
+				MR.CL.Panels:SetMRFocus(witdhMagnification.Inner:GetChildren()[1].TextArea)
 				witdhMagnification.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_scalex", self:GetValue())
 				end
 
 			local heightMagnification = propertiesPanel:CreateRow("Magnification", "Height")
-				MR.CL.Panels:SetMRFocus(heightMagnification.Inner)
 				heightMagnification:Setup("Float", { min = 0.01, max = 6 })
 				heightMagnification:SetValue(GetConVar("internal_mr_scaley"):GetFloat())
 				heightMagnification.DataChanged = function(self, data)
 					setValue("internal_mr_scaley", data)
 				end
-
+				MR.CL.Panels:SetMRFocus(heightMagnification.Inner:GetChildren()[1].TextArea)
 				heightMagnification.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_scaley", self:GetValue())
 				end
 
 			local horizontalTranslation = propertiesPanel:CreateRow("Translation", "Horizontal")
-				MR.CL.Panels:SetMRFocus(horizontalTranslation.Inner)
 				horizontalTranslation:Setup("Float", { min = -1, max = 1 })
 				horizontalTranslation:SetValue(GetConVar("internal_mr_offsetx"):GetFloat())
 				horizontalTranslation.DataChanged = function(self, data)
 					setValue("internal_mr_offsetx", data)
 				end
-
+				MR.CL.Panels:SetMRFocus(horizontalTranslation.Inner:GetChildren()[1].TextArea)
 				horizontalTranslation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_offsetx", self:GetValue())
 				end
 
 			local verticalTranslation = propertiesPanel:CreateRow("Translation", "Vertical")
-				MR.CL.Panels:SetMRFocus(verticalTranslation.Inner)
 				verticalTranslation:Setup("Float", { min = -1, max = 1 })
 				verticalTranslation:SetValue(GetConVar("internal_mr_offsety"):GetFloat())
 				verticalTranslation.DataChanged = function(self, data)
 					setValue("internal_mr_offsety", data)
 				end
-
+				MR.CL.Panels:SetMRFocus(verticalTranslation.Inner:GetChildren()[1].TextArea)
 				verticalTranslation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_offsety", self:GetValue())
 				end
 
 			local rotation = propertiesPanel:CreateRow("Others", "Rotation")
-				MR.CL.Panels:SetMRFocus(rotation.Inner)
 				rotation:Setup("Float", { min = -180, max = 180 })
 				rotation:SetValue(GetConVar("internal_mr_rotation"):GetFloat())
 				rotation.DataChanged = function(self, data)
 					setValue("internal_mr_rotation", data)
 				end
-
+				MR.CL.Panels:SetMRFocus(rotation.Inner:GetChildren()[1].TextArea)
 				rotation.Inner:GetChildren()[1].TextArea.OnEnter = function(self)
 					setValueFromText("internal_mr_rotation", self:GetValue())
 				end
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
-				MR.CL.Panels:SetMRFocus(details.Inner)
 				details:Setup("Combo", { text = GetConVar("internal_mr_detail"):GetString() })
 				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
 					details:AddChoice(k, { k, v })
 				end
+				MR.CL.Panels:SetMRFocus(details.Inner:GetChildren()[1].Panel)
 				details.DataChanged = function(self, data)
 					setValue("internal_mr_detail", data[1])
 				end

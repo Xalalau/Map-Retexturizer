@@ -65,10 +65,16 @@ function Displacements:Init()
 		-- For each displacement found...
 		for k,v in pairs(displacements.faces) do
 			-- Get the material name from the texdata inside the texinfo
-			local material = texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1] -- More increments to adjust C tables to Lua
+			local material
+
+			if texInfo[k] and texInfo[k].texdata then
+				if texData[texInfo[k].texdata + 1] and texData[texInfo[k].texdata + 1].nameStringTableID then
+					material = texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1]
+				end
+			end
 
 			-- Register the material once and initialize it in the tool
-			if not displacements.materials[material] then
+			if material and not displacements.materials[material] then
 				displacements.materials[material] = material:sub(1, #material - 1)
 
 				MR.Displacements:SetDetected(displacements.materials[material]) -- Important: remove the last char

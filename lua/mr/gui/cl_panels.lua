@@ -107,17 +107,6 @@ hook.Add("VGUIMousePressed", "MRVGUIMousePressedPanelLocking", function(panel)
 			Panels:RunMRDefocusCallback(oldPanel)
 		end
 
-		-- Select the correct panel with its a DProperties panel
-		if panel:GetParent() then
-			if string.find(panel:GetParent():GetName(), "DProperty_") then
-				panel = panel:GetParent()
-			elseif panel:GetParent():GetParent() then
-				if string.find(panel:GetParent():GetParent():GetName(), "DProperty_") then
-					panel = panel:GetParent():GetParent()
-				end
-			end
-		end
-
 		-- If the MRFocus lock is down and it's a GetMRFocus() menu, lock it up
 		if not Panels:GetElementFocused() then
 			if Panels:GetMRFocus(panel) then
@@ -135,11 +124,9 @@ end)
 
 -- Set a panel to lock our custom focus
 function Panels:SetMRFocus(panel)
-	timer.Simple(0.03, function() -- Ensure that all the panels are valid
-		if panel then
-			panel.MRFocus = true
-		end
-	end)
+	if panel then
+		panel.MRFocus = true
+	end
 end
 
 -- Get if the panel has a custom focus lock

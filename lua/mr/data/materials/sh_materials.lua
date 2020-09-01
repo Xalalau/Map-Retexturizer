@@ -188,6 +188,8 @@ end
 
 -- Set a material as (in)valid
 function Materials:Validate(material)
+	if not material then return false end
+
 	-- If it's already validated, return the saved result
 	if Materials:GetValid(material) or CLIENT and Materials:GetValid(material) == false then
 		return Materials:GetValid(material)

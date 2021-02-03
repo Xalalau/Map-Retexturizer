@@ -18,7 +18,13 @@ net.Receive("SV.Load:SetAuto", function(_, ply)
 end)
 
 net.Receive("SV.Load:Start", function(_, ply)
-	Load:Start(ply, net.ReadString())
+	-- Note: loads can be done by normal players too, like when they enter the
+	-- server, but only admins can pass through this net!
+	if not MR.Ply:IsAdmin(ply) then
+		return false
+	end
+
+	Load:Start(MR.SV.Ply:GetFakeHostPly() , net.ReadString())
 end)
 
 net.Receive("SV.Load:Delete", function(_, ply)
@@ -64,14 +70,8 @@ function Load:Init()
 end
 
 -- Load modifications
+-- Note: use MR.SV.Ply:GetFakeHostPly() as ply to broadcast materials
 function Load:Start(ply, loadName)
-	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
-		return false
-	elseif ply.IsPlayer then
-		ply = MR.SV.Ply:GetFakeHostPly()
-	end
-
 	local loadTable
 
 	-- Don't load in the middle of an unloading

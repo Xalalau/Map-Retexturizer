@@ -343,13 +343,16 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 		return
 	end
 
+	-- Is broadcasted?
+	local isBroadcasted = ply == MR.SV.Ply:GetFakeHostPly()
+
 	-- Count
 	MR.Duplicator:IncrementCurrent(ply)
 	Duplicator:SetProgress(ply, MR.Duplicator:GetCurrent(ply))
 
 	-- Apply map material
 	if section == "map" then
-		MR.Map:Set(ply, savedTable[position], true)
+		MR.Map:Set(ply, savedTable[position], isBroadcasted)
 	-- Apply displacement material(s)
 	elseif section == "displacements" then
 		if not MR.Displacements:GetDetected()[savedTable[position].oldMaterial] then
@@ -360,18 +363,18 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 			net.Broadcast()
 		end
 
-		MR.Map:Set(ply, savedTable[position], true)
+		MR.Map:Set(ply, savedTable[position], isBroadcasted)
 	-- Apply model material
 	elseif section == "model" then
-		MR.Models:Set(ply, savedTable[position], true)
+		MR.Models:Set(ply, savedTable[position], isBroadcasted)
 	-- Change the stored entity to world and apply decal
 	elseif section == "decal" then
 		savedTable[position].ent = game.GetWorld()
 
-		MR.SV.Decals:Set(ply, nil, savedTable[position], true)
+		MR.SV.Decals:Set(ply, nil, savedTable[position], isBroadcasted)
 	-- Apply skybox
 	elseif section == "skybox" then
-		MR.SV.Skybox:Set(ply, savedTable[position], true)
+		MR.SV.Skybox:Set(ply, savedTable[position], isBroadcasted)
 	end
 
 	-- Check the clientside errors on...
@@ -380,13 +383,12 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	if section == "displacements" then
 		net.WriteString(savedTable[position].newMaterial2 or "")
 	end
+	net.WriteBool(isBroadcasted)
 	-- all players
-	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
-		net.WriteBool(true)
+	if isBroadcasted then
 		net.Broadcast()
 	-- the player
 	else
-		net.WriteBool(false)
 		net.Send(ply)
 	end
 
@@ -406,7 +408,7 @@ function Duplicator:ForceStop(isGModLoadStarting)
 		end)
 
 		net.Start("CL.Duplicator:ForceStop")
-		net.Broadcast(ply)
+		net.Broadcast()
 
 		return true
 	end
@@ -434,7 +436,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 			-- Print the errors on the console and reset the counting on...
 			net.Start("CL.Duplicator:FinishErrorProgress")
 			-- all players
-			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+			if ply == MR.SV.Ply:GetFakeHostPly() then
 				net.WriteBool(true)
 				net.Broadcast()
 			-- the player

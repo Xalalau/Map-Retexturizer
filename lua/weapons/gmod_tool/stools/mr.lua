@@ -230,7 +230,6 @@ function TOOL:RightClick(tr)
 	newData.newMaterial = MR.Skybox:ValidatePath(newData.newMaterial)
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
-	newData.detail = "None" -- HACK: disable the detail field, it's completely buggy
 
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then

@@ -37,6 +37,8 @@ end)
 
 -- Hooks
 hook.Add("OnSpawnMenuOpen", "MRMPanelHandleSpawnMenuOpenned", function()
+	if not IsValid(MPanel:GetSelf()) then return; end
+	if LocalPlayer():InVehicle() then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Stop the preview
@@ -45,6 +47,8 @@ end)
 
 hook.Add("OnSpawnMenuClose", "MRMPanelHandleSpawnMenuClosed", function()
 	timer.Simple(0.2, function() -- To make sure that we'll have time to validate the tool
+		if not IsValid(MPanel:GetSelf()) then return; end
+		if LocalPlayer():InVehicle() then return; end
 		if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 		-- Restart the preview

@@ -44,6 +44,7 @@ end)
 -- Hooks
 hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
 	if not IsValid(CPanel:GetSelf()) then return; end
+	if LocalPlayer():InVehicle() then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
 	-- Show the custom CPanel inside the Spawn Panel
@@ -61,6 +62,10 @@ hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
 end)
 
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
+	if not IsValid(CPanel:GetSelf()) then return; end
+	if LocalPlayer():InVehicle() then return; end
+	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
+
 	-- This situation can only occur at the start of the match:
 	-- Inhibit GMod's spawn menu context panel in case the player opens the spawn
 	-- menu, load our tool menu but don't click on it to load the tool gun

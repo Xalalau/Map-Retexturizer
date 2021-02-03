@@ -156,6 +156,9 @@ function Load:FirstSpawn(ply)
 	-- Validate the preview material
 	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 
+	-- Set to auto validate the tool state
+	MR.Ply:SetAutoValidateTool(ply)
+
 	-- Start an ongoing load from the beggining
 	if MR.Duplicator:IsRunning() then
 		Load:Start(ply, "currentLoading")

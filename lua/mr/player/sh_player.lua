@@ -170,6 +170,15 @@ function Ply:IsAdmin(ply)
 	return true
 end
 
+-- Revalidate the tool after some time to ensure that the preview isn't stuck on the screen
+-- e.g. this can happen if the player starts to change the menus like crazy (VERY FAST)
+-- Anyway, it's good to have this check here because it's light and covers unforeseen cases
+function Ply:SetAutoValidateTool(ply)
+	timer.Create("MRAntiPreviewStuck", 3, 0, function()
+		Ply:ValidateTool(ply, ply:GetActiveWeapon())
+	end)
+end
+
 -- Check if a given weapon is the tool
 function Ply:ValidateTool(ply, weapon)
 	-- It's the tool gun, it's using this addon and  the player isn't just reselecting it

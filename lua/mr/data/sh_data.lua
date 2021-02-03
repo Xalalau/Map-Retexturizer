@@ -38,7 +38,7 @@ function Data:IsEqual(Data1, Data2)
 	local isEqual = true
 
 	for k,v in pairs(Data1) do
-		if k ~= "backup" and not IsEntity(v) and string.lower(v) ~= string.lower(Data2[k]) then -- Ignore "backup" and "ent" fields
+		if k ~= "backup" and not IsEntity(v) and Data2[k] and string.lower(v) ~= string.lower(Data2[k]) then -- Ignore "backup" and "ent" fields
 			if isnumber(v) then
 				if tonumber(v) ~= tonumber(Data2[k]) then
 					isEqual = false

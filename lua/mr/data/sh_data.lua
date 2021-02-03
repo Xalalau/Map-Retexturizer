@@ -38,7 +38,10 @@ function Data:IsEqual(Data1, Data2)
 	local isEqual = true
 
 	for k,v in pairs(Data1) do
-		if k ~= "backup" and not IsEntity(v) and Data2[k] and string.lower(v) ~= string.lower(Data2[k]) then -- Ignore "backup" and "ent" fields
+		-- Ignore "backup" and "ent" fields
+		-- HACK: Ignore "detail" field because it's not set up correctly on the server by the game and has to be repaired manually
+		--       during all first uses. Obviously removing this condition will make detection less accurate, but it is necessary.
+		if k ~= "backup" and not IsEntity(v) and k ~= "detail" and Data2[k] and string.lower(v) ~= string.lower(Data2[k]) then 
 			if isnumber(v) then
 				if tonumber(v) ~= tonumber(Data2[k]) then
 					isEqual = false

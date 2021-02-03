@@ -192,7 +192,7 @@ function Ply:ValidateTool(ply, weapon)
 	else
 		-- It's a tool gun but the mode is empty. this occurs when
 		-- the player (re)spawns and to ensure success I'll revalidate
-		if SERVER and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
+		if SERVER and weapon and IsValid(weapon) and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
 			timer.Simple(0.05, function()
 				Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
 			end)

@@ -74,12 +74,14 @@ function Panels:RefreshPreviews()
 			if v and v.panel and IsValid(v.panel) then
 				local material = Material(MR.Materials:IsSkybox(MR.Materials:GetSelected()) and MR.Skybox:SetSuffix(MR.Materials:GetSelected()) or MR.Materials:GetSelected())
 
-				local width, height = MR.Materials:ResizeInABox(v.size, material:Width(), material:Height())
-				local x = (v.size - width) / 2
-				local y = (v.size - height) / 2
+				if not material:IsError() then
+					local width, height = MR.Materials:ResizeInABox(v.size, material:Width(), material:Height())
+					local x = (v.size - width) / 2
+					local y = (v.size - height) / 2
 
-				v.panel:SetSize(width, height)
-				v.panel:SetPos(x, y)
+					v.panel:SetSize(width, height)
+					v.panel:SetPos(x, y)
+				end
 			end
 		end
 	end

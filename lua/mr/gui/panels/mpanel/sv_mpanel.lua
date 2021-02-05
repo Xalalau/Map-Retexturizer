@@ -3,5 +3,5 @@
 -------------------------------------
 
 -- Networking 
-util.AddNetworkString("CL.MPanel:ForceHide")
-util.AddNetworkString("CL.MPanel:RestartPreviewBox")
+util.AddNetworkString("CL.MPanel:OnToolClose")
+util.AddNetworkString("CL.MPanel:OnToolOpen")

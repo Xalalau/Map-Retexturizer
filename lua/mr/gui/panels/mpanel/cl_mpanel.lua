@@ -27,11 +27,16 @@ local mpanel = {
 }
 
 -- Networking
-net.Receive("CL.MPanel:RestartPreviewBox", function()
-	MPanel:RestartPreviewBox()
+net.Receive("CL.MPanel:OnToolOpen", function()
+	-- Restart the preview box rendering
+	if not MR.Ply:GetDecalMode(ply) then
+		MPanel:RestartPreviewBox()
+	end
 end)
 
-net.Receive("CL.MPanel:ForceHide", function()
+net.Receive("CL.MPanel:OnToolClose", function()
+	-- Force to close the menus
+	-- It's for cases like: get the tool gun, press C, while C is pressed switch for another weapon, menus got stuck
 	MPanel:Hide()
 end)
 

@@ -36,7 +36,8 @@ local panels = {
 }
 
 -- Networking
-net.Receive("CL.Panels:DisableSpawnmenuActiveControlPanel", function()
+net.Receive("CL.Panels:OnToolOpen", function()
+	-- Inhibit GMod's spawn menu context panel
 	Panels:DisableSpawnmenuActiveControlPanel()
 end)
 

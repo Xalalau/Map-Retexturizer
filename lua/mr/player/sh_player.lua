@@ -41,6 +41,8 @@ net.Receive("Ply:SetDecalMode", function(_, ply)
 end)
 
 net.Receive("Ply:SetUsingTheTool", function(_, ply)
+	if SERVER then return; end
+
 	Ply:SetUsingTheTool(ply or LocalPlayer(), net.ReadBool())
 end)
 
@@ -57,7 +59,7 @@ if SERVER then
 	end)
 
 	hook.Add("PlayerEnteredVehicle", "MRDisableToolVehicle", function(ply)
-		Ply:SetToolState(ply, false)
+		MR.SV.Ply:SetToolState(ply, false)
 	end)
 
 	hook.Add("PlayerLeaveVehicle", "MRCheckToolVehicle", function(ply)
@@ -184,7 +186,13 @@ function Ply:ValidateTool(ply, weapon)
 	-- It's the tool gun, it's using this addon and  the player isn't just reselecting it
 	if weapon and IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
 		if not Ply:GetUsingTheTool(ply) then
-			Ply:SetToolState(ply, true)
+			if SERVER then
+				MR.SV.Ply:SetToolState(ply, true)
+			else
+				net.Start("SV.Ply:SetToolState")
+					net.WriteBool(true)
+				net.SendToServer()			
+			end
 		end
 	-- It's some weapon unrelated to this addon
 	else
@@ -199,53 +207,13 @@ function Ply:ValidateTool(ply, weapon)
 		end
 
 		if Ply:GetUsingTheTool(ply) then
-			Ply:SetToolState(ply, false)
-		end
-	end
-end
-
-function Ply:SetToolState(ply, isUsing)
-	if isUsing then
-		-- Register that the player is using this addon 
-		Ply:SetUsingTheTool(ply, true)
-
-		if CLIENT then
-			-- Inhibit GMod's spawn menu context panel
-			MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
-		end
-		
-		if SERVER then
-			-- Register that the player is using this addon 
-			net.Start("Ply:SetUsingTheTool")
-			net.WriteBool(true)
-			net.Send(ply)
-
-			-- Inhibit GMod's spawn menu context panel
-			net.Start("CL.Panels:DisableSpawnmenuActiveControlPanel")
-			net.Send(ply)
-
-			-- Restart the preview box rendering
-			if not MR.Ply:GetDecalMode(ply) then
-				net.Start("CL.MPanel:RestartPreviewBox")
-				net.Send(ply)
+			if SERVER then
+				MR.SV.Ply:SetToolState(ply, false)
+			else
+				net.Start("SV.Ply:SetToolState")
+					net.WriteBool(false)
+				net.SendToServer()			
 			end
-		end
-	else
-		-- Register that the player isn't using this addon 
-		Ply:SetUsingTheTool(ply, false)
-
-		if SERVER then
-			net.Start("Ply:SetUsingTheTool")
-				net.WriteBool(false)
-			net.Send(ply)
-
-			-- Force to close the menus
-			-- It's for cases like: get the tool gun, press C, while C is pressed switch for another weapon, menus got stuck
-			net.Start("CL.CPanel:ForceHide")
-			net.Send(ply)
-
-			net.Start("CL.MPanel:ForceHide")
-			net.Send(ply)
 		end
 	end
 end

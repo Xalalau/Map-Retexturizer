@@ -3,4 +3,4 @@
 -------------------------------------
 
 -- Networking 
-util.AddNetworkString("CL.CPanel:ForceHide")
+util.AddNetworkString("CL.CPanel:OnToolClose")

@@ -37,7 +37,9 @@ local cpanel = {
 	}
 }
 
-net.Receive("CL.CPanel:ForceHide", function()
+net.Receive("CL.CPanel:OnToolClose", function()
+	-- Force to close the menus
+	-- It's for cases like: get the tool gun, press C, while C is pressed switch for another weapon, menus got stuck
 	CPanel:Hide(CPanel:GetContextSelf())
 end)
 

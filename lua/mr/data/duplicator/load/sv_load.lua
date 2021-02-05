@@ -38,14 +38,15 @@ hook.Add("PlayerInitialSpawn", "MRPlyfirstSpawn", function(ply)
 	Load:PlayerJoined(ply)
 
 	-- Load tool modifications AFTER the player is fully ready
-	hook.Add("SetupMove", ply, function(self, ply, _, cmd)
-		if self == ply and not cmd:IsForced() then
+	local hookName = "MR" .. tostring(ply)
+	hook.Add("SetupMove", hookName, function(ply, mv, cmd)
+		if hookName == "MR" .. tostring(ply) and not cmd:IsForced() then
 			-- Wait just a bit more for players with weaker hardware
 			timer.Simple(1, function()
 				Load:FirstSpawn(ply);
 			end)
 
-			hook.Remove("SetupMove",self)
+			hook.Remove("SetupMove", hookName)
 		end
 	end)
 end)

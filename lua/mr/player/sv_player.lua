@@ -17,7 +17,7 @@ util.AddNetworkString("Ply:SetDecalMode")
 util.AddNetworkString("Ply:SetUsingTheTool")
 util.AddNetworkString("SV.Ply:SetToolState")
 
-net.Receive("SV.Ply:SetToolState", function(ply)
+net.Receive("SV.Ply:SetToolState", function(_, ply)
     Ply:SetToolState(ply, net.ReadBool())
 end)
 

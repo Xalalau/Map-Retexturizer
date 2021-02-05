@@ -41,26 +41,16 @@ net.Receive("CL.CPanel:OnToolClose", function()
 	-- Force to close the menus
 	-- It's for cases like: get the tool gun, press C, while C is pressed switch for another weapon, menus got stuck
 	CPanel:Hide(CPanel:GetContextSelf())
+
+	CPanel:ShowInSpawnMenu()
 end)
 
 -- Hooks
 hook.Add("OnSpawnMenuOpen", "MRPickMenu", function()
-	if not IsValid(CPanel:GetSelf()) then return; end
 	if LocalPlayer():InVehicle() then return; end
 	if not MR.Ply:GetUsingTheTool(LocalPlayer()) then return; end
 
-	-- Show the custom CPanel inside the Spawn Panel
-	CPanel:GetSpawnListSelf():Add(CPanel:GetSelf())
-
-	-- Show the materials panel in the custom CPanel
-	MR.CL.ExposedPanels:Get("materials", "frame"):Show()
-	MR.CL.ExposedPanels:Get("materials", "panel"):Add(MR.CL.ExposedPanels:Get("materials", "detach"))
-
-	-- Resize the custom CPanel height
-	CPanel:GetSelf():SetTall(CPanel:Spawn_GetFrameTall())
-	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Spawn_GetSkyboxTop())
-	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Spawn_GetDisplacementsTop())
-	MR.CL.ExposedPanels:Get("cleanup", "frame"):SetPos(0, CPanel:Spawn_GetCleanupTop())
+	CPanel:ShowInSpawnMenu()
 end)
 
 hook.Add("OnSpawnMenuClose", "MRCPanelHandleSpawnMenuClosed", function()
@@ -208,6 +198,25 @@ end
 
 function CPanel:Context_SetCleanupTop(value)
 	cpanel.context.size.cleanup = value
+end
+
+-- Fit our CPanel to the Spawn Menu.
+-- Note: this is accessed by the OnContextMenu... and OnSpawnMenu... hooks and the tool validation
+function CPanel:ShowInSpawnMenu()
+	if not IsValid(CPanel:GetSelf()) then return; end
+
+	-- Show the custom CPanel inside the Spawn Panel
+	CPanel:GetSpawnListSelf():Add(CPanel:GetSelf())
+
+	-- Show the materials panel in the custom CPanel
+	MR.CL.ExposedPanels:Get("materials", "frame"):Show()
+	MR.CL.ExposedPanels:Get("materials", "panel"):Add(MR.CL.ExposedPanels:Get("materials", "detach"))
+
+	-- Resize the custom CPanel height
+	CPanel:GetSelf():SetTall(CPanel:Spawn_GetFrameTall())
+	MR.CL.ExposedPanels:Get("skybox", "frame"):SetPos(0, CPanel:Spawn_GetSkyboxTop())
+	MR.CL.ExposedPanels:Get("displacements", "frame"):SetPos(0, CPanel:Spawn_GetDisplacementsTop())
+	MR.CL.ExposedPanels:Get("cleanup", "frame"):SetPos(0, CPanel:Spawn_GetCleanupTop())
 end
 
 -- Create the panel

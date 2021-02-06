@@ -190,6 +190,21 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 	end
 
+	-- Get the total modifications to do
+	local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
+	local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0
+	local displacementsTotal = savedTable.displacements and istable(savedTable.displacements) and MR.DataList:Count(savedTable.displacements) or 0
+	local skyboxTotal = savedTable.skybox and istable(savedTable.skybox) and MR.DataList:Count(savedTable.skybox) or 0
+	local modelsTotal = savedTable.models and istable(savedTable.models) and MR.DataList:Count(savedTable.models) or 0
+	local total = decalsTotal + mapTotal + displacementsTotal + modelsTotal + skyboxTotal
+
+	-- For some reason there are no modifications to do, so finish it
+	if total == 0 then
+		Duplicator:Finish(ply)
+
+		return
+	end
+
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		-- Cleanup
@@ -215,37 +230,22 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	-- Save a reference of the current loading table
 	Duplicator:SetCurrentTable(savedTable)
 
+	-- Print server alert
+	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+		print("[Map Retexturizer] Loading started...")
+	end
+
+	-- Set the duplicator running state
+	MR.Duplicator:SetRunning(ply, loadName)
+
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
 	timer.Simple(0.5, function()
-		-- Get the total modifications to do
-		local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
-		local mapTotal = savedTable.map and istable(savedTable.map) and MR.DataList:Count(savedTable.map) or 0
-		local displacementsTotal = savedTable.displacements and istable(savedTable.displacements) and MR.DataList:Count(savedTable.displacements) or 0
-		local skyboxTotal = savedTable.skybox and istable(savedTable.skybox) and MR.DataList:Count(savedTable.skybox) or 0
-		local modelsTotal = savedTable.models and istable(savedTable.models) and MR.DataList:Count(savedTable.models) or 0
-		local total = decalsTotal + mapTotal + displacementsTotal + modelsTotal + skyboxTotal
-
-		-- For some reason there are no modifications to do, so finish it
-		if total == 0 then
-			Duplicator:Finish(ply)
-
-			return
-		end
-
-		-- Print server alert
-		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
-			print("[Map Retexturizer] Loading started...")
-		end
-
-		-- Set the duplicator running state
-		MR.Duplicator:SetRunning(ply, loadName)
-
 		-- Set the total modifications to do
 		MR.Duplicator:SetTotal(ply, total)
 		Duplicator:SetProgress(ply, nil, MR.Duplicator:GetTotal(ply))
 
-		--  table.GetLastKey() is deprecated, so I use this just to make sure
+		--  table.GetLastKey() is deprecated, so I use this function just to make sure it always works
 		local function GetLastKey(tab)
 			local last = 1
 

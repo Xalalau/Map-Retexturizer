@@ -182,13 +182,13 @@ end
 
 	-- Skybox
 	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-		MR.SV.Skybox:Set(ply, newData)
+		MR.SV.Skybox:Set(ply, newData, true)
 	-- model
 	elseif IsValid(tr.Entity) then
-		MR.Models:Set(ply, newData)
+		MR.Models:Set(ply, newData, true)
 	-- map/displacement
 	elseif tr.Entity:IsWorld() then
-		MR.Map:Set(ply, newData)
+		MR.Map:Set(ply, newData, true)
 	end
 
 	return true

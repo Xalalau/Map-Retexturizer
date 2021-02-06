@@ -149,7 +149,7 @@ function Displacements:Set(ply, displacement, newMaterial, newMaterial2, data)
 	data.newMaterial2 = newMaterial2
 
 	-- Apply the changes
-	MR.Map:Set(ply, data)
+	MR.Map:Set(ply, data, true)
 end
 
 -- Remove all displacements materials

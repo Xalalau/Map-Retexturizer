@@ -17,7 +17,7 @@ util.AddNetworkString("SV.Skybox:Set")
 util.AddNetworkString("SV.Skybox:Remove")
 
 net.Receive("SV.Skybox:Set", function(_, ply)
-	Skybox:Set(ply, net.ReadTable())
+	Skybox:Set(ply, net.ReadTable(), net.ReadBool())
 end)
 
 net.Receive("SV.Skybox:Remove", function(_, ply)

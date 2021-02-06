@@ -450,16 +450,8 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		dup.models.delay = 0
 		dup.models.startTime = 0
 
-		-- Set the duplicator running state
-		MR.Duplicator:SetRunning(ply, loadName)
-
 		-- Set "running" to nothing
 		MR.Duplicator:SetRunning(ply)
-
-		-- Print alert
-		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
-			print("[Map Retexturizer] Loading finished.")
-		end
 
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
@@ -485,13 +477,18 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 				end
 
 				-- Start
-				Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), Duplicator:GetEnt(), newSavedTable, "noMrLoadFile")
+				Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
 			-- Disable the first spawn state
 			else				
 				MR.Ply:SetFirstSpawn(ply)
 				net.Start("Ply:SetFirstSpawn")
 				net.Send(ply)
 			end
+		end
+
+		-- Print alert
+		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
+			print("[Map Retexturizer] Loading finished.")
 		end
 
 		return true

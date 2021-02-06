@@ -15,7 +15,7 @@ local model = {
 net.Receive("Models:Set", function(_, ply)
 	if SERVER then return; end
 
-	Models:Set(LocalPlayer(), net.ReadTable())
+	Models:Set(LocalPlayer(), net.ReadTable(), net.ReadBool())
 end)
 
 net.Receive("Models:Remove", function()
@@ -216,6 +216,7 @@ function Models:Set(ply, data, isBroadcasted)
 		-- Send the modification to...
 		net.Start("Models:Set")
 			net.WriteTable(data)
+			net.WriteBool(isBroadcasted)
 		-- every player
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 			net.Broadcast()

@@ -498,25 +498,29 @@ end
 ]]
 
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
-	-- Admin only and first spawn only
+	-- Admin and first spawn loading only
 	if SERVER then
-		if not MR.Ply:GetFirstSpawn(ply) and not MR.Ply:IsAdmin(ply) then
+		if not (MR.Ply:GetFirstSpawn(ply) and not isBroadcasted) and not MR.Ply:IsAdmin(ply) then
 			return false
 		end
 	end
 
 	-- Block an ongoing load for a player at his first spawn - he'll start it from the beggining
-	-- Block a new data applications for a player at his first spawn - register it to apply later
-	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
-		if SERVER and
-		   data and
-		   not MR.Duplicator:IsRunning() and
-		   not MR.Duplicator:IsRunning(ply) then
+	if CLIENT and MR.Ply:GetFirstSpawn(ply) and MR.Duplicator:IsRunning() then
+		return false
+	end
 
-			MR.SV.Duplicator:InsertNewDupTable(ply, string.lower(check.type), data)
+	-- Block and store a new material application for a player at his first spawn - he'll apply it later
+	if isBroadcasted then
+		if SERVER and data then
+			for _,aPly in pairs(player.GetHumans()) do
+				if MR.Duplicator:IsRunning(aPly) then
+					MR.SV.Duplicator:InsertNewDupTable(aPly, string.lower(check.type), data)
+				end
+			end
 		end
 
-		if CLIENT then
+		if CLIENT and MR.Ply:GetFirstSpawn(ply) then
 			return false
 		end
 	end

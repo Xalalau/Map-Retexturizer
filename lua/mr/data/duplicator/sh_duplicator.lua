@@ -80,7 +80,7 @@ end
 -- Check if the duplicator is running
 -- Must return the name of the loading or nil
 function Duplicator:IsRunning(ply)
-	return dup.running[Duplicator:GetControlIndex(ply)] or dup.running[Duplicator:GetControlIndex()]
+	return dup.running[Duplicator:GetControlIndex(ply)]
 end
 
 function Duplicator:SetRunning(ply, value, isBroadcasted)
@@ -92,11 +92,10 @@ function Duplicator:SetRunning(ply, value, isBroadcasted)
 	if SERVER then
 		net.Start("Duplicator:SetRunning")
 		net.WriteString(value or "")
-		if IsEntity(ply) and ply:IsPlayer() then -- Only fully individual loads are managed by players
-			net.WriteBool(false)
+		net.WriteBool(value and true or false)
+		if IsEntity(ply) and ply:IsPlayer() then
 			net.Send(ply)
 		else
-			net.WriteBool(true)
 			net.Broadcast()
 		end
 	end

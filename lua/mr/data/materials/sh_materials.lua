@@ -334,14 +334,16 @@ end
 
 -- Get a material detail name
 function Materials:GetDetail(material)
-	local detail = Material(material):GetString("$detail")
+	if not material then return end
 
-	if material then
+	local detail = SERVER and MR.SV.Materials:GetDetailFix(material) or Material(material):GetString("$detail")
+
+	if CLIENT then
 		for k,v in pairs(Materials:GetDetailList()) do
-			if not isbool(v) then
+			if not isbool(v) then -- The first key/value is for control
 				if v:GetTexture("$basetexture"):GetName() == detail then
 					detail = k
-					
+
 					break
 				end
 			end

@@ -129,6 +129,7 @@ end
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
 	local oldData = MR.Materials:GetData(tr)
+	local foundOldData = oldData and true
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -151,8 +152,9 @@ end
 	end
 
 	-- Get the correct detail for the oldData in the server
-	if SERVER then
+	if SERVER and not foundOldData then
 		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+
 		if detailFix then
 			oldData.detail = detailFix
 		end
@@ -204,6 +206,7 @@ function TOOL:RightClick(tr)
 	-- Get data tables with the future and current materials
 	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
 	local oldData = MR.Materials:GetData(tr)
+	local foundOldData = oldData and true
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -220,8 +223,9 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Get the correct detail for the oldData in the server
-	if SERVER then
+	if SERVER and not foundOldData then
 		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+
 		if detailFix then
 			oldData.detail = detailFix
 		end

@@ -9,8 +9,7 @@ MR.SV.Materials = Materials
 local materials = {
 	-- Store the real $detail keyvalue (collected from the clients)
 	-- ["material"] = "detail"
-	detailFix = {},
-	detailsQueue = {}
+	detailFix = {}
 }
 
 -- Networking

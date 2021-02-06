@@ -140,9 +140,22 @@ function Load:PlayerJoined(ply)
 	net.Start("CL.Displacements:InitDetected")
 		net.WriteTable(MR.Displacements:GetDetected())
 	net.Send(ply)
+end
 
+-- Load tool modifications AFTER the player is fully ready
+function Load:FirstSpawn(ply)
 	-- Initialize server materials detail list
-	if not file.Exists(MR.Base:GetDetectedDetailsFile(), "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
+	local detailsFile = MR.Base:GetDetectedDetailsFile()
+	-- [bug] detail lists created before 2021.02.5 are invalid and must be replaced
+	if file.Exists(detailsFile, "Data") then
+		local dateParts = string.Explode(".", os.date("%d.%m.%Y", file.Time(detailsFile, "DATA")))
+		for k,v in pairs(dateParts) do dateParts[k] = tonumber(v); end
+		if dateParts[3] < 2021 or dateParts[2] < 2 or dateParts[1] < 5 then
+			file.Delete(detailsFile)
+		end
+	end
+	-- [/bug]
+	if not file.Exists(detailsFile, "Data") and not MR.SV.Materials:GetDetailFix("Initialized") then
 		print("[Map Retexturizer] Building details list for the first time...")
 
 		MR.SV.Materials:SetDetailFix("Initialized", 1)
@@ -150,10 +163,7 @@ function Load:PlayerJoined(ply)
 		net.Start("CL.Materials:SetDetailFixList")
 		net.Send(ply)
 	end
-end
 
--- Load tool modifications AFTER the player is fully ready
-function Load:FirstSpawn(ply)
 	-- Validate the preview material
 	MR.Materials:Validate(MR.Materials:GetSelected(ply))
 

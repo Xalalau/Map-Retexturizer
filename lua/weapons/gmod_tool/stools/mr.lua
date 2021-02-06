@@ -152,8 +152,9 @@ end
 
 	-- Get the correct detail for the oldData in the server
 	if SERVER then
-		if MR.SV.Materials:GetDetailFix(oldData.oldMaterial) then
-			oldData.detail = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		if detailFix then
+			oldData.detail = detailFix
 		end
 	end
 
@@ -220,8 +221,9 @@ function TOOL:RightClick(tr)
 
 	-- Get the correct detail for the oldData in the server
 	if SERVER then
-		if MR.SV.Materials:GetDetailFix(oldData.oldMaterial) then
-			oldData.detail = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		if detailFix then
+			oldData.detail = detailFix
 		end
 	end
 

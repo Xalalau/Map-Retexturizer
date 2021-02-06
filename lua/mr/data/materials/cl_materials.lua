@@ -76,6 +76,8 @@ function Materials:SetDetailFixList()
 		end
 	end
 
+	LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] List of map material details built and saved.")
+
 	-- Send the detail chunks to the server
 	for _,currentChunk in pairs(list.materials) do
 		timer.Simple(delay, function()

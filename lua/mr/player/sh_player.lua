@@ -177,7 +177,9 @@ end
 -- Anyway, it's good to have this check here because it's light and covers unforeseen cases
 function Ply:SetAutoValidateTool(ply)
 	timer.Create("MRAntiPreviewStuck", 3, 0, function()
-		Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		if IsValid(ply) then
+			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		end
 	end)
 end
 

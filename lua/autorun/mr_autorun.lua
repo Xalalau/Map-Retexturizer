@@ -4,7 +4,7 @@
 		files = tool files extracted into the addons folder with the necessary materials
 		hybrid = tool files extracted into the addons folder using materials from an extra gma and from files
 ]]
-local mode = "files"
+local mode = "gma"
 -- Folder inside "[...]/garrysmod/materials"
 local materialsDir = "mr/"
 -- Folder inside "[...]/garrysmod/lua"

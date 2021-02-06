@@ -79,6 +79,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	-- HACK: disable the detail field, it's completely buggy
 	if data.detail then
 		data.detail = nil
+		ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Applying materials with details on the skybox is unsupported. Setting value to \"None\"...")
 	end
 
 	-- Replicate

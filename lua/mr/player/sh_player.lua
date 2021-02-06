@@ -160,7 +160,7 @@ function Ply:IsAdmin(ply)
 	-- General admin check
 	if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
 		if SERVER then
-			if not timer.Exists("MRNotAdminPrint") then
+			if not MR.Ply:GetFirstSpawn(ply) and not timer.Exists("MRNotAdminPrint") then
 				timer.Create("MRNotAdminPrint", 2, 1, function() end)
 				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
 			end

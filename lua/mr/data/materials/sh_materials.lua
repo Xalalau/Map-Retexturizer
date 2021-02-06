@@ -500,7 +500,7 @@ end
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 	-- Admin only and first spawn only
 	if SERVER then
-		if not MR.Ply:IsAdmin(ply) and not MR.Ply:GetFirstSpawn(ply) then
+		if not MR.Ply:GetFirstSpawn(ply) and not MR.Ply:IsAdmin(ply) then
 			return false
 		end
 	end

@@ -602,7 +602,7 @@ function Materials:SetFinalSteps()
 end
 
 -- Get current modifications quantity
-function Materials:GetCurrentModificationsQuantity()
+function Materials:GetModificantionsTotal()
 	local total = 0
 
 	for k,v in pairs(Materials:GetCurrentModifications(clean)) do

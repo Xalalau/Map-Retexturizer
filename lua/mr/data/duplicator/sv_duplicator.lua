@@ -209,7 +209,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 		-- Cleanup
 		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
-			if MR.Materials:GetCurrentModificationsQuantity() ~= 0 then
+			if MR.Materials:GetModificantionsTotal() ~= 0 then
 				MR.SV.Materials:RemoveAll(ply)
 
 				if not MR.Materials:IsInstantCleanupEnabled() then
@@ -478,8 +478,11 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 
 				-- Start
 				Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
-			-- Disable the first spawn state
-			else				
+			else
+				-- Find any removed material and sync it
+				Materials:GetModificantionsTotal()
+
+				-- Disable the first spawn state
 				MR.Ply:SetFirstSpawn(ply)
 				net.Start("Ply:SetFirstSpawn")
 				net.Send(ply)

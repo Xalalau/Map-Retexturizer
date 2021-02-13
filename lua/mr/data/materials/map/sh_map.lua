@@ -258,33 +258,31 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	end
 
-	if SERVER and MR.DataList:IsActive(data) then
-		-- Set the Undo
-		if not isBroadcasted then
-			-- Only allow 1 skybox undo (otherwise it'll set 6)
-			local create = true
+	-- Set the Undo
+	if SERVER and MR.DataList:IsActive(data) and not isBroadcasted and not MR.Ply:GetFirstSpawn(ply) then
+		-- Only allow 1 skybox undo (otherwise it'll set 6)
+		local create = true
 
-			if MR.Materials:IsSkybox(data.oldMaterial) then
-				if not (data.oldMaterial == MR.Skybox:SetSuffix(MR.Skybox:RemoveSuffix(data.oldMaterial))) then
-					create = false
-				end
+		if MR.Materials:IsSkybox(data.oldMaterial) then
+			if not (data.oldMaterial == MR.Skybox:SetSuffix(MR.Skybox:RemoveSuffix(data.oldMaterial))) then
+				create = false
 			end
-		
-			if create then
-				undo.Create("Material")
-					undo.SetPlayer(ply)
-					undo.AddFunction(function(tab, oldMaterial)
-						-- Skybox
-						if MR.Materials:IsSkybox(oldMaterial) then
-							MR.SV.Skybox:Remove(ply)
-						-- map/displacement
-						else
-							Map:Remove(data.oldMaterial)
-						end
-					end, data.oldMaterial)
-					undo.SetCustomUndoText("Undone Material")
-				undo.Finish()
-			end
+		end
+	
+		if create then
+			undo.Create("Material")
+				undo.SetPlayer(ply)
+				undo.AddFunction(function(tab, oldMaterial)
+					-- Skybox
+					if MR.Materials:IsSkybox(oldMaterial) then
+						MR.SV.Skybox:Remove(ply)
+					-- map/displacement
+					else
+						Map:Remove(data.oldMaterial)
+					end
+				end, data.oldMaterial)
+				undo.SetCustomUndoText("Undone Material")
+			undo.Finish()
 		end
 
 		-- General final steps

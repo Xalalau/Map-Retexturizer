@@ -250,7 +250,7 @@ function Models:Set(ply, data, isBroadcasted)
 	end
 
 	-- Set the Undo
-	if SERVER and not isBroadcasted then
+	if SERVER and and not isBroadcasted and not MR.Ply:GetFirstSpawn(ply) then
 		undo.Create("Material")
 			undo.SetPlayer(ply)
 			undo.AddFunction(function(tab, ent)

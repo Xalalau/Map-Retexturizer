@@ -479,7 +479,7 @@ function Materials:ResizeInABox(boxSize, width, height)
 end
 
 --[[
-	Many initial important checks and adjustments for functions that apply material changes
+	Many initial important checks and adjustments for functions that apply or remove materials
 	Must be clientside and serverside - on the top
 
 	ply = player
@@ -505,7 +505,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 		end
 	end
 
-	-- Block an ongoing load for a player at his first spawn - he'll start it from the beggining
+	-- Block an ongoing load for a player at his first spawn - he'll start it from the beginning
 	if CLIENT and MR.Ply:GetFirstSpawn(ply) and MR.Duplicator:IsRunning() then
 		return false
 	end

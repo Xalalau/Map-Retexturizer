@@ -97,6 +97,7 @@ function Map:Set(ply, data, isBroadcasted)
 
 	if MR.Materials:IsDisplacement(data.oldMaterial) then
 		selected.isDisplacement = true
+		selected.type = "Displacements"
 		selected.list = MR.Displacements:GetList()
 		selected.limit = MR.Displacements:GetLimit()
 		selected.filename = MR.Displacements:GetFilename()
@@ -106,6 +107,7 @@ function Map:Set(ply, data, isBroadcasted)
 		end
 	elseif MR.Materials:IsSkybox(data.oldMaterial) then
 		selected.isSkybox = true
+		selected.type = "Skybox"
 		selected.list = MR.Skybox:GetList()
 		selected.limit = MR.Skybox:GetLimit()
 		selected.filename = MR.Skybox:GetFilename()
@@ -113,6 +115,7 @@ function Map:Set(ply, data, isBroadcasted)
 			selected.dupName = MR.SV.Skybox:GetDupName()
 		end
 	else
+		selected.type = "Map"
 		selected.list = Map:GetList()
 		selected.limit = Map:GetLimit()
 		selected.filename = Map:GetFilename()
@@ -125,9 +128,7 @@ function Map:Set(ply, data, isBroadcasted)
 	local check = {
 		material = data.newMaterial,
 		material2 = data.newMaterial2,
-		type = selected.isDisplacement and "Displacements" or
-					selected.isSkybox and "Skybox" or
-					"Map"
+		type = selected.type
 	}
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data) then
@@ -176,9 +177,7 @@ function Map:Set(ply, data, isBroadcasted)
 			local check = {
 				list = selected.list,
 				limit = selected.limit,
-				type = selected.isDisplacement and "Displacements" or
-					selected.isSkybox and "Skybox" or
-					"Map"
+				type = selected.type
 			}
 
 			if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then

@@ -83,24 +83,19 @@ function Duplicator:IsRunning(ply)
 	return dup.running[Duplicator:GetControlIndex(ply)]
 end
 
-function Duplicator:SetRunning(ply, value, isBroadcasted)
-	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
-	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
-		return
-	end
-
+function Duplicator:SetRunning(ply, loadName, isBroadcasted)
 	if SERVER then
 		net.Start("Duplicator:SetRunning")
-		net.WriteString(value or "")
-		net.WriteBool(value and true or false)
-		if IsEntity(ply) and ply:IsPlayer() then
-			net.Send(ply)
-		else
+		net.WriteString(loadName or "")
+		net.WriteBool(isBroadcasted)
+		if isBroadcasted then
 			net.Broadcast()
+		else
+			net.Send(ply)
 		end
 	end
 
-	dup.running[Duplicator:GetControlIndex(ply)] = value ~= "" and value
+	dup.running[Duplicator:GetControlIndex(ply)] = loadName ~= "" and loadName
 end
 
 function Duplicator:GetTotal(ply)

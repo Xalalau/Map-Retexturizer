@@ -169,11 +169,14 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized, true, loadName)
 	end
 
+	-- Is broadcasted? The only case it's not is when a player is loading his first spawn materials
+	local isBroadcasted = loadName ~= "currentMaterials"
+
 	-- Deal with GMod saves
 	if dup.recreatedTable.initialized then
 		-- FORCE to cease ongoing duplications
 		Duplicator:ForceStop(true)
-		Duplicator:Finish(ply, true)
+		Duplicator:Finish(ply, isBroadcasted, true)
 
 		-- Copy and clean our GMod duplicator reconstructed table
 		savedTable = table.Copy(dup.recreatedTable)
@@ -200,7 +203,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- For some reason there are no modifications to do, so finish it
 	if total == 0 then
-		Duplicator:Finish(ply)
+		Duplicator:Finish(ply, isBroadcasted)
 
 		return
 	end
@@ -236,7 +239,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	end
 
 	-- Set the duplicator running state
-	MR.Duplicator:SetRunning(ply, loadName)
+	MR.Duplicator:SetRunning(ply, loadName, isBroadcasted)
 
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
@@ -260,27 +263,27 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 		-- Apply model materials
 		if modelsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "model")
+			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "model", isBroadcasted)
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decal")
+			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decal", isBroadcasted)
 		end
 
 		-- Apply map materials
 		if mapTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.map, 1, GetLastKey(savedTable.map), "map")
+			Duplicator:LoadMaterials(ply, savedTable.map, 1, GetLastKey(savedTable.map), "map", isBroadcasted)
 		end
 
 		-- Apply displacements
 		if displacementsTotal > 0 then		
-			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, GetLastKey(savedTable.displacements), "displacements")
+			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, GetLastKey(savedTable.displacements), "displacements", isBroadcasted)
 		end
 
 		-- Apply the skybox
 		if skyboxTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, GetLastKey(savedTable.skybox), "skybox")
+			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, GetLastKey(savedTable.skybox), "skybox", isBroadcasted)
 		end
 	end)
 end
@@ -329,22 +332,19 @@ function Duplicator:SetProgress(ply, current, total)
 end
 
 -- Load materials from saves
-function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section)
+function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section, isBroadcasted)
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
 		if not MR.Duplicator:IsStopping() and position <= finalPosition then
-			Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section)
+			Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
 		-- There are no more entries
 		else
-			Duplicator:Finish(ply)
+			Duplicator:Finish(ply, isBroadcasted)
 		end
 
 		return
 	end
-
-	-- Is broadcasted?
-	local isBroadcasted = ply == MR.SV.Ply:GetFakeHostPly()
 
 	-- Count
 	MR.Duplicator:IncrementCurrent(ply)
@@ -394,7 +394,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 	-- Next material
 	timer.Simple(GetConVar("internal_mr_delay"):GetFloat(), function()
-		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section)
+		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
 	end)
 end
 
@@ -417,7 +417,7 @@ function Duplicator:ForceStop(isGModLoadStarting)
 end
 
 -- Finish the duplication process
-function Duplicator:Finish(ply, isGModLoadOverriding)
+function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
 		-- Remove the reference of the current loading table
 		Duplicator:SetCurrentTable()
@@ -451,7 +451,7 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 		dup.models.startTime = 0
 
 		-- Set "running" to nothing
-		MR.Duplicator:SetRunning(ply)
+		MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
 
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
@@ -479,8 +479,6 @@ function Duplicator:Finish(ply, isGModLoadOverriding)
 				-- Start
 				Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
 			else
-				-- Find any removed material and sync it
-				Materials:GetModificantionsTotal()
 
 				-- Disable the first spawn state
 				MR.Ply:SetFirstSpawn(ply)

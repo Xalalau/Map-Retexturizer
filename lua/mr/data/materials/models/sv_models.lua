@@ -31,13 +31,14 @@ function Models:RemoveAll(ply)
 	MR.SV.Duplicator:ForceStop()
 
 	-- Cleanup
-	timer.Simple(0.01, function() -- Wait a bit so we can validate all the current progressive cleanings
+	local delay = MR.Duplicator:IsStopping() and 0.5 or 0.01
+	timer.Simple(delay, function() -- Wait a bit so we can validate all the current progressive cleanings
 		for k,v in pairs(ents.GetAll()) do
 			if IsValid(v) and v.mr then
 				if MR.Materials:IsInstantCleanupEnabled() then
-					MR.Models:Remove(v)
+					MR.Models:Remove(ply, v, true)
 				else
-					MR.Materials:SetProgressiveCleanup(MR.Models.Remove, v)
+					MR.Materials:SetProgressiveCleanup(MR.Models.Remove, ply, v, true)
 				end
 			end
 		end

@@ -42,14 +42,15 @@ function Map:RemoveAll(ply)
 	MR.SV.Duplicator:ForceStop()
 
 	-- Remove
-	timer.Simple(0.01, function() -- Wait a bit so we can validate all the current progressive cleanings
+	local delay = MR.Duplicator:IsStopping() and 0.5 or 0.01
+	timer.Simple(delay, function() -- Wait a bit so we can validate all the current progressive cleanings
 		if MR.DataList:Count(MR.Map:GetList()) > 0 then
 			for k,v in pairs(MR.Map:GetList()) do
 				if MR.DataList:IsActive(v) then
 					if MR.Materials:IsInstantCleanupEnabled() then
-						MR.Map:Remove(v.oldMaterial)
+						MR.Map:Remove(ply, v.oldMaterial, true)
 					else
-						MR.Materials:SetProgressiveCleanup(MR.Map.Remove, v.oldMaterial)
+						MR.Materials:SetProgressiveCleanup(MR.Map.Remove, ply, v.oldMaterial, true)
 					end
 				end
 			end

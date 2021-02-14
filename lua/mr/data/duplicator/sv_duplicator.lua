@@ -210,10 +210,15 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 
 	-- Deal with older modifications
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+		-- Cease ongoing duplications
+		Duplicator:ForceStop()
+
 		-- Cleanup
 		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
-			if MR.Materials:GetModificantionsTotal() ~= 0 then
-				MR.SV.Materials:RemoveAll(ply)
+			if MR.Materials:GetTotalModificantions() ~= 0 then
+				timer.Simple(0.5, function() -- Wait or some materials will not be removed
+					MR.SV.Materials:RemoveAll(ply)
+				end)
 
 				if not MR.Materials:IsInstantCleanupEnabled() then
 					MR.Materials:SetProgressiveCleanupEndCallback(MR.SV.Duplicator.Start, ply, ent, savedTable, loadName)
@@ -222,9 +227,6 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 				end
 			end
 		end
-
-		-- Cease ongoing duplications
-		Duplicator:ForceStop()
 	end
 
 	-- Adjust the duplicator generic spawn entity
@@ -400,7 +402,7 @@ end
 
 -- Force to stop the duplicator
 function Duplicator:ForceStop(isGModLoadStarting)
-	if MR.Duplicator:IsRunning() or isGModLoadStarting then
+	if (MR.Duplicator:IsRunning() or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
 		MR.Duplicator:SetStopping(true)
 
 		timer.Simple(0.05, function()

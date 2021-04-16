@@ -17,12 +17,12 @@ function Map:Set(data)
 	local oldMaterial = Material(data.oldMaterial)
 
 	-- Change the texture
-	if data.newMaterial then
+	if data.newMaterial and Material(data.newMaterial):GetTexture("$basetexture") then
 		oldMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
 	end
 
 	-- Change the second texture (displacements only)
-	if data.newMaterial2 then
+	if data.newMaterial2 and Material(data.newMaterial2):GetTexture("$basetexture") then
 		oldMaterial:SetTexture("$basetexture2", Material(data.newMaterial2):GetTexture("$basetexture"))
 	end
 
@@ -36,17 +36,17 @@ function Map:Set(data)
 	local textureMatrix = oldMaterial:GetMatrix("$basetexturetransform")
 	local matrixChanged = false
 
-	if data.rotation then
+	if textureMatrix and data.rotation then
 		textureMatrix:SetAngles(Angle(0, data.rotation, 0)) 
 		matrixChanged = true
 	end
 
-	if data.scaleX or data.scaleY then
+	if textureMatrix and (data.scaleX or data.scaleY) then
 		textureMatrix:SetScale(Vector(1/(data.scaleX or 1), 1/(data.scaleY or 1), 1))
 		if not matrixChanged then matrixChanged = true; end
 	end
 
-	if data.offsetX or data.offsetY then
+	if textureMatrix and (data.offsetX or data.offsetY) then
 		textureMatrix:SetTranslation(Vector(data.offsetX or 0, data.offsetY or 0)) 
 		if not matrixChanged then matrixChanged = true; end
 	end

@@ -19,7 +19,7 @@ local dup = {
 		startTime = 0
 	},
 	-- Store a reference to the current loading table
-	currentTable,
+	currentTable = {},
 	-- A table reconstructed from GMod duplicator calls (GMod saves)
 	recreatedTable = {
 		initialized = false,
@@ -73,12 +73,12 @@ function Duplicator:InsertNewDupTable(ply, field, data)
 	end
 end
 
-function Duplicator:SetCurrentTable(savedTable)
-	dup.currentTable = savedTable
+function Duplicator:SetCurrentTable(ply, savedTable)
+	dup.currentTable[tostring(ply)] = savedTable
 end
 
-function Duplicator:GetCurrentTable()
-	return dup.currentTable
+function Duplicator:GetCurrentTable(ply)
+	return dup.currentTable[tostring(ply)]
 end
 
 -- Create a single loading table with the duplicator calls (GMod save)
@@ -233,7 +233,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	Duplicator:SetEnt(ent)
 
 	-- Save a reference of the current loading table
-	Duplicator:SetCurrentTable(savedTable)
+	Duplicator:SetCurrentTable(ply, savedTable)
 
 	-- Print server alert
 	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
@@ -347,7 +347,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 		return
 	end
-
+	
 	-- Count
 	MR.Duplicator:IncrementCurrent(ply)
 	Duplicator:SetProgress(ply, MR.Duplicator:GetCurrent(ply))
@@ -422,7 +422,7 @@ end
 function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
 		-- Remove the reference of the current loading table
-		Duplicator:SetCurrentTable()
+		Duplicator:SetCurrentTable(ply)
 
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
@@ -481,7 +481,6 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 				-- Start
 				Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
 			else
-
 				-- Disable the first spawn state
 				MR.Ply:SetFirstSpawn(ply)
 				net.Start("Ply:SetFirstSpawn")

@@ -22,9 +22,6 @@ local MRPlayer = {
 	list = {}
 }
 
--- Generic table to be used very fast on the first spawn if the player isn't ready
-MRPlayer.list[999] = table.Copy(MRPlayer.default)
-
 -- Networking
 net.Receive("Ply:SetFirstSpawn", function(_, ply)
 	if Ply:GetFirstSpawn(ply or LocalPlayer()) then
@@ -99,13 +96,7 @@ function Ply:InitStatesList(ply, forceIndex)
 end
 
 function Ply:GetControlIndex(ply)
-	local index = ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
-
-	if not MRPlayer.list[index] then
-		index = 999
-	end
-
-	return index
+	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
 end
 
 function Ply:GetFirstSpawn(ply)

@@ -95,7 +95,7 @@ function Load:Start(ply, loadName)
 		loadTable = table.Copy(MR.Materials:GetCurrentModifications(true))
 	-- Ongoing loads
 	elseif loadName == "changeAllMaterials" then
-		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable())
+		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable(ply))
 	-- Loadings from files
 	else
 		-- Get the load file

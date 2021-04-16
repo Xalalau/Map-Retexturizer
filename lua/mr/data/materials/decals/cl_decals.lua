@@ -35,11 +35,10 @@ end
 function Decals:Set(data, isBroadcasted)
 	-- General first steps
 	local check = {
-		material = data and data.newMaterial or MR.Materials:GetSelected(ply),
-		type = "Decals"
+		material = data and data.newMaterial or MR.Materials:GetSelected(ply)
 	}
 
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check, data) then
+	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check, data, "Decals") then
 		return false
 	end
 

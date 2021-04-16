@@ -21,7 +21,7 @@ net.Receive("SV.Skybox:Set", function(_, ply)
 end)
 
 net.Receive("SV.Skybox:Remove", function(_, ply)
-	Skybox:Remove(ply)
+	Skybox:Remove(ply, net.ReadBool())
 end)
 
 -- Get duplicator name
@@ -51,7 +51,7 @@ function Skybox:Set(ply, data, isBroadcasted)
        ) or
 	   data.newMaterial == "" then
 
-		Skybox:Remove(ply)
+		Skybox:Remove(ply, isBroadcasted)
 
 		return
 	-- It's a full 6-sided skybox (Render box on clientside)
@@ -96,31 +96,33 @@ function Skybox:Set(ply, data, isBroadcasted)
 end
 
 -- Remove the skybox
-function Skybox:Remove(ply)
+function Skybox:Remove(ply, isBroadcasted)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return
 	end
 
-	-- Return if a cleanup is already running
-	if MR.Materials:IsRunningProgressiveCleanup() then
-		return false
-	end
-
 	-- Check if we need to go ahead
 	if MR.Skybox:GetCurrent() == "" then
 		return
-	-- Reset the combobox
-	else
-		net.Start("CL.Panels:ResetSkyboxComboValue")
-		net.Broadcast()
 	end
 
-	-- Replicate
-	MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
+	if isBroadcasted then
+		-- Return if a cleanup is already running
+		if MR.Materials:IsRunningProgressiveCleanup() then
+			return false
+		end
+
+		-- Reset the combobox
+		net.Start("CL.Panels:ResetSkyboxComboValue")
+		net.Broadcast()
+
+		-- Replicate
+		MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
+	end
 
 	-- Remove the skybox
 	for k,v in pairs(MR.Skybox:GetList()) do
-		MR.Map:Remove(v.oldMaterial)
+		MR.Map:Remove(ply, v.oldMaterial, isBroadcasted)
 	end
 end

@@ -81,10 +81,6 @@ function Load:Start(ply, loadName)
 	end
 
 	-- General first steps
-	local check = {
-		type = "Load"
-	}
-
 	if not MR.Materials:SetFirstSteps(ply) then
 		return false
 	end
@@ -98,7 +94,7 @@ function Load:Start(ply, loadName)
 	if loadName == "currentMaterials" then
 		loadTable = table.Copy(MR.Materials:GetCurrentModifications(true))
 	-- Ongoing loads
-	elseif loadName == "changeAllMaterials" or loadName == "currentLoading" then
+	elseif loadName == "changeAllMaterials" then
 		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable())
 	-- Loadings from files
 	else
@@ -170,11 +166,8 @@ function Load:FirstSpawn(ply)
 	-- Set to auto validate the tool state
 	MR.Ply:SetAutoValidateTool(ply)
 
-	-- Start an ongoing load from the beggining
-	if MR.Duplicator:IsRunning() then
-		Load:Start(ply, "currentLoading")
-	-- Send the current modifications
-	elseif MR.Base:GetInitialized() then
+	-- Send the current modifications / keep loading an ongoing load
+	if MR.Base:GetInitialized() or MR.Duplicator:IsRunning() then
 		Load:Start(ply, "currentMaterials")
 	-- Run an autoload
 	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then

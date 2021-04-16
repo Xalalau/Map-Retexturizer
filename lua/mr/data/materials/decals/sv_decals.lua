@@ -11,7 +11,7 @@ util.AddNetworkString("CL.Decals:Set")
 util.AddNetworkString("SV.Decals:RemoveAll")
 
 net.Receive("SV.Decals:RemoveAll", function(_, ply)
-	Decals:RemoveAll(ply)
+	Decals:RemoveAll(ply, net.ReadBool())
 end)
 
 -- Apply decal materials
@@ -19,13 +19,19 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 	-- Get the basic properties
 	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
 
+	-- "Hack": turn it into a removal if newMaterial is nothing
+	if data.newMaterial == "" then
+		Decals:RemoveAll(ply, isBroadcasted)
+
+		return false
+	end
+
 	-- General first steps
 	local check = {
-		material = data.newMaterial,
-		type = "Decals"
+		material = data.newMaterial
 	}
 
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data, "Decals") then
 		return false
 	end
 
@@ -56,26 +62,36 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 end
 
 -- Remove all decals
-function Decals:RemoveAll(ply)
-	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
+function Decals:RemoveAll(ply, isBroadcasted)
+	-- General first steps
+	local fakeData = { newMaterial = "" }
+
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, nil, fakeData, "Decals") then
 		return false
 	end
 
-	-- Return if a cleanup is already running
-	if MR.Materials:IsRunningProgressiveCleanup() then
-		return false
-	end
-	
-	-- Stop the duplicator
-	MR.SV.Duplicator:ForceStop()
-
-	-- Cleanup
-	for k,v in pairs(player.GetAll()) do
-		if v:IsValid() then
-			v:ConCommand("r_cleardecals")
+	if isBroadcasted then
+		-- Return if a cleanup is already running
+		if MR.Materials:IsRunningProgressiveCleanup() then
+			return false
 		end
+
+		-- Stop the duplicator
+		MR.SV.Duplicator:ForceStop()
+
+		-- Cleanup
+		for k,v in pairs(player.GetHumans()) do
+			if v:IsValid() then
+				v:ConCommand("r_cleardecals")
+			end
+		end
+
+		table.Empty(MR.Decals:GetList())
+		duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
+	elseif IsValid(ply) and ply:IsPlayer() then
+		ply:ConCommand("r_cleardecals")
 	end
-	table.Empty(MR.Decals:GetList())
-	duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
+
+	-- General final steps
+	MR.Materials:SetFinalSteps()
 end

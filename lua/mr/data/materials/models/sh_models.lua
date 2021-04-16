@@ -21,7 +21,7 @@ end)
 net.Receive("Models:Remove", function()
 	if SERVER then return; end
 
-	Models:Remove(net.ReadEntity())
+	Models:Remove(LocalPlayer(), net.ReadEntity(), net.ReadBool())
 end)
 
 -- Get the original material full path
@@ -201,14 +201,20 @@ end
 
 -- Set model material
 function Models:Set(ply, data, isBroadcasted)
+	-- "Hack": turn it into a removal if newMaterial is nothing
+	if data.newMaterial == "" then
+		Models:Remove(ply, data.ent, isBroadcasted)
+
+		return
+	end
+
 	-- General first steps
 	local check = {
 		material = data.newMaterial,
-		ent = data.ent or "",
-		type = "Models"
+		ent = data.ent or ""
 	}
 
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data, "Models") then
 		return false
 	end
 
@@ -255,7 +261,7 @@ function Models:Set(ply, data, isBroadcasted)
 			undo.SetPlayer(ply)
 			undo.AddFunction(function(tab, ent)
 				if IsValid(ent) and ent.mr then
-					Models:Remove(ent)
+					Models:Remove(ply, ent, isBroadcasted)
 				end
 			end, data.ent)
 			undo.SetCustomUndoText("Undone Material")
@@ -269,29 +275,52 @@ function Models:Set(ply, data, isBroadcasted)
 end
 
 -- Remove model material
-function Models:Remove(ent)
+function Models:Remove(ply, ent, isBroadcasted)
 	-- Check if there is a modification
 	if not ent or not IsValid(ent) or ent:IsPlayer() or not ent.mr then
 		return false
 	end
 
-	-- Delete the Data table
-	ent.mr = nil
+	-- General first steps
+	local fakeData = {
+		newMaterial = "",
+		ent = ent
+	}
 
-	if SERVER then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, nil, fakeData, "Models") then
+		return false
+	end
+
+	if SERVER and isBroadcasted then
+		-- Delete the Data table
+		ent.mr = nil
+
 		-- Clear the duplicator
 		duplicator.ClearEntityModifier(ent, "MapRetexturizer_Models")
+	end
 
-		-- Remove on every player
+	if SERVER then
+		-- Run the remotion on client(s)
 		net.Start("Models:Remove")
-			net.WriteEntity(ent)
-		net.Broadcast()
+		net.WriteEntity(ent)
+		net.WriteBool(isBroadcasted)
+		if isBroadcasted then
+			net.Broadcast()
+		else
+			net.Send(ply)
+		end
 	elseif CLIENT then
+		-- Delete the Data table
+		ent.mr = nil
+
 		-- Disable the alpha
 		ent:SetMaterial("")
 		ent:SetRenderMode(RENDERMODE_NORMAL)
 		ent:SetColor(Color(255,255,255,255))
 	end
+
+	-- General final steps
+	MR.Materials:SetFinalSteps()
 
 	return true
 end

@@ -490,14 +490,14 @@ end
 		ent = data.ent
 		list = a data materials list
 		limit = limit for the above list
-		type = the kind of the material
 	}
 	data = data table
 		will be stored for future application if needed
 		data.newMaterial and data.newMaterial2 will be validated and can be modified
-]]
+	type = the material type, like "Displacements"
+	]]
 
-function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
+function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
 	-- Admin and first spawn loading only
 	if SERVER then
 		if not (MR.Ply:GetFirstSpawn(ply) and not isBroadcasted) and not MR.Ply:IsAdmin(ply) then
@@ -505,17 +505,17 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 		end
 	end
 
-	-- Block an ongoing load for a player at his first spawn - he'll start it from the beginning
-	if CLIENT and MR.Ply:GetFirstSpawn(ply) and MR.Duplicator:IsRunning() then
+	-- Don't do anything if a loading is being stopped
+	if MR.Duplicator:IsStopping() then
 		return false
 	end
 
-	-- Block and store a new material application for a player at his first spawn - he'll apply it later
+	-- Store the material change if ply is a player that just joined the game (first spawn), he'll apply it later
 	if isBroadcasted then
 		if SERVER and data then
 			for _,aPly in pairs(player.GetHumans()) do
 				if MR.Duplicator:IsRunning(aPly) then
-					MR.SV.Duplicator:InsertNewDupTable(aPly, string.lower(check.type), data)
+					MR.SV.Duplicator:InsertNewDupTable(aPly, string.lower(matType), data)
 				end
 			end
 		end
@@ -525,9 +525,9 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 		end
 	end
 
-	-- Don't do anything if a loading is being stopped
-	if MR.Duplicator:IsStopping() then
-		return false
+	-- Set the duplicator entity
+	if SERVER then
+		MR.SV.Duplicator:SetEnt()
 	end
 
 	if check then
@@ -552,7 +552,7 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 		-- Don't modify bad entities
 		-- Note: it's an redundant check to avoid script errors from untreated cases
 		if check.ent and (isstring(check.ent) or not IsValid(check.ent)) then
-			print("[Map Retexturizer]["..check.type.."] Bad entity blocked.")
+			print("[Map Retexturizer]["..matType.."] Bad entity blocked.")
 
 			return false
 		end
@@ -560,16 +560,11 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data)
 		-- Check if the modifications table is full
 		if check.list and check.limit and MR.DataList:IsFull(check.list, check.limit) then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]["..check.type.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
+				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]["..matType.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
 			end
 
 			return false
 		end
-	end
-
-	-- Set the duplicator entity
-	if SERVER then
-		MR.SV.Duplicator:SetEnt()
 	end
 
 	return true
@@ -602,7 +597,7 @@ function Materials:SetFinalSteps()
 end
 
 -- Get current modifications quantity
-function Materials:GetModificantionsTotal()
+function Materials:GetTotalModificantions()
 	local total = 0
 
 	for k,v in pairs(Materials:GetCurrentModifications(clean)) do

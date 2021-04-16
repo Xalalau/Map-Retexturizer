@@ -106,6 +106,7 @@ function Panels:SetSkybox(parent, frameType, info)
 
 			if value == "" then
 				net.Start("SV.Skybox:Remove")
+				net.WriteBool(true)
 				net.SendToServer()
 			elseif MR.Materials:Validate(value) or MR.Materials:IsFullSkybox(value) then
 				if MR.Materials:IsFullSkybox(value) then

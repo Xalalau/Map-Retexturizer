@@ -106,6 +106,9 @@ function Panels:SetCleanup(parent, frameType, info)
 			for k,v in pairs(options) do
 				if v[1]:GetChecked() then
 					net.Start(v[2])
+					if v[2] == "SV.Skybox:Remove" or v[2] == "SV.Decals:RemoveAll" then
+						net.WriteBool(true)
+					end
 					net.SendToServer()
 				end
 			end

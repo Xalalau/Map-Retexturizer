@@ -30,7 +30,7 @@ end)
 net.Receive("Map:Remove", function()
 	if SERVER then return; end
 
-	Map:Remove(net.ReadString())
+	Map:Remove(LocalPlayer(), net.ReadString(), net.ReadBool())
 end)
 
 -- Get map modifications
@@ -127,11 +127,10 @@ function Map:Set(ply, data, isBroadcasted)
 	-- General first steps (part 1)
 	local check = {
 		material = data.newMaterial,
-		material2 = data.newMaterial2,
-		type = selected.type
+		material2 = data.newMaterial2
 	}
 
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data, selected.type) then
 		return
 	end
 
@@ -176,11 +175,10 @@ function Map:Set(ply, data, isBroadcasted)
 			-- General first steps (part 2)
 			local check = {
 				list = selected.list,
-				limit = selected.limit,
-				type = selected.type
+				limit = selected.limit
 			}
 
-			if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+			if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, nil, selected.type) then
 				return
 			end
 
@@ -274,10 +272,10 @@ function Map:Set(ply, data, isBroadcasted)
 				undo.AddFunction(function(tab, oldMaterial)
 					-- Skybox
 					if MR.Materials:IsSkybox(oldMaterial) then
-						MR.SV.Skybox:Remove(ply)
+						MR.SV.Skybox:Remove(ply, isBroadcasted)
 					-- map/displacement
 					else
-						Map:Remove(data.oldMaterial)
+						Map:Remove(ply, data.oldMaterial, isBroadcasted)
 					end
 				end, data.oldMaterial)
 				undo.SetCustomUndoText("Undone Material")
@@ -290,7 +288,7 @@ function Map:Set(ply, data, isBroadcasted)
 end
 
 -- Clean map and displacements materials
-function Map:Remove(oldMaterial)
+function Map:Remove(ply, oldMaterial, isBroadcasted)
 	if not oldMaterial then
 		return false
 	end
@@ -299,16 +297,19 @@ function Map:Remove(oldMaterial)
 	local selected = {}
 
 	if MR.Materials:IsDisplacement(oldMaterial) then
+		selected.type = "Displacements"
 		selected.list = MR.Displacements:GetList()
 		if SERVER then
 			selected.dupName = MR.SV.Displacements:GetDupName()
 		end
 	elseif MR.Materials:IsSkybox(oldMaterial) then
+		selected.type = "Skybox"
 		selected.list = MR.Skybox:GetList()
 		if SERVER then
 			selected.dupName = MR.SV.Skybox:GetDupName()
 		end
 	else
+		selected.type = "Map"
 		selected.list = Map:GetList()
 		if SERVER then
 			selected.dupName = MR.SV.Map:GetDupName()
@@ -319,17 +320,25 @@ function Map:Remove(oldMaterial)
 		-- Get the element to clean from the table
 		local element = MR.DataList:GetElement(selected.list, oldMaterial)
 
+		-- General first steps
+		if not MR.Materials:SetFirstSteps(ply, isBroadcasted, nil, element, selected.type) then
+			return
+		end
+
 		if element then
-			-- Run the element backup
 			if CLIENT then
+				-- Run the element backup
 				MR.CL.Map:Set(element.backup)
+
+				-- Change the state of the element to disabled
+				MR.DataList:DisableElement(element)
 			end
 
-			-- Change the state of the element to disabled
-			MR.DataList:DisableElement(element)
+			if SERVER and isBroadcasted then
+				-- Change the state of the element to disabled
+				MR.DataList:DisableElement(element)
 
-			-- Update the duplicator
-			if SERVER then
+				-- Update the duplicator
 				if IsValid(MR.SV.Duplicator:GetEnt()) then
 					if MR.DataList:Count(selected.list) == 0 then
 						duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), selected.dupName)
@@ -337,12 +346,20 @@ function Map:Remove(oldMaterial)
 				end
 			end
 
-			-- Run the remotion on every client
+			-- Run the remotion on client(s)
 			if SERVER then
 				net.Start("Map:Remove")
-					net.WriteString(oldMaterial)
-				net.Broadcast()
+				net.WriteString(oldMaterial)
+				net.WriteBool(isBroadcasted)
+				if isBroadcasted then
+					net.Broadcast()
+				else
+					net.Send(ply)
+				end
 			end
+
+			-- General final steps
+			MR.Materials:SetFinalSteps()
 
 			return true
 		end

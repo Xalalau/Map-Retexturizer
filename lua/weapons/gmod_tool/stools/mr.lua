@@ -278,13 +278,13 @@ function TOOL:Reload(tr)
 		if SERVER then
 			-- Skybox
 			if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-				MR.SV.Skybox:Remove(ply)
+				MR.SV.Skybox:Remove(ply, true)
 			-- model
 			elseif IsValid(tr.Entity) then
-				MR.Models:Remove(tr.Entity)
+				MR.Models:Remove(ply, tr.Entity, true)
 			-- map/displacement
 			elseif tr.Entity:IsWorld() then
-				MR.Map:Remove(MR.Materials:GetOriginal(tr))
+				MR.Map:Remove(ply, MR.Materials:GetOriginal(tr), true)
 			end
 		end
 

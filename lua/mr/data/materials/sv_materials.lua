@@ -71,11 +71,10 @@ function Materials:SetAll(ply)
 
 	-- General first steps
 	local check = {
-		material = material,
-		type = "SetAll"
+		material = material
 	}
 
-	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check) then
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, nil, "SetAll") then
 		return
 	end
 
@@ -167,9 +166,9 @@ function Materials:RemoveAll(ply)
 	-- Cleanup
 	MR.SV.Models:RemoveAll(ply)
 	MR.SV.Map:RemoveAll(ply)
-	MR.SV.Decals:RemoveAll(ply)
+	MR.SV.Decals:RemoveAll(ply, true)
 	MR.SV.Displacements:RemoveAll(ply)
-	MR.SV.Skybox:Remove(ply)
+	MR.SV.Skybox:Remove(ply, true)
 
 	return true
 end

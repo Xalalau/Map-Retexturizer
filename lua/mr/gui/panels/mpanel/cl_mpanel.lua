@@ -29,7 +29,7 @@ local mpanel = {
 -- Networking
 net.Receive("CL.MPanel:OnToolOpen", function()
 	-- Restart the preview box rendering
-	if not MR.Ply:GetDecalMode(ply) then
+	if not MR.Ply:GetDecalMode(LocalPlayer()) then
 		MPanel:RestartPreviewBox()
 	end
 end)

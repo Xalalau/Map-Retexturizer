@@ -498,6 +498,13 @@ end
 	]]
 
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
+	-- If the player isn't even initialized yet, do nothing
+	--   TO-DO: Here we *lost* the application of some materials (min. 5 in low speed). They need to be stored and returned to the new
+	--          player. After this is done, the lines ""if not ply or not IsValid(ply) then return SOMEBOOL end"" should be removed from sh_player.lua
+	if not ply then
+		return false
+	end
+
 	-- Admin and first spawn loading only
 	if SERVER then
 		if not (MR.Ply:GetFirstSpawn(ply) and not isBroadcasted) and not MR.Ply:IsAdmin(ply) then

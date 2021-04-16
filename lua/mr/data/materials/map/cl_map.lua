@@ -56,7 +56,7 @@ function Map:Set(data)
 	end
 
 	-- Change the detail
-	if data.detail and data.detail ~= "None" then
+	if data.detail and MR.Materials:GetDetailList()[data.detail] and data.detail ~= "None" then
 		oldMaterial:SetTexture("$detail", MR.Materials:GetDetailList()[data.detail]:GetTexture("$basetexture"))
 		oldMaterial:SetString("$detailblendfactor", "1")
 	elseif oldMaterial:GetString("$detail") and oldMaterial:GetString("$detail") ~= "" then

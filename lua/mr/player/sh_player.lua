@@ -176,9 +176,13 @@ end
 -- e.g. this can happen if the player starts to change the menus like crazy (VERY FAST)
 -- Anyway, it's good to have this check here because it's light and covers unforeseen cases
 function Ply:SetAutoValidateTool(ply)
-	timer.Create("MRAntiPreviewStuck", 3, 0, function()
-		if IsValid(ply) then
+	local hookName = "MRAntiPreviewStuck" .. tostring(ply)
+
+	timer.Create(hookName, 3, 0, function()
+		if IsValid(ply) and ply:IsValid() then
 			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+		else
+			timer.Remove(hookName)
 		end
 	end)
 end

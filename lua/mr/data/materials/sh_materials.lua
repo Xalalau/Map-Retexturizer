@@ -94,7 +94,7 @@ function Materials:SetProgressiveCleanup(callback, ...)
 	local args = { ... }
 	local diff = Materials:GetProgressiveCleanupTime() - CurTime()
 	local delayBase = 0.02
-	local delay = diff > 0 and (diff + delayBase) or delayBase
+	local delay = diff > 0 and (diff + delayBase) or 0.1 -- Note: Duplicator:ForceStop() needs 0.05s to cease the duplication.
 	local incrementedTime = diff > 0 and (Materials:GetProgressiveCleanupTime() + delayBase) or CurTime() + delay
 
 	if diff < 0 then

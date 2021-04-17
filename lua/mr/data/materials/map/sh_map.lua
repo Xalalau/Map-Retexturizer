@@ -256,7 +256,7 @@ function Map:Set(ply, data, isBroadcasted)
 	end
 
 	-- Set the Undo
-	if SERVER and MR.DataList:IsActive(data) and not isBroadcasted and not MR.Ply:GetFirstSpawn(ply) then
+	if SERVER and MR.DataList:IsActive(data) and isBroadcasted and IsValid(ply) and not MR.Ply:GetFirstSpawn(ply) then
 		-- Only allow 1 skybox undo (otherwise it'll set 6)
 		local create = true
 
@@ -265,7 +265,7 @@ function Map:Set(ply, data, isBroadcasted)
 				create = false
 			end
 		end
-	
+
 		if create then
 			undo.Create("Material")
 				undo.SetPlayer(ply)

@@ -64,6 +64,12 @@ end
 function Decals:Preview()
 	local ply = LocalPlayer()
 	local tr = ply:GetEyeTrace()
+	local hitData = MR.Data:Create(ply, { tr = tr }, nil, true)
+
+	-- Don't render over the skybox
+	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		return
+	end
 
 	-- Don't render if there is a loading or the material browser is open
 	if MR.Duplicator:IsRunning(ply) then

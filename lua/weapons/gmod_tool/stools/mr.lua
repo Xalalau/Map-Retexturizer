@@ -119,6 +119,11 @@ end
 
 	-- If we are dealing with decals, apply it
 	if isDecal then
+		-- Don't interact with the skybox
+		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+			return false
+		end
+
 		if SERVER then
 			MR.SV.Decals:Set(ply, tr)
 		end
@@ -267,6 +272,11 @@ end
 -- Restore materials
 function TOOL:Reload(tr)
 	local ply = self:GetOwner() or LocalPlayer()
+
+	-- Do nothing while in decals mode
+	if MR.Ply:GetDecalMode(ply) then
+		return false
+	end
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then

@@ -114,17 +114,35 @@ function Skybox:Remove(ply, isBroadcasted)
 		if MR.Materials:IsRunningProgressiveCleanup() then
 			return false
 		end
-
-		-- Reset the combobox
-		net.Start("CL.Panels:ResetSkyboxComboValue")
-		net.Broadcast()
-
-		-- Replicate
-		MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
 	end
 
 	-- Remove the skybox
-	for k,v in pairs(MR.Skybox:GetList()) do
-		MR.Map:Remove(ply, v.oldMaterial, isBroadcasted)
-	end
+	local delay = MR.Duplicator:IsStopping() and 0.5 or 0.01
+	timer.Simple(delay, function() -- Wait a bit so we can validate all the current progressive cleanings
+		if MR.DataList:Count(MR.Skybox:GetList()) > 0 then
+			for k,v in pairs(MR.Skybox:GetList()) do
+				if MR.Materials:IsInstantCleanupEnabled() then
+					MR.Map:Remove(ply, v.oldMaterial, isBroadcasted)
+				else
+					MR.Materials:SetProgressiveCleanup(MR.Map.Remove, ply, v.oldMaterial, true)
+				end
+			end
+			if isBroadcasted then
+				local function FinishRemotion()
+					-- Reset the combobox
+					net.Start("CL.Panels:ResetSkyboxComboValue")
+					net.Broadcast()
+			
+					-- Replicate
+					MR.SV.Sync:Replicate(ply, "internal_mr_skybox", "", "skybox", "text")
+				end
+
+				if MR.Materials:IsInstantCleanupEnabled() then
+					FinishRemotion()
+				else
+					MR.Materials:SetProgressiveCleanup(FinishRemotion)
+				end
+			end
+		end
+	end)
 end

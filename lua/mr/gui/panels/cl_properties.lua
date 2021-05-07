@@ -9,6 +9,27 @@ net.Receive("CL.Panels:RefreshProperties", function()
 	Panels:RefreshProperties(MR.CL.ExposedPanels:Get("properties", "self"))
 end)
 
+local function validateEntry(panel)
+	local input = panel:GetText()
+
+	MR.Materials:SetNew(LocalPlayer(), panel:GetText())
+	--MR.Materials:SetOld(LocalPlayer(), "")
+
+	-- I was restarting the fields if a wrong information was entered, but it's better to
+	-- leave them until the player fixes the material name on his own. So if the menu is
+	-- closed and the material is still invalid, it changes to our missing material.
+
+	if input == "" or not MR.Materials:Validate(input) then
+		MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
+		--MR.Materials:SetOld(LocalPlayer(), "")
+		--panel:SetText(MR.Materials:GetMissing())
+	end
+
+	timer.Simple(0.05, function()
+		MR.CL.Materials:SetPreview()
+	end)
+end
+
 function Panels:SetPropertiesPath(parent, frameType, info)
 	local frame = MR.CL.Panels:StartContainer("Path", parent, frameType, info)
 
@@ -37,45 +58,29 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 	--------------------------
 	local materialText2 = vgui.Create("DTextEntry", panel)
 		MR.CL.Panels:SetMRFocus(materialText2)
+		MR.CL.Panels:SetMRDefocusCallback(materialText2, validateEntry, materialText2)
 		materialText2:SetSize(materialInfo2.width, materialInfo2.height)
 		materialText2:SetPos(materialInfo2.x, materialInfo2.y)
 		materialText2:SetConVar("internal_mr_old_material")
-		materialText2:SetEnabled(false)
 		materialText2:SetTooltip("Base material")
+		local backupMat2Paint = materialText2.Paint
+		function materialText2:Paint(w, h)
+			backupMat2Paint(self, w, h)
+			if not materialText2:IsEditing() then
+				draw.RoundedBox(2, 1, 1, w - 2, h - 2, Color(190, 190, 190, 255))
+			end
+		end
 
 	--------------------------
 	-- New material
 	--------------------------
 	local materialText = vgui.Create("DTextEntry", panel)
-		local function validateEntry(panel)
-			local input = panel:GetText()
-
-			MR.Materials:SetNew(LocalPlayer(), panel:GetText())
-			--MR.Materials:SetOld(LocalPlayer(), "")
-
-			-- I was restarting the fields if a wrong information was entered, but it's better to
-			-- leave them until the player fixes the material name on his own. So if the menu is
-			-- closed and the material is still invalid, it changes to our missing material.
-
-			if input == "" or not MR.Materials:Validate(input) then
-				MR.Materials:SetNew(LocalPlayer(), MR.Materials:GetMissing())
-				--MR.Materials:SetOld(LocalPlayer(), "")
-				--panel:SetText(MR.Materials:GetMissing())
-			end
-
-			timer.Simple(0.05, function()
-				MR.CL.Materials:SetPreview()
-			end)
-		end
 		MR.CL.Panels:SetMRFocus(materialText)
 		MR.CL.Panels:SetMRDefocusCallback(materialText, validateEntry, materialText)
 		materialText:SetSize(materialInfo.width, materialInfo.height)
 		materialText:SetPos(materialInfo.x, materialInfo.y)
 		materialText:SetConVar("internal_mr_new_material")
 		materialText:SetTooltip("New material")
-		materialText.OnEnter = function(self)
-			validateEntry(self)
-		end
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)
 end

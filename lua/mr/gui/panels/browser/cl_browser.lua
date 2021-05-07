@@ -21,6 +21,24 @@ local browser = {
 	}
 }
 
+surface.CreateFont( "mapret_browser_buttons_font", {
+	font = "Arial",
+	extended = false,
+	size = 12,
+	weight = 500,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
 function Browser:GetSelf()
 	return browser.self
 end
@@ -68,7 +86,7 @@ function Browser:Create()
 	local border = 5
 	local buttonsHeight = 25
 
-	local windowWidth = 1000
+	local windowWidth = 1020
 	local windowHeight = 4 * windowWidth/10 + buttonsHeight + topBar + border
 
 	local materialBoxSize = 4 * windowWidth/10 - border * 2
@@ -122,38 +140,45 @@ function Browser:Create()
 
 		-- Element measures
 		local treeListInfo = {
-			width = window:GetWide() - materialBoxSize - (window:GetWide() - materialBoxSize)/1.8 - border * 3,
+			width = window:GetWide() - materialBoxSize - (window:GetWide() - materialBoxSize)/1.85 - border * 3,
 			height = materialBoxSize,
 			x = materialBoxSize + border * 2,
 			y = buttonsHeight + topBar + border * 2
 		}
 
-		local textPanelInfo = {
-			width = treeListInfo.width,
+		local reloadButtonInfo = {
+			width = buttonsHeight,
+			height = buttonsHeight,
+			x = treeListInfo.x + treeListInfo.width - buttonsHeight,
+			y = topBar + border
+		}
+
+		local mouseTipLInfo = {
+			width = (treeListInfo.width - reloadButtonInfo.width) / 3,
 			height = buttonsHeight,
 			x = treeListInfo.x,
 			y = topBar + border
 		}
 
-		local sendButtonInfo = {
-			width = materialBoxSize/3 - border,
+		local mouseTipMInfo = {
+			width = mouseTipLInfo.width,
+			height = buttonsHeight,
+			x = mouseTipLInfo.x + mouseTipLInfo.width,
+			y = topBar + border
+		}
+
+		local mouseTipRInfo = {
+			width = mouseTipMInfo.width,
+			height = buttonsHeight,
+			x = mouseTipMInfo.x + mouseTipMInfo.width,
+			y = topBar + border
+		}
+
+		local textPanelInfo = {
+			width = materialBoxSize,
 			height = buttonsHeight,
 			x = border,
 			y = materialBoxSize + border * 2 + topBar
-		}
-
-		local copyButtonInfo = {
-			width = materialBoxSize/3 - border,
-			height = buttonsHeight,
-			x = materialBoxSize/3 + border,
-			y = sendButtonInfo.y
-		}
-
-		local reloadButtonInfo = {
-			width = materialBoxSize/3,
-			height = buttonsHeight,
-			x = 2 * materialBoxSize/3 + border,
-			y = sendButtonInfo.y
 		}
 
 		local scrollPanelInfo = {
@@ -183,12 +208,34 @@ function Browser:Create()
 				end
 			end
 
-		-- Send button
-		local sendButton = vgui.Create("DButton", window)
-			sendButton:SetSize(sendButtonInfo.width, sendButtonInfo.height)
-			sendButton:SetPos(sendButtonInfo.x, sendButtonInfo.y)
-			sendButton:SetText("Tool Gun")
-			sendButton.DoClick = function()
+		-- Left button - Preview
+		local leftButton = vgui.Create("DButton", window)
+			leftButton:SetSize(mouseTipLInfo.width, mouseTipLInfo.height)
+			leftButton:SetPos(mouseTipLInfo.x, mouseTipLInfo.y)
+			leftButton:SetIcon("mr/m_left.png")
+			leftButton:SetText("Preview")
+			leftButton:SetFont("mapret_browser_buttons_font")
+			leftButton:SetEnabled(false)
+
+		-- Middle button - Copy to clipboard
+		local middleButton = vgui.Create("DButton", window)
+			middleButton:SetSize(mouseTipMInfo.width, mouseTipMInfo.height)
+			middleButton:SetPos(mouseTipMInfo.x, mouseTipMInfo.y)
+			middleButton:SetIcon("mr/m_middle.png")
+			middleButton:SetText(" Copy Path")
+			middleButton:SetFont("mapret_browser_buttons_font")
+			middleButton.DoClick = function()
+				SetClipboardText(browserPreviewMaterial:GetTexture("$basetexture"):GetName())
+			end
+
+		-- Right button - Send
+		local rightButton = vgui.Create("DButton", window)
+			rightButton:SetSize(mouseTipRInfo.width, mouseTipRInfo.height)
+			rightButton:SetPos(mouseTipRInfo.x, mouseTipRInfo.y)
+			rightButton:SetIcon("mr/m_right.png")
+			rightButton:SetText("Tool Gun")
+			rightButton:SetFont("mapret_browser_buttons_font")
+			rightButton.DoClick = function()
 				MR.Materials:SetNew(LocalPlayer(), selectedMaterial:GetText())
 				MR.Materials:SetOld(LocalPlayer(), "")
 				timer.Simple(0.03, function()
@@ -196,20 +243,12 @@ function Browser:Create()
 				end)
 			end
 
-		-- Copy to clipboard button
-		local copyButton = vgui.Create("DButton", window)
-			copyButton:SetSize(copyButtonInfo.width, copyButtonInfo.height)
-			copyButton:SetPos(copyButtonInfo.x, copyButtonInfo.y)
-			copyButton:SetText("Copy to Clipboard")
-			copyButton.DoClick = function()
-				SetClipboardText(browserPreviewMaterial:GetTexture("$basetexture"):GetName())
-			end
-
 		-- Reload button
 		local reloadButton = vgui.Create("DButton", window)
 			reloadButton:SetSize(reloadButtonInfo.width, reloadButtonInfo.height)
 			reloadButton:SetPos(reloadButtonInfo.x, reloadButtonInfo.y)
-			reloadButton:SetText("Reload Lists")
+			reloadButton:SetIcon("icon16/arrow_rotate_clockwise.png")
+			reloadButton:SetText("")
 			reloadButton.DoClick = function()
 				scroll:Remove()
 				treeList:Remove()
@@ -405,6 +444,14 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 
 					n.DoClick = function()
 						Browser:SetSelectedMaterial(arq, browserPreviewMaterial)
+					end
+
+					n.DoRightClick = function()
+						MR.Materials:SetNew(LocalPlayer(), arq)
+						MR.Materials:SetOld(LocalPlayer(), "")
+						timer.Simple(0.03, function()
+							MR.CL.Materials:SetPreview()
+						end)
 					end
 				end
 			end

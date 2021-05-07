@@ -79,6 +79,9 @@ end
 if SERVER then
 	local function SendFiles()
 		local files, _ = file.Find("materials/".. luaDir .."*.vmt", "GAME")
+		local files2, _ = file.Find("materials/".. luaDir .."*.png", "GAME")
+
+		table.Merge(files, files2)
 
 		for k, v in ipairs(files) do
 			resource.AddFile("materials/".. luaDir .. v)

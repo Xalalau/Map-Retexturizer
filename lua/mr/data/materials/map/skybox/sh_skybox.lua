@@ -74,10 +74,8 @@ function Skybox:Init()
 
 		-- Initialize the painted skybox
 		if CLIENT then
-			if Skybox:IsPainted() then
-				for i=1,6,1 do
-					Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
-				end
+			for i=1,6,1 do
+				Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
 			end
 		end
 	end)
@@ -172,12 +170,7 @@ function Skybox:GetOriginal(tr)
 		-- Instead of tools/toolsskybox, return...
 		if MR.Materials:IsSkybox(originalMaterial) then
 			-- our custom env_skypainted material 
-			if Skybox:IsPainted() then
-				return Skybox:GetFilename2()
-			-- The current sky material
-			else
-				return Skybox:ValidatePath(Skybox:GetName())
-			end
+			return Skybox:GetFilename2()
 		end
 	end
 
@@ -201,6 +194,7 @@ end
 
 -- Insert a sky material suffix
 function Skybox:SetSuffix(material)
+	if not material then return false end
 	return material .. skybox.suffixes[1]
 end
 

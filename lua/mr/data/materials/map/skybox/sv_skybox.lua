@@ -68,7 +68,6 @@ function Skybox:Set(ply, data, isBroadcasted)
 	elseif not MR.Materials:Validate(data.newMaterial) then
 		return
 	end
-	-- if nothing above is true, it's a valid single material
 
 	-- Adjustment for first spawn
 	if MR.Ply:GetFirstSpawn(ply) then
@@ -90,7 +89,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	-- Apply the material(s)
 	for i = 1,6 do
 		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial
-		data.oldMaterial = (MR.Skybox:IsPainted() and MR.Skybox:GetFilename2() or MR.Skybox:GetName()) .. MR.Skybox:GetSuffixes()[i]
+		data.oldMaterial = MR.Skybox:GetFilename2() .. MR.Skybox:GetSuffixes()[i]
 		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
 	end
 

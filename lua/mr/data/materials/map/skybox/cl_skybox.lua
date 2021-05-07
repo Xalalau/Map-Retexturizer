@@ -8,31 +8,21 @@ MR.CL.Skybox = Skybox
 
 -- Skybox rendering hook
 hook.Add("PostDraw2DSkyBox", "Skybox:Render", function()
-	if MR and MR.Skybox and MR.Skybox:IsPainted() then
+	if MR and MR.Skybox then
 		Skybox:Render()
 	end
 end)
 
 -- Render 6 side skybox materials on every map or simple materials on the skybox on maps with env_skypainted entity
 function Skybox:Render()
+	if newMaterial == "" or not MR.Materials:Validate(MR.Skybox:GetCurrent()) then return end
+
 	local distance = 200
 	local width = distance * 2.01
 	local height = distance * 2.01
-	local newMaterial = MR.Skybox:GetCurrent()
+	local newMaterial = MR.Skybox:GetFilename2()
 	local suffixes = MR.Skybox:GetSuffixes()
 
-	-- Stop renderind if there is no material
-	if newMaterial == "" then
-		return
-	-- It's an invalid material
-	elseif not MR.Materials:Validate(newMaterial) then
-		return
-	-- It's a single material
-	else
-		newMaterial = MR.Skybox:GetFilename2()
-	end
-
-	-- Render our sky box around the player
 	render.OverrideDepthEnable(true, false)
 
 	cam.Start3D(Vector(0, 0, 0), EyeAngles())

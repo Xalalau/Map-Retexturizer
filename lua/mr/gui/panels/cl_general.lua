@@ -156,6 +156,7 @@ function Panels:SetGeneral(parent, frameType, info)
 		decalsMode:SetText("Start decals mode")
 		decalsMode:SetTextColor(Color(0, 0, 0, 255))
 		decalsMode:SetValue(false)
+		decalsMode:SetEnabled(false) -- Reactivate it when it's working properly
 		decalsMode.OnChange = function(self, val)
 			preview:SetEnabled(not val)
 

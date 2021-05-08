@@ -58,7 +58,6 @@ function Panels:SetPropertiesPath(parent, frameType, info)
 	--------------------------
 	local materialText2 = vgui.Create("DTextEntry", panel)
 		MR.CL.Panels:SetMRFocus(materialText2)
-		MR.CL.Panels:SetMRDefocusCallback(materialText2, validateEntry, materialText2)
 		materialText2:SetSize(materialInfo2.width, materialInfo2.height)
 		materialText2:SetPos(materialInfo2.x, materialInfo2.y)
 		materialText2:SetConVar("internal_mr_old_material")

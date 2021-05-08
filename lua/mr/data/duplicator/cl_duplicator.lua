@@ -43,6 +43,9 @@ end
 function Duplicator:SetProgress(current, total, isBroadcasted)
 	local ply = LocalPlayer()
 
+	-- Do nothing if the player isn't initialized
+	if not ply then return end
+
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
 	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
 		return

@@ -100,6 +100,7 @@ function Ply:GetControlIndex(ply)
 end
 
 function Ply:GetFirstSpawn(ply)
+	if not ply or not IsValid(ply) then return true end -- Ugly. If ply isn't initialized
 	return MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn
 end
 

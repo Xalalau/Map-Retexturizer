@@ -229,6 +229,11 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 		end
 	end
 
+	-- Create event
+	if not MR.Duplicator:IsRunning(ply) then
+		hook.Run("MRStartLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
+	end
+
 	-- Adjust the duplicator generic spawn entity
 	Duplicator:SetEnt(ent)
 
@@ -452,6 +457,9 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		dup.models.delay = 0
 		dup.models.startTime = 0
 
+		-- Get load name
+		local loadName = MR.Duplicator:IsRunning(ply)
+
 		-- Set "running" to nothing
 		MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
 
@@ -488,8 +496,11 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 			end
 		end
 
-		-- Print alert
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
+			-- Create event
+			hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
+
+			-- Print alert
 			print("[Map Retexturizer] Loading finished.")
 		end
 

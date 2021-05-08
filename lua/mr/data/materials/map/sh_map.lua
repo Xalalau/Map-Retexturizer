@@ -92,6 +92,11 @@ end
 
 -- Set map material
 function Map:Set(ply, data, isBroadcasted)
+	-- Hold the change if the player is unitialized
+	if CLIENT and ply and not IsValid(ply) then
+		timer.Simple(1.5, function() Map:Set(LocalPlayer(), data, isBroadcasted) end)
+	end
+
 	-- Select the correct type
 	local selected = {}
 

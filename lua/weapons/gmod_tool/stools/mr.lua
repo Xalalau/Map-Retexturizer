@@ -82,9 +82,9 @@ function TOOL_BasicChecks(ply, tr)
 	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
 		if SERVER then
 			if GetConVar("sv_cheats"):GetString() == "0" then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify this displacement using the tool menu.")
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Change displacements using the tool menu.")
 			else
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Read the console output to modify this displacement.")
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Read the console output to change displacements.")
 				net.Start("CL.Concommands:PrintDisplacementsHelp")
 				net.Send(ply)
 			end
@@ -97,7 +97,7 @@ function TOOL_BasicChecks(ply, tr)
 	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
 			if not MR.Ply:GetDecalMode(ply) then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Modify the skybox using the tool menu.")
+				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Change the skybox using the tool menu.")
 			end
 		end
 

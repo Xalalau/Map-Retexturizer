@@ -92,11 +92,11 @@ function Load:Start(ply, loadName)
 
 	-- The current map modifications
 	if loadName == "currentMaterials" then
-		loadTable = table.Copy(MR.Materials:GetCurrentModifications(true))
-	-- Ongoing loads
+		loadTable = MR.Materials:CleanCurrentModifications(table.Copy(MR.Materials:GetCurrentModifications()))
+	-- Ongoing change all load
 	elseif loadName == "changeAllMaterials" then
 		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable(ply))
-	-- Loadings from files
+	-- Loading from files
 	else
 		-- Get the load file
 		local loadFile = MR.Load:GetOption(loadName) or MR.Base:GetSaveFolder() .. loadName .. ".txt"

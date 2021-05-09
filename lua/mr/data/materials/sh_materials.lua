@@ -603,7 +603,7 @@ end
 function Materials:GetTotalModificantions()
 	local total = 0
 
-	for k,v in pairs(Materials:GetCurrentModifications(clean)) do
+	for k,v in pairs(Materials:GetCurrentModifications()) do
 		if k ~= "savingFormat" then
 			total = total + MR.DataList:Count(v)
 		end
@@ -631,14 +631,16 @@ function Materials:GetCurrentModifications(clean)
 		end
 	end
 
-	-- Remove all the disabled elements
-	if clean then
-		for k,v in pairs(currentMaterialsLists) do
-			if k ~= "savingFormat" and #v > 0 then
-				MR.DataList:Clean(v)
-			end
+	return currentMaterialsLists
+end
+
+-- Remove all the disabled elements from all lists
+function Materials:CleanCurrentModifications(currentModifications)
+	for listName,list in pairs(currentModifications) do
+		if listName ~= "savingFormat" and #list > 0 then
+			MR.DataList:Clean(list)
 		end
 	end
 
-	return currentMaterialsLists
+	return currentModifications
 end

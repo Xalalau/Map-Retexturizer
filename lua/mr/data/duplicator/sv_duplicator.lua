@@ -448,6 +448,26 @@ function Duplicator:RemoveMaterials(ply, differencesTable)
 	end
 end
 
+-- Find and fix dyssynchrony
+function Duplicator:FixDyssynchrony(ply, checkTable)
+	local dupTable = checkTable or Duplicator:GetCumulativeNewDupTable(ply) or Duplicator:GetCurrentTable(ply)
+
+	-- Get differences between the current server table and an applied or selected table
+	local differences = MR.DataList:GetDifferences(dupTable, MR.DataList:GetCurrentModifications())
+
+	if differences and table.Count(differences.current) > 0 then
+		-- Remove materials
+		Duplicator:RemoveMaterials(ply, differences)
+	
+		-- Add current version tag
+		differences.current.savingFormat = MR.Save:GetCurrentVersion()
+	else
+		differences = nil
+	end
+
+	return differences
+end
+
 -- Force to stop the duplicator
 function Duplicator:ForceStop(isGModLoadStarting)
 	if (MR.Duplicator:IsRunning() or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
@@ -538,19 +558,11 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 			-- If there are no more additions to do, look for differences between the applied and the current table
 			-- This code can't handle a loading in progress, that's why it's only used to fix sync problems (caused by materials being removed while the player was loading)
 			else
-				local dupTable = Duplicator:GetCumulativeNewDupTable(ply) or Duplicator:GetCurrentTable(ply)
+				local differences = Duplicator:FixDyssynchrony(ply)
 
-				local differences = MR.DataList:GetDifferences(dupTable, MR.DataList:GetCurrentModifications())
-
-				if differences and table.Count(differences.current) > 0 then
-					-- Remove materials
-					Duplicator:RemoveMaterials(ply, differences)
-
+				if differences then
 					-- Stack the lists
 					Duplicator:InsertCumulativeNewDupTable(ply, differences.current)
-
-					-- Add current version tag
-					differences.current.savingFormat = MR.Save:GetCurrentVersion()
 
 					-- Start
 					return Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials")

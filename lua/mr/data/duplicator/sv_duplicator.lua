@@ -228,7 +228,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 
 		-- Cleanup
 		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
-			if MR.Materials:GetTotalModificantions() ~= 0 then
+			if MR.DataList:GetTotalModificantions() ~= 0 then
 				timer.Simple(0.5, function() -- Wait or some materials will not be removed
 					MR.SV.Materials:RemoveAll(ply)
 				end)
@@ -540,7 +540,7 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 			else
 				local dupTable = Duplicator:GetCumulativeNewDupTable(ply) or Duplicator:GetCurrentTable(ply)
 
-				local differences = MR.DataList:GetDifferences(dupTable, MR.Materials:GetCurrentModifications())
+				local differences = MR.DataList:GetDifferences(dupTable, MR.DataList:GetCurrentModifications())
 
 				if differences and table.Count(differences.current) > 0 then
 					-- Remove materials

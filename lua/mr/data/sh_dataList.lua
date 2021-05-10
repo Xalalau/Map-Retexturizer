@@ -100,6 +100,17 @@ function DataList:Clean(list)
 	end
 end
 
+-- Remove all the disabled elements from all lists
+function DataList:CleanFullLists(listsTab)
+	for listName,list in pairs(listsTab) do
+		if listName ~= "savingFormat" and #list > 0 then
+			MR.DataList:Clean(list)
+		end
+	end
+
+	return listsTab
+end
+
 -- Remove the backups from a list
 function DataList:DeleteBackups(list)
 	for _,section in pairs(list) do
@@ -109,6 +120,41 @@ function DataList:DeleteBackups(list)
 			end
 		end
 	end
+end
+
+-- Get current modifications quantity
+function DataList:GetTotalModificantions()
+	local total = 0
+
+	for k,v in pairs(DataList:GetCurrentModifications()) do
+		if k ~= "savingFormat" then
+			total = total + MR.DataList:Count(v)
+		end
+	end
+
+	return total
+end
+
+-- Get the current modified materials lists
+-- clean = bool, removes disabled elements
+function DataList:GetCurrentModifications()
+	local currentMaterialsLists = {
+		decals = MR.Decals:GetList(),
+		map = MR.Map:GetList(),
+		displacements = MR.Displacements:GetList(),
+		skybox = { MR.Skybox:GetList()[1] } ,
+		models = {},
+		savingFormat = MR.Save:GetCurrentVersion()
+	}
+
+	-- Check for changed models
+	for k,v in pairs(ents.GetAll()) do
+		if MR.Models:GetData(v) then
+			table.insert(currentMaterialsLists.models, v)
+		end
+	end
+
+	return currentMaterialsLists
 end
 
 -- Generate a new list with the differences between two lists

@@ -92,7 +92,7 @@ function Load:Start(ply, loadName)
 
 	-- The current map modifications
 	if loadName == "currentMaterials" then
-		loadTable = MR.Materials:CleanCurrentModifications(table.Copy(MR.Materials:GetCurrentModifications()))
+		loadTable = MR.DataList:CleanFullLists(table.Copy(MR.DataList:GetCurrentModifications()))
 	-- Ongoing change all load
 	elseif loadName == "changeAllMaterials" then
 		loadTable = table.Copy(MR.SV.Duplicator:GetCurrentTable(ply))

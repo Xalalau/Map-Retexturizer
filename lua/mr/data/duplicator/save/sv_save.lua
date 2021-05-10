@@ -35,7 +35,7 @@ function Save:Set(ply, saveName, blockAlert)
 	local saveFile = saveName and MR.Base:GetSaveFolder()..string.lower(saveName)..".txt" or MR.Base:GetAutoSaveFile()
 
 	-- Create a save table
-	local save = MR.Materials:CleanCurrentModifications(table.Copy(MR.Materials:GetCurrentModifications()))
+	local save = MR.DataList:CleanFullLists(table.Copy(MR.DataList:GetCurrentModifications()))
 
 	-- Remove the backups
 	MR.DataList:DeleteBackups(save)

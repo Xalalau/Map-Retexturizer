@@ -8,7 +8,7 @@ MR.DataList = DataList
 
 -- Check if the element is active
 function DataList:IsActive(element)
-	if element and istable(element) and element.oldMaterial ~=nil then
+	if element and element.oldMaterial then
 		return true
 	end
 
@@ -53,6 +53,8 @@ end
 
 -- Get an element and its index
 function DataList:GetElement(list, oldMaterial)
+	if not oldMaterial then return end
+
 	for k,v in pairs(list) do
 		-- Note: GMod supports both Windows and Linux, so it's case-insensitive
 		if DataList:IsActive(v) then
@@ -105,6 +107,55 @@ function DataList:DeleteBackups(list)
 			for _,data in pairs(section) do
 				data.backup = nil
 			end
+		end
+	end
+end
+
+-- Generate a new list with the differences between two lists
+function DataList:GetDifferences(appliedList, currentList)
+	if not appliedList or not currentList then return end
+
+	local differences = {
+		applied = {},
+		current = {},
+	}
+
+	for sectionName,section in pairs(currentList) do
+		if istable(section) then
+			for index,currentData in pairs(section) do
+				
+				local appliedData = appliedList[sectionName] and appliedList[sectionName][index]
+
+				if not MR.Data:IsEqual(appliedData, currentData) then
+					if sectionName == "skybox" then
+						if MR.Skybox:RemoveSuffix(currentData.newMaterial) == MR.Skybox:RemoveSuffix(appliedData.newMaterial) then
+							continue
+						end
+					end
+
+					if not differences.applied[sectionName] then differences.applied[sectionName] = {} end
+					if not differences.current[sectionName] then differences.current[sectionName] = {} end
+
+					differences.applied[sectionName][index] = appliedData
+					differences.current[sectionName][index] = currentData
+				end
+			end
+		end
+	end
+
+	return differences
+end
+
+-- Add the contents of one list to another
+function DataList:Merge(dest, source)
+	for k, v in pairs(source) do
+		if isnumber(k) then -- Data
+			local _, index = DataList:GetElement(dest, v.oldMaterial)
+			DataList:InsertElement(dest, v, index)
+		else -- List name
+			if k == "savingFormat" then continue end
+
+			DataList:Merge(dest[k], source[k])
 		end
 	end
 end

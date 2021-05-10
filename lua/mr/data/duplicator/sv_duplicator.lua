@@ -29,7 +29,7 @@ local dup = {
 		models = {},
 		skybox
 	},
-	-- Table to hold modifications made while the player is loading
+		-- Table to hold modifications made while the player is loading
 	-- newSavedTable.list[player index] = { copy of a default save table }
 	newSavedTable = {
 		default = {
@@ -40,7 +40,8 @@ local dup = {
 			models = {},
 			savingFormat
 		},
-		list = {}
+		list = {},
+		cumulativeList = {} -- All newSavedTables merged
 	},
 }
 
@@ -54,8 +55,6 @@ util.AddNetworkString("CL.Duplicator:ForceStop")
 
 -- Modifications made while a new player is loading
 function Duplicator:GetNewDupTable(ply, field)
-	if ply == MR.SV.Ply:GetFakeHostPly() then return nil; end
-
 	return not field and dup.newSavedTable.list[ply:EntIndex()] or dup.newSavedTable.list[ply:EntIndex()][field]
 end
 
@@ -71,6 +70,20 @@ function Duplicator:InsertNewDupTable(ply, field, data)
 	if list then
 		MR.DataList:InsertElement(list, data)
 	end
+end
+
+function Duplicator:InsertCumulativeNewDupTable(ply, addTable)
+	if not Duplicator:GetCumulativeNewDupTable(ply) then
+		dup.newSavedTable.cumulativeList[ply:EntIndex()] = table.Copy(dup.newSavedTable.default)
+		dup.newSavedTable.cumulativeList[ply:EntIndex()].savingFormat = MR.Save:GetCurrentVersion()
+		MR.DataList:Merge(dup.newSavedTable.cumulativeList[ply:EntIndex()], Duplicator:GetCurrentTable(ply))
+	end
+
+	MR.DataList:Merge(dup.newSavedTable.cumulativeList[ply:EntIndex()], addTable)
+end
+
+function Duplicator:GetCumulativeNewDupTable(ply)
+	return dup.newSavedTable.cumulativeList[ply:EntIndex()]
 end
 
 function Duplicator:SetCurrentTable(ply, savedTable)
@@ -163,7 +176,7 @@ end
 -- Duplicator start
 -- Note: we must have a valid savedTable
 -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
-function Duplicator:Start(ply, ent, savedTable, loadName) 
+function Duplicator:Start(ply, ent, savedTable, loadName, dontClean) 
 	-- Finish upgrading the format (if it's necessary)
 	if not dup.recreatedTable.initialized then
 		savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized, true, loadName)
@@ -209,7 +222,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName)
 	end
 
 	-- Deal with older modifications
-	if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+	if not dontClean and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
 		-- Cease ongoing duplications
 		Duplicator:ForceStop()
 
@@ -405,6 +418,36 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	end)
 end
 
+-- Correct differences caused by removals
+function Duplicator:RemoveMaterials(ply, differencesTable)
+	if not (ply and IsValid(ply)) then return end
+
+	local cumulativeNewDupTable = Duplicator:GetCumulativeNewDupTable(ply)
+
+	for sectionName,section in pairs(differencesTable.current) do
+		if sectionName == "savingFormat" then continue end
+		if not cumulativeNewDupTable[sectionName] then continue end
+
+		for index,data in pairs(section) do
+			if index > #cumulativeNewDupTable[sectionName] then continue end
+			-- Note:
+			-- 		Removed data = Empty index
+			-- 		Changed data = Something got removed then the index was taken by another material
+			if sectionName == "map" or sectionName == "displacements" or sectionName == "skybox" then
+				net.Start("Map:Remove")
+					net.WriteString(differencesTable.applied[sectionName][index].oldMaterial)
+					net.WriteBool(false)
+				net.Send(ply)
+
+				MR.DataList:DisableElement(cumulativeNewDupTable[sectionName][index])
+			elseif sectionName == "decals" then
+				MR.SV.Decals:RemoveAll(ply, false)
+				cumulativeNewDupTable[sectionName] = {}
+			end
+		end
+	end
+end
+
 -- Force to stop the duplicator
 function Duplicator:ForceStop(isGModLoadStarting)
 	if (MR.Duplicator:IsRunning() or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
@@ -426,9 +469,6 @@ end
 -- Finish the duplication process
 function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
-		-- Remove the reference of the current loading table
-		Duplicator:SetCurrentTable(ply)
-
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()
@@ -465,13 +505,21 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
-			-- Start a new (partial) load if modifications were made while the player was entering
+			-- Start a new load with additions that were made while the player was loading
 			local newElements = false
 
-			for k,v in pairs(Duplicator:GetNewDupTable(ply)) do
-				if k ~= "savingFormat" and #v > 0 then
-					newElements = true
-					break
+			if Duplicator:GetNewDupTable(ply) then
+				for sectionName,section in pairs(Duplicator:GetNewDupTable(ply)) do
+					if sectionName ~= "savingFormat" and #section > 0 then
+						for index,currentData in pairs(section) do
+							if MR.DataList:IsActive(currentData) then
+								newElements = true
+								break
+							end
+						end
+
+						if elements then break end
+					end
 				end
 			end
 
@@ -479,26 +527,48 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 				-- Create a copy
 				local newSavedTable = table.Copy(Duplicator:GetNewDupTable(ply))
 
-				-- Empty the original table, so we can repeat this process if it's necessary
-				for k,v in pairs(Duplicator:GetNewDupTable(ply)) do
-					if k ~= "savingFormat" and #v > 0 then
-						table.Empty(v)
-					end
-				end
+				-- Stack the lists
+				Duplicator:InsertCumulativeNewDupTable(ply, newSavedTable)
+
+				-- Recreate the new materials table, so we can repeat this process if it's necessary
+				Duplicator:InitNewDupTable(ply)
 
 				-- Start
-				Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
+				return Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
+			-- If there are no more additions to do, look for differences between the applied and the current table
+			-- This code can't handle a loading in progress, that's why it's only used to fix sync problems (caused by materials being removed while the player was loading)
 			else
-				-- Disable the first spawn state
-				MR.Ply:SetFirstSpawn(ply)
-				net.Start("Ply:SetFirstSpawn")
-				net.Send(ply)
+				local dupTable = Duplicator:GetCumulativeNewDupTable(ply) or Duplicator:GetCurrentTable(ply)
+
+				local differences = MR.DataList:GetDifferences(dupTable, MR.Materials:GetCurrentModifications())
+
+				if differences and table.Count(differences.current) > 0 then
+					-- Remove materials
+					Duplicator:RemoveMaterials(ply, differences)
+
+					-- Stack the lists
+					Duplicator:InsertCumulativeNewDupTable(ply, differences.current)
+
+					-- Add current version tag
+					differences.current.savingFormat = MR.Save:GetCurrentVersion()
+
+					-- Start
+					return Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials")
+				else
+					-- Disable the first spawn state
+					MR.Ply:SetFirstSpawn(ply)
+					net.Start("Ply:SetFirstSpawn")
+					net.Send(ply)
+				end
 			end
 		end
 
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
 			-- Create event
 			hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
+
+			-- Remove the reference of the current loading table
+			Duplicator:SetCurrentTable(ply)
 
 			-- Print alert
 			print("[Map Retexturizer] Loading finished.")

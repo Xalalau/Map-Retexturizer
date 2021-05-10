@@ -37,19 +37,29 @@ MR.Data = Data
 function Data:IsEqual(Data1, Data2)
 	local isEqual = true
 
-	for k,v in pairs(Data1) do
-		-- Ignore "backup" and "ent" fields
-		if k ~= "backup" and not IsEntity(v) and Data2[k] and string.lower(v) ~= string.lower(Data2[k]) then 
-			if isnumber(v) then
-				if tonumber(v) ~= tonumber(Data2[k]) then
+	if Data1 and not Data2 or not Data1 and Data2 then -- Missing data
+		isEqual = false
+	else
+		for k,v in pairs(Data1) do
+			if k ~= "backup" and not IsEntity(v) then -- Ignore "backup" and "ent" fields
+				if v and not Data2[k] or not v and Data2[k] then -- Disabled fields
 					isEqual = false
-
 					break
 				end
-			else
-				isEqual = false
 
-				break
+				if string.lower(v) ~= string.lower(Data2[k]) then -- Different values
+					if isnumber(v) then
+						if tonumber(v) ~= tonumber(Data2[k]) then
+							isEqual = false
+
+							break
+						end
+					else
+						isEqual = false
+
+						break
+					end
+				end
 			end
 		end
 	end

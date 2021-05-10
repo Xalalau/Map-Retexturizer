@@ -283,12 +283,12 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 
 		-- Apply model materials
 		if modelsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "model", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "models", isBroadcasted)
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decal", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decals", isBroadcasted)
 		end
 
 		-- Apply map materials
@@ -385,10 +385,10 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 		MR.Map:Set(ply, savedTable[position], isBroadcasted)
 	-- Apply model material
-	elseif section == "model" then
+	elseif section == "models" then
 		MR.Models:Set(ply, savedTable[position], isBroadcasted)
 	-- Change the stored entity to world and apply decal
-	elseif section == "decal" then
+	elseif section == "decals" then
 		savedTable[position].ent = game.GetWorld()
 
 		MR.SV.Decals:Set(ply, nil, savedTable[position], isBroadcasted)

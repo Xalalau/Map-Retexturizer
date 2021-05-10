@@ -33,7 +33,7 @@ MR.Data = Data
 		}
 ]]
 
--- Check if the tables are the same
+-- Check that the fields on Data1 are the same as on Data2. Data2 fields that aren't on Data1 are ignored.
 function Data:IsEqual(Data1, Data2)
 	local isEqual = true
 

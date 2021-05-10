@@ -109,6 +109,7 @@ if SERVER then
 	MR.SV.Displacements:Init()
 	MR.SV.Ply:Init()
 	MR.SV.Load:Init()
+	MR.SV.Duplicator:Init()
 else
 	MR.CL.Save:Init()
 end

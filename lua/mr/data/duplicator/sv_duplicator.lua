@@ -41,7 +41,6 @@ local dup = {
 			savingFormat
 		},
 		list = {},
-		cumulativeList = {} -- All newSavedTables merged
 	},
 }
 
@@ -52,6 +51,19 @@ util.AddNetworkString("CL.Duplicator:SetProgress")
 util.AddNetworkString("CL.Duplicator:CheckForErrors")
 util.AddNetworkString("CL.Duplicator:FinishErrorProgress")
 util.AddNetworkString("CL.Duplicator:ForceStop")
+util.AddNetworkString("CL.Duplicator:FindDyssynchrony")
+util.AddNetworkString("SV.Duplicator:FixDyssynchrony")
+
+net.Receive("SV.Duplicator:FixDyssynchrony", function(_, ply)
+	Duplicator:FixDyssynchrony(ply, net.ReadTable()) -- TO-DO: optimize this. The table that comes is small but it could be compressed and in parts.
+end)
+
+function Duplicator:Init()
+	-- Check every two minutes for dyssynchrony
+	timer.Create("MR_AntiDyssynchrony", 120, 0, function()
+		Duplicator:FindDyssynchrony()
+	end)
+end
 
 -- Modifications made while a new player is loading
 function Duplicator:GetNewDupTable(ply, field)
@@ -70,20 +82,6 @@ function Duplicator:InsertNewDupTable(ply, field, data)
 	if list then
 		MR.DataList:InsertElement(list, data)
 	end
-end
-
-function Duplicator:InsertCumulativeNewDupTable(ply, addTable)
-	if not Duplicator:GetCumulativeNewDupTable(ply) then
-		dup.newSavedTable.cumulativeList[ply:EntIndex()] = table.Copy(dup.newSavedTable.default)
-		dup.newSavedTable.cumulativeList[ply:EntIndex()].savingFormat = MR.Save:GetCurrentVersion()
-		MR.DataList:Merge(dup.newSavedTable.cumulativeList[ply:EntIndex()], Duplicator:GetCurrentTable(ply))
-	end
-
-	MR.DataList:Merge(dup.newSavedTable.cumulativeList[ply:EntIndex()], addTable)
-end
-
-function Duplicator:GetCumulativeNewDupTable(ply)
-	return dup.newSavedTable.cumulativeList[ply:EntIndex()]
 end
 
 function Duplicator:SetCurrentTable(ply, savedTable)
@@ -422,14 +420,11 @@ end
 function Duplicator:RemoveMaterials(ply, differencesTable)
 	if not (ply and IsValid(ply)) then return end
 
-	local cumulativeNewDupTable = Duplicator:GetCumulativeNewDupTable(ply)
-
 	for sectionName,section in pairs(differencesTable.current) do
 		if sectionName == "savingFormat" then continue end
-		if not cumulativeNewDupTable[sectionName] then continue end
 
 		for index,data in pairs(section) do
-			if index > #cumulativeNewDupTable[sectionName] then continue end
+			if not MR.DataList:IsActive(differencesTable.applied[sectionName][index]) then continue end
 			-- Note:
 			-- 		Removed data = Empty index
 			-- 		Changed data = Something got removed then the index was taken by another material
@@ -438,34 +433,11 @@ function Duplicator:RemoveMaterials(ply, differencesTable)
 					net.WriteString(differencesTable.applied[sectionName][index].oldMaterial)
 					net.WriteBool(false)
 				net.Send(ply)
-
-				MR.DataList:DisableElement(cumulativeNewDupTable[sectionName][index])
 			elseif sectionName == "decals" then
 				MR.SV.Decals:RemoveAll(ply, false)
-				cumulativeNewDupTable[sectionName] = {}
 			end
 		end
 	end
-end
-
--- Find and fix dyssynchrony
-function Duplicator:FixDyssynchrony(ply, checkTable)
-	local dupTable = checkTable or Duplicator:GetCumulativeNewDupTable(ply) or Duplicator:GetCurrentTable(ply)
-
-	-- Get differences between the current server table and an applied or selected table
-	local differences = MR.DataList:GetDifferences(dupTable, MR.DataList:GetCurrentModifications())
-
-	if differences and table.Count(differences.current) > 0 then
-		-- Remove materials
-		Duplicator:RemoveMaterials(ply, differences)
-	
-		-- Add current version tag
-		differences.current.savingFormat = MR.Save:GetCurrentVersion()
-	else
-		differences = nil
-	end
-
-	return differences
 end
 
 -- Force to stop the duplicator
@@ -484,6 +456,25 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	end
 
 	return false
+end
+
+-- Send the anti dyssynchrony table
+function Duplicator:FindDyssynchrony()
+	local verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial" })
+
+	if verificationTab and MR.DataList:GetTotalModificantions(verificationTab) > 0 then
+		net.Start("CL.Duplicator:FindDyssynchrony")
+			net.WriteTable(verificationTab)
+		net.Broadcast()
+	end
+end
+
+function Duplicator:FixDyssynchrony(ply, differences)
+	-- Remove the different materials from the player
+	Duplicator:RemoveMaterials(ply, differences)
+
+	-- Start
+	Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials", true)
 end
 
 -- Finish the duplication process
@@ -526,6 +517,7 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		-- Finish for new players
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
 			-- Start a new load with additions that were made while the player was loading
+			-- Problems caused by remotions will be fixed later by Duplicator:FixDyssynchrony()
 			local newElements = false
 
 			if Duplicator:GetNewDupTable(ply) then
@@ -547,31 +539,16 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 				-- Create a copy
 				local newSavedTable = table.Copy(Duplicator:GetNewDupTable(ply))
 
-				-- Stack the lists
-				Duplicator:InsertCumulativeNewDupTable(ply, newSavedTable)
-
 				-- Recreate the new materials table, so we can repeat this process if it's necessary
 				Duplicator:InitNewDupTable(ply)
 
 				-- Start
 				return Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
-			-- If there are no more additions to do, look for differences between the applied and the current table
-			-- This code can't handle a loading in progress, that's why it's only used to fix sync problems (caused by materials being removed while the player was loading)
 			else
-				local differences = Duplicator:FixDyssynchrony(ply)
-
-				if differences then
-					-- Stack the lists
-					Duplicator:InsertCumulativeNewDupTable(ply, differences.current)
-
-					-- Start
-					return Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials")
-				else
-					-- Disable the first spawn state
-					MR.Ply:SetFirstSpawn(ply)
-					net.Start("Ply:SetFirstSpawn")
-					net.Send(ply)
-				end
+				-- Disable the first spawn state
+				MR.Ply:SetFirstSpawn(ply)
+				net.Start("Ply:SetFirstSpawn")
+				net.Send(ply)
 			end
 		end
 
@@ -584,6 +561,9 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 
 			-- Print alert
 			print("[Map Retexturizer] Loading finished.")
+
+			-- Send the anti dyssynchrony table
+			Duplicator:FindDyssynchrony()
 		end
 
 		return true

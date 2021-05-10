@@ -123,10 +123,10 @@ function DataList:DeleteBackups(list)
 end
 
 -- Get current modifications quantity
-function DataList:GetTotalModificantions()
+function DataList:GetTotalModificantions(modificationTab)
 	local total = 0
 
-	for k,v in pairs(DataList:GetCurrentModifications()) do
+	for k,v in pairs(modificationTab or DataList:GetCurrentModifications()) do
 		if k ~= "savingFormat" then
 			total = total + MR.DataList:Count(v)
 		end
@@ -157,23 +157,28 @@ function DataList:GetCurrentModifications()
 	return currentMaterialsLists
 end
 
--- Generate a new list with the differences between two lists
-function DataList:GetDifferences(appliedList, currentList)
-	if not appliedList or not currentList then return end
+-- Generate a new modification table with the differences between two modification tables
+function DataList:GetDifferences(modificationTab, isCurrent)
+	local currentModifications = isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
+	modificationTab = not isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
+
+	if not modificationTab or not currentModifications then return end
 
 	local differences = {
 		applied = {},
 		current = {},
 	}
 
-	for sectionName,section in pairs(currentList) do
+	for sectionName,section in pairs(currentModifications) do
 		if istable(section) then
 			for index,currentData in pairs(section) do
 				
-				local appliedData = appliedList[sectionName] and appliedList[sectionName][index]
+				local appliedData = modificationTab[sectionName] and modificationTab[sectionName][index]
 
-				if not MR.Data:IsEqual(appliedData, currentData) then
-					if sectionName == "skybox" then
+				local isOnlyCurrentDataActive = not DataList:IsActive(currentData) and DataList:IsActive(appliedData)
+
+				if isOnlyCurrentDataActive or not MR.Data:IsEqual(appliedData, currentData) then
+					if sectionName == "skybox" and appliedData then
 						if MR.Skybox:RemoveSuffix(currentData.newMaterial) == MR.Skybox:RemoveSuffix(appliedData.newMaterial) then
 							continue
 						end
@@ -204,4 +209,34 @@ function DataList:Merge(dest, source)
 			DataList:Merge(dest[k], source[k])
 		end
 	end
+end
+
+-- Keep only some selected fields in a modification table
+function DataList:Filter(modifications, whitelist)
+	if not modifications then return end 
+
+	for k, v in pairs(modifications) do
+		if isnumber(k) then -- Data
+			for index,value in pairs(v) do
+				local keep = false
+
+				for _,validField in ipairs(whitelist) do
+					if index == validField then
+						keep = true
+						break
+					end
+				end
+
+				if not keep then
+					modifications[k][index] = nil
+				end
+			end
+		else -- List name
+			if k == "savingFormat" then continue end
+
+			DataList:Filter(modifications[k], whitelist)
+		end
+	end
+
+	return modifications
 end

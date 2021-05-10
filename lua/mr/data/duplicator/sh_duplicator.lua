@@ -43,7 +43,7 @@ net.Receive("Duplicator:SetRunning", function(_, ply)
 end)
 
 net.Receive("Duplicator:InitProcessedList", function()
-	if SERVER then return; end
+	if SERVER then return end
 	
 	Duplicator:InitProcessedList(LocalPlayer(), net.ReadInt(8))
 end)
@@ -176,3 +176,16 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Maps", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Displacements", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_version", RecreateTable)
+
+-- Find any dyssynchrony between the current modifications and the modifications of a selected table
+function Duplicator:FindDyssynchrony(checkTable, isCurrent)
+	local differences = MR.DataList:GetDifferences(checkTable, isCurrent)
+
+	if differences and table.Count(differences.current) > 0 then	
+		differences.current.savingFormat = MR.Save:GetCurrentVersion()
+	else
+		differences = nil
+	end
+
+	return differences
+end

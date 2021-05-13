@@ -123,7 +123,6 @@ end
 -- Load tool modifications BEFORE the player is fully ready
 function Load:PlayerJoined(ply)
 	-- Set the player internal controls
-	MR.SV.Duplicator:InitNewDupTable(ply)
 	MR.Duplicator:InitProcessedList(ply)
 	MR.Ply:InitStatesList(ply)
 

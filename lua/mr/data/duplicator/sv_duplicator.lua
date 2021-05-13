@@ -29,19 +29,6 @@ local dup = {
 		models = {},
 		skybox
 	},
-		-- Table to hold modifications made while the player is loading
-	-- newSavedTable.list[player index] = { copy of a default save table }
-	newSavedTable = {
-		default = {
-			decals = {},
-			map = {},
-			displacements = {},
-			skybox = {},
-			models = {},
-			savingFormat
-		},
-		list = {},
-	},
 }
 
 -- Networking
@@ -61,27 +48,8 @@ end)
 function Duplicator:Init()
 	-- Check every two minutes for dyssynchrony
 	timer.Create("MR_AntiDyssynchrony", 120, 0, function()
-		Duplicator:FindDyssynchrony()
+		--Duplicator:FindDyssynchrony()
 	end)
-end
-
--- Modifications made while a new player is loading
-function Duplicator:GetNewDupTable(ply, field)
-	return not field and dup.newSavedTable.list[ply:EntIndex()] or dup.newSavedTable.list[ply:EntIndex()][field]
-end
-
-function Duplicator:InitNewDupTable(ply)
-	dup.newSavedTable.list[ply:EntIndex()] = table.Copy(dup.newSavedTable.default)
-	dup.newSavedTable.list[ply:EntIndex()].savingFormat = MR.Save:GetCurrentVersion()
-end
-
--- Store changes to apply after the current load (with a new load)
-function Duplicator:InsertNewDupTable(ply, field, data)
-	local list = MR.SV.Duplicator:GetNewDupTable(ply, field)
-
-	if list then
-		MR.DataList:InsertElement(list, data)
-	end
 end
 
 function Duplicator:SetCurrentTable(ply, savedTable)
@@ -514,42 +482,11 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		-- Set "running" to nothing
 		MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
 
-		-- Finish for new players
+		-- Disable the first spawn state
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
-			-- Start a new load with additions that were made while the player was loading
-			-- Problems caused by remotions will be fixed later by Duplicator:FixDyssynchrony()
-			local newElements = false
-
-			if Duplicator:GetNewDupTable(ply) then
-				for sectionName,section in pairs(Duplicator:GetNewDupTable(ply)) do
-					if sectionName ~= "savingFormat" and #section > 0 then
-						for index,currentData in pairs(section) do
-							if MR.DataList:IsActive(currentData) then
-								newElements = true
-								break
-							end
-						end
-
-						if elements then break end
-					end
-				end
-			end
-
-			if newElements then
-				-- Create a copy
-				local newSavedTable = table.Copy(Duplicator:GetNewDupTable(ply))
-
-				-- Recreate the new materials table, so we can repeat this process if it's necessary
-				Duplicator:InitNewDupTable(ply)
-
-				-- Start
-				return Duplicator:Start(ply, Duplicator:GetEnt(), newSavedTable, "currentMaterials")
-			else
-				-- Disable the first spawn state
-				MR.Ply:SetFirstSpawn(ply)
-				net.Start("Ply:SetFirstSpawn")
-				net.Send(ply)
-			end
+			MR.Ply:SetFirstSpawn(ply)
+			net.Start("Ply:SetFirstSpawn")
+			net.Send(ply)
 		end
 
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then

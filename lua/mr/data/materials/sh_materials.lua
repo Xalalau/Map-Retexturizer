@@ -499,7 +499,7 @@ end
 
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
 	-- If the player isn't even initialized yet, do nothing
-	if not ply then return false end
+	if not ply or CLIENT and ply and not IsValid(ply) then return false end
 
 	-- Admin and first spawn loading only
 	if SERVER then
@@ -515,14 +515,6 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
 
 	-- Store the material change if ply is a player that just joined the game (first spawn), he'll apply it later
 	if isBroadcasted then
-		if SERVER and data then
-			for _,aPly in pairs(player.GetHumans()) do
-				if MR.Duplicator:IsRunning(aPly) then
-					MR.SV.Duplicator:InsertNewDupTable(aPly, string.lower(matType), data)
-				end
-			end
-		end
-
 		if CLIENT and MR.Ply:GetFirstSpawn(ply) then
 			return false
 		end

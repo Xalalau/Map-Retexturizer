@@ -158,6 +158,7 @@ function DataList:GetCurrentModifications()
 end
 
 -- Generate a new modification table with the differences between two modification tables
+-- isCurrent is set to true when I compare the player’s materials with the server’s materials, which are the actual “current”
 function DataList:GetDifferences(modificationTab, isCurrent)
 	local currentModifications = isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
 	modificationTab = not isCurrent and modificationTab or MR.DataList:GetCurrentModifications()

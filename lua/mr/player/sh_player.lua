@@ -24,9 +24,9 @@ local MRPlayer = {
 
 -- Networking
 net.Receive("Ply:SetFirstSpawn", function(_, ply)
-	if Ply:GetFirstSpawn(ply or LocalPlayer()) then
-		Ply:SetFirstSpawn(ply or LocalPlayer())
-	end
+	if SERVER then return end
+
+	Ply:SetFirstSpawn(LocalPlayer(), net.ReadBool())
 end)
 
 net.Receive("Ply:SetPreviewMode", function(_, ply)
@@ -104,10 +104,14 @@ function Ply:GetFirstSpawn(ply)
 	return MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn
 end
 
-function Ply:SetFirstSpawn(ply)
-	MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn = false
+function Ply:SetFirstSpawn(ply, value)
+	MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn = value
 
-	if CLIENT then
+	if SERVER then
+		net.Start("Ply:SetFirstSpawn")
+			net.WriteBool(value)
+		net.Send(ply)
+	else
 		-- Inhibit GMod's spawn menu context panel
 		MR.CL.Panels:DisableSpawnmenuActiveControlPanel()
 	end

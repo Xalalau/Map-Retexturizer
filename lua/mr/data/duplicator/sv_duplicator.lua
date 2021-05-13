@@ -39,16 +39,12 @@ util.AddNetworkString("CL.Duplicator:CheckForErrors")
 util.AddNetworkString("CL.Duplicator:FinishErrorProgress")
 util.AddNetworkString("CL.Duplicator:ForceStop")
 util.AddNetworkString("CL.Duplicator:FindDyssynchrony")
-util.AddNetworkString("SV.Duplicator:FixDyssynchrony")
-
-net.Receive("SV.Duplicator:FixDyssynchrony", function(_, ply)
-	Duplicator:FixDyssynchrony(ply, net.ReadTable()) -- TO-DO: optimize this. The table that comes is small but it could be compressed and in parts.
-end)
+util.AddNetworkString("Duplicator:GetAntiDyssyncChunks")
 
 function Duplicator:Init()
 	-- Check every two minutes for dyssynchrony
 	timer.Create("MR_AntiDyssynchrony", 120, 0, function()
-		--Duplicator:FindDyssynchrony()
+		Duplicator:FindDyssynchrony(true)
 	end)
 end
 
@@ -331,7 +327,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 		return
 	end
-	
+
 	-- Count
 	MR.Duplicator:IncrementCurrent(ply)
 	Duplicator:SetProgress(ply, MR.Duplicator:GetCurrent(ply))
@@ -426,20 +422,26 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	return false
 end
 
--- Send the anti dyssynchrony table
-function Duplicator:FindDyssynchrony()
-	local verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial" })
 
-	if verificationTab and MR.DataList:GetTotalModificantions(verificationTab) > 0 then
-		net.Start("CL.Duplicator:FindDyssynchrony")
-			net.WriteTable(verificationTab)
-		net.Broadcast()
+-- Send the anti dyssynchrony table (compressed string chunks)
+function Duplicator:FindDyssynchrony(lightCheck)
+	local verificationTab
+
+	if lightCheck then
+		verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial", "newMaterial" })
+	else
+		verificationTab = table.Copy(MR.DataList:GetCurrentModifications())
 	end
+
+	MR.Duplicator:SendAntiDyssyncChunks(verificationTab, "CL", "Duplicator", "FindDyssynchrony")
 end
 
 function Duplicator:FixDyssynchrony(ply, differences)
 	-- Remove the different materials from the player
 	Duplicator:RemoveMaterials(ply, differences)
+
+	-- Reenable first spawn state
+	MR.Ply:SetFirstSpawn(ply, true)
 
 	-- Start
 	Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials", true)
@@ -484,9 +486,7 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 
 		-- Disable the first spawn state
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
-			MR.Ply:SetFirstSpawn(ply)
-			net.Start("Ply:SetFirstSpawn")
-			net.Send(ply)
+			MR.Ply:SetFirstSpawn(ply, false)
 		end
 
 		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then

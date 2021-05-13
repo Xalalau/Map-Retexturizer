@@ -171,16 +171,12 @@ function Load:FirstSpawn(ply)
 	-- Run an autoload
 	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
 		-- Set the spawn as done since The fakeHostPly will take care of this load
-		MR.Ply:SetFirstSpawn(ply)
-		net.Start("Ply:SetFirstSpawn")
-		net.Send(ply)
+		MR.Ply:SetFirstSpawn(ply, false)
 
 		Load:Start(MR.SV.Ply:GetFakeHostPly(), GetConVar("internal_mr_autoload"):GetString())
 	-- Nothing to send, finish the joining process
 	else
-		MR.Ply:SetFirstSpawn(ply)
-		net.Start("Ply:SetFirstSpawn")
-		net.Send(ply)
+		MR.Ply:SetFirstSpawn(ply, false)
 	end
 end
 

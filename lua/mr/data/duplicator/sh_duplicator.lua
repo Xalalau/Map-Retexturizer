@@ -34,12 +34,20 @@ local dup = {
 		Normal = "0.035",
 		Fast = "0.01",
 		Slow = "0.1"
-	}
+	},
+	-- Tables exchanged between scopes to synchronize materials
+	modificationChunks = {}
 }
 
 -- Networking
 net.Receive("Duplicator:SetRunning", function(_, ply)
 	Duplicator:SetRunning(ply or LocalPlayer(), net.ReadString(), net.ReadBool())
+end)
+
+-- Networking
+net.Receive("Duplicator:GetAntiDyssyncChunks", function(_, ply)
+	local len = net.ReadUInt(16)
+	Duplicator:GetAntiDyssyncChunks(ply or LocalPlayer(), net.ReadData(len), net.ReadString(), net.ReadString(), net.ReadString(), net.ReadTable())
 end)
 
 net.Receive("Duplicator:InitProcessedList", function()
@@ -60,6 +68,30 @@ end
 
 function Duplicator:GetControlIndex(ply)
 	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
+end
+
+function Duplicator:AddModificationChunks(ply, chunk, lastPart)
+	local plyIndex = Duplicator:GetControlIndex(ply)
+
+	if not dup.modificationChunks[plyIndex] then
+		dup.modificationChunks[plyIndex] = ""
+	end
+
+	dup.modificationChunks[plyIndex] = dup.modificationChunks[plyIndex] .. chunk
+
+	if lastPart then
+		dup.modificationChunks[plyIndex] = util.JSONToTable(util.Decompress(dup.modificationChunks[plyIndex]))
+	end
+end
+
+function Duplicator:GeModificationChunksTab(ply)
+	local tab = dup.modificationChunks[Duplicator:GetControlIndex(ply)]
+	return tab and istable(tab) and tab
+end
+
+function Duplicator:CleanModificationChunksTab(ply)
+	local tab = dup.modificationChunks[Duplicator:GetControlIndex(ply)]
+	if tab and tab ~= "" then dup.modificationChunks[Duplicator:GetControlIndex(ply)] = "" end
 end
 
 -- Set the old material
@@ -176,6 +208,66 @@ duplicator.RegisterEntityModifier("MapRetexturizer_Maps", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Displacements", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_version", RecreateTable)
+
+-- Send the anti dyssynchrony table (compressed string chunks)
+function Duplicator:SendAntiDyssyncChunks(sendTab, scope, lib, callback, args)
+	if sendTab and istable(sendTab) and MR.DataList:GetTotalModificantions(sendTab.current or sendTab) > 0 then
+		local curTable = util.Compress(util.TableToJSON(sendTab))
+		local chunks = {}
+		local totalSize = string.len(curTable)
+		local chunkSize = 15000 -- 15KB
+
+		for i = 1, math.ceil(totalSize / chunkSize), 1 do
+			local startByte = chunkSize * (i - 1) + 1
+			local remaining = totalSize - (startByte - 1)
+			local endByte = remaining < chunkSize and (startByte - 1) + remaining or chunkSize * i
+
+			table.insert(chunks, string.sub(curTable, startByte, endByte))
+		end
+
+		for k,v in ipairs(chunks) do
+			timer.Create("MR_SendChunks" .. k, k * 0.1, 1, function()
+				net.Start("Duplicator:GetAntiDyssyncChunks")
+					net.WriteUInt(#v, 16)
+					net.WriteData(v, #v)
+					if k == #chunks then
+						net.WriteString(scope)
+						net.WriteString(lib)
+						net.WriteString(callback)
+						if args and istable(args) then
+							net.WriteTable(args)
+						end
+					end
+				if SERVER then
+					net.Broadcast()
+				else
+					net.SendToServer()
+				end
+			end)
+		end
+	end
+end
+
+-- Get anti dyssynchrony table 
+function Duplicator:GetAntiDyssyncChunks(ply, chunk, scope, lib, callback, args)
+	if Duplicator:IsRunning(ply) then return end
+
+	local lastPart = scope and true
+
+	Duplicator:AddModificationChunks(ply, chunk, lastPart)	
+
+	if lastPart then
+		local serverModifications = Duplicator:GeModificationChunksTab(ply)
+
+		if scope == "SH" then
+			MR[lib][callback](MR[lib][callback], ply, serverModifications, args and unpack(args))
+		else
+			MR[scope][lib][callback](MR[scope][lib][callback], ply, serverModifications, args and unpack(args))
+		end
+
+		Duplicator:CleanModificationChunksTab(ply)
+	end
+end
 
 -- Find any dyssynchrony between the current modifications and the modifications of a selected table
 function Duplicator:FindDyssynchrony(checkTable, isCurrent)

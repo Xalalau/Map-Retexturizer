@@ -25,7 +25,7 @@ net.Receive("CL.Duplicator:ForceStop", function()
 end)
 
 net.Receive("CL.Duplicator:FindDyssynchrony", function()
-	Duplicator:FindDyssynchrony(net.ReadTable()) -- TO-DO: optimize this. The table that comes is very reduced but it could be compressed and in parts.
+	Duplicator:FindDyssynchrony(net.ReadString(), net.ReadBool())
 end)
 
 -- Progress bar hook
@@ -176,14 +176,10 @@ function Duplicator:ForceStop()
 end
 
 -- Check if a modification table sent by the server is the same as the current table
-function Duplicator:FindDyssynchrony(serverModifications)
-	if MR.Duplicator:IsRunning(LocalPlayer()) then return end
-
+function Duplicator:FindDyssynchrony(ply, serverModifications, a, b, c, d)
 	local differences = MR.Duplicator:FindDyssynchrony(serverModifications, true)
 
 	if differences then
-		net.Start("SV.Duplicator:FixDyssynchrony")
-			net.WriteTable(differences)
-		net.SendToServer()
+		MR.Duplicator:SendAntiDyssyncChunks(differences, "SV", "Duplicator", "FixDyssynchrony")
 	end
 end

@@ -177,7 +177,7 @@ end
 
 -- Check if a modification table sent by the server is the same as the current table
 function Duplicator:FindDyssynchrony(serverModifications)
-	if MR.Duplicator:IsRunning(ply) then return end
+	if MR.Duplicator:IsRunning(LocalPlayer()) then return end
 
 	local differences = MR.Duplicator:FindDyssynchrony(serverModifications, true)
 

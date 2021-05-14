@@ -175,10 +175,12 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 			for index,currentData in pairs(section) do
 				
 				local appliedData = modificationTab[sectionName] and modificationTab[sectionName][index]
-
+				
 				local isOnlyCurrentDataActive = not DataList:IsActive(currentData) and DataList:IsActive(appliedData)
-
+				
 				if isOnlyCurrentDataActive or not MR.Data:IsEqual(currentData, appliedData) then
+					if appliedData.newMaterial == MR.Materials:GetMissing() then continue end
+
 					if sectionName == "skybox" and appliedData then
 						if MR.Skybox:RemoveSuffix(currentData.newMaterial) == MR.Skybox:RemoveSuffix(appliedData.newMaterial) then
 							continue

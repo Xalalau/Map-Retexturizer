@@ -73,7 +73,7 @@ end
 function Duplicator:AddModificationChunks(ply, chunk, lastPart)
 	local plyIndex = Duplicator:GetControlIndex(ply)
 
-	if not dup.modificationChunks[plyIndex] then
+	if not dup.modificationChunks[plyIndex] or istable(dup.modificationChunks[plyIndex]) then
 		dup.modificationChunks[plyIndex] = ""
 	end
 
@@ -87,11 +87,6 @@ end
 function Duplicator:GeModificationChunksTab(ply)
 	local tab = dup.modificationChunks[Duplicator:GetControlIndex(ply)]
 	return tab and istable(tab) and tab
-end
-
-function Duplicator:CleanModificationChunksTab(ply)
-	local tab = dup.modificationChunks[Duplicator:GetControlIndex(ply)]
-	if tab and tab ~= "" then dup.modificationChunks[Duplicator:GetControlIndex(ply)] = "" end
 end
 
 -- Set the old material
@@ -264,8 +259,6 @@ function Duplicator:GetAntiDyssyncChunks(ply, chunk, scope, lib, callback, args)
 		else
 			MR[scope][lib][callback](MR[scope][lib][callback], ply, serverModifications, args and unpack(args))
 		end
-
-		Duplicator:CleanModificationChunksTab(ply)
 	end
 end
 

@@ -104,6 +104,11 @@ function Panels:SetLoad(parent, frameType, info)
 		loadButton:SetText("Load")
 		loadButton:SetIcon("icon16/folder_go.png")
 		loadButton.DoClick = function()
+			-- Don't allow a person in an initial spawn condition to start a load
+			if MR.Ply:GetFirstSpawn(LocalPlayer()) then
+				return false
+			end
+
 			local panel = MR.CL.ExposedPanels:Get("load", "text")
 			local value = panel:GetSelected()[1] and panel:GetSelected()[1]:GetColumnText(1) or ""
 

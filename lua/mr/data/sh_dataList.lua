@@ -149,8 +149,8 @@ function DataList:GetCurrentModifications()
 
 	-- Check for changed models
 	for k,v in pairs(ents.GetAll()) do
-		if MR.Models:GetData(v) then
-			table.insert(currentMaterialsLists.models, v)
+		if v.mr then
+			table.insert(currentMaterialsLists.models, MR.Models:GetData(v))
 		end
 	end
 

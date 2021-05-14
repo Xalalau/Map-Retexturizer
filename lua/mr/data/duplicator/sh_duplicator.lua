@@ -229,9 +229,7 @@ function Duplicator:SendAntiDyssyncChunks(sendTab, scope, lib, callback, args)
 						net.WriteString(scope)
 						net.WriteString(lib)
 						net.WriteString(callback)
-						if args and istable(args) then
-							net.WriteTable(args)
-						end
+						net.WriteTable(args and istable(args) and args or {})
 					end
 				if SERVER then
 					net.Broadcast()

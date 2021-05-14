@@ -7,6 +7,7 @@ CPanel.__index = CPanel
 MR.CL.CPanel = CPanel
 
 local cpanel = {
+	width = 252, -- CPanel min. width
 	-- Base panels (self(s))
 	self,
 	spawn = {
@@ -102,6 +103,10 @@ end
 
 function CPanel:SetSelf(panel)
 	cpanel.self = panel
+end
+
+function CPanel:GetCPanelWidth()
+	return cpanel.width
 end
 
 function CPanel:GetContextSelf()
@@ -242,7 +247,7 @@ function CPanel:Create(parent, isTest)
 	local panel = vgui.Create("DPanel", parent)
 		CPanel:SetSelf(panel)
 		panel:SetBackgroundColor(Color(255, 255, 255, 255))
-		panel:SetWidth(scroll:GetWide())
+		panel:SetWidth(CPanel:GetCPanelWidth()) -- 475 is the min. value. Get the panel width with scroll:GetWide()
 
 	paddingTop = MR.CL.Panels:SetDescription(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
 	paddingTop = MR.CL.Panels:SetGeneral(panel, "DCollapsibleCategory", { y = paddingTop }) + paddingTop + verticalPadding
@@ -331,7 +336,7 @@ end
 -- Test the menus. Uncomment and save while the game is running
 function CPanel:Test()
 	local contextFrameInfo = {
-		width = 252,
+		width = CPanel:GetCPanelWidth(),
 		height = 700,
 		externalPadding = {
 			right = 20,

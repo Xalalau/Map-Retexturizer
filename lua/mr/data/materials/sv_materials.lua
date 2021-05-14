@@ -83,9 +83,6 @@ function Materials:SetAll(ply)
 		material = MR.Skybox:SetSuffix(material)
 	end
 
-	-- Clean the map
-	Materials:RemoveAll(ply, true)
-
 	timer.Simple(not MR.Ply:GetFirstSpawn(ply) and MR.SV.Duplicator:ForceStop() and 0.15 or 0, function() -- Wait for the map cleanup
 		-- Create a fake save table
 		local newTable = {

@@ -40,6 +40,9 @@ function Save:Set(ply, saveName, blockAlert)
 	-- Remove the backups
 	MR.DataList:DeleteBackups(save)
 
+	-- Remove models
+	save.models = nil
+
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save, true))
 

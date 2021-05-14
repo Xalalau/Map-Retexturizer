@@ -179,7 +179,7 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 				local isOnlyCurrentDataActive = not DataList:IsActive(currentData) and DataList:IsActive(appliedData)
 				
 				if isOnlyCurrentDataActive or not MR.Data:IsEqual(currentData, appliedData) then
-					if appliedData then
+					if appliedData and appliedData.newMaterial then
 						-- if appliedData.newMaterial == MR.Materials:GetMissing() then continue end -- Ignore our missing material
 						if string.find(appliedData.newMaterial, MR.Base:GetMaterialsFolder()) then continue end -- Hack: ignore any material in materials/mr folder
 

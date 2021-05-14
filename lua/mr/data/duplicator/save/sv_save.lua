@@ -43,18 +43,8 @@ function Save:Set(ply, saveName, blockAlert)
 	-- Remove models
 	save.models = nil
 
-	-- Count modifications
-	local total = 0
-
-	if save then
-		for listName, list in pairs(save) do
-			if listName ~= "savingFormat" then
-				total = total + MR.DataList:Count(list)
-			end
-		end
-	end
-
-	if total == 0 then
+	-- Don't save if the table is empty
+	if MR.DataList:GetTotalModificantions(save) == 0 then
 		print("[Map Retexturizer] No map changes were found.")
 
 		return false

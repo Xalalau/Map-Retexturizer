@@ -30,7 +30,7 @@ function Skybox:GetDupName()
 end
 
 -- Change the skybox
-function Skybox:Set(ply, data, isBroadcasted)
+function Skybox:Set(ply, data, isBroadcasted, forcePosition)
 	local i
 
 	-- Admin only
@@ -90,7 +90,7 @@ function Skybox:Set(ply, data, isBroadcasted)
 	for i = 1,6 do
 		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial
 		data.oldMaterial = MR.Skybox:GetFilename2() .. MR.Skybox:GetSuffixes()[i]
-		MR.Map:Set(ply, table.Copy(data), isBroadcasted)
+		MR.Map:Set(ply, table.Copy(data), isBroadcasted, forcePosition)
 	end
 
 	return

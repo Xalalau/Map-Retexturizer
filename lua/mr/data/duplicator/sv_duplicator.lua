@@ -138,7 +138,7 @@ end
 -- Duplicator start
 -- Note: we must have a valid savedTable
 -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
-function Duplicator:Start(ply, ent, savedTable, loadName, dontClean) 
+function Duplicator:Start(ply, ent, savedTable, loadName, dontClean, forcePosition)
 	-- Finish upgrading the format (if it's necessary)
 	if not dup.recreatedTable.initialized then
 		savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized, true, loadName)
@@ -245,27 +245,27 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 
 		-- Apply model materials
 		if modelsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "models", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.models, 1, GetLastKey(savedTable.models), "models", isBroadcasted, forcePosition)
 		end
 
 		-- Apply decals
 		if decalsTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decals", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.decals, 1, GetLastKey(savedTable.decals), "decals", isBroadcasted, forcePosition)
 		end
 
 		-- Apply map materials
 		if mapTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.map, 1, GetLastKey(savedTable.map), "map", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.map, 1, GetLastKey(savedTable.map), "map", isBroadcasted, forcePosition)
 		end
 
 		-- Apply displacements
 		if displacementsTotal > 0 then		
-			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, GetLastKey(savedTable.displacements), "displacements", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.displacements, 1, GetLastKey(savedTable.displacements), "displacements", isBroadcasted, forcePosition)
 		end
 
 		-- Apply the skybox
 		if skyboxTotal > 0 then
-			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, GetLastKey(savedTable.skybox), "skybox", isBroadcasted)
+			Duplicator:LoadMaterials(ply, savedTable.skybox, 1, GetLastKey(savedTable.skybox), "skybox", isBroadcasted, forcePosition)
 		end
 	end)
 end
@@ -314,7 +314,7 @@ function Duplicator:SetProgress(ply, current, total)
 end
 
 -- Load materials from saves
-function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section, isBroadcasted)
+function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section, isBroadcasted, forcePosition)
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
@@ -334,7 +334,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 	-- Apply map material
 	if section == "map" then
-		MR.Map:Set(ply, savedTable[position], isBroadcasted)
+		MR.Map:Set(ply, savedTable[position], isBroadcasted, forcePosition and position)
 	-- Apply displacement material(s)
 	elseif section == "displacements" then
 		if not MR.Displacements:GetDetected()[savedTable[position].oldMaterial] then
@@ -345,7 +345,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 			net.Broadcast()
 		end
 
-		MR.Map:Set(ply, savedTable[position], isBroadcasted)
+		MR.Map:Set(ply, savedTable[position], isBroadcasted, forcePosition and position)
 	-- Apply model material
 	elseif section == "models" then
 		MR.Models:Set(ply, savedTable[position], isBroadcasted)
@@ -353,10 +353,10 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	elseif section == "decals" then
 		savedTable[position].ent = game.GetWorld()
 
-		MR.SV.Decals:Set(ply, nil, savedTable[position], isBroadcasted)
+		MR.SV.Decals:Set(ply, nil, savedTable[position], isBroadcasted, forcePosition and position)
 	-- Apply skybox
 	elseif section == "skybox" then
-		MR.SV.Skybox:Set(ply, savedTable[position], isBroadcasted)
+		MR.SV.Skybox:Set(ply, savedTable[position], isBroadcasted, forcePosition and position)
 	end
 
 	-- Check the clientside errors on...
@@ -444,7 +444,7 @@ function Duplicator:FixDyssynchrony(ply, differences)
 	MR.Ply:SetFirstSpawn(ply, true)
 
 	-- Start
-	Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials", true)
+	Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials", true, true)
 end
 
 -- Finish the duplication process

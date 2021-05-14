@@ -15,7 +15,7 @@ net.Receive("SV.Decals:RemoveAll", function(_, ply)
 end)
 
 -- Apply decal materials
-function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
+function Decals:Set(ply, tr, duplicatorData, isBroadcasted, forcePosition)
 	-- Get the basic properties
 	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
 
@@ -41,7 +41,7 @@ function Decals:Set(ply, tr, duplicatorData, isBroadcasted)
 		duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = MR.Decals:GetList() })
 
 		-- Index the Data
-		MR.DataList:InsertElement(MR.Decals:GetList(), data)
+		MR.DataList:InsertElement(MR.Decals:GetList(), data, forcePosition)
 	end
 
 	-- Send to...

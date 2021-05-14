@@ -24,7 +24,7 @@ local map = {
 net.Receive("Map:Set", function()
 	if SERVER then return; end
 
-	Map:Set(LocalPlayer(), net.ReadTable(), net.ReadBool())
+	Map:Set(LocalPlayer(), net.ReadTable(), net.ReadBool(), net.ReadInt(12))
 end)
 
 net.Receive("Map:Remove", function()
@@ -91,7 +91,9 @@ function Map:GetData(tr)
 end
 
 -- Set map material
-function Map:Set(ply, data, isBroadcasted)
+function Map:Set(ply, data, isBroadcasted, forcePosition)
+	if forcePosition == 0 then forcePosition = nil end
+
 	-- Select the correct type
 	local selected = {}
 
@@ -137,14 +139,16 @@ function Map:Set(ply, data, isBroadcasted)
 	-- Send the modification to...
 	if SERVER then
 		net.Start("Map:Set")
-			net.WriteTable(data) 
+			net.WriteTable(data)
 		-- every player
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 			net.WriteBool(true)
+			net.WriteInt(forcePosition or 0, 12)
 			net.Broadcast()
 		-- the player
 		else
 			net.WriteBool(false)
+			net.WriteInt(forcePosition or 0, 12)
 			net.Send(ply)
 		end
 	end
@@ -169,7 +173,7 @@ function Map:Set(ply, data, isBroadcasted)
 			MR.DataList:DisableElement(element)
 
 			-- Get a map.list free index
-			i = MR.DataList:GetFreeIndex(selected.list)
+			i = forcePosition or MR.DataList:GetFreeIndex(selected.list)
 		-- If the material is untouched
 		else
 			-- General first steps (part 2)
@@ -183,7 +187,7 @@ function Map:Set(ply, data, isBroadcasted)
 			end
 
 			-- Get a map.list free index
-			i = MR.DataList:GetFreeIndex(selected.list)
+			i = forcePosition or MR.DataList:GetFreeIndex(selected.list)
 
 			-- Get the current material info (It's only going to be data.backup if we are running the duplicator)
 			data.backup = MR.Data:CreateFromMaterial(data.oldMaterial, data.newMaterial and selected.filename..tostring(i), data.newMaterial2 and selected.filename2..tostring(i), nil, true)

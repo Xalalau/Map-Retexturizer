@@ -143,6 +143,10 @@ end
 
 -- Check if a given material path is a displacement
 function Materials:IsDisplacement(material)
+	if material == "**displacement**" then
+		return true
+	end
+
 	for k,v in pairs(MR.Displacements:GetDetected()) do
 		if string.lower(k) == string.lower(material) then
 			return true

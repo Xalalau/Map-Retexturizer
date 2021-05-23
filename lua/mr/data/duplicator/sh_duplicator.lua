@@ -61,7 +61,7 @@ function Duplicator:Init()
 	dup.running[999] = {}
 	dup.processed.list[999] = table.Copy(dup.processed.default)
 
-	-- Check every two minutes for dyssynchrony
+	-- Check every minute for dyssynchrony
 	if SERVER then
 		timer.Create("MR_AntiDyssynchrony", 60, 0, function()
 			MR.SV.Duplicator:FindDyssynchrony(true)

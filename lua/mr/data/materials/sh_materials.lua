@@ -106,28 +106,28 @@ function Materials:SetProgressiveCleanup(callback, ...)
 	Materials:SetProgressiveCleanupTime(incrementedTime)
 
 	timer.Simple(delay, function()
-		callback(nil, unpack(args))
+		callback(callback, unpack(args))
 
 		if CurTime() + 0.001 > Materials:GetProgressiveCleanupTime() then
-			local tab = Materials:GetProgressiveCleanupEndCallback()
+			local endCallbackTab = Materials:GetProgressiveCleanupEndCallback()
 
 			net.Start("Materials:SetProgressiveCleanupTime")
 			net.WriteFloat(0)
 			net.Broadcast()
 
-			if tab and tab.func then
+			if endCallbackTab and endCallbackTab.func then
 				-- I guess I'm passing too much information since unpack() is returning an empty result
 				-- So I take the arguments manually
-				arg1 = tab.args[1]
-				arg2 = tab.args[2]
-				arg3 = tab.args[3]
-				arg4 = tab.args[4]
-				arg5 = tab.args[5]
-				arg6 = tab.args[6]
+				arg1 = endCallbackTab.args[1]
+				arg2 = endCallbackTab.args[2]
+				arg3 = endCallbackTab.args[3]
+				arg4 = endCallbackTab.args[4]
+				arg5 = endCallbackTab.args[5]
+				arg6 = endCallbackTab.args[6]
 
-				tab.func(nil, arg1, arg2, arg3, arg4, arg5, arg6)
+				endCallbackTab.func(endCallbackTab.func, arg1, arg2, arg3, arg4, arg5, arg6)
 
-				tab.func = nil
+				endCallbackTab.func = nil
 			end
 		end
 	end)

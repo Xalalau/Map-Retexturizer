@@ -419,7 +419,6 @@ function Duplicator:ForceStop(isGModLoadStarting)
 	return false
 end
 
-
 -- Send the anti dyssynchrony table (compressed string chunks)
 function Duplicator:FindDyssynchrony(lightCheck)
 	local verificationTab

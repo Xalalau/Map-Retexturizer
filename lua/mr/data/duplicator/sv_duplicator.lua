@@ -484,24 +484,24 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		-- Set "running" to nothing
 		MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
 
+		-- Remove the reference of the current loading table
+		Duplicator:SetCurrentTable(ply)
+
+		-- Create event
+		hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
+
+		-- Print alert
+		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
+			print("[Map Retexturizer] Loading finished.")
+		end
+
 		-- Disable the first spawn state
 		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
 			MR.Ply:SetFirstSpawn(ply, false)
 		end
 
-		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
-			-- Create event
-			hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
-
-			-- Remove the reference of the current loading table
-			Duplicator:SetCurrentTable(ply)
-
-			-- Print alert
-			print("[Map Retexturizer] Loading finished.")
-
-			-- Send the anti dyssynchrony table
-			Duplicator:FindDyssynchrony()
-		end
+		-- Send the anti dyssynchrony table
+		Duplicator:FindDyssynchrony()
 
 		return true
 	end

@@ -41,13 +41,6 @@ util.AddNetworkString("CL.Duplicator:ForceStop")
 util.AddNetworkString("CL.Duplicator:FindDyssynchrony")
 util.AddNetworkString("Duplicator:GetAntiDyssyncChunks")
 
-function Duplicator:Init()
-	-- Check every two minutes for dyssynchrony
-	timer.Create("MR_AntiDyssynchrony", 120, 0, function()
-		Duplicator:FindDyssynchrony(true)
-	end)
-end
-
 function Duplicator:SetCurrentTable(ply, savedTable)
 	dup.currentTable[tostring(ply)] = savedTable
 end
@@ -382,7 +375,7 @@ end
 
 -- Correct differences caused by removals
 function Duplicator:RemoveMaterials(ply, differencesTable)
-	if not (ply and IsValid(ply)) then return end
+	if not MR.Ply:IsValid(ply) then return end
 
 	for sectionName,section in pairs(differencesTable.current) do
 		if sectionName == "savingFormat" then continue end
@@ -406,7 +399,7 @@ end
 
 -- Force to stop the duplicator
 function Duplicator:ForceStop(isGModLoadStarting)
-	if (MR.Duplicator:IsRunning() or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
+	if (MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
 		MR.Duplicator:SetStopping(true)
 
 		timer.Simple(0.05, function()

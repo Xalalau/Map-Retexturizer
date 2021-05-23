@@ -21,18 +21,14 @@ net.Receive("SV.Ply:SetToolState", function(_, ply)
     Ply:SetToolState(ply, net.ReadBool())
 end)
 
--- Set the fake player
-function Ply:Init()
-    MR.Ply:InitStatesList()
-    MR.Duplicator:InitProcessedList()
-end
-
 function Ply:GetFakeHostPly()
 	return fakeHostPly
 end
 
 -- Register and adjust the tool state
 function Ply:SetToolState(ply, isUsing)
+	if not MR.Ply:IsValid(ply) then return end
+
 	MR.Ply:SetUsingTheTool(ply, isUsing)
 
 	net.Start("Ply:SetUsingTheTool")

@@ -48,7 +48,7 @@ function Duplicator:SetProgress(current, total, isBroadcasted)
 	local ply = LocalPlayer()
 
 	-- Do nothing if the player isn't initialized
-	if not ply then return end
+	if not MR.Ply:IsValid(ply) then return end
 
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
 	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
@@ -69,6 +69,9 @@ end
 function Duplicator:SetErrorProgress(mat, isBroadcasted)
 	local ply = LocalPlayer()
 
+	-- Do nothing if the player isn't initialized
+	if not MR.Ply:IsValid(ply) then return end
+
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
 	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
 		return
@@ -80,6 +83,9 @@ end
 
 function Duplicator:FinishErrorProgress(isBroadcasted)
 	local ply = LocalPlayer()
+
+	-- Do nothing if the player isn't initialized
+	if not MR.Ply:IsValid(ply) then return end
 
 	-- Block the changes if it's a new player joining in the middle of a loading. He'll have his own load.
 	if MR.Ply:GetFirstSpawn(ply) and isBroadcasted then
@@ -107,7 +113,7 @@ end
 function Duplicator:RenderProgress()
 	local ply = LocalPlayer()
 
-	if MR.Duplicator:IsProgressBarEnabled() and ply and IsValid(ply) and MR.Duplicator:GetTotal(ply) > 0 and MR.Duplicator:GetCurrent(ply) > 0 then				
+	if MR.Duplicator:IsProgressBarEnabled() and MR.Ply:IsValid(ply) and MR.Duplicator:GetTotal(ply) > 0 and MR.Duplicator:GetCurrent(ply) > 0 then				
 		local borderOut = 2
 		local border = 5
 
@@ -177,6 +183,9 @@ end
 
 -- Check if a modification table sent by the server is the same as the current table
 function Duplicator:FindDyssynchrony(ply, serverModifications, a, b, c, d)
+	-- Do nothing if the player isn't initialized
+	if not MR.Ply:IsValid(LocalPlayer()) then return end
+
 	local differences = MR.Duplicator:FindDyssynchrony(serverModifications, true)
 
 	if differences then

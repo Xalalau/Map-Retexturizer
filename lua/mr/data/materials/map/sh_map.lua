@@ -260,7 +260,7 @@ function Map:Set(ply, data, isBroadcasted, forcePosition)
 	end
 
 	-- Set the Undo
-	if SERVER and MR.DataList:IsActive(data) and isBroadcasted and IsValid(ply) and not MR.Ply:GetFirstSpawn(ply) then
+	if SERVER and MR.DataList:IsActive(data) and isBroadcasted and MR.Ply:IsValid(ply, true) and not MR.Ply:GetFirstSpawn(ply) then
 		-- Only allow 1 skybox undo (otherwise it'll set 6)
 		local create = true
 

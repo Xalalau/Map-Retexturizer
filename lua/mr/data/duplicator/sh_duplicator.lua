@@ -14,19 +14,19 @@ local dup = {
 	-- Controls the timer from RecreateTable
 	recreateTimerIncrement = 0,
 	-- The save identifier if a save is being loaded
-		-- Index: [1] = server, [player ent index + 1] = player
-		-- running[Index] = load name or "" (relative to a player (shared) or the server (serverside only))
+	-- Index: [1] = server, [player ent index + 1] = player, [999] = invalid player (avoid script errors)
+	-- running[Index] = load name or ""
 	running = {},
 	-- Status of the loading
 	processed = {
-		-- Default counting control
+		-- Default count control
 		default = {
 			total = 0, -- total materials
 			current = 0, -- current material
 			errors = {} -- simple string list (material names) of errors
 		},
-		-- Index: [1] = server, [player ent index + 1] = player
-		-- processed.list[Index] = { copy of the default couting control } (relative to a player (shared) or the server (serverside only))
+		-- Index: [1] = MR.SV.Ply:GetFakeHostPly(), [player ent index + 1] = player, [999] = invalid player (avoid script errors)
+		-- processed.list[Index] = { copy of the default count control }
 		list = {}
 	},
 	-- Default ducplicator speeds (mr_delay)
@@ -56,10 +56,23 @@ net.Receive("Duplicator:InitProcessedList", function()
 	Duplicator:InitProcessedList(LocalPlayer(), net.ReadInt(8))
 end)
 
+function Duplicator:Init()
+	-- Init fallback lists (to avoid script errors)
+	dup.running[999] = {}
+	dup.processed.list[999] = table.Copy(dup.processed.default)
+
+	-- Check every two minutes for dyssynchrony
+	if SERVER then
+		timer.Create("MR_AntiDyssynchrony", 120, 0, function()
+			Duplicator:FindDyssynchrony(true)
+		end)
+	end
+end
+
 function Duplicator:InitProcessedList(ply, forceIndex)
 	dup.processed.list[forceIndex or Duplicator:GetControlIndex(ply)] = table.Copy(dup.processed.default)
 
-	if SERVER and ply and ply:IsPlayer() then
+	if SERVER and MR.Ply:IsValid(ply) then
 		net.Start("Duplicator:InitProcessedList")
 			net.WriteInt(Duplicator:GetControlIndex(ply), 8)
 		net.Send(ply)
@@ -67,7 +80,7 @@ function Duplicator:InitProcessedList(ply, forceIndex)
 end
 
 function Duplicator:GetControlIndex(ply)
-	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
+	return SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1 or MR.Ply:IsValid(ply) and ply:EntIndex() + 1 or 999
 end
 
 function Duplicator:AddModificationChunks(ply, chunk, lastPart)
@@ -111,6 +124,9 @@ function Duplicator:IsRunning(ply)
 end
 
 function Duplicator:SetRunning(ply, loadName, isBroadcasted)
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
 	if SERVER then
 		net.Start("Duplicator:SetRunning")
 		net.WriteString(loadName or "")
@@ -122,7 +138,7 @@ function Duplicator:SetRunning(ply, loadName, isBroadcasted)
 		end
 	end
 
-	dup.running[Duplicator:GetControlIndex(ply)] = loadName ~= "" and loadName
+	dup.running[index] = loadName ~= "" and loadName
 end
 
 function Duplicator:GetTotal(ply)
@@ -130,7 +146,10 @@ function Duplicator:GetTotal(ply)
 end
 
 function Duplicator:SetTotal(ply, value)
-	dup.processed.list[Duplicator:GetControlIndex(ply)].total = value
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
+	dup.processed.list[index].total = value
 end
 
 function Duplicator:GetCurrent(ply)
@@ -138,11 +157,17 @@ function Duplicator:GetCurrent(ply)
 end
 
 function Duplicator:SetCurrent(ply, value)
-	dup.processed.list[Duplicator:GetControlIndex(ply)].current = value
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
+	dup.processed.list[index].current = value
 end
 
 function Duplicator:IncrementCurrent(ply)
-	dup.processed.list[Duplicator:GetControlIndex(ply)].current = dup.processed.list[Duplicator:GetControlIndex(ply)].current + 1
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
+	dup.processed.list[index].current = dup.processed.list[index].current + 1
 end
 
 function Duplicator:GetErrorsCurrent(ply)
@@ -154,11 +179,17 @@ function Duplicator:GetErrorsList(ply)
 end
 
 function Duplicator:InsertErrorsList(ply, value)
-	table.insert(dup.processed.list[Duplicator:GetControlIndex(ply)].errors, value)
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
+	table.insert(dup.processed.list[index].errors, value)
 end
 
 function Duplicator:EmptyErrorsList(ply, value)
-	table.Empty(dup.processed.list[Duplicator:GetControlIndex(ply)].errors)
+	local index = Duplicator:GetControlIndex(ply)
+	if index == 999 then return end
+
+	table.Empty(dup.processed.list[index].errors)
 end
 
 function Duplicator:GetSpeedProfile(field)

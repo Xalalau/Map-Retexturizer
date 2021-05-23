@@ -18,7 +18,8 @@ local MRPlayer = {
 		-- If the player is using Map Retexturizer
 		usingTheTool = false
 	},
-	-- MRPlayer.list[player index] = { copy of the default states }
+	-- Index: [1] = MR.SV.Ply:GetFakeHostPly(), [player ent index + 1] = player, [999] = invalid player (avoid script errors)
+	-- MRPlayer.list[Index] = { copy of the default state list }
 	list = {}
 }
 
@@ -48,6 +49,21 @@ net.Receive("Ply:InitStatesList", function()
 
 	Ply:InitStatesList(LocalPlayer(), net.ReadInt(8))
 end)
+
+-- Validate the player
+function Ply:IsValid(ply, acceptFakePly)
+	if SERVER and acceptFakePly and ply == MR.SV.Ply:GetFakeHostPly() then
+		return true
+	end
+
+	if ply and IsValid(ply) and ply:IsValid() and ply:IsPlayer() then
+		if SERVER and not ply:IsConnected() then return false end
+
+		return true
+	end
+
+	return false
+end
 
 -- Auto detect if the player is using the tool (weapon switched)
 if SERVER then
@@ -85,27 +101,43 @@ if CLIENT then
 	end)
 end
 
+function Ply:Init()
+	-- Init the fallback default list (to avoid script errors)
+	MRPlayer.list[999] = table.Copy(MRPlayer.default)
+
+	-- Set the fake player
+	if SERVER then
+		MR.Ply:InitStatesList(MR.SV.Ply:GetFakeHostPly())
+		MR.Duplicator:InitProcessedList(MR.SV.Ply:GetFakeHostPly())
+	end
+end
+
+-- Init player state list
 function Ply:InitStatesList(ply, forceIndex)
 	MRPlayer.list[forceIndex or Ply:GetControlIndex(ply)] = table.Copy(MRPlayer.default)
 
-	if SERVER and ply and ply:IsPlayer() then
+	if SERVER and Ply:IsValid(ply) then
 		net.Start("Ply:InitStatesList")
 			net.WriteInt(Ply:GetControlIndex(ply), 8)
 		net.Send(ply)
 	end
 end
 
+-- Return "1" for server, "EntIndex() + 1" for valid players and "999" for invalid players
+-- 999 points to a table with default values.
 function Ply:GetControlIndex(ply)
-	return ply and IsValid(ply) and ply:IsPlayer() and ply:EntIndex() + 1 or SERVER and 1
+	return SERVER and ply == MR.SV.Ply:GetFakeHostPly() and 1 or Ply:IsValid(ply) and ply:EntIndex() + 1 or 999
 end
 
 function Ply:GetFirstSpawn(ply)
-	if not ply or not IsValid(ply) then return true end -- Ugly. If ply isn't initialized
 	return MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn
 end
 
 function Ply:SetFirstSpawn(ply, value)
-	MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn = value
+	local index = Ply:GetControlIndex(ply)
+	if index == 999 then return end
+
+	MRPlayer.list[index].firstSpawn = value
 
 	if SERVER then
 		net.Start("Ply:SetFirstSpawn")
@@ -122,7 +154,10 @@ function Ply:GetPreviewMode(ply)
 end
 
 function Ply:SetPreviewMode(ply, value)
-	MRPlayer.list[Ply:GetControlIndex(ply)].previewMode = value
+	local index = Ply:GetControlIndex(ply)
+	if index == 999 then return end
+
+	MRPlayer.list[index].previewMode = value
 end
 
 function Ply:GetDecalMode(ply)
@@ -130,7 +165,10 @@ function Ply:GetDecalMode(ply)
 end
 
 function Ply:SetDecalMode(ply, value)
-	MRPlayer.list[Ply:GetControlIndex(ply)].decalMode = value
+	local index = Ply:GetControlIndex(ply)
+	if index == 999 then return end
+
+	MRPlayer.list[index].decalMode = value
 end
 
 function Ply:GetUsingTheTool(ply)
@@ -138,31 +176,31 @@ function Ply:GetUsingTheTool(ply)
 end
 
 function Ply:SetUsingTheTool(ply, value)
-	MRPlayer.list[Ply:GetControlIndex(ply)].usingTheTool = value
+	local index = Ply:GetControlIndex(ply)
+	if index == 999 then return end
+
+	MRPlayer.list[index].usingTheTool = value
 end
 
 -- Detect admin privileges 
 function Ply:IsAdmin(ply)
-	-- MR.SV.Ply:GetFakeHostPly() from server
-	if SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
-		return true
-	end
-
-	-- Trash
-	if not IsValid(ply) or IsValid(ply) and not ply:IsPlayer() then
+	-- Validate ply
+	if not Ply:IsValid(ply, true) then
 		return false
 	end
 
-	-- General admin check
-	if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
-		if SERVER then
-			if not MR.Ply:GetFirstSpawn(ply) and not timer.Exists("MRNotAdminPrint") then
-				timer.Create("MRNotAdminPrint", 2, 1, function() end)
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
+	-- Admin check
+	if not (SERVER and ply == MR.SV.Ply:GetFakeHostPly()) then
+		if not ply:IsAdmin() and GetConVar("internal_mr_admin"):GetString() == "1" then
+			if SERVER then
+				if not MR.Ply:GetFirstSpawn(ply) and not timer.Exists("MRNotAdminPrint") then
+					timer.Create("MRNotAdminPrint", 2, 1, function() end)
+					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
+				end
 			end
-		end
 
-		return false
+			return false
+		end
 	end
 
 	return true
@@ -175,7 +213,7 @@ function Ply:SetAutoValidateTool(ply)
 	local hookName = "MRAntiPreviewStuck" .. tostring(ply)
 
 	timer.Create(hookName, 3, 0, function()
-		if IsValid(ply) and ply:IsValid() then
+		if Ply:IsValid(ply) then
 			Ply:ValidateTool(ply, ply:GetActiveWeapon())
 		else
 			timer.Remove(hookName)
@@ -185,6 +223,8 @@ end
 
 -- Check if a given weapon is the tool
 function Ply:ValidateTool(ply, weapon)
+	if not MR.Ply:IsValid(ply) then return end
+
 	-- It's the tool gun, it's using this addon and  the player isn't just reselecting it
 	if weapon and IsValid(weapon) and weapon:GetClass() == "gmod_tool" and weapon:GetMode() == "mr" then
 		if not Ply:GetUsingTheTool(ply) then

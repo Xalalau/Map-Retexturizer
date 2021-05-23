@@ -65,7 +65,7 @@ function TOOL_BasicChecks(ply, tr)
 	end
 
 	-- Don't use in the middle of a(n) (un)loading
-	if MR.Duplicator:IsRunning() or MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
+	if SERVER and MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
 		if SERVER then
 			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the current process finishes.")
 		end

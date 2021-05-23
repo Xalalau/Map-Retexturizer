@@ -499,7 +499,7 @@ end
 
 function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
 	-- If the player isn't even initialized yet, do nothing
-	if not ply or CLIENT and ply and not IsValid(ply) then return false end
+	if not MR.Ply:IsValid(ply, true) then return false end
 
 	-- Admin and first spawn loading only
 	if SERVER then
@@ -581,7 +581,7 @@ function Materials:SetFinalSteps()
 		if GetConVar("internal_mr_autosave"):GetString() == "1" then
 			if not timer.Exists("MRAutoSave") then
 				timer.Create("MRAutoSave", 60, 1, function()
-					if not (MR.Duplicator:IsRunning() or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup()) then
+					if not (MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup()) then
 						MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), MR.Base:GetAutoSaveName())
 						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
 					end

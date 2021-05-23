@@ -88,7 +88,7 @@ function Decals:RemoveAll(ply, isBroadcasted)
 
 		table.Empty(MR.Decals:GetList())
 		duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
-	elseif IsValid(ply) and ply:IsPlayer() then
+	elseif MR.Ply:IsValid(ply) then
 		ply:ConCommand("r_cleardecals")
 	end
 

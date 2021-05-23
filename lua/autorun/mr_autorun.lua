@@ -104,12 +104,12 @@ end
 MR.Base:Init()
 MR.Materials:Init()
 MR.Skybox:Init()
+MR.Ply:Init()
+MR.Duplicator:Init()
 
 if SERVER then
 	MR.SV.Displacements:Init()
-	MR.SV.Ply:Init()
 	MR.SV.Load:Init()
-	MR.SV.Duplicator:Init()
 else
 	MR.CL.Save:Init()
 end

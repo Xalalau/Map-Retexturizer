@@ -166,7 +166,7 @@ function Load:FirstSpawn(ply)
 	MR.Ply:SetAutoValidateTool(ply)
 
 	-- Send the current modifications / keep loading an ongoing load
-	if MR.Base:GetInitialized() or MR.Duplicator:IsRunning() then
+	if MR.Base:GetInitialized() or MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) then
 		Load:Start(ply, "currentMaterials")
 	-- Run an autoload
 	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then

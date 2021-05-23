@@ -425,7 +425,7 @@ function Duplicator:FindDyssynchrony(lightCheck)
 	local verificationTab
 
 	if lightCheck then
-		verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial", "newMaterial" })
+		verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial", "newMaterial", "normal", "position" })
 	else
 		verificationTab = table.Copy(MR.DataList:GetCurrentModifications())
 	end

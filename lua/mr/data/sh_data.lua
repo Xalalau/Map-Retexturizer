@@ -47,16 +47,21 @@ function Data:IsEqual(Data1, Data2)
 					break
 				end
 
-				if string.lower(v) ~= string.lower(Data2[k]) then -- Different values
-					if isnumber(v) then
-						if tonumber(v) ~= tonumber(Data2[k]) then
-							isEqual = false
-
-							break
-						end
-					else
+				if isvector(v) then
+					if math.Truncate(v.x) ~= math.Truncate(Data2[k].x) or -- Our vectors are positions and they vary slightly in decimals
+					   math.Truncate(v.y) ~= math.Truncate(Data2[k].y) or
+					   math.Truncate(v.z) ~= math.Truncate(Data2[k].z) then
 						isEqual = false
-
+						break
+					end
+				elseif isnumber(v) then
+					if v ~= Data2[k] then
+						isEqual = false
+						break
+					end
+				elseif isstring(v) then
+					if string.lower(v) ~= string.lower(Data2[k]) then -- Material path can be uppercase sometimes
+						isEqual = false
 						break
 					end
 				end

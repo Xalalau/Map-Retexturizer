@@ -63,7 +63,7 @@ function Duplicator:Init()
 
 	-- Check every two minutes for dyssynchrony
 	if SERVER then
-		timer.Create("MR_AntiDyssynchrony", 120, 0, function()
+		timer.Create("MR_AntiDyssynchrony", 60, 0, function()
 			MR.SV.Duplicator:FindDyssynchrony(true)
 		end)
 	end

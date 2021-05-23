@@ -455,7 +455,7 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 			MR.Base:SetInitialized()
 		end
 
-		timer.Simple(0.4, function()
+		timer.Simple(0.4, function() -- leave the progress bar on the screen for a while
 			-- Reset the progress bar
 			MR.Duplicator:SetTotal(ply, 0)
 			MR.Duplicator:SetCurrent(ply, 0)

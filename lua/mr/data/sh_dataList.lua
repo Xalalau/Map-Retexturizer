@@ -160,6 +160,8 @@ end
 -- Generate a new modification table with the differences between two modification tables
 -- isCurrent is set to true when I compare the player’s materials with the server’s materials, which are the actual “current”
 function DataList:GetDifferences(modificationTab, isCurrent)
+	if not istable(modificationTab) then return end
+
 	local currentModifications = isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
 	modificationTab = not isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
 
@@ -169,7 +171,7 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 		applied = {},
 		current = {},
 	}
-	
+
 	for sectionName,section in pairs(currentModifications) do
 		if istable(section) then
 			for index,currentData in pairs(section) do

@@ -64,10 +64,11 @@ end
 function Decals:Preview()
 	local ply = LocalPlayer()
 	local tr = ply:GetEyeTrace()
+	local material = MR.Materials:GetOriginal(tr)
 	local hitData = MR.Data:Create(ply, { tr = tr }, nil, true)
 
-	-- Don't render over the skybox
-	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+	-- Don't render over skybox or displacements
+	if MR.Materials:IsSkybox(material) or MR.Materials:IsDisplacement(material) then
 		return
 	end
 
@@ -77,7 +78,7 @@ function Decals:Preview()
 	end
 
 	-- Don't render decal materials over the skybox
-	if MR.Materials:GetOriginal(tr) == MR.Skybox:GetGenericName() then
+	if material == MR.Skybox:GetGenericName() then
 		return
 	end
 

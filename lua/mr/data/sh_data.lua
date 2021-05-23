@@ -41,26 +41,24 @@ function Data:IsEqual(Data1, Data2)
 		isEqual = false
 	else
 		for k,v in pairs(Data1) do
-			if k ~= "backup" and not IsEntity(v) then -- Ignore "backup" and "ent" fields
+			if k ~= "backup" and not IsEntity(v) then -- Ignore "backup" field and fields with entities
 				if v and not Data2[k] or not v and Data2[k] then -- Disabled fields
 					isEqual = false
 					break
-				end
-
-				if isvector(v) then
-					if math.Truncate(v.x) ~= math.Truncate(Data2[k].x) or -- Our vectors are positions and they vary slightly in decimals
+				elseif isvector(v) then -- Our Data vectors are positions and they vary slightly in decimals
+					if math.Truncate(v.x) ~= math.Truncate(Data2[k].x) or
 					   math.Truncate(v.y) ~= math.Truncate(Data2[k].y) or
 					   math.Truncate(v.z) ~= math.Truncate(Data2[k].z) then
 						isEqual = false
 						break
 					end
-				elseif isnumber(v) then
+				elseif isnumber(v) then -- Compare simple numbers
 					if v ~= Data2[k] then
 						isEqual = false
 						break
 					end
-				elseif isstring(v) then
-					if string.lower(v) ~= string.lower(Data2[k]) then -- Material path can be uppercase sometimes
+				elseif isstring(v) then -- Material path can be uppercase sometimes
+					if string.lower(v) ~= string.lower(Data2[k]) then
 						isEqual = false
 						break
 					end

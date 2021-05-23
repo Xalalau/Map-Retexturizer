@@ -54,7 +54,7 @@ function Decals:Set(data, isBroadcasted)
 	end
 
 	-- Apply the decal
-	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, Color(255,255,255,255), data.scaleX or MR.CVars:GetDefaultScaleX(), data.scaleY or MR.CVars:GetDefaultScaleY())
+	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, nil, data.scaleX or MR.CVars:GetDefaultScaleX(), data.scaleY or MR.CVars:GetDefaultScaleY())
 
 	-- Index the Data
 	MR.DataList:InsertElement(MR.Decals:GetList(), data)

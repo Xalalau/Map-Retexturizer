@@ -14,7 +14,7 @@ end)
 -- Set map material: client
 function Map:Set(data)
 	-- Get the material to be modified
-	local oldMaterial = Material(data.oldMaterial)
+	local oldMaterial = isstring(data.oldMaterial) and Material(data.oldMaterial) or data.oldMaterial
 
 	-- Change the texture
 	if data.newMaterial and Material(data.newMaterial):GetTexture("$basetexture") then

@@ -20,11 +20,11 @@ function CustomMaterials:IsID(material)
     return string.find(CustomMaterials:IDToString(material), "-=+") and true or false
 end
 
-function CustomMaterials:InsertID(materialID, material)
+function CustomMaterials:StoreID(materialID, material)
     customMaterials.list[CustomMaterials:IDToString(materialID)] = material
 end
 
-function CustomMaterials:GetID(materialID)
+function CustomMaterials:CheckID(materialID)
     return customMaterials.list[CustomMaterials:IDToString(materialID)]
 end
 
@@ -41,7 +41,7 @@ function CustomMaterials:RevertID(materialID)
 end
 
 -- Generate the material unique ID (materialID)
-function CustomMaterials:SetID(data)
+function CustomMaterials:GenerateID(data)
     if CustomMaterials:IsID(data.newMaterial) then
         return CustomMaterials:IDToString(data.newMaterial)
     end
@@ -78,20 +78,20 @@ end
 -- return the new data
 function CustomMaterials:Create(data)
 	-- Generate ID
-	local materialID = CustomMaterials:SetID(data)
+	local materialID = CustomMaterials:GenerateID(data)
 
     -- Get previously modified materials
-    local material = CustomMaterials:GetID(materialID)
+    local material = CustomMaterials:CheckID(materialID)
 
     -- Set the new data and store any new material
     if not material then
         if SERVER then
-            CustomMaterials:InsertID(materialID, materialID)
+            CustomMaterials:StoreID(materialID, materialID)
             data.newMaterial = materialID
         else
             local customMaterial = MR.CL.Materials:Create(materialID, "VertexLitGeneric", data.newMaterial)
 
-            CustomMaterials:InsertID(materialID, customMaterial)
+            CustomMaterials:StoreID(materialID, customMaterial)
 
             local oldMaterial = data.oldMaterial
             data.oldMaterial = customMaterial

@@ -103,6 +103,7 @@ function CustomMaterials:Create(data, materialType, isDecal)
             -- Adjust Data
             if isDecal then
                 data.newMaterial = customMaterial
+                data.oldMaterial = customMaterial
             else
                 data.oldMaterial = bakMaterial
                 data.newMaterial = customMaterial

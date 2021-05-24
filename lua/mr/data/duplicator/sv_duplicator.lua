@@ -350,7 +350,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	elseif section == "decals" then
 		savedTable[position].ent = game.GetWorld()
 
-		MR.SV.Decals:Set(ply, nil, savedTable[position], isBroadcasted, forcePosition and position)
+		MR.Decals:Set(ply, isBroadcasted, nil, savedTable[position], forcePosition and position)
 	-- Apply skybox
 	elseif section == "skybox" then
 		MR.SV.Skybox:Set(ply, savedTable[position], isBroadcasted, forcePosition and position)

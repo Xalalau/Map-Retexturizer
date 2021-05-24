@@ -119,9 +119,10 @@ function Materials:ValidateReceived(material)
 end
 
 -- Create a material if it doesn't exist
+-- NOTE: change the created material using the returned variable, don't try to get it using Material(name or path)!!! 
 function Materials:Create(name, matType, path)
 	if Material(name):IsError() then
-		return CreateMaterial(name, matType or "VertexLitGeneric", {["$basetexture"] = name or path})
+		return CreateMaterial(name, matType or "LightmappedGeneric", { ["$basetexture"] = name or path })
 	else
 		return Material(name)
 	end
@@ -129,10 +130,11 @@ end
 
 -- Set material preview Data
 -- use newData to force a specific material preview
-function Materials:SetPreview(newData, isDecal)
+function Materials:SetPreview(newData)
 	local ply = LocalPlayer()
-	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), isDecal and newData.newMaterial, nil, isDecal, true)
-	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() }, nil, true)
+	local isDecal = MR.Ply:GetDecalMode(ply)
+	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), nil, nil, isDecal, true)
+	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() }, isDecal and {}, true)
 
 	-- Get the current preview image
 	oldData.newMaterial = Materials:GetPreviewMaterial()
@@ -147,7 +149,9 @@ function Materials:SetPreview(newData, isDecal)
 
 	-- Adjustments for decal materials
 	if isDecal then
-		oldData.oldMaterial = oldData.newMaterial
+		newData.oldMaterial = oldData.oldMaterial
+		newData.scaleX = 1
+		newData.scaleY = 1
 	end
 
 	-- Update the material if necessary

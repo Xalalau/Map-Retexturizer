@@ -122,13 +122,13 @@ function Data:Create(ply, materialInfo, decalInfo, blockCleanup)
 		ent = materialInfo and materialInfo.tr and materialInfo.tr.Entity or game.GetWorld(),
 		oldMaterial = decalInfo and MR.Materials:GetSelected(ply) or materialInfo and (materialInfo.tr and MR.Materials:GetOriginal(materialInfo.tr) or materialInfo.oldMaterial) or "",
 		newMaterial = MR.Materials:GetSelected(ply),
-		offsetX = not decalInfo and string.format("%.2f", ply:GetInfo("internal_mr_offsetx")) or nil,
-		offsetY = not decalInfo and string.format("%.2f", ply:GetInfo("internal_mr_offsety")) or nil,
+		offsetX = string.format("%.2f", ply:GetInfo("internal_mr_offsetx")) or nil,
+		offsetY = string.format("%.2f", ply:GetInfo("internal_mr_offsety")) or nil,
 		scaleX = ply:GetInfo("internal_mr_scalex") ~= "0" and string.format("%.2f", ply:GetInfo("internal_mr_scalex")) or nil,
 		scaleY = ply:GetInfo("internal_mr_scaley") ~= "0" and string.format("%.2f", ply:GetInfo("internal_mr_scaley")) or nil,
-		rotation = not decalInfo and string.format("%.2f", (math.ceil(ply:GetInfo("internal_mr_rotation")))) or nil,
+		rotation = string.format("%.2f", (math.ceil(ply:GetInfo("internal_mr_rotation")))) or nil,
 		alpha = not decalInfo and string.format("%.2f", ply:GetInfo("internal_mr_alpha")) or nil,
-		detail = not decalInfo and ply:GetInfo("internal_mr_detail") or nil,
+		detail = ply:GetInfo("internal_mr_detail") or nil,
 		position = decalInfo and decalInfo.pos,
 		normal = decalInfo and decalInfo.normal
 	}
@@ -158,14 +158,14 @@ function Data:CreateFromMaterial(oldMaterialIn, newMaterial, newMaterial2, isDec
 		oldMaterial = oldMaterialIn,
 		newMaterial = newMaterial or nil,
 		newMaterial2 = newMaterial2 or nil,
-		offsetX = not isDecal and string.format("%.2f", math.floor((offsetX)*100)/100) or nil,
-		offsetY = not isDecal and string.format("%.2f", math.floor((offsetY)*100)/100) or nil,
-		scaleX = string.format("%.2f", math.ceil((1/scaleX)*1000)/1000),
-		scaleY = string.format("%.2f", math.ceil((1/scaleY)*1000)/1000),
+		offsetX = string.format("%.2f", math.floor((offsetX)*100)/100) or nil,
+		offsetY = string.format("%.2f", math.floor((offsetY)*100)/100) or nil,
+		scaleX = string.format("%.2f", math.ceil((1/scaleX)*1000)/1000) or nil,
+		scaleY = string.format("%.2f", math.ceil((1/scaleY)*1000)/1000) or nil,
 		-- NOTE: for some reason the rotation never returns exactly the same as the one chosen by the user
-		rotation = not isDecal and (oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and string.format("%.2f", oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y)) or nil,
+		rotation = oldMaterial:GetMatrix("$basetexturetransform") and oldMaterial:GetMatrix("$basetexturetransform"):GetAngles() and string.format("%.2f", oldMaterial:GetMatrix("$basetexturetransform"):GetAngles().y) or nil,
 		alpha =  not isDecal and string.format("%.2f", oldMaterial:GetString("$alpha") or 1) or nil,
-		detail =  not isDecal and MR.Materials:GetDetail(oldMaterialIn) or nil
+		detail = MR.Materials:GetDetail(oldMaterialIn) or nil
 	}
 
 	if not blockCleanup then

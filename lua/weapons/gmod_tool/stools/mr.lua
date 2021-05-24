@@ -125,7 +125,7 @@ end
 		end
 
 		if SERVER then
-			MR.SV.Decals:Set(ply, tr)
+			MR.Decals:Set(ply, true, tr)
 		end
 
 		return true

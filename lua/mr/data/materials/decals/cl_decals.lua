@@ -6,11 +6,6 @@ local Decals = {}
 Decals.__index = Decals
 MR.CL.Decals = Decals
 
--- Networking 
-net.Receive("CL.Decals:Set", function()
-	Decals:Set(net.ReadTable(), net.ReadBool())
-end)
-
 -- Decal rendering hook
 hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 	local ply = LocalPlayer()
@@ -31,44 +26,14 @@ function Decals:Toogle(value)
 	net.SendToServer()
 end
 
--- Apply decal materials
-function Decals:Set(data, isBroadcasted)
-	-- General first steps
-	local check = {
-		material = data and data.newMaterial or MR.Materials:GetSelected(ply)
-	}
-
-	if not MR.Materials:SetFirstSteps(LocalPlayer(), isBroadcasted, check, data, "Decals") then
-		return false
-	end
-
-	-- Create the material
-	local decalMaterial = MR.Decals:GetList()[data.newMaterial.."2"]
-
-	if not decalMaterial then
-		decalMaterial = MR.CL.Materials:Create(data.newMaterial.."2", "LightmappedGeneric", data.newMaterial)
-		decalMaterial:SetInt("$decal", 1)
-		decalMaterial:SetInt("$translucent", 1)
-		decalMaterial:SetFloat("$decalscale", 1.00)
-		decalMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
-	end
-
-	-- Apply the decal
-	util.DecalEx(Material(data.newMaterial), data.ent, data.position, data.normal, nil, data.scaleX or MR.CVars:GetDefaultScaleX(), data.scaleY or MR.CVars:GetDefaultScaleY())
-
-	-- Index the Data
-	MR.DataList:InsertElement(MR.Decals:GetList(), data)
-end
-
 -- Material rendering
 function Decals:Preview()
 	local ply = LocalPlayer()
 	local tr = ply:GetEyeTrace()
-	local material = MR.Materials:GetOriginal(tr)
-	local hitData = MR.Data:Create(ply, { tr = tr }, nil, true)
+	local hitMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Don't render over skybox or displacements
-	if MR.Materials:IsSkybox(material) or MR.Materials:IsDisplacement(material) then
+	if MR.Materials:IsSkybox(hitMaterial) or MR.Materials:IsDisplacement(hitMaterial) then
 		return
 	end
 
@@ -78,16 +43,15 @@ function Decals:Preview()
 	end
 
 	-- Don't render decal materials over the skybox
-	if material == MR.Skybox:GetGenericName() then
+	if hitMaterial == MR.Skybox:GetGenericName() then
 		return
 	end
 
 	-- Render
-	local ang = tr.HitNormal:Angle()
+	local material = Material(MR.CL.Materials:GetPreviewName())
 	local scaleX = ply:GetInfo("internal_mr_scalex")
 	local scaleY = ply:GetInfo("internal_mr_scaley")
-	local material = Material(MR.CL.Materials:GetPreviewName())
 
 	render.SetMaterial(material)
-	render.DrawQuadEasy(tr.HitPos, tr.HitNormal, material:Width() * scaleX, material:Height() * scaleY, Color(255,255,255), tr.HitNormal[3] ~= 0 and 90 or 180)
+	render.DrawQuadEasy(tr.HitPos, tr.HitNormal, 64 * scaleX, 64 * scaleY, nil, tr.HitNormal[3] < 0 and -90 or tr.HitNormal[3] > 0 and 270 or 180)
 end

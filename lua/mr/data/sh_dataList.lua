@@ -123,6 +123,10 @@ function DataList:CleanAll(modificationTab)
 	for listName,list in pairs(modificationTab) do
 		if listName ~= "savingFormat" and #list > 0 then
 			DataList:CleanDisabled(list)
+
+			if listName == "decals" or listName == "models" then
+				DataList:CleanIDs(list)
+			end
 		end
 	end
 
@@ -147,10 +151,6 @@ function DataList:GetTotalModificantions(modificationTab)
 	for k,v in pairs(modificationTab or DataList:GetCurrentModifications()) do
 		if k ~= "savingFormat" then
 			total = total + DataList:Count(v)
-		end
-
-		if k == "decals" or k == "models" then
-			DataList:CleanIDs(list)
 		end
 	end
 

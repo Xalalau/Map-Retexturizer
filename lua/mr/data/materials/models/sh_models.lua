@@ -121,8 +121,10 @@ function Models:Set(ply, data, isBroadcasted)
 		data.ent.mr = data
 
 		-- Set the alpha
-		data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
-		data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
+		if data.alpha then
+			data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
+			data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
+		end
 
 		-- Apply the material
 		data.ent:SetMaterial("!" .. MR.CustomMaterials:IDToString(data.newMaterial))

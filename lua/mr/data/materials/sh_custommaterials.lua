@@ -11,21 +11,24 @@ local customMaterials = {
     list = {}
 }
 
--- Ensure that the id is a string
+-- Convert a materialID from Material type to string type
 function CustomMaterials:IDToString(materialID)
     return materialID and (SERVER and materialID or materialID.GetName and materialID:GetName() or materialID)
 end
 
+-- Convert a materialID string type to Material type if it's stored
+function CustomMaterials:StringToID(materialID)
+    return customMaterials.list[CustomMaterials:IDToString(materialID)]
+end
+
+-- Check if it's a materialID
 function CustomMaterials:IsID(material)
     return string.find(CustomMaterials:IDToString(material), "-=+") and true or false
 end
 
+-- Store a new materialID
 function CustomMaterials:StoreID(materialID, material)
     customMaterials.list[CustomMaterials:IDToString(materialID)] = material
-end
-
-function CustomMaterials:CheckID(materialID)
-    return customMaterials.list[CustomMaterials:IDToString(materialID)]
 end
 
 -- Get the base material path from a materialID
@@ -48,7 +51,7 @@ function CustomMaterials:GenerateID(data)
     -- Note: I generate different IDs even for the same materials because this way we can manage them individually later
     if CustomMaterials:IsID(data.newMaterial) then
         materialID = CustomMaterials:IDToString(data.newMaterial)
-        return CustomMaterials:CheckID(materialID) and materialID .. "_" or materialID
+        return CustomMaterials:StringToID(materialID) and materialID .. "_" or materialID
     end
 
 	-- I use SortedPairs so to keep the name ordered
@@ -84,7 +87,7 @@ function CustomMaterials:Create(data, materialType, isDecal, shareMaterials)
 	local materialID = CustomMaterials:GenerateID(data)
 
     -- Get previously modified materials
-    local foundMaterial = shareMaterials and CustomMaterials:CheckID(materialID)
+    local foundMaterial = shareMaterials and CustomMaterials:StringToID(materialID)
 
     -- Set the new data and store any new material
     if not shareMaterials or not foundMaterial then

@@ -184,13 +184,15 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean, forcePositi
 		if GetConVar("internal_mr_duplicator_cleanup"):GetInt() == 1 then
 			if MR.DataList:GetTotalModificantions() ~= 0 then
 				timer.Simple(0.5, function() -- Wait or some materials will not be removed
-					if not MR.Materials:IsInstantCleanupEnabled() then
+					local isDecalsOnly = total == decalsTotal
+
+					if not isDecalsOnly and not MR.Materials:IsInstantCleanupEnabled() then
 						MR.Materials:SetProgressiveCleanupEndCallback(MR.SV.Duplicator.Start, ply, ent, savedTable, loadName, dontClean, forcePosition)
 					end
 
 					MR.SV.Materials:RemoveAll(ply)
 
-					if MR.Materials:IsInstantCleanupEnabled() then
+					if isDecalsOnly or MR.Materials:IsInstantCleanupEnabled() then
 						MR.SV.Duplicator:Start(ply, ent, savedTable, loadName, dontClean, forcePosition)
 					end
 				end)

@@ -121,13 +121,11 @@ function Models:Set(ply, data, isBroadcasted)
 		data.ent.mr = data
 
 		-- Set the alpha
-		if SERVER and data.alpha then
-			data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
-			data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
+		data.ent:SetRenderMode(RENDERMODE_TRANSALPHA)
+		data.ent:SetColor(Color(255, 255, 255, 255 * data.alpha))
+
 		-- Apply the material
-		else
-			data.ent:SetMaterial("!" .. MR.CustomMaterials:IDToString(data.newMaterial))
-		end	
+		data.ent:SetMaterial("!" .. MR.CustomMaterials:IDToString(data.newMaterial))
 	end
 
 	-- Set the Undo

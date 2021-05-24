@@ -95,24 +95,26 @@ function CustomMaterials:Create(data, materialType, isDecal, shareMaterials)
         if SERVER then
             CustomMaterials:StoreID(materialID, materialID)
 
-            data.newMaterial = materialID
+            data.newMaterial = isDecal and data.newMaterial or materialID
             data.oldMaterial = isDecal and materialID or data.oldMaterial
         else
-            -- Create, initialize and store the custom material
-            local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
+            -- Backup base material name
             local bakMaterial = data.oldMaterial
 
-            data.oldMaterial = customMaterial
+            -- Create, initialize and store the custom material
+            local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
+
+            data.oldMaterial = materialID
             MR.CL.Materials:Apply(data)
 
             CustomMaterials:StoreID(materialID, customMaterial)
 
             -- Adjust Data
-            data.newMaterial = customMaterial
-            data.oldMaterial = isDecal and customMaterial or bakMaterial
+            data.newMaterial = isDecal and data.newMaterial or materialID
+            data.oldMaterial = isDecal and materialID or bakMaterial
         end
     else
-        data.newMaterial = foundMaterial
+        data.newMaterial = isDecal and data.newMaterial or foundMaterial
         data.oldMaterial = isDecal and foundMaterial or data.oldMaterial
     end
 

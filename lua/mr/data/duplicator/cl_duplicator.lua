@@ -3,7 +3,6 @@
 --------------------------------
 
 local Duplicator = {}
-Duplicator.__index = Duplicator
 MR.CL.Duplicator = Duplicator
 
 -- Networking

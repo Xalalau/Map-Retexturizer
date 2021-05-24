@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Concommands = {}
-Concommands.__index = Concommands
 MR.SV.Concommands = Concommands
 
 -- Networking

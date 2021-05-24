@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Load = {}
-Load.__index = Load
 MR.Load = Load
 
 -- List of save names

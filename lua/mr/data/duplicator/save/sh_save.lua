@@ -3,7 +3,6 @@
 --------------------------------
 
 local Save = {}
-Save.__index = Save
 MR.Save = Save
 
 local save = {

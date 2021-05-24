@@ -3,7 +3,6 @@
 --------------------------------
 
 local Materials = {}
-Materials.__index = Materials
 MR.Materials = Materials
 
 local materials = {

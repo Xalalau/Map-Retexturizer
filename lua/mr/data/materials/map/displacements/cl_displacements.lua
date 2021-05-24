@@ -3,7 +3,6 @@
 --------------------------------
 
 local Displacements = {}
-Displacements.__index = Displacements
 MR.CL.Displacements = Displacements
 
 -- A dirty hack to make all the displacements darker, since the tool does it with these materials

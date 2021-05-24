@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Ply = {}
-Ply.__index = Ply
 MR.SV.Ply = Ply
 
 -- Fake client for server usage

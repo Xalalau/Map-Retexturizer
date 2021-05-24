@@ -3,7 +3,6 @@
 --------------------------------
 
 local Map = {}
-Map.__index = Map
 MR.SV.Map = Map
 
 local map = {

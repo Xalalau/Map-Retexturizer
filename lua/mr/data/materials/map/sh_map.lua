@@ -3,7 +3,6 @@
 --------------------------------
 
 local Map = {}
-Map.__index = Map
 MR.Map = Map
 
 -- Note: I consider displacements a type of map material because most of the code it needs ends being almost

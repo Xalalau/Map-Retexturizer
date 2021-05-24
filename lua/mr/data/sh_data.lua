@@ -3,7 +3,6 @@
 --------------------------------
 
 local Data = {}
-Data.__index = Data
 MR.Data = Data
 
 --[[

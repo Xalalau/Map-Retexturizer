@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Panels = {}
-Panels.__index = Panels
 MR.CL.Panels = Panels
 
 local panels = {

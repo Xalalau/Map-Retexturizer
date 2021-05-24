@@ -3,7 +3,6 @@
 --------------------------------
 
 local Skybox = {}
-Skybox.__index = Skybox
 MR.CL.Skybox = Skybox
 
 -- Skybox rendering hook

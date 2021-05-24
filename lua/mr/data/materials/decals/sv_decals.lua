@@ -3,7 +3,6 @@
 --------------------------------
 
 local Decals = {}
-Decals.__index = Decals
 MR.SV.Decals = Decals
 
 -- Networking 

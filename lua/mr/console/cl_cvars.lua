@@ -3,7 +3,6 @@
 --------------------------------
 
 local CVars = {}
-CVars.__index = CVars
 MR.CL.CVars = CVars
 
 -- Set propertie cvars to default

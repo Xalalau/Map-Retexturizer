@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Load = {}
-Load.__index = Load
 MR.CL.Load = Load
 
 net.Receive("CL.Load:Delete", function()

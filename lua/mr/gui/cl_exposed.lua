@@ -4,7 +4,6 @@
 -- Access these panels from anywhere
 
 local ExposedPanels = {}
-ExposedPanels.__index = ExposedPanels
 MR.CL.ExposedPanels = ExposedPanels
 
 local exposed = {

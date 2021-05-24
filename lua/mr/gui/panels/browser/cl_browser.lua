@@ -3,7 +3,6 @@
 --------------------------------
 
 local Browser = {}
-Browser.__index = Browser
 MR.Browser = Browser
 
 local browser = {

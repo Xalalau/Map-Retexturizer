@@ -3,7 +3,6 @@
 --------------------------------
 
 local Skybox = {}
-Skybox.__index = Skybox
 MR.Skybox = Skybox
 
 local skybox = {

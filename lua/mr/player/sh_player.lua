@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Ply = {}
-Ply.__index = Ply
 MR.Ply = Ply
 
 local MRPlayer = {

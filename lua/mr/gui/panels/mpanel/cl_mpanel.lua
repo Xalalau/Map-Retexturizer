@@ -3,7 +3,6 @@
 -------------------------------------
 
 local MPanel = {}
-MPanel.__index = MPanel
 MR.CL.MPanel = MPanel
 
 local mpanel = {

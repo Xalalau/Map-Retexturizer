@@ -3,7 +3,6 @@
 --------------------------------
 
 local CVars = {}
-CVars.__index = CVars
 MR.CVars = CVars
 
 local cvars = {

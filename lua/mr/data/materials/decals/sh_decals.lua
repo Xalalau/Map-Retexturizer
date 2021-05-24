@@ -3,7 +3,6 @@
 --------------------------------
 
 local Decals = {}
-Decals.__index = Decals
 MR.Decals = Decals
 
 -- ID = String, all the modifications

@@ -3,7 +3,6 @@
 --------------------------------
 
 local Displacements = {}
-Displacements.__index = Displacements
 MR.Displacements = Displacements
 
 local displacements = {

@@ -3,7 +3,6 @@
 --------------------------------
 
 local Duplicator = {}
-Duplicator.__index = Duplicator
 MR.SV.Duplicator = Duplicator
 
 local dup = {

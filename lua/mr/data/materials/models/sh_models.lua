@@ -3,7 +3,6 @@
 --------------------------------
 
 local Models = {}
-Models.__index = Models
 MR.Models = Models
 
 -- Networking

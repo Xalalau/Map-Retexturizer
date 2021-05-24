@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Base = {}
-Base.__index = Base
 MR.Base = Base
 
 local base = {

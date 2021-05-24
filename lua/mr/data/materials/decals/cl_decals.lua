@@ -3,7 +3,6 @@
 --------------------------------
 
 local Decals = {}
-Decals.__index = Decals
 MR.CL.Decals = Decals
 
 -- Decal rendering hook

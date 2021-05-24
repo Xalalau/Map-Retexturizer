@@ -4,7 +4,6 @@
 -- Keep an option synced between all players
 
 local Sync = {}
-Sync.__index = Sync
 MR.Sync = Sync
 
 -- This stores menu objects to keep their values synced between clients

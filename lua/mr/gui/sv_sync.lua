@@ -4,7 +4,6 @@
 -- Keep an option synced between all players
 
 local Sync = {}
-Sync.__index = Sync
 MR.SV.Sync = Sync
 
 -- Networking

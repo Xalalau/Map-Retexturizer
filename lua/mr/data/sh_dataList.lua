@@ -3,7 +3,6 @@
 -------------------------------------
 
 local DataList = {}
-DataList.__index = DataList
 MR.DataList = DataList
 
 -- Check if the element is active

@@ -3,7 +3,6 @@
 --------------------------------
 
 local CVars = {}
-CVars.__index = CVars
 MR.SV.CVars = CVars
 
 -- Set propertie cvars based on some data table

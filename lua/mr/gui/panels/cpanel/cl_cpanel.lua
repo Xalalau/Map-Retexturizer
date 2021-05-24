@@ -3,7 +3,6 @@
 -------------------------------------
 
 local CPanel = {}
-CPanel.__index = CPanel
 MR.CL.CPanel = CPanel
 
 local cpanel = {

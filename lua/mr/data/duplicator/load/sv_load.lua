@@ -3,7 +3,6 @@
 -------------------------------------
 
 local Load = {}
-Load.__index = Load
 MR.SV.Load = Load
 
 -- Networking

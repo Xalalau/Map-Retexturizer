@@ -3,7 +3,6 @@
 --------------------------------
 
 local Save = {}
-Save.__index = Save
 MR.CL.Save = Save
 
 -- Networking

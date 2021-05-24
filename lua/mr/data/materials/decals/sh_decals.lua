@@ -69,22 +69,24 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		end
 	end
 
-	local dataCopy = table.Copy(data)
-	data.scaleX = 1
-	data.scaleY = 1
-
+	-- Create the custom material
 	MR.CustomMaterials:Create(data, "LightmappedGeneric", true, false)
 
 	-- Apply the decal
 	if CLIENT then
+		local dataCopy = table.Copy(data)
+
+		data.scaleX = 1
+		data.scaleY = 1
 		data.rotation = (data.normal[3] < 0 and 0 or data.normal[3] == 1 and 180 or 0) + (data.rotation or 0)
 
 		MR.CL.Materials:Apply(data)
 		util.DecalEx(data.oldMaterial, data.ent, data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
+
+		data = dataCopy
 	end
 
-	-- Fix Data filds
-	data = dataCopy
+	-- Truncate some Data fields
 	data.position.x = math.Truncate(data.position.x)
 	data.position.y = math.Truncate(data.position.y)
 	data.position.z = math.Truncate(data.position.z)
@@ -111,3 +113,10 @@ function Decals:RemoveAll()
 		RunConsoleCommand("r_cleardecals")
 	end
 end
+
+--[[
+	2021/05/21
+	Note: I cannot access decals individually so I can't remove them one by one. Also, trying
+	to manipulate the decal material after it's applied doesn't work. I need to overcome this
+	in order to support decals like a map submodule with full undo, remove and copy support.
+]]

@@ -44,14 +44,14 @@ function CustomMaterials:RevertID(materialID)
 end
 
 -- Generate the material unique ID (materialID)
-function CustomMaterials:GenerateID(data)
+function CustomMaterials:GenerateID(data, shareMaterials)
     local materialID = ""
 
     -- If data.newMaterial is a taken ID, generate a new one based on it
     -- Note: I generate different IDs even for the same materials because this way we can manage them individually later
     if CustomMaterials:IsID(data.newMaterial) then
         materialID = CustomMaterials:IDToString(data.newMaterial)
-        return CustomMaterials:StringToID(materialID) and materialID .. "_" or materialID
+        return not shareMaterials and CustomMaterials:StringToID(materialID) and materialID .. "_" or materialID
     end
 
 	-- I use SortedPairs so to keep the name ordered

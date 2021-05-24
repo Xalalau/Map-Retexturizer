@@ -19,7 +19,7 @@ function DataList:IsFull(list, limit)
 	-- Check if the backup table is full
 	if DataList:Count(list) > limit then
 		-- Limit reached! Try to open new spaces in the list removing disabled entries
-		DataList:Clean(list)
+		DataList:CleanDisabled(list)
 
 		-- Check again
 		if DataList:Count(list) > limit then
@@ -87,10 +87,8 @@ function DataList:DisableElement(element)
 end
 
 -- Remove all the disabled elements
-function DataList:Clean(list)
-	if not list then
-		return
-	end
+function DataList:CleanDisabled(list)
+	if not list then return end
 
 	for i=1, #list, 1 do
 		if not DataList:IsActive(list[i]) then
@@ -99,11 +97,32 @@ function DataList:Clean(list)
 	end
 end
 
--- Remove all the disabled elements from all lists
+-- Remove all the materialIDs from elements
+function DataList:CleanIDs(list)
+	if not list then return end
+
+	for i=1, #list, 1 do
+		if DataList:IsActive(list[i]) then
+			if MR.CustomMaterials:IsID(list[i].oldMaterial) then
+				list[i].oldMaterial = MR.CustomMaterials:RevertID(list[i].oldMaterial)
+			end
+
+			if list[i].newMaterial and MR.CustomMaterials:IsID(list[i].newMaterial) then
+				list[i].newMaterial = MR.CustomMaterials:RevertID(list[i].newMaterial)
+			end
+
+			if list[i].newMaterial2 and MR.CustomMaterials:IsID(list[i].newMaterial2) then
+				list[i].newMaterial2 = MR.CustomMaterials:RevertID(list[i].newMaterial2)
+			end
+		end
+	end
+end
+
+-- Remove all the disabled and materialIDs from elements from all lists
 function DataList:CleanAll(modificationTab)
 	for listName,list in pairs(modificationTab) do
 		if listName ~= "savingFormat" and #list > 0 then
-			MR.DataList:Clean(list)
+			DataList:CleanDisabled(list)
 		end
 	end
 
@@ -127,7 +146,11 @@ function DataList:GetTotalModificantions(modificationTab)
 
 	for k,v in pairs(modificationTab or DataList:GetCurrentModifications()) do
 		if k ~= "savingFormat" then
-			total = total + MR.DataList:Count(v)
+			total = total + DataList:Count(v)
+		end
+
+		if k == "decals" or k == "models" then
+			DataList:CleanIDs(list)
 		end
 	end
 
@@ -161,8 +184,8 @@ end
 function DataList:GetDifferences(modificationTab, isCurrent)
 	if not istable(modificationTab) then return end
 
-	local currentModifications = isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
-	modificationTab = not isCurrent and modificationTab or MR.DataList:GetCurrentModifications()
+	local currentModifications = isCurrent and modificationTab or DataList:GetCurrentModifications()
+	modificationTab = not isCurrent and modificationTab or DataList:GetCurrentModifications()
 
 	if not modificationTab or not currentModifications then return end
 

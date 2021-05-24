@@ -259,7 +259,7 @@ function Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
 		-- Map and displacements tables from saved files and rebuilt GMod saves:
 		if savedTable.map then
 			-- Remove all the disabled elements
-			MR.DataList:Clean(savedTable.map)
+			MR.DataList:CleanDisabled(savedTable.map)
 
 			-- Change "mapretexturizer" to "mr"
 			local i

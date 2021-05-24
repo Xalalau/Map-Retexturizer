@@ -218,7 +218,7 @@ local function RecreateTable(ply, ent, savedTable)
 		-- Start with the saving format, then send the rest
 		timer.Simple(savedTable.savingFormat and 0 or 0.01, function()
 			-- Remove some disabled elements (because duplicator allways gets these tables full of trash)
-			MR.DataList:Clean(savedTable.map or savedTable.displacements or nil)
+			MR.DataList:CleanDisabled(savedTable.map or savedTable.displacements or nil)
 
 			-- Index the format version
 			savedTable.savingFormat = recreateTableSaveFormat

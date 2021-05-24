@@ -114,7 +114,7 @@ function Models:Set(ply, data, isBroadcasted)
 		end
 
 		-- Create the new material
-		MR.CustomMaterials:Create(data, "VertexLitGeneric")
+		MR.CustomMaterials:Create(data, "VertexLitGeneric", false, true)
 
 		-- Save the Data table inside the model
 		data.ent.mr = data

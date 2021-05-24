@@ -42,13 +42,14 @@ end
 
 -- Generate the material unique ID (materialID)
 function CustomMaterials:GenerateID(data)
-    -- If data.newMaterial is a taken ID, generate a new one based on it
-    -- Note: I generate different IDs even for the same materials because this way we can hide them individually later
-    if CustomMaterials:IsID(data.newMaterial) then
-        return CustomMaterials:IDToString(data.newMaterial) .. "_"
-    end
-
     local materialID = ""
+
+    -- If data.newMaterial is a taken ID, generate a new one based on it
+    -- Note: I generate different IDs even for the same materials because this way we can manage them individually later
+    if CustomMaterials:IsID(data.newMaterial) then
+        materialID = CustomMaterials:IDToString(data.newMaterial)
+        return CustomMaterials:CheckID(materialID) and materialID .. "_" or materialID
+    end
 
 	-- I use SortedPairs so to keep the name ordered
 	for k,v in SortedPairs(data) do
@@ -78,18 +79,21 @@ end
 
 -- Create a materialID with data and store it in data.newMaterial
 -- return the new data
-function CustomMaterials:Create(data, materialType, isDecal)
+function CustomMaterials:Create(data, materialType, isDecal, shareMaterials)
 	-- Generate ID
 	local materialID = CustomMaterials:GenerateID(data)
 
     -- Get previously modified materials
-    local material = CustomMaterials:CheckID(materialID)
+    local foundMaterial = shareMaterials and CustomMaterials:CheckID(materialID)
 
     -- Set the new data and store any new material
-    if not material then
+    if not shareMaterials or not foundMaterial then
+        -- Set the new data and store any new material
         if SERVER then
             CustomMaterials:StoreID(materialID, materialID)
+
             data.newMaterial = materialID
+            data.oldMaterial = isDecal and materialID or data.oldMaterial
         else
             -- Create, initialize and store the custom material
             local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
@@ -101,17 +105,13 @@ function CustomMaterials:Create(data, materialType, isDecal)
             CustomMaterials:StoreID(materialID, customMaterial)
 
             -- Adjust Data
-            if isDecal then
-                data.newMaterial = customMaterial
-                data.oldMaterial = customMaterial
-            else
-                data.oldMaterial = bakMaterial
-                data.newMaterial = customMaterial
-            end
+            data.newMaterial = customMaterial
+            data.oldMaterial = isDecal and customMaterial or bakMaterial
         end
     else
-        data.newMaterial = material
+        data.newMaterial = foundMaterial
+        data.oldMaterial = isDecal and foundMaterial or data.oldMaterial
     end
 
-	return data
+    return data
 end

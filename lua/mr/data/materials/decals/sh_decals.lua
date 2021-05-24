@@ -73,7 +73,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 	data.scaleX = 1
 	data.scaleY = 1
 
-	MR.CustomMaterials:Create(data, "LightmappedGeneric", true)
+	MR.CustomMaterials:Create(data, "LightmappedGeneric", true, false)
 
 	-- Apply the decal
 	if CLIENT then

@@ -76,7 +76,7 @@ end
 
 -- Create a materialID with data and store it in data.newMaterial
 -- return the new data
-function CustomMaterials:Create(data)
+function CustomMaterials:Create(data, materialType)
 	-- Generate ID
 	local materialID = CustomMaterials:GenerateID(data)
 
@@ -89,7 +89,7 @@ function CustomMaterials:Create(data)
             CustomMaterials:StoreID(materialID, materialID)
             data.newMaterial = materialID
         else
-            local customMaterial = MR.CL.Materials:Create(materialID, "VertexLitGeneric", data.newMaterial)
+            local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
 
             CustomMaterials:StoreID(materialID, customMaterial)
 

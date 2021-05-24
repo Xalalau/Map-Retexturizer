@@ -17,6 +17,12 @@ net.Receive("Decals:Set", function()
 	Decals:Set(LocalPlayer(), net.ReadBool(), net.ReadTable(), net.ReadTable(), net.ReadInt(12))
 end)
 
+net.Receive("Decals:RemoveAll", function(_, ply)
+	if SERVER and not MR.Ply:IsAdmin(ply) then return end
+
+	Decals:RemoveAll()
+end)
+
 -- Get the decals list
 function Decals:GetList()
 	return decals.list
@@ -72,6 +78,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 	-- Apply the decal
 	if CLIENT then
 		data.rotation = (data.normal[3] < 0 and 0 or data.normal[3] == 1 and 180 or 0) + (data.rotation or 0)
+
 		MR.CL.Materials:Apply(data)
 		util.DecalEx(data.oldMaterial, data.ent, data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
 	end
@@ -94,4 +101,13 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 
 	-- General final steps
 	MR.Materials:SetFinalSteps()
+end
+
+-- Remove decals table
+function Decals:RemoveAll()
+	table.Empty(MR.Decals:GetList())
+
+	if CLIENT then
+		RunConsoleCommand("r_cleardecals")
+	end
 end

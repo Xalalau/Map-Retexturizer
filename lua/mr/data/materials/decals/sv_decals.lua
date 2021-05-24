@@ -7,6 +7,7 @@ MR.SV.Decals = Decals
 
 -- Networking 
 util.AddNetworkString("Decals:Set")
+util.AddNetworkString("Decals:RemoveAll")
 util.AddNetworkString("SV.Decals:RemoveAll")
 
 net.Receive("SV.Decals:RemoveAll", function(_, ply)
@@ -32,16 +33,15 @@ function Decals:RemoveAll(ply, isBroadcasted)
 		MR.SV.Duplicator:ForceStop()
 
 		-- Cleanup
-		for k,v in pairs(player.GetHumans()) do
-			if v:IsValid() then
-				v:ConCommand("r_cleardecals")
-			end
-		end
+		MR.Decals:RemoveAll()
 
-		table.Empty(MR.Decals:GetList())
+		net.Start("Decals:RemoveAll")
+		net.Broadcast()
+
 		duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
 	elseif MR.Ply:IsValid(ply) then
-		ply:ConCommand("r_cleardecals")
+		net.Start("Decals:RemoveAll")
+		net.Send(ply)
 	end
 
 	-- General final steps

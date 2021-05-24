@@ -87,7 +87,7 @@ function CustomMaterials:Create(data, materialType, isDecal, shareMaterials)
 	local materialID = CustomMaterials:GenerateID(data)
 
     -- Get previously modified materials
-    local foundMaterial = shareMaterials and CustomMaterials:StringToID(materialID)
+    local foundMaterial = shareMaterials and CustomMaterials:IDToString(CustomMaterials:StringToID(materialID))
 
     -- Set the new data and store any new material
     if not shareMaterials or not foundMaterial then

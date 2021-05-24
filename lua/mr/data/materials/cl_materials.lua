@@ -165,9 +165,9 @@ end
 -- Apply the changes of a Data table
 function Materials:Apply(data)
 	-- Get the material to be modified
-	local oldMaterial = data.oldMaterial.GetName and data.oldMaterial or Material(data.oldMaterial)
-	local newMaterial = data.newMaterial and (data.newMaterial.GetName and data.newMaterial or Material(data.newMaterial))
-	local newMaterial2 = data.newMaterial2 and (data.newMaterial2.GetName and data.newMaterial2 or Material(data.newMaterial2))
+	local oldMaterial = MR.CustomMaterials:StringToID(data.oldMaterial) or Material(data.oldMaterial)
+	local newMaterial = data.newMaterial and (MR.CustomMaterials:StringToID(data.newMaterial) or Material(data.newMaterial))
+	local newMaterial2 = data.newMaterial2 and (MR.CustomMaterials:StringToID(data.newMaterial2) or Material(data.newMaterial2))
 
 	-- Change the texture
 	if newMaterial and newMaterial:GetTexture("$basetexture") then

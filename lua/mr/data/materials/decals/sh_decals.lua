@@ -81,7 +81,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		data.rotation = (data.normal[3] < 0 and 0 or data.normal[3] == 1 and 180 or 0) + (data.rotation or 0)
 
 		MR.CL.Materials:Apply(data)
-		util.DecalEx(data.oldMaterial, data.ent, data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
+		util.DecalEx(MR.CustomMaterials:StringToID(data.oldMaterial), data.ent, data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
 
 		data = dataCopy
 	end

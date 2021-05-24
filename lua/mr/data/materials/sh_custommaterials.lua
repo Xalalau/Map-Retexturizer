@@ -42,8 +42,10 @@ end
 
 -- Generate the material unique ID (materialID)
 function CustomMaterials:GenerateID(data)
+    -- If data.newMaterial is a taken ID, generate a new one based on it
+    -- Note: I generate different IDs even for the same materials because this way we can hide them individually later
     if CustomMaterials:IsID(data.newMaterial) then
-        return CustomMaterials:IDToString(data.newMaterial)
+        return CustomMaterials:IDToString(data.newMaterial) .. "_"
     end
 
     local materialID = ""

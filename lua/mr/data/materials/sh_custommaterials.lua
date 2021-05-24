@@ -78,7 +78,7 @@ end
 
 -- Create a materialID with data and store it in data.newMaterial
 -- return the new data
-function CustomMaterials:Create(data, materialType)
+function CustomMaterials:Create(data, materialType, isDecal)
 	-- Generate ID
 	local materialID = CustomMaterials:GenerateID(data)
 
@@ -91,15 +91,22 @@ function CustomMaterials:Create(data, materialType)
             CustomMaterials:StoreID(materialID, materialID)
             data.newMaterial = materialID
         else
+            -- Create, initialize and store the custom material
             local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
+            local bakMaterial = data.oldMaterial
+
+            data.oldMaterial = customMaterial
+            MR.CL.Materials:Apply(data)
 
             CustomMaterials:StoreID(materialID, customMaterial)
 
-            local oldMaterial = data.oldMaterial
-            data.oldMaterial = customMaterial
-            MR.CL.Materials:Apply(data)
-            data.oldMaterial = oldMaterial
-            data.newMaterial = customMaterial
+            -- Adjust Data
+            if isDecal then
+                data.newMaterial = customMaterial
+            else
+                data.oldMaterial = bakMaterial
+                data.newMaterial = customMaterial
+            end
         end
     else
         data.newMaterial = material

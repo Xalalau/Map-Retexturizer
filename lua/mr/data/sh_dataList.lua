@@ -100,14 +100,14 @@ function DataList:Clean(list)
 end
 
 -- Remove all the disabled elements from all lists
-function DataList:CleanFullLists(listsTab)
-	for listName,list in pairs(listsTab) do
+function DataList:CleanAll(modificationTab)
+	for listName,list in pairs(modificationTab) do
 		if listName ~= "savingFormat" and #list > 0 then
 			MR.DataList:Clean(list)
 		end
 	end
 
-	return listsTab
+	return modificationTab
 end
 
 -- Remove the backups from a list
@@ -137,7 +137,7 @@ end
 -- Get the current modified materials lists
 -- clean = bool, removes disabled elements
 function DataList:GetCurrentModifications()
-	local currentMaterialsLists = {
+	local currentModificationTab = {
 		decals = MR.Decals:GetList(),
 		map = MR.Map:GetList(),
 		displacements = MR.Displacements:GetList(),
@@ -149,11 +149,11 @@ function DataList:GetCurrentModifications()
 	-- Check for changed models
 	for k,v in pairs(ents.GetAll()) do
 		if v.mr then
-			table.insert(currentMaterialsLists.models, MR.Models:GetData(v))
+			table.insert(currentModificationTab.models, MR.Models:GetData(v))
 		end
 	end
 
-	return currentMaterialsLists
+	return currentModificationTab
 end
 
 -- Generate a new modification table with the differences between two modification tables
@@ -206,15 +206,15 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 end
 
 -- Add the contents of one list to another
-function DataList:Merge(dest, source)
-	for k, v in pairs(source) do
+function DataList:Merge(destList, sourceList)
+	for k, v in pairs(sourceList) do
 		if isnumber(k) then -- Data
-			local _, index = DataList:GetElement(dest, v.oldMaterial)
-			DataList:InsertElement(dest, v, index)
+			local _, index = DataList:GetElement(destList, v.oldMaterial)
+			DataList:InsertElement(destList, v, index)
 		else -- List name
 			if k == "savingFormat" then continue end
 
-			DataList:Merge(dest[k], source[k])
+			DataList:Merge(destList[k], sourceList[k])
 		end
 	end
 end

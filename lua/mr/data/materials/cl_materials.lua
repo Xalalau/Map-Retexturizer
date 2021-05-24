@@ -166,16 +166,18 @@ end
 -- Apply the changes of a Data table
 function Materials:Apply(data)
 	-- Get the material to be modified
-	local oldMaterial = isstring(data.oldMaterial) and Material(data.oldMaterial) or data.oldMaterial
+	local oldMaterial = data.oldMaterial.GetName and data.oldMaterial or Material(data.oldMaterial)
+	local newMaterial = data.newMaterial and (data.newMaterial.GetName and data.newMaterial or Material(data.newMaterial))
+	local newMaterial2 = data.newMaterial2 and (data.newMaterial2.GetName and data.newMaterial2 or Material(data.newMaterial2))
 
 	-- Change the texture
-	if data.newMaterial and Material(data.newMaterial):GetTexture("$basetexture") then
-		oldMaterial:SetTexture("$basetexture", Material(data.newMaterial):GetTexture("$basetexture"))
+	if newMaterial and newMaterial:GetTexture("$basetexture") then
+		oldMaterial:SetTexture("$basetexture", newMaterial:GetTexture("$basetexture"))
 	end
 
 	-- Change the second texture (displacements only)
-	if data.newMaterial2 and Material(data.newMaterial2):GetTexture("$basetexture") then
-		oldMaterial:SetTexture("$basetexture2", Material(data.newMaterial2):GetTexture("$basetexture"))
+	if newMaterial2 and newMaterial2:GetTexture("$basetexture") then
+		oldMaterial:SetTexture("$basetexture2", newMaterial2:GetTexture("$basetexture"))
 	end
 
 	-- Change the alpha channel
@@ -218,6 +220,28 @@ function Materials:Apply(data)
 	end
 
 	--[[
+
+            local material = {
+                ["$basetexture"] = data.newMaterial,
+                ["$vertexalpha"] = 0,
+                ["$vertexcolor"] = 1,
+            }
+
+
+	-- Try to apply Bumpmap ()
+	local bumpmappath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
+	local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap") -- checks for a copied material active bumpmap
+
+	if file.Exists("materials/"..bumpmappath..".vtf", "GAME") then
+		if not model.list[bumpmappath] then
+			model.list[bumpmappath] = MR.CL.Materials:Create(bumpmappath)
+		end
+		newMaterial:SetTexture("$bumpmap", model.list[bumpmappath]:GetTexture("$basetexture"))
+	elseif bumpmap then
+		newMaterial:SetTexture("$bumpmap", bumpmap)
+	end
+
+
 	-- Old tests that I want to keep here
 	mapMaterial:SetTexture("$bumpmap", Material(data.newMaterial):GetTexture("$basetexture"))
 	mapMaterial:SetString("$nodiffusebumplighting", "1")

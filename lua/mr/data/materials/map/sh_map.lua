@@ -166,7 +166,7 @@ function Map:Set(ply, data, isBroadcasted, forcePosition)
 
 			-- Run the element backup
 			if CLIENT then
-				MR.CL.Map:Set(element.backup)
+				MR.CL.Materials:Apply(element.backup)
 			end
 
 			-- Change the state of the element to disabled
@@ -240,7 +240,7 @@ function Map:Set(ply, data, isBroadcasted, forcePosition)
 
 		-- Apply the new state to the map material
 		if CLIENT and MR.DataList:IsActive(data) then
-			MR.CL.Map:Set(data)
+			MR.CL.Materials:Apply(data)
 		end
 		
 		if SERVER and MR.DataList:IsActive(data) then
@@ -332,7 +332,7 @@ function Map:Remove(ply, oldMaterial, isBroadcasted)
 		if element then
 			if CLIENT then
 				-- Run the element backup
-				MR.CL.Map:Set(element.backup)
+				MR.CL.Materials:Apply(element.backup)
 
 				-- Change the state of the element to disabled
 				MR.DataList:DisableElement(element)

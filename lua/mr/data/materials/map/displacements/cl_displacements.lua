@@ -51,7 +51,7 @@ function Displacements:InitHack()
 		data.newMaterial = nil
 		data.newMaterial2 = nil
 
-		MR.CL.Map:Set(data)
+		MR.CL.Materials:Apply(data)
 	end
 
 	displacements.initHack = true

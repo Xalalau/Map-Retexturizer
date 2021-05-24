@@ -14,7 +14,6 @@ local map = {
 -- Networking
 util.AddNetworkString("Map:Set")
 util.AddNetworkString("Map:Remove")
-util.AddNetworkString("CL.Map:Set")
 util.AddNetworkString("SV.Map:RemoveAll")
 
 net.Receive("SV.Map:RemoveAll", function(_,ply)

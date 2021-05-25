@@ -63,10 +63,12 @@ function CustomMaterials:GenerateID(data, shareMaterials)
 				if v == data.newMaterial then
 					v = "-=+"..v.."-=+"
 				end
-			-- Round the numbers
+			-- Truncate numbers
 			elseif isnumber(v) then
-				v = math.Round(v)
-			end
+				v = math.Truncate(v, 2)
+            elseif isvector(v) then
+                v = math.Truncate(v.x) .. "-" .. math.Truncate(v.y) .. "-" .. math.Truncate(v.z)
+            end
 
 			-- Generating...
 			materialID = materialID..tostring(v)

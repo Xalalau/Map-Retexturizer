@@ -164,6 +164,8 @@ end
 
 -- Apply the changes of a Data table
 function Materials:Apply(data)
+	if not data then return end
+
 	-- Get the material to be modified
 	local oldMaterial = MR.CustomMaterials:StringToID(data.oldMaterial) or Material(data.oldMaterial)
 	local newMaterial = data.newMaterial and (MR.CustomMaterials:StringToID(data.newMaterial) or Material(data.newMaterial))

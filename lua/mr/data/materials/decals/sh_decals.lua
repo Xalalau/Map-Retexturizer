@@ -5,8 +5,8 @@
 local Decals = {}
 MR.Decals = Decals
 
--- ID = String, all the modifications
 local decals = {
+	-- "Data" table
 	list = {}
 }
 
@@ -53,7 +53,17 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		return false
 	end
 
+	local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
+
 	if SERVER then
+		local decalEditor = ents.Create("decal-editor")
+		decalEditor:SetPos(data.position)
+		decalEditor:SetAngles(data.normal:Angle() + Angle(90, 0, 0))
+		decalEditor:SetModelScale(scale)
+		decalEditor:Spawn()
+
+		data.ent = decalEditor:EntIndex()
+
 		-- Send to...
 		net.Start("Decals:Set")
 			net.WriteBool(isBroadcasted)
@@ -67,7 +77,20 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		else
 			net.Send(ply)
 		end
+
+		data.ent = decalEditor		
 	end
+
+	timer.Simple(0.3, function() -- Wait a bit so the client can initialize the entity
+		if CLIENT then
+			data.ent = ents.GetByIndex(data.ent)
+		end
+
+		-- Resize the collision model
+		if scale ~= 1 then
+			MR.Models:ResizePhysics(data.ent, scale)
+		end
+	end)
 
 	-- Create the custom material
 	MR.CustomMaterials:Create(data, "LightmappedGeneric", true, false)
@@ -81,7 +104,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		data.rotation = (data.normal[3] < 0 and 0 or data.normal[3] == 1 and 180 or 0) + (data.rotation or 0)
 
 		MR.CL.Materials:Apply(data)
-		util.DecalEx(MR.CustomMaterials:StringToID(data.oldMaterial), data.ent, data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
+		util.DecalEx(MR.CustomMaterials:StringToID(data.oldMaterial), game.GetWorld(), data.position, data.normal, nil, 2 * (dataCopy.scaleX or 1), 2 * (dataCopy.scaleY or 1)) -- Note: the scale is multiplied by 32
 
 		data = dataCopy
 	end
@@ -109,14 +132,13 @@ end
 function Decals:RemoveAll()
 	table.Empty(MR.Decals:GetList())
 
+	if SERVER then
+		for _, ent in ipairs(ents.FindByClass("decal-editor")) do
+			ent:Remove()
+		end
+	end
+
 	if CLIENT then
 		RunConsoleCommand("r_cleardecals")
 	end
 end
-
---[[
-	2021/05/21
-	Note: I cannot access decals individually so I can't remove them one by one. Also, trying
-	to manipulate the decal material after it's applied doesn't work. I need to overcome this
-	in order to support decals like a map submodule with full undo, remove and copy support.
-]]

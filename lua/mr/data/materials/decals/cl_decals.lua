@@ -5,12 +5,39 @@
 local Decals = {}
 MR.CL.Decals = Decals
 
+local decals = {
+	-- Used to control the visibility of the last decal-editor seen
+	lastDecalEditor
+}
+
+function Decals:GetLastDecalEditor()
+	return decals.lastDecalEditor
+end
+
+function Decals:SetLastDecalEditor(value)
+	decals.lastDecalEditor = value
+end
+
 -- Decal rendering hook
 hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 	local ply = LocalPlayer()
 
 	if ply and MR.Ply:GetUsingTheTool(ply) and MR.Ply:GetDecalMode(ply) then
-		Decals:Preview()
+		local tr = ply:GetEyeTrace()
+
+		if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+			if not Decals:GetLastDecalEditor() then
+				Decals:SetLastDecalEditor(tr.Entity)
+				tr.Entity.inFocus = true
+			end
+		else
+			if Decals:GetLastDecalEditor() then
+				Decals:GetLastDecalEditor().inFocus = false
+				Decals:SetLastDecalEditor()
+			end
+
+			Decals:Preview()
+		end
 	end
 end)
 

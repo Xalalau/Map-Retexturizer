@@ -289,7 +289,7 @@ function TOOL:Reload(tr)
 	if data then
 		if SERVER then
 			-- Decal
-			if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+			if tr.Entity and IsValid(tr.Entity) and tr.Entity:GetClass() == "decal-editor" then
 				MR.SV.Decals:Remove(ply, data.oldMaterial, true)
 			-- Skybox
 			elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then

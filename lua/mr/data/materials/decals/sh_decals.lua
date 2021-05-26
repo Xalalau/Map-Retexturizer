@@ -123,7 +123,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 	end
 
 	timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
-		if CLIENT then
+		if CLIENT and data.ent then
 			data.ent = ents.GetByIndex(data.ent) -- Get the entity
 		end
 
@@ -165,7 +165,9 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		MR.DataList:InsertElement(MR.Decals:GetList(), data, forcePosition)
 
 		timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
-			data.ent.mr = data
+			if data.ent and IsValid(data.ent) and data.ent:IsValid() then
+				data.ent.mr = data
+			end
 		end)
 	end
 

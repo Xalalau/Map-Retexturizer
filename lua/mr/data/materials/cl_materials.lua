@@ -221,20 +221,20 @@ function Materials:Apply(data)
 	end
 
 	--[[
+	-- Old tests that I want to keep here
 
-            local material = {
-                ["$basetexture"] = data.newMaterial,
-                ["$vertexalpha"] = 0,
-                ["$vertexcolor"] = 1,
-            }
-
+	local material = {
+		["$basetexture"] = "",
+		["$vertexalpha"] = 0,
+		["$vertexcolor"] = 1,
+	}
 
 	-- Try to apply Bumpmap ()
-	local bumpmappath = data.newMaterial .. "_normal" -- checks for a file placed with the model (named like mymaterial_normal.vtf)
-	local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap") -- checks for a copied material active bumpmap
+	local bumpmappath = data.newMaterial .. "_normal"
+	local bumpmap = Material(data.newMaterial):GetTexture("$bumpmap")
 
 	if file.Exists("materials/"..bumpmappath..".vtf", "GAME") then
-		if not model.list[bumpmappath] then
+		if not model.list[bumpmappath] then -- Note: it's the old customMaterial system. Update to test.
 			model.list[bumpmappath] = MR.CL.Materials:Create(bumpmappath)
 		end
 		newMaterial:SetTexture("$bumpmap", model.list[bumpmappath]:GetTexture("$basetexture"))
@@ -242,8 +242,6 @@ function Materials:Apply(data)
 		newMaterial:SetTexture("$bumpmap", bumpmap)
 	end
 
-
-	-- Old tests that I want to keep here
 	mapMaterial:SetTexture("$bumpmap", Material(data.newMaterial):GetTexture("$basetexture"))
 	mapMaterial:SetString("$nodiffusebumplighting", "1")
 	mapMaterial:SetString("$normalmapalphaenvmapmask", "1")

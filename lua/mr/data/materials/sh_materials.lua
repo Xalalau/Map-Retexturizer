@@ -141,6 +141,12 @@ function Materials:SetProgressiveCleanupEndCallback(func, ...)
 end
 
 -- Check if a given material path is a displacement
+-- Note: this is not a general purpose function, it works only on this tool
+function Materials:IsDecal(material)
+	return MR.DataList:GetElement(MR.Decals:GetList(), material) or false
+end
+
+-- Check if a given material path is a displacement
 function Materials:IsDisplacement(material)
 	if material == "**displacement**" then
 		return true

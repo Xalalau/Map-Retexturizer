@@ -52,7 +52,7 @@ end
 
 -- Get an element and its index
 function DataList:GetElement(list, oldMaterial)
-	if not oldMaterial then return end
+	if not list or not oldMaterial then return end
 
 	for k,v in pairs(list) do
 		-- Note: GMod supports both Windows and Linux, so it's case-insensitive

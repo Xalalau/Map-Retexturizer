@@ -123,14 +123,18 @@ end
 	end
 
 	-- Get data tables with the future and current materials
-	local oldData = isDecal and MR.DataList:CleanIDs(MR.Materials:GetData(tr)) or MR.Materials:GetData(tr)
+	local oldData = MR.Materials:GetData(tr)
+	local foundOldData = oldData and true
 
 	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
 		isDecal = true
 	end
 
+	if isDecal then
+		MR.DataList:CleanIDs({ oldData })
+	end
+
 	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and { pos = tr.HitPos, normal = tr.HitNormal }, true)
-	local foundOldData = oldData and true
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -167,11 +171,22 @@ end
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
+	-- Adjustment for decals
+	if isDecal and foundOldData then
+		newData.position = oldData.position
+		newData.normal = oldData.normal
+	end
+
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
 		return false
 	end
-
+--[[
+	PrintTable(newData)
+	print()
+	PrintTable(oldData)
+	print("---")
+]]
 	-- Adjustment for decals
 	if isDecal and foundOldData then
 		newData.backup = true
@@ -218,6 +233,12 @@ function TOOL:RightClick(tr)
 	local oldData = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
 
+	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
+		MR.DataList:CleanIDs({ oldData })
+		oldData.position = nil
+		oldData.normal = nil
+	end
+	
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)

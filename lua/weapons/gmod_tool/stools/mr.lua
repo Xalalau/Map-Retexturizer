@@ -125,7 +125,7 @@ end
 	-- Get data tables with the future and current materials
 	local oldData = isDecal and MR.DataList:CleanIDs(MR.Materials:GetData(tr)) or MR.Materials:GetData(tr)
 
-	if MR.Materials:IsDecal(oldData.oldMaterial) then
+	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
 		isDecal = true
 	end
 

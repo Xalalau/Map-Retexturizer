@@ -153,7 +153,7 @@ function Panels:SetGeneral(parent, frameType, info)
 	--------------------------
 	local decalsMode = vgui.Create("DCheckBoxLabel", panel)
 		decalsMode:SetPos(decalsModeInfo.x, decalsModeInfo.y)
-		decalsMode:SetText("Start decals mode")
+		decalsMode:SetText("Decals Mode 2.0")
 		decalsMode:SetTextColor(Color(0, 0, 0, 255))
 		decalsMode:SetValue(false)
 		decalsMode.OnChange = function(self, val)

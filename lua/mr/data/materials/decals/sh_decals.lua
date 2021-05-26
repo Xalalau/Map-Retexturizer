@@ -14,7 +14,7 @@ local decals = {
 net.Receive("Decals:Set", function()
 	if SERVER then return end
 
-	Decals:Set(LocalPlayer(), net.ReadBool(), net.ReadTable(), net.ReadTable(), net.ReadInt(12))
+	Decals:Set(LocalPlayer(), net.ReadTable(), net.ReadBool(), net.ReadInt(12))
 end)
 
 net.Receive("Decals:RemoveAll", function(_, ply)
@@ -48,18 +48,39 @@ function Decals:GetCurrent(tr)
 end
 
 -- Apply decal materials
-function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
+function Decals:Set(ply, data, isBroadcasted, forcePosition)
 	if forcePosition == 0 then forcePosition = nil end
 
-	-- Get the basic properties
-	local data = duplicatorData or MR.Data:Create(ply, nil, { pos = tr.HitPos, normal = tr.HitNormal })
-
 	if SERVER then
-		-- "Hack": turn it into a removal if newMaterial is nothing
+		-- Very old saves didn’t define newMaterial and I don’t remember the version that it happened anymore
+		-- Also at some point I used empty fields to convert an addition to removal...
+		-- This check is here for compatibility
 		if data.newMaterial == "" then
-			Decals:RemoveAll(ply, isBroadcasted)
+			data.newMaterial = data.oldMaterial
+		end
 
-			return false
+		-- Change an applyied decal
+		if data.backup then
+			local oldData, index = MR.DataList:GetElement(Decals:GetList(), data.oldMaterial)
+
+			data.backup = nil
+			data.position = oldData.position
+			data.normal = oldData.normal
+
+			Decals:GetList()[index] = data
+
+			local newTable = {
+				decals = table.Copy(MR.Decals:GetList()),
+				savingFormat = MR.Save:GetCurrentVersion()
+			}
+
+			MR.DataList:CleanAll(newTable)
+
+			MR.Decals:RemoveAll(ply, isBroadcasted)
+
+			MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
+
+			return
 		end
 	end
 
@@ -85,9 +106,8 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 
 		-- Send to...
 		net.Start("Decals:Set")
-			net.WriteBool(isBroadcasted)
-			net.WriteTable(tr or {})
 			net.WriteTable(data)
+			net.WriteBool(isBroadcasted)
 			net.WriteInt(forcePosition or 0, 12)
 		-- all players
 		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then

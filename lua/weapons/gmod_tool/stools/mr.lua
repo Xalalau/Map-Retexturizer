@@ -93,6 +93,11 @@ function TOOL_BasicChecks(ply, tr)
 		return false
 	end
 
+	-- Don't interact with the skybox while in the decal mode
+	if MR.Ply:GetDecalMode(ply) and MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+		return false
+	end
+
 	--Check if we can interact with the skybox
 	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
@@ -117,23 +122,14 @@ end
 		return false
 	end
 
-	-- If we are dealing with decals, apply it
-	if isDecal then
-		-- Don't interact with the skybox
-		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-			return false
-		end
+	-- Get data tables with the future and current materials
+	local oldData = isDecal and MR.DataList:CleanIDs(MR.Materials:GetData(tr)) or MR.Materials:GetData(tr)
 
-		if SERVER then
-			MR.Decals:Set(ply, true, tr)
-		end
-
-		return true
+	if MR.Materials:IsDecal(oldData.oldMaterial) then
+		isDecal = true
 	end
 
-	-- Get data tables with the future and current materials
-	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
-	local oldData = MR.Materials:GetData(tr)
+	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and { pos = tr.HitPos, normal = tr.HitNormal }, true)
 	local foundOldData = oldData and true
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
@@ -176,6 +172,12 @@ end
 		return false
 	end
 
+	-- Adjustment for decals
+	if isDecal and foundOldData then
+		newData.backup = true
+		newData.oldMaterial = oldData.oldMaterial
+	end
+
 	if CLIENT then
 		return true
 	end
@@ -185,8 +187,11 @@ end
 
 	-- Set the material
 
+	-- Decal
+	if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+		MR.Decals:Set(ply, newData, true)
 	-- Skybox
-	if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 		MR.SV.Skybox:Set(ply, newData, true)
 	-- model
 	elseif IsValid(tr.Entity) then

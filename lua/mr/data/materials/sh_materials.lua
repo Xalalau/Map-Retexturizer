@@ -140,10 +140,11 @@ function Materials:SetProgressiveCleanupEndCallback(func, ...)
 	materials.progressiveCleanup.endCallback = { func = func, args = { ... } }
 end
 
--- Check if a given material path is a displacement
+-- Check if a given material path or traced entity is a decal
 -- Note: this is not a general purpose function, it works only on this tool
-function Materials:IsDecal(material)
-	return MR.DataList:GetElement(MR.Decals:GetList(), material) or false
+function Materials:IsDecal(material, tr)
+	return tr and tr.Entity and tr.Entity:GetClass() == "decal-editor" and tr.Entity.mr or
+		   MR.DataList:GetElement(MR.Decals:GetList(), material) or false
 end
 
 -- Check if a given material path is a displacement

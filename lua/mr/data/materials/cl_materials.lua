@@ -131,7 +131,7 @@ end
 -- use newData to force a specific material preview
 function Materials:SetPreview(newData)
 	local ply = LocalPlayer()
-	local isDecal = MR.Ply:GetDecalMode(ply)
+	local isDecal = MR.Ply:GetDecalMode(ply) or newData and MR.Materials:IsDecal(newData.oldMaterial, ply:GetEyeTrace())
 	local oldData = MR.Data:CreateFromMaterial(Materials:GetPreviewName(), nil, nil, isDecal, true)
 	newData = newData or MR.Data:Create(ply, { oldMaterial = Materials:GetPreviewName() }, isDecal and {}, true)
 
@@ -168,6 +168,9 @@ function Materials:Apply(data)
 
 	-- Get the material to be modified
 	local oldMaterial = MR.CustomMaterials:StringToID(data.oldMaterial) or Material(data.oldMaterial)
+
+	if not oldMaterial then return end
+
 	local newMaterial = data.newMaterial and (MR.CustomMaterials:StringToID(data.newMaterial) or Material(data.newMaterial))
 	local newMaterial2 = data.newMaterial2 and (MR.CustomMaterials:StringToID(data.newMaterial2) or Material(data.newMaterial2))
 

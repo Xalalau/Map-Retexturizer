@@ -317,7 +317,9 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
 		if not MR.Duplicator:IsStopping() and position <= finalPosition then
-			Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
+			timer.Simple(0, function() -- Break recursion stack
+				Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
+			end)
 		-- There are no more entries
 		else
 			Duplicator:Finish(ply, isBroadcasted)

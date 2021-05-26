@@ -162,7 +162,7 @@ function Materials:RemoveAll(ply)
 	-- Cleanup
 	MR.SV.Models:RemoveAll(ply)
 	MR.SV.Map:RemoveAll(ply)
-	MR.SV.Decals:RemoveAll(ply, true)
+	MR.Decals:RemoveAll(ply, true)
 	MR.SV.Displacements:RemoveAll(ply)
 	MR.SV.Skybox:Remove(ply, true)
 

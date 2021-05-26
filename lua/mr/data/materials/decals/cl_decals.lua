@@ -38,6 +38,11 @@ hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 
 			Decals:Preview()
 		end
+	else
+		if Decals:GetLastDecalEditor() then
+			Decals:GetLastDecalEditor().inFocus = false
+			Decals:SetLastDecalEditor()
+		end
 	end
 end)
 

@@ -120,7 +120,7 @@ end
 -- Create a material if it doesn't exist
 -- NOTE: change the created material using the returned variable, don't try to get it using Material(name or path)!!! 
 function Materials:Create(name, matType, path)
-	if Material(name):IsError() then
+	if not Material(name) or Material(name):IsError() then
 		return CreateMaterial(name, matType or "LightmappedGeneric", { ["$basetexture"] = name or path })
 	else
 		return Material(name)

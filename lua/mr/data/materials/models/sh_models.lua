@@ -61,7 +61,7 @@ function Models:GetData(ent)
 	local oldData
 
 	-- Model
-	if IsValid(ent) and not ent:IsPlayer() then
+	if IsValid(ent) and not ent:IsPlayer() and ent.mr and not ent.mr.normal then
 		oldData = table.Copy(ent.mr)
 
 		-- Revert the newName if there is data

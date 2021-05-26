@@ -396,7 +396,7 @@ function Duplicator:RemoveMaterials(ply, differencesTable)
 					net.WriteBool(false)
 				net.Send(ply)
 			elseif sectionName == "decals" then
-				MR.SV.Decals:RemoveAll(ply, false)
+				MR.Decals:RemoveAll(ply, false)
 			end
 		end
 	end

@@ -22,7 +22,7 @@ end
 hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 	local ply = LocalPlayer()
 
-	if ply and MR.Ply:GetUsingTheTool(ply) and MR.Ply:GetDecalMode(ply) then
+	if ply and MR.Ply:GetUsingTheTool(ply) then
 		local tr = ply:GetEyeTrace()
 
 		if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
@@ -36,7 +36,9 @@ hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 				Decals:SetLastDecalEditor()
 			end
 
-			Decals:Preview()
+			if MR.Ply:GetDecalMode(ply) then
+				Decals:Preview()
+			end
 		end
 	else
 		if Decals:GetLastDecalEditor() then

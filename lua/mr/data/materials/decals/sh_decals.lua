@@ -100,7 +100,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		data.ent = decalEditor		
 	end
 
-	timer.Simple(0.3, function() -- Wait a bit so the client can initialize the entity
+	timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
 		if CLIENT then
 			data.ent = ents.GetByIndex(data.ent)
 		end
@@ -142,7 +142,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 		-- Index the Data
 		MR.DataList:InsertElement(MR.Decals:GetList(), data, forcePosition)
 
-		timer.Simple(0.3, function() -- Wait a bit so the client can initialize the entity
+		timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
 			data.ent.mr = data
 		end)
 	end

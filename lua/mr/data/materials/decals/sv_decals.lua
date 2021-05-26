@@ -18,3 +18,19 @@ local decals = {
 function Decals:GetDupName()
 	return decals.dupName
 end
+
+-- Remove a decal
+function Decals:Remove(ply, oldMaterial, isBroadcasted)
+	MR.Map:Remove(ply, oldMaterial, isBroadcasted)
+
+	local newTable = {
+		decals = table.Copy(MR.Decals:GetList()),
+		savingFormat = MR.Save:GetCurrentVersion()
+	}
+
+	MR.DataList:CleanAll(newTable)
+
+	MR.Decals:RemoveAll(ply, isBroadcasted)
+
+	MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
+end

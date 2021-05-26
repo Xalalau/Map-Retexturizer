@@ -273,21 +273,21 @@ end
 function TOOL:Reload(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 
-	-- Do nothing while in decals mode
-	if MR.Ply:GetDecalMode(ply) then
-		return false
-	end
-
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
 
 	-- Normal materials cleanup
-	if MR.Materials:GetData(tr) then
+	local data = MR.Materials:GetData(tr)
+
+	if data then
 		if SERVER then
+			-- Decal
+			if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+				MR.SV.Decals:Remove(ply, data.oldMaterial, true)
 			-- Skybox
-			if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+			elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 				MR.SV.Skybox:Remove(ply, true)
 			-- model
 			elseif IsValid(tr.Entity) then

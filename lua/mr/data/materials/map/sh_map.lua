@@ -312,6 +312,12 @@ function Map:Remove(ply, oldMaterial, isBroadcasted)
 		if SERVER then
 			selected.dupName = MR.SV.Skybox:GetDupName()
 		end
+	elseif MR.Materials:IsDecal(oldMaterial) then
+		selected.type = "Decals"
+		selected.list = MR.Decals:GetList()
+		if SERVER then
+			selected.dupName = MR.SV.Decals:GetDupName()
+		end
 	else
 		selected.type = "Map"
 		selected.list = Map:GetList()

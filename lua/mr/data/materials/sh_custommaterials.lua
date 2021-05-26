@@ -33,6 +33,8 @@ end
 
 -- Get the base material path from a materialID
 function CustomMaterials:RevertID(materialID)
+    if not materialID or not isstring(materialID) then return end
+
     local parts = string.Explode("-=+", CustomMaterials:IDToString(materialID))
 	local materialPath
 

@@ -51,37 +51,11 @@ end
 function Decals:Set(ply, data, isBroadcasted, forcePosition)
 	if forcePosition == 0 then forcePosition = nil end
 
-	if SERVER then
-		-- Very old saves didn’t define newMaterial and I don’t remember the version that it happened anymore
-		-- Also at some point I used empty fields to convert an addition to removal...
-		-- This check is here for compatibility
-		if data.newMaterial == "" then
-			data.newMaterial = data.oldMaterial
-		end
-
-		-- Change an applyied decal
-		if data.backup then
-			local oldData, index = MR.DataList:GetElement(Decals:GetList(), data.oldMaterial)
-
-			data.backup = nil
-			data.position = oldData.position
-			data.normal = oldData.normal
-
-			Decals:GetList()[index] = data
-
-			local newTable = {
-				decals = table.Copy(MR.Decals:GetList()),
-				savingFormat = MR.Save:GetCurrentVersion()
-			}
-
-			MR.DataList:CleanAll(newTable)
-
-			MR.Decals:RemoveAll(ply, isBroadcasted)
-
-			MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
-
-			return
-		end
+	-- Very old saves didn’t define newMaterial and I don’t remember the version that it happened anymore
+	-- Also at some point I used empty fields to convert an addition to removal...
+	-- This check is here for compatibility
+	if SERVER and data.newMaterial == "" then
+		data.newMaterial = data.oldMaterial
 	end
 
 	-- General first steps
@@ -91,6 +65,30 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, check, data, "Decals") then
 		return false
+	end
+
+	-- Change an applyied decal
+	if SERVER and data.backup then
+		local oldData, index = MR.DataList:GetElement(Decals:GetList(), data.oldMaterial)
+
+		data.backup = nil
+		data.position = oldData.position
+		data.normal = oldData.normal
+
+		Decals:GetList()[index] = data
+
+		local newTable = {
+			decals = table.Copy(MR.Decals:GetList()),
+			savingFormat = MR.Save:GetCurrentVersion()
+		}
+
+		MR.DataList:CleanAll(newTable)
+
+		MR.Decals:RemoveAll(ply, isBroadcasted)
+
+		MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
+
+		return
 	end
 
 	local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))

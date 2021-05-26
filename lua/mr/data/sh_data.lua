@@ -93,13 +93,13 @@ function Data:RemoveDefaultValuesOld(data)
 end
 
 -- Reinsert unused fields
-function Data:ReinsertDefaultValues(data)
+function Data:ReinsertDefaultValues(data, isDecal)
 	if not data.offsetX then data.offsetX = MR.CVars:GetDefaultOffsetX(); end
 	if not data.offsetY then data.offsetY = MR.CVars:GetDefaultOffsetY(); end
 	if not data.scaleX then data.scaleX = MR.CVars:GetDefaultScaleX(); end
 	if not data.scaleY then data.scaleY = MR.CVars:GetDefaultScaleY(); end
 	if not data.rotation then data.rotation = MR.CVars:GetDefaultRotation(); end
-	if not data.alpha then data.alpha = MR.CVars:GetDefaultAlpha(); end
+	if not data.alpha and not isDecal then data.alpha = MR.CVars:GetDefaultAlpha(); end
 	if not data.detail then data.detail = MR.CVars:GetDefaultDetail(); end
 end
 

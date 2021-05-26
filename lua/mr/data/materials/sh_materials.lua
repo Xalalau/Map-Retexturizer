@@ -335,7 +335,9 @@ end
 
 -- Get the current data
 function Materials:GetData(tr)
-	return MR.Models:GetData(tr.Entity) or MR.Map:GetData(tr)
+	local res1, res2 = MR.Models:GetData(tr.Entity)
+	if not res1 then res1, res2 = MR.Map:GetData(tr) end
+	return res1, res2
 end
 
 -- Get the details list

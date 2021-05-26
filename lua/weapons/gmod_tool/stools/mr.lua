@@ -123,15 +123,11 @@ end
 	end
 
 	-- Get data tables with the future and current materials
-	local oldData = MR.Materials:GetData(tr)
+	local oldData, index = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
 
 	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
 		isDecal = true
-	end
-
-	if isDecal then
-		MR.DataList:CleanIDs({ oldData })
 	end
 
 	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and { pos = tr.HitPos, normal = tr.HitNormal }, true)
@@ -142,7 +138,7 @@ end
 		oldData.newMaterial = oldData.oldMaterial 
 	-- Else fill up the empty fields
 	else
-		MR.Data:ReinsertDefaultValues(oldData)
+		MR.Data:ReinsertDefaultValues(oldData, isDecal)
 	end
 
 	-- Don't apply bad materials
@@ -165,36 +161,32 @@ end
 		end
 	end
 
+	-- Adjustment for decals
+	if isDecal and foundOldData then
+		newData.oldMaterial = oldData.oldMaterial
+		newData.position = oldData.position
+		newData.normal = oldData.normal
+	end
+
 	-- Adjustment for skybox materials
 	newData.oldMaterial = MR.Skybox:ValidatePath(newData.oldMaterial)
 	newData.newMaterial = MR.Skybox:ValidatePath(newData.newMaterial)
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
-	-- Adjustment for decals
-	if isDecal and foundOldData then
-		newData.position = oldData.position
-		newData.normal = oldData.normal
-	end
-
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
 		return false
 	end
---[[
-	PrintTable(newData)
-	print()
-	PrintTable(oldData)
-	print("---")
-]]
-	-- Adjustment for decals
-	if isDecal and foundOldData then
-		newData.backup = true
-		newData.oldMaterial = oldData.oldMaterial
-	end
 
 	if CLIENT then
 		return true
+	end
+
+	-- Adjustment for decals
+	if isDecal and foundOldData then
+		newData.backup = index
+		MR.DataList:CleanIDs({ newData })
 	end
 
 	-- Remove unused fields
@@ -222,6 +214,7 @@ end
 -- Copy materials
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
+	local isDecal = false
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
@@ -229,16 +222,17 @@ function TOOL:RightClick(tr)
 	end
 
 	-- Get data tables with the future and current materials
-	local newData = MR.Data:Create(ply, { tr = tr }, nil, true)
 	local oldData = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
 
 	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
-		MR.DataList:CleanIDs({ oldData })
+		isDecal = true
 		oldData.position = nil
 		oldData.normal = nil
 	end
 	
+	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and {}, true)
+
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
 		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
@@ -250,7 +244,7 @@ function TOOL:RightClick(tr)
 		oldData.newMaterial = oldData.oldMaterial 
 	-- Else fill up the empty fields
 	else
-		MR.Data:ReinsertDefaultValues(oldData)
+		MR.Data:ReinsertDefaultValues(oldData, isDecal)
 	end
 
 	-- Get the correct detail for the oldData in the server

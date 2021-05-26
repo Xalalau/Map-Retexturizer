@@ -80,14 +80,16 @@ end
 function Map:GetData(tr)
 	local material = MR.Skybox:ValidatePath(MR.Materials:GetOriginal(tr))
 
-	local dataList = MR.Materials:IsDecal(material) and MR.Decals:GetList() or
+	local dataList = MR.Materials:IsDecal(material, tr) and MR.Decals:GetList() or
 					 MR.Materials:IsSkybox(material) and MR.Skybox:GetList() or
 					 MR.Materials:IsDisplacement(material) and MR.Displacements:GetList() or
 					 MR.Map:GetList()
 
-	local element = dataList and MR.DataList:GetElement(dataList, material)
+	local element, index = MR.DataList:GetElement(dataList, material)
 
-	return element and table.Copy(element)
+	if element then element = table.Copy(element) end
+
+	return element, index
 end
 
 -- Set map material

@@ -69,16 +69,11 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	-- Change an applyied decal
 	if SERVER and data.backup then
-		-- Get the current dData
-		local oldData, index = MR.DataList:GetElement(Decals:GetList(), data.oldMaterial)
+		-- Modify the decal list
+		Decals:GetList()[data.backup] = data
 
 		-- Adjust the new Data
 		data.backup = nil
-		data.position = oldData.position
-		data.normal = oldData.normal
-
-		-- Modify the decal list
-		Decals:GetList()[index] = data
 
 		-- Create a new modifications list and clean it
 		local newTable = {

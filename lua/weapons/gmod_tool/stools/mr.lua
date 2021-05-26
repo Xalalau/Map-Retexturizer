@@ -188,7 +188,7 @@ end
 	-- Set the material
 
 	-- Decal
-	if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+	if isDecal then
 		MR.Decals:Set(ply, newData, true)
 	-- Skybox
 	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then

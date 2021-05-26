@@ -69,14 +69,18 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	-- Change an applyied decal
 	if SERVER and data.backup then
+		-- Get the current dData
 		local oldData, index = MR.DataList:GetElement(Decals:GetList(), data.oldMaterial)
 
+		-- Adjust the new Data
 		data.backup = nil
 		data.position = oldData.position
 		data.normal = oldData.normal
 
+		-- Modify the decal list
 		Decals:GetList()[index] = data
 
+		-- Create a new modifications list and clean it
 		local newTable = {
 			decals = table.Copy(MR.Decals:GetList()),
 			savingFormat = MR.Save:GetCurrentVersion()
@@ -84,23 +88,28 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 		MR.DataList:CleanAll(newTable)
 
+		-- Remove current decals from the map
 		MR.Decals:RemoveAll(ply, isBroadcasted)
 
+		-- Apply the new decals table
 		MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
 
 		return
 	end
 
+	-- Scale to keep decal-editor proportional to the material
+	-- 1.35 ratio was calculated manually and serves only for the used model
 	local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
 
 	if SERVER then
+		-- Create our decal controller
 		local decalEditor = ents.Create("decal-editor")
 		decalEditor:SetPos(data.position)
 		decalEditor:SetAngles(data.normal:Angle() + Angle(90, 0, 0))
 		decalEditor:SetModelScale(scale)
 		decalEditor:Spawn()
 
-		data.ent = decalEditor:EntIndex()
+		data.ent = decalEditor:EntIndex() -- let's send the index to the player because the entity is not initialized immediately
 
 		-- Send to...
 		net.Start("Decals:Set")
@@ -120,7 +129,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
 		if CLIENT then
-			data.ent = ents.GetByIndex(data.ent)
+			data.ent = ents.GetByIndex(data.ent) -- Get the entity
 		end
 
 		-- Resize the collision model
@@ -146,7 +155,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		data = dataCopy
 	end
 
-	-- Truncate some Data fields
+	-- Truncate some Data fields (it eliminates position decimals that differ on the server and on the client)
 	data.position.x = math.Truncate(data.position.x)
 	data.position.y = math.Truncate(data.position.y)
 	data.position.z = math.Truncate(data.position.z)

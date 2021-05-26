@@ -26,6 +26,20 @@ function Decals:GetList()
 	return decals.list
 end
 
+-- Get the original material full path
+function Decals:GetOriginal(tr)
+	if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+		return MR.CustomMaterials:RevertID(tr.Entity.mr.oldMaterial)
+	end
+
+	return nil
+end
+
+-- Get the current material full path
+function Decals:GetCurrent(tr)
+	return Decals:GetOriginal(tr)
+end
+
 -- Apply decal materials
 function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 	if forcePosition == 0 then forcePosition = nil end
@@ -120,6 +134,10 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 
 		-- Index the Data
 		MR.DataList:InsertElement(MR.Decals:GetList(), data, forcePosition)
+
+		timer.Simple(0.3, function() -- Wait a bit so the client can initialize the entity
+			data.ent.mr = data
+		end)
 	end
 
 	-- General final steps

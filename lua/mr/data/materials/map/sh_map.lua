@@ -80,7 +80,8 @@ end
 function Map:GetData(tr)
 	local material = MR.Skybox:ValidatePath(MR.Materials:GetOriginal(tr))
 
-	local dataList = MR.Materials:IsSkybox(material) and MR.Skybox:GetList() or
+	local dataList = MR.Materials:IsDecal(material) and MR.Decals:GetList() or
+					 MR.Materials:IsSkybox(material) and MR.Skybox:GetList() or
 					 MR.Materials:IsDisplacement(material) and MR.Displacements:GetList() or
 					 MR.Map:GetList()
 

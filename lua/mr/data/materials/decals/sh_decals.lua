@@ -35,8 +35,8 @@ end
 
 -- Get the original material full path
 function Decals:GetOriginal(tr)
-	if tr.Entity and tr.Entity:GetClass() == "decal-editor" and tr.Entity.mr then
-		return MR.CustomMaterials:RevertID(tr.Entity.mr.oldMaterial)
+	if MR.Materials:IsDecal(nil, tr) then
+		return tr.Entity.mr.oldMaterial
 	end
 
 	return nil
@@ -44,7 +44,7 @@ end
 
 -- Get the current material full path
 function Decals:GetCurrent(tr)
-	return Decals:GetOriginal(tr)
+	return MR.CustomMaterials:RevertID(Decals:GetOriginal(tr))
 end
 
 -- Apply decal materials

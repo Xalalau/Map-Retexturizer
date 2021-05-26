@@ -115,7 +115,7 @@ end
 -- Apply materials
  function TOOL:LeftClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
-	local isDecal = MR.Ply:GetDecalMode(ply)
+	local isDecalMode = MR.Ply:GetDecalMode(ply)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
@@ -125,12 +125,13 @@ end
 	-- Get data tables with the future and current materials
 	local oldData, index = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
+	local isOldDataDecal
 
 	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
-		isDecal = true
+		isOldDataDecal = true
 	end
 
-	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and { pos = tr.HitPos, normal = tr.HitNormal }, true)
+	local newData = MR.Data:Create(ply, { tr = tr }, (isDecalMode or isOldDataDecal) and { pos = tr.HitPos, normal = tr.HitNormal }, true)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
@@ -138,7 +139,7 @@ end
 		oldData.newMaterial = oldData.oldMaterial 
 	-- Else fill up the empty fields
 	else
-		MR.Data:ReinsertDefaultValues(oldData, isDecal)
+		MR.Data:ReinsertDefaultValues(oldData, isOldDataDecal)
 	end
 
 	-- Don't apply bad materials
@@ -162,7 +163,7 @@ end
 	end
 
 	-- Adjustment for decals
-	if isDecal and foundOldData then
+	if isOldDataDecal then
 		newData.oldMaterial = oldData.oldMaterial
 		newData.position = oldData.position
 		newData.normal = oldData.normal
@@ -184,7 +185,7 @@ end
 	end
 
 	-- Adjustment for decals
-	if isDecal and foundOldData then
+	if isOldDataDecal then
 		newData.backup = index
 		MR.DataList:CleanIDs({ newData })
 	end
@@ -195,7 +196,7 @@ end
 	-- Set the material
 
 	-- Decal
-	if isDecal then
+	if isDecalMode then
 		MR.Decals:Set(ply, newData, true)
 	-- Skybox
 	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then

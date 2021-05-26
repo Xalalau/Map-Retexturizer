@@ -74,7 +74,7 @@ function Panels:SetCleanup(parent, frameType, info)
 		cleanBox2:SetValue(true)
 
 	local cleanBox3 = vgui.Create("DCheckBoxLabel", panel)
-		options[3] = { cleanBox3, "SV.Decals:RemoveAll" }
+		options[3] = { cleanBox3, "Decals:RemoveAll" }
 		cleanBox3:SetPos(cleanBox3Info.x, cleanBox3Info.y)
 		cleanBox3:SetText("Decals")
 		cleanBox3:SetTextColor(Color(0, 0, 0, 255))
@@ -106,7 +106,7 @@ function Panels:SetCleanup(parent, frameType, info)
 			for k,v in pairs(options) do
 				if v[1]:GetChecked() then
 					net.Start(v[2])
-					if v[2] == "SV.Skybox:Remove" or v[2] == "SV.Decals:RemoveAll" then
+					if v[2] == "SV.Skybox:Remove" or v[2] == "Decals:RemoveAll" then
 						net.WriteBool(true)
 					end
 					net.SendToServer()

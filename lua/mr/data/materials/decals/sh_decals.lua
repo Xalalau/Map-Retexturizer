@@ -18,9 +18,7 @@ net.Receive("Decals:Set", function()
 end)
 
 net.Receive("Decals:RemoveAll", function(_, ply)
-	if SERVER and not MR.Ply:IsAdmin(ply) then return end
-
-	Decals:RemoveAll()
+	Decals:RemoveAll(ply or LocalPlayer(), net.ReadBool())
 end)
 
 -- Get the decals list
@@ -117,7 +115,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 	if CLIENT or SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
 		-- Set the duplicator
 		if SERVER then
-			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), Decals:GetDupName(), { decals = MR.Decals:GetList() })
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), MR.SV.Decals:GetDupName(), { decals = MR.Decals:GetList() })
 		end
 
 		-- Index the Data
@@ -129,16 +127,53 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 end
 
 -- Remove decals table
-function Decals:RemoveAll()
-	table.Empty(MR.Decals:GetList())
+function Decals:RemoveAll(ply, isBroadcasted)
+	-- General first steps
+	local fakeData = { newMaterial = "" }
+
+	if not MR.Materials:SetFirstSteps(ply, isBroadcasted, nil, fakeData, "Decals") then
+		return false
+	end
 
 	if SERVER then
-		for _, ent in ipairs(ents.FindByClass("decal-editor")) do
-			ent:Remove()
+		if isBroadcasted then
+			-- Return if a cleanup is already running
+			if MR.Materials:IsRunningProgressiveCleanup() then
+				return false
+			end
+
+			-- Stop the duplicator
+			MR.SV.Duplicator:ForceStop()
+
+			-- Remove decal-editor entities
+			for _, ent in ipairs(ents.FindByClass("decal-editor")) do
+				ent:Remove()
+			end
+
+			-- Clean duplicator
+			duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), MR.SV.Decals:GetDupName())
+
+			-- Clean decals Data table
+			table.Empty(MR.Decals:GetList())
+
+			-- Send to clients
+			net.Start("Decals:RemoveAll")
+			net.Broadcast()
+		elseif MR.Ply:IsValid(ply) then
+			-- Send to client
+			net.Start("Decals:RemoveAll")
+			net.Send(ply)
 		end
 	end
 
 	if CLIENT then
+		-- Clean decals Data table
+		table.Empty(MR.Decals:GetList())
+
+		-- Remove decals
 		RunConsoleCommand("r_cleardecals")
 	end
+
+	-- General final steps
+	MR.Materials:SetFinalSteps()
 end

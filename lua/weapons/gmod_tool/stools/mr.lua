@@ -196,7 +196,7 @@ end
 	-- Set the material
 
 	-- Decal
-	if isDecalMode then
+	if isDecalMode or isOldDataDecal then
 		MR.Decals:Set(ply, newData, true)
 	-- Skybox
 	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then

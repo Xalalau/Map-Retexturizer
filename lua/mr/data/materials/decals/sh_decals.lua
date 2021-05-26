@@ -21,6 +21,13 @@ net.Receive("Decals:RemoveAll", function(_, ply)
 	Decals:RemoveAll(ply or LocalPlayer(), net.ReadBool())
 end)
 
+-- Block physgun usage with decal-editor
+hook.Add("PhysgunPickup", "MRBlockDecalEditor", function( ply, ent)
+	if ent:GetClass() == "decal-editor" then
+		return false
+	end
+end)
+
 -- Get the decals list
 function Decals:GetList()
 	return decals.list

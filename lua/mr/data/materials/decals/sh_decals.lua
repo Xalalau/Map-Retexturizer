@@ -117,7 +117,7 @@ function Decals:Set(ply, isBroadcasted, tr, duplicatorData, forcePosition)
 	if CLIENT or SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
 		-- Set the duplicator
 		if SERVER then
-			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals", { decals = MR.Decals:GetList() })
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), Decals:GetDupName(), { decals = MR.Decals:GetList() })
 		end
 
 		-- Index the Data

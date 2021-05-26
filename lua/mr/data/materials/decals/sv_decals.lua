@@ -14,6 +14,16 @@ net.Receive("SV.Decals:RemoveAll", function(_, ply)
 	Decals:RemoveAll(ply, net.ReadBool())
 end)
 
+local decals = {
+	-- Name used in duplicator
+	dupName = "MapRetexturizer_Decals"
+}
+
+-- Get duplicator name
+function Decals:GetDupName()
+	return decals.dupName
+end
+
 -- Remove all decals
 function Decals:RemoveAll(ply, isBroadcasted)
 	-- General first steps
@@ -38,7 +48,7 @@ function Decals:RemoveAll(ply, isBroadcasted)
 		net.Start("Decals:RemoveAll")
 		net.Broadcast()
 
-		duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_Decals")
+		duplicator.ClearEntityModifier(MR.SV.Duplicator:GetEnt(), Decals:GetDupName())
 	elseif MR.Ply:IsValid(ply) then
 		net.Start("Decals:RemoveAll")
 		net.Send(ply)

@@ -15,7 +15,15 @@ function Decals:GetLastDecalEditor()
 end
 
 function Decals:SetLastDecalEditor(value)
+	local last = Decals:GetLastDecalEditor()
+
 	decals.lastDecalEditor = value
+
+	local ent = last or value
+
+	if ent then
+		ent.inFocus = value
+	end
 end
 
 -- Decal rendering hook
@@ -28,12 +36,10 @@ hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 		if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
 			if not Decals:GetLastDecalEditor() then
 				Decals:SetLastDecalEditor(tr.Entity)
-				tr.Entity.inFocus = true
 			end
 		else
 			if Decals:GetLastDecalEditor() then
-				Decals:GetLastDecalEditor().inFocus = false
-				Decals:SetLastDecalEditor()
+				Decals:SetLastDecalEditor(false)
 			end
 
 			if MR.Ply:GetDecalMode(ply) then
@@ -42,8 +48,7 @@ hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 		end
 	else
 		if Decals:GetLastDecalEditor() then
-			Decals:GetLastDecalEditor().inFocus = false
-			Decals:SetLastDecalEditor()
+			Decals:SetLastDecalEditor(false)
 		end
 	end
 end)

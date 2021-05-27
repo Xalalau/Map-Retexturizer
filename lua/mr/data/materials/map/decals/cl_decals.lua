@@ -68,10 +68,16 @@ end
 function Decals:Preview()
 	local ply = LocalPlayer()
 	local tr = ply:GetEyeTrace()
+	local ent = tr.Entity
 	local hitMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Don't render over skybox or displacements
 	if MR.Materials:IsSkybox(hitMaterial) or MR.Materials:IsDisplacement(hitMaterial) then
+		return
+	end
+
+	-- Don't render over models
+	if ent and ent:IsValid() and not ent:IsWorld() then
 		return
 	end
 

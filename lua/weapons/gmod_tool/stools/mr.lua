@@ -115,12 +115,18 @@ end
 -- Apply materials
  function TOOL:LeftClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
+	local ent = tr.Entity
 	local isDecalMode = MR.Ply:GetDecalMode(ply)
 
 	-- Basic checks
 	if not TOOL_BasicChecks(ply, tr) then
 		return false
 	end
+
+	-- Don't apply on models on decal mode
+	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() then
+		return false
+	end 
 
 	-- Get data tables with the future and current materials
 	local oldData, index = MR.Materials:GetData(tr)

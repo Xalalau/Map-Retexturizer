@@ -124,7 +124,7 @@ end
 	end
 
 	-- Don't apply on models on decal mode
-	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() then
+	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() and not MR.Materials:IsDecal(nil, tr) then
 		return false
 	end 
 

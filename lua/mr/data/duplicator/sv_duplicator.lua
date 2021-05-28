@@ -442,6 +442,9 @@ function Duplicator:FixDyssynchrony(ply, differences)
 	-- Reenable first spawn state
 	MR.Ply:SetFirstSpawn(ply, true)
 
+	-- Clean table
+	MR.DataList:CleanAll(differences.current)
+
 	-- Start
 	Duplicator:Start(ply, Duplicator:GetEnt(), differences.current, "currentMaterials", true, true)
 end

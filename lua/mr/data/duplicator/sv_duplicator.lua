@@ -424,6 +424,10 @@ end
 
 -- Send the anti dyssynchrony table (compressed string chunks)
 function Duplicator:FindDyssynchrony(lightCheck)
+	-- Do nothing if we are loading or unloading
+	if MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) then return end
+	if MR.Materials:IsRunningProgressiveCleanup() then return end
+
 	local verificationTab
 
 	if lightCheck then

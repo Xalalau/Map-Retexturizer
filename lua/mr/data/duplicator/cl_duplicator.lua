@@ -185,6 +185,10 @@ function Duplicator:FindDyssynchrony(ply, serverModifications, a, b, c, d)
 	-- Do nothing if the player isn't initialized
 	if not MR.Ply:IsValid(LocalPlayer()) then return end
 
+	-- Do nothing if the player is loading
+	if MR.Duplicator:IsRunning(ply) then return end
+
+	-- Find differences between server and client
 	local differences = MR.Duplicator:FindDyssynchrony(serverModifications, true)
 
 	if differences then

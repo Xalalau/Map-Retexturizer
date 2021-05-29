@@ -440,7 +440,12 @@ function Duplicator:FixDyssynchrony(ply, differences)
 	Duplicator:RemoveMaterials(ply, differences)
 
 	-- Reenable first spawn state
-	MR.Ply:SetFirstSpawn(ply, true)
+	MR.Ply:SetFirstSpawn(ply, true)	
+
+	-- Adjust decals list
+	if differences.current.decals then
+		differences.current.decals = MR.Decals:GetList()
+	end
 
 	-- Clean table
 	MR.DataList:CleanAll(differences.current)

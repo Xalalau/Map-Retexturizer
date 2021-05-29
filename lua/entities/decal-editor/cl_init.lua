@@ -16,15 +16,18 @@ function ENT:Draw()
 		-- Enable stencils
 		render.SetStencilEnable( true )
 		-- Set the reference value to 1. This is what the compare function tests against
-		render.SetStencilReferenceValue( 1 )
+		render.SetStencilReferenceValue( 22 )
 		-- Force everything to fail
 		render.SetStencilCompareFunction( STENCIL_NEVER )
 		-- Save all the things we don't draw
 		render.SetStencilFailOperation( STENCIL_REPLACE )
 
-		-- Fail to draw our entities.
-		self:SetModelScale(self.scale, 0)
-		self:DrawModel()
+		local side = self:GetModelRadius() * self.scale * 2
+	
+		cam.Start3D2D(self:GetPos() + self:GetUp() * 1, self:GetAngles(), 1)
+			surface.SetDrawColor(Color(255, 0, 0, 255))
+			surface.DrawRect(-side/2, -side/2, side, side)
+		cam.End3D2D()
 
 		-- Render all pixels that don't have their stencil value as 1
 		render.SetStencilCompareFunction( STENCIL_NOTEQUAL )
@@ -32,8 +35,13 @@ function ENT:Draw()
 		render.SetStencilFailOperation( STENCIL_KEEP )
 
 		-- Draw our big entities. They will have holes in them wherever the smaller entities were
-		self:SetModelScale(self.scale + 0.1, 0)
-		self:DrawModel()
+
+		local side = self:GetModelRadius() * self.scale * 2 + 11
+	
+		cam.Start3D2D(self:GetPos() + self:GetUp() * 1, self:GetAngles(), 1)
+			surface.SetDrawColor(Color(255, 0, 0, 255))
+			surface.DrawRect(-side/2, -side/2, side, side)
+		cam.End3D2D()
 
 		-- Let everything render normally again
 		render.SetStencilEnable( false )

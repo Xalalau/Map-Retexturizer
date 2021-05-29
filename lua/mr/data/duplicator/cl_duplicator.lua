@@ -5,6 +5,14 @@
 local Duplicator = {}
 MR.CL.Duplicator = Duplicator
 
+local dup = {
+	dyssync = {
+		-- Count how many times we tried to automatically fix table differences
+		counter = 0,
+		resetTimerName = "MRAutoResetDyssyncCounter"
+	}
+}
+
 -- Networking
 
 net.Receive("CL.Duplicator:CheckForErrors", function()
@@ -33,6 +41,27 @@ hook.Add("HUDPaint", "MRDupProgress", function()
 		Duplicator:RenderProgress()
 	end
 end)
+
+-- Control how many times we tried to automatically fix table differences
+function Duplicator:GetDyssyncCounter()
+	return dup.dyssync.counter
+end
+
+function Duplicator:ResetDyssyncCounter()
+	dup.dyssync.counter = 0
+
+	if timer.Exists(Duplicator:GetDyssyncTimerName()) then
+		timer.Remove(Duplicator:GetDyssyncTimerName())
+	end
+end
+
+function Duplicator:IncrementDyssyncCounter()
+	dup.dyssync.counter = dup.dyssync.counter + 1
+end
+
+function Duplicator:GetDyssyncTimerName()
+	return dup.dyssync.resetTimerName
+end
 
 -- Load materials from saves
 function Duplicator:CheckForErrors(material, material2, isBroadcasted)
@@ -192,6 +221,37 @@ function Duplicator:FindDyssynchrony(ply, serverModifications, a, b, c, d)
 	local differences = MR.Duplicator:FindDyssynchrony(serverModifications, true)
 
 	if differences then
+		-- If it's the first attempt, set to reset the dyssync counter after 1 minute and a half
+		if Duplicator:GetDyssyncCounter() == 0 then
+			timer.Create(Duplicator:GetDyssyncTimerName(), 90, 1, function()
+				Duplicator:ResetDyssyncCounter()
+			end)
+		end
+
+		-- Register this autofix attempt
+		Duplicator:IncrementDyssyncCounter()
+
+		-- From the third attempt in a short time...
+		if Duplicator:GetDyssyncCounter() >= 3 then
+			-- We will keep auto-correction off since the last difference detection for 5 minutes
+			-- This system will also be released if the player removes the applied materials
+			timer.Create(Duplicator:GetDyssyncTimerName(), 300, 1, function()
+				Duplicator:ResetDyssyncCounter()
+			end)
+
+			-- Print an alert
+			if Duplicator:GetDyssyncCounter() == 4 then
+				ply:PrintMessage(HUD_PRINTTALK, "\n[Map Retexturizer] Sync problems detected! Look at the console for more information.")
+				print("[Map Retexturizer] WARNING! Failed to fix material discrepancies between the server and the client")
+				print("To correct the problem, show the developer of the tool the following table:\n")
+				PrintTable(differences)
+				print("\nThis may be a false detection but it's something to be evaluated. The auto dyssync correction system will be turned off until the map materials are cleared or the difference is gone.\n")
+			end
+
+			return
+		end
+
+		-- Try to fix the differences
 		MR.Duplicator:SendAntiDyssyncChunks(differences, "SV", "Duplicator", "FixDyssynchrony")
 	end
 end

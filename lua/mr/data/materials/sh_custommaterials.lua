@@ -71,6 +71,7 @@ function CustomMaterials:GenerateID(data, shareMaterials)
 				v = math.Truncate(v, 2)
             elseif isvector(v) then
                 v = math.Truncate(v.x) .. "-" .. math.Truncate(v.y) .. "-" .. math.Truncate(v.z)
+                v = string.gsub(v, "--0", "-0") -- Since C converts a negative zero to the string -0, so does Lua. We have to correct this since it happens sometimes with positions.
             end
 
 			-- Generating...

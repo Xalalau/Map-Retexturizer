@@ -201,7 +201,7 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 				local appliedData = modificationTab[sectionName] and modificationTab[sectionName][index]
 				
 				local isOnlyCurrentDataActive = not DataList:IsActive(currentData) and DataList:IsActive(appliedData)
-				
+
 				if isOnlyCurrentDataActive or not MR.Data:IsEqual(currentData, appliedData) then
 					if appliedData and appliedData.newMaterial then
 						-- if appliedData.newMaterial == MR.Materials:GetMissing() then continue end -- Ignore our missing material
@@ -243,7 +243,7 @@ function DataList:Merge(destList, sourceList)
 end
 
 -- Keep only some selected fields in a modification table
-function DataList:Filter(modifications, whitelist)
+function DataList:Filter(modifications, whitelist, blacklist)
 	if not modifications then return end 
 
 	for k, v in pairs(modifications) do
@@ -251,10 +251,21 @@ function DataList:Filter(modifications, whitelist)
 			for index,value in pairs(v) do
 				local keep = false
 
-				for _,validField in ipairs(whitelist) do
-					if index == validField then
-						keep = true
-						break
+				if whitelist then
+					for _,validField in ipairs(whitelist) do
+						if index == validField then
+							keep = true
+							break
+						end
+					end
+				end
+
+				if blacklist then
+					for _,invalidField in ipairs(blacklist) do
+						if index == invalidField then
+							keep = false
+							break
+						end
 					end
 				end
 

@@ -11,7 +11,7 @@ function ENT:Initialize()
 	self:SetCollisionGroup(COLLISION_GROUP_WORLD)
 	self:SetMaterial("concrete/concretefloor004")
 	self:SetRenderMode(RENDERMODE_TRANSALPHA)
-	self:SetColor(Color(255, 255, 255, 70))
+	self:SetColor(Color(255, 0, 0, 255))
 	self:DrawShadow(false)
 	self.inFocus = false
 end

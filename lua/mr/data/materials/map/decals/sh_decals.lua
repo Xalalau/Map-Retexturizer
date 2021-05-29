@@ -129,6 +129,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 		-- Resize the collision model
 		if scale ~= 1 and IsValid(data.ent) then
+			data.ent.scale = scale
 			MR.Models:ResizePhysics(data.ent, scale)
 		end
 	end)

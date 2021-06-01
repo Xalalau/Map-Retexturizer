@@ -2,7 +2,8 @@ include("shared.lua")
 
 -- https://github.com/Lexicality/stencil-tutorial/blob/master/lua/stencil_tutorial/06_cutting_holes_in_props.lua
 function ENT:Draw()
-	if self.inFocus and self.scale then			
+	local scale = self:GetNWFloat("scale")
+	if self.inFocus and scale then			
 		-- Reset everything to known good
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilTestMask( 0xFF )
@@ -22,7 +23,7 @@ function ENT:Draw()
 		-- Save all the things we don't draw
 		render.SetStencilFailOperation( STENCIL_REPLACE )
 
-		local side = self:GetModelRadius() * self.scale * 2
+		local side = self:GetModelRadius() * scale * 2
 	
 		cam.Start3D2D(self:GetPos() + self:GetUp() * 1, self:GetAngles(), 1)
 			surface.SetDrawColor(Color(255, 0, 0, 255))
@@ -36,7 +37,7 @@ function ENT:Draw()
 
 		-- Draw our big entities. They will have holes in them wherever the smaller entities were
 
-		local side = self:GetModelRadius() * self.scale * 2 + 11
+		local side = self:GetModelRadius() * scale * 2 + 11
 	
 		cam.Start3D2D(self:GetPos() + self:GetUp() * 1, self:GetAngles(), 1)
 			surface.SetDrawColor(Color(255, 0, 0, 255))

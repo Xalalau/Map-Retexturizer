@@ -94,14 +94,15 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	-- Scale to keep decal-editor proportional to the material
 	-- 1.35 ratio was calculated manually and serves only for the used model
-	local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
-
 	if SERVER then
+		local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
+
 		-- Create our decal controller
 		local decalEditor = ents.Create("decal-editor")
 		decalEditor:SetPos(data.position)
 		decalEditor:SetAngles(data.normal:Angle() + Angle(90, 0, 0))
 		decalEditor:SetModelScale(scale)
+		decalEditor:SetNWFloat("scale", scale)
 		decalEditor:Spawn()
 
 		data.ent = decalEditor:EntIndex() -- let's send the index to the player because the entity is not initialized immediately
@@ -124,13 +125,13 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
 		if CLIENT and data.ent then
+			if not isnumber(data.ent) then return end
 			data.ent = ents.GetByIndex(data.ent) -- Get the entity
 		end
 
 		-- Resize the collision model
-		if scale ~= 1 and IsValid(data.ent) then
-			data.ent.scale = scale
-			MR.Models:ResizePhysics(data.ent, scale)
+		if IsValid(data.ent) and data.ent:GetNWFloat("scale") ~= 1 then
+			MR.Models:ResizePhysics(data.ent, data.ent:GetNWFloat("scale"))
 		end
 	end)
 

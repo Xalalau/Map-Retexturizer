@@ -3,7 +3,7 @@ include("shared.lua")
 -- https://github.com/Lexicality/stencil-tutorial/blob/master/lua/stencil_tutorial/06_cutting_holes_in_props.lua
 function ENT:Draw()
 	local scale = self:GetNWFloat("scale")
-	if self.inFocus and scale then			
+	if self.inFocus and scale and not self.BlockStencil then			
 		-- Reset everything to known good
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilTestMask( 0xFF )

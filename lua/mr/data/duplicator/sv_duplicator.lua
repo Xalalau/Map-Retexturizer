@@ -460,50 +460,52 @@ end
 
 -- Finish the duplication process
 function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
-	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply) then
+	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply)  then
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()
 		end
 
-		timer.Simple(0.4, function() -- leave the progress bar on the screen for a while
-			-- Reset the progress bar
-			MR.Duplicator:SetTotal(ply, 0)
-			MR.Duplicator:SetCurrent(ply, 0)
-			Duplicator:SetProgress(ply, 0, 0)
+		if MR.Duplicator:GetTotal(ply) > 0 then
+			timer.Simple(0.4, function() -- leave the progress bar on the screen for a while
+				-- Reset the progress bar
+				MR.Duplicator:SetTotal(ply, 0)
+				MR.Duplicator:SetCurrent(ply, 0)
+				Duplicator:SetProgress(ply, 0, 0)
 
-			-- Print the errors on the console and reset the counting on...
-			net.Start("CL.Duplicator:FinishErrorProgress")
-			-- all players
-			if ply == MR.SV.Ply:GetFakeHostPly() then
-				net.WriteBool(true)
-				net.Broadcast()
-			-- the player
-			else
-				net.WriteBool(false)
-				net.Send(ply)
+				-- Print the errors on the console and reset the counting on...
+				net.Start("CL.Duplicator:FinishErrorProgress")
+				-- all players
+				if ply == MR.SV.Ply:GetFakeHostPly() then
+					net.WriteBool(true)
+					net.Broadcast()
+				-- the player
+				else
+					net.WriteBool(false)
+					net.Send(ply)
+				end
+			end)
+
+			-- Reset model delay adjuster
+			dup.models.delay = 0
+			dup.models.startTime = 0
+
+			-- Get load name
+			local loadName = MR.Duplicator:IsRunning(ply)
+
+			-- Set "running" to nothing
+			MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
+
+			-- Remove the reference of the current loading table
+			Duplicator:SetCurrentTable(ply)
+
+			-- Create event
+			hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
+
+			-- Print alert
+			if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
+				print("[Map Retexturizer] Loading finished.")
 			end
-		end)
-
-		-- Reset model delay adjuster
-		dup.models.delay = 0
-		dup.models.startTime = 0
-
-		-- Get load name
-		local loadName = MR.Duplicator:IsRunning(ply)
-
-		-- Set "running" to nothing
-		MR.Duplicator:SetRunning(ply, nil, isBroadcasted)
-
-		-- Remove the reference of the current loading table
-		Duplicator:SetCurrentTable(ply)
-
-		-- Create event
-		hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
-
-		-- Print alert
-		if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
-			print("[Map Retexturizer] Loading finished.")
 		end
 
 		-- Disable the first spawn state
@@ -512,7 +514,9 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		end
 
 		-- Send the anti dyssynchrony table
-		Duplicator:FindDyssynchrony()
+		if MR.Duplicator:GetTotal(ply) then
+			Duplicator:FindDyssynchrony()
+		end
 
 		return true
 	end

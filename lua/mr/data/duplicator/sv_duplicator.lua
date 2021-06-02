@@ -421,18 +421,12 @@ function Duplicator:ForceStop(isGModLoadStarting)
 end
 
 -- Send the anti dyssynchrony table (compressed string chunks)
-function Duplicator:FindDyssynchrony(lightCheck)
+function Duplicator:FindDyssynchrony()
 	-- Do nothing if we are loading or unloading
 	if MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) then return end
 	if MR.Materials:IsRunningProgressiveCleanup() then return end
 
-	local verificationTab
-
-	if lightCheck then
-		verificationTab = MR.DataList:Filter(table.Copy(MR.DataList:GetCurrentModifications()), { "oldMaterial", "newMaterial", "normal", "position" })
-	else
-		verificationTab = table.Copy(MR.DataList:GetCurrentModifications())
-	end
+	local verificationTab = table.Copy(MR.DataList:GetCurrentModifications())
 
 	MR.Duplicator:SendAntiDyssyncChunks(verificationTab, "CL", "Duplicator", "FindDyssynchrony")
 end

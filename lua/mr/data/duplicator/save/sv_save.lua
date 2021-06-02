@@ -44,7 +44,7 @@ function Save:Set(ply, saveName, blockAlert)
 
 	-- Don't save if the table is empty
 	if MR.DataList:GetTotalModificantions(save) == 0 then
-		print("[Map Retexturizer] No map changes were found.")
+		print("[Map Retexturizer] Save: no map changes found.")
 
 		return false
 	end

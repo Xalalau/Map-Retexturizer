@@ -94,7 +94,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 
 	-- Scale to keep decal-editor proportional to the material
 	-- 1.35 ratio was calculated manually and serves only for the used model
-	if SERVER then
+	if SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
 		local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
 
 		-- Create our decal controller
@@ -105,8 +105,11 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		decalEditor:SetNWFloat("scale", scale)
 		decalEditor:Spawn()
 
-		data.ent = decalEditor:EntIndex() -- let's send the index to the player because the entity is not initialized immediately
+		-- let's send the index to the player because the entity is not initialized immediately
+		data.ent = decalEditor:EntIndex() 
+	end
 
+	if SERVER then
 		-- Send to...
 		net.Start("Decals:Set")
 			net.WriteTable(data)
@@ -119,12 +122,10 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		else
 			net.Send(ply)
 		end
-
-		data.ent = decalEditor		
 	end
 
 	timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
-		if CLIENT and data.ent then
+		if data.ent then
 			if not isnumber(data.ent) then return end
 			data.ent = ents.GetByIndex(data.ent) -- Get the entity
 		end
@@ -136,7 +137,9 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 	end)
 
 	-- Create the custom material
-	MR.CustomMaterials:Create(data, "LightmappedGeneric", true, false)
+	if CLIENT or SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
+		MR.CustomMaterials:Create(data, "LightmappedGeneric", true, false)
+	end
 
 	-- Apply the decal
 	if CLIENT then
@@ -152,12 +155,12 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		data = dataCopy
 	end
 
-	-- Truncate some Data fields (it eliminates position decimals that differ on the server and on the client)
-	data.position.x = math.Truncate(data.position.x)
-	data.position.y = math.Truncate(data.position.y)
-	data.position.z = math.Truncate(data.position.z)
-
 	if CLIENT or SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
+		-- Truncate some Data fields (it eliminates position decimals that differ on the server and on the client)
+		data.position.x = math.Truncate(data.position.x)
+		data.position.y = math.Truncate(data.position.y)
+		data.position.z = math.Truncate(data.position.z)
+
 		-- Set the duplicator
 		if SERVER then
 			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), MR.SV.Decals:GetDupName(), { decals = MR.Decals:GetList() })
@@ -166,7 +169,7 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		-- Index the Data
 		MR.DataList:InsertElement(MR.Decals:GetList(), data, forcePosition)
 
-		timer.Simple(0.5, function() -- Wait a bit so the client can initialize the entity
+		timer.Simple(0.6, function() -- Wait a bit so the client can initialize the entity
 			if data.ent and IsValid(data.ent) and data.ent:IsValid() then
 				data.ent.mr = data
 			end

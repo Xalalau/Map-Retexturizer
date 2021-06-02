@@ -10,6 +10,31 @@ local decals = {
 	lastDecalEditor
 }
 
+-- Refresh decals
+function Decals:Init()
+	timer.Create("MRRefreshDecals", 60, 0, function()
+		-- Do nothing if we are loading or unloading
+		if MR.Duplicator:IsRunning(LocalPlayer()) then return end
+		if MR.Materials:IsRunningProgressiveCleanup() then return end
+
+		-- Clean the map reapply decals wihtout changing Data list
+		if MR.DataList:Count(MR.Decals:GetList()) > 0 then
+			RunConsoleCommand("r_cleardecals")
+
+			timer.Simple(0.01, function()
+				for _,data in ipairs(MR.Decals:GetList()) do
+					if isnumber(data.ent) then continue end -- Ignore the decal if it's not ready
+
+					local decalEditorPos = data.ent:GetPos()
+					data.ent:SetPos(Vector(0, 0, 0))
+					util.DecalEx(MR.CustomMaterials:StringToID(data.oldMaterial), game.GetWorld(), data.position, data.normal, nil, 2 * (data.scaleX or 1), 2 * (data.scaleY or 1)) -- Note: the scale is multiplied by 32
+					data.ent:SetPos(decalEditorPos)
+				end
+			end)
+		end
+	end)
+end
+
 function Decals:GetLastDecalEditor()
 	return decals.lastDecalEditor
 end

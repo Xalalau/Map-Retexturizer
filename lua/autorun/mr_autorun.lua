@@ -112,4 +112,5 @@ if SERVER then
 	MR.SV.Load:Init()
 else
 	MR.CL.Save:Init()
+	MR.CL.Decals:Init()
 end

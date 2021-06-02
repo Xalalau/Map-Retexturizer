@@ -92,24 +92,26 @@ function Decals:Set(ply, data, isBroadcasted, forcePosition)
 		return
 	end
 
-	-- Scale to keep decal-editor proportional to the material
-	-- 1.35 ratio was calculated manually and serves only for the used model
-	if SERVER and (not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly()) then
-		local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
+	if SERVER then
+		local decalEditor
 
-		-- Create our decal controller
-		local decalEditor = ents.Create("decal-editor")
-		decalEditor:SetPos(data.position)
-		decalEditor:SetAngles(data.normal:Angle() + Angle(90, 0, 0))
-		decalEditor:SetModelScale(scale)
-		decalEditor:SetNWFloat("scale", scale)
-		decalEditor:Spawn()
+		if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
+			-- Scale to keep decal-editor proportional to the material
+			-- 1.35 ratio was calculated manually and serves only for the used model
+			local scale = 1.35 * ((tonumber(data.scaleX) or 1) <= (tonumber(data.scaleY) or 1) and (data.scaleX or 1) or (data.scaleY or 1))
+
+			-- Create our decal controller
+			decalEditor = ents.Create("decal-editor")
+			decalEditor:SetPos(data.position)
+			decalEditor:SetAngles(data.normal:Angle() + Angle(90, 0, 0))
+			decalEditor:SetModelScale(scale)
+			decalEditor:SetNWFloat("scale", scale)
+			decalEditor:Spawn()
+		end
 
 		-- let's send the index to the player because the entity is not initialized immediately
-		data.ent = decalEditor:EntIndex() 
-	end
+		data.ent = IsValid(data.ent) and data.ent:EntIndex() or decalEditor:EntIndex() 
 
-	if SERVER then
 		-- Send to...
 		net.Start("Decals:Set")
 			net.WriteTable(data)

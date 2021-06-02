@@ -506,7 +506,7 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
 		end
 
 		-- Send the anti dyssynchrony table
-		if MR.Duplicator:GetTotal(ply) then
+		if MR.Duplicator:GetTotal(ply) > 0 then
 			Duplicator:FindDyssynchrony()
 		end
 

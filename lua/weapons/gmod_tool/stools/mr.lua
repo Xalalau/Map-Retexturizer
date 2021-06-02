@@ -204,6 +204,12 @@ end
 	-- Decal
 	if isDecalMode or isOldDataDecal then
 		MR.Decals:Set(ply, newData, true)
+
+		-- HACK: redo the decal preview if there is scale variation
+		if newData.scaleX or newData.scaleY then
+			net.Start("CL.Materials:SetPreview")
+			net.Send(ply)
+		end
 	-- Skybox
 	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 		MR.SV.Skybox:Set(ply, newData, true)

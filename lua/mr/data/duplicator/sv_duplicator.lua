@@ -351,8 +351,6 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 		MR.Models:Set(ply, savedTable[position], isBroadcasted)
 	-- Change the stored entity to world and apply decal
 	elseif section == "decals" then
-		savedTable[position].ent = game.GetWorld()
-
 		MR.Decals:Set(ply, savedTable[position], isBroadcasted, forcePosition and position)
 	-- Apply skybox
 	elseif section == "skybox" then

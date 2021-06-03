@@ -59,6 +59,12 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		dup.recreatedTable.map = savedTable.map
 	-- Displacements
 	elseif savedTable.displacements then
+		for k,v in pairs(savedTable.displacements) do -- Remove nil entries if they exist (old hack?)
+			if not v.newMaterial and not v.newMaterial2 then
+				table.remove(savedTable.displacements, k)
+			end
+		end
+
 		dup.recreatedTable.displacements = savedTable.displacements
 	-- Decals
 	elseif savedTable.decals then

@@ -282,7 +282,7 @@ function TOOL:RightClick(tr)
 
 	if SERVER then
 		-- Copy the material
-		MR.Materials:SetNew(ply, oldData.backup and oldData.newMaterial or "")
+		MR.Materials:SetNew(ply, (IsValid(tr.Entity) and tr.Entity.mr or oldData.backup) and oldData.newMaterial or "")
 		MR.Materials:SetOld(ply, MR.Materials:GetOriginal(tr))
 
 		-- Set the cvars to the copied values

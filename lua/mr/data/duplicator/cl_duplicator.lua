@@ -65,6 +65,9 @@ end
 
 -- Load materials from saves
 function Duplicator:CheckForErrors(material, material2, isBroadcasted)
+	material = MR.DataList:CleanIDs({ newMaterial = material })
+	material2 = MR.DataList:CleanIDs({ newMaterial2 = material2 })
+
 	if MR.CL.Materials:ValidateReceived(material) == MR.Materials:GetMissing() and
 	   material2 and MR.CL.Materials:ValidateReceived(material2) == MR.Materials:GetMissing() then
 		Duplicator:SetErrorProgress(material, isBroadcasted)

@@ -110,10 +110,10 @@ function CustomMaterials:Create(data, materialType, isDecal, shareMaterials)
             -- Create, initialize and store the custom material
             local customMaterial = MR.CL.Materials:Create(materialID, materialType, data.newMaterial)
 
+            CustomMaterials:StoreID(materialID, customMaterial)
+
             data.oldMaterial = materialID
             MR.CL.Materials:Apply(data)
-
-            CustomMaterials:StoreID(materialID, customMaterial)
 
             -- Adjust Data
             data.newMaterial = isDecal and data.newMaterial or materialID

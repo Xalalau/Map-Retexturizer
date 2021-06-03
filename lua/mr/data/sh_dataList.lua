@@ -227,6 +227,10 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 						end
 					end
 
+					if not appliedData and not DataList:IsActive(currentData) then
+						continue
+					end
+
 					if not differences.applied[sectionName] then differences.applied[sectionName] = {} end
 					if not differences.current[sectionName] then differences.current[sectionName] = {} end
 

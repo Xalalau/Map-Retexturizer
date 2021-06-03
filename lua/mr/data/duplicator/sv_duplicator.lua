@@ -7,26 +7,16 @@ MR.SV.Duplicator = Duplicator
 
 local dup = {
 	entity = { 
-		-- Workaround to duplicate map and decal materials
+		-- The entity object. it's responsible for our support for GMod saves
 		object = nil,
 		-- Entity model
 		model = "models/props_phx/cannonball_solid.mdl"
 	},
-	-- Special aditive delay for models
-	models = {
-		delay = 0.3,
-		startTime = 0
-	},
-	-- Store a reference to the current loading table
+	-- Store a copy of the current loading table
 	currentTable = {},
-	-- A table reconstructed from GMod duplicator calls (GMod saves)
+	-- Store a rebuilt loading table from a GMod save
 	recreatedTable = {
-		initialized = false,
-		map,
-		displacements,
-		decals,
-		models = {},
-		skybox
+		models = {}
 	},
 }
 
@@ -50,80 +40,48 @@ end
 
 -- Create a single loading table with the duplicator calls (GMod save)
 function Duplicator:RecreateTable(ply, ent, savedTable)
-	-- Note: it has to start after the Duplicator:Start() timer and after the first model entry
-	local notModelDelay = 0.2
-
-	-- Start upgrading the format (if it's necessary)
-	savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized)
-
-	-- Saving format
-	if savedTable.savingFormat and not dup.recreatedTable.savingFormat then
+	-- Saving format & dup entity
+	if not dup.recreatedTable.savingFormat then
 		dup.recreatedTable.savingFormat = savedTable.savingFormat
 	end
 
 	-- Models
 	if ent:GetModel() ~= dup.entity.model then
-		-- Set the aditive delay time
-		dup.models.delay = dup.models.delay + 0.05 -- It's initialized as 0.3
-
-		-- Change the stored entity to the current one
 		savedTable.ent = ent
+		table.insert(dup.recreatedTable.models, savedTable)
+	-- Duplicator entity
+	elseif not dup.recreatedTable.ent then
+		dup.recreatedTable.ent = ent
+	end
 
-		-- Get the max delay time
-		if dup.models.startTime == 0 then
-			dup.models.startTime = dup.models.delay
-		end
-
-		-- Lock the duplicator to start after the last model insertion in this table reconstruction
-		if not dup.recreatedTable.initialized then
-			dup.recreatedTable.initialized = true
-		end
-
-		-- Set a timer with a different delay for each entity  (and faster than the other duplicator calls)
-		timer.Simple(dup.models.delay, function()
-			-- Store the changed model
-			table.insert(dup.recreatedTable.models, savedTable)
-
-			-- No more entries, call our duplicator
-			if dup.models.startTime == dup.models.delay then
-				Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, dup.recreatedTable, "noMrLoadFile")
-			else
-				dup.models.startTime = dup.models.startTime + 0.05
-			end
-		end)
-
-		return
 	-- Map materials
-	elseif savedTable.map then
+	if savedTable.map then
 		dup.recreatedTable.map = savedTable.map
-		notModelDelay = 0.37
 	-- Displacements
 	elseif savedTable.displacements then
-		-- Remove nil entries if they exist
-		for k,v in pairs(savedTable.displacements) do
-			if not v.newMaterial and not v.newMaterial2 then
-				table.remove(savedTable.displacements, k)
-			end
-		end
-
 		dup.recreatedTable.displacements = savedTable.displacements
-		notModelDelay = 0.38
 	-- Decals
 	elseif savedTable.decals then
 		dup.recreatedTable.decals = savedTable.decals
-		notModelDelay = 0.39
 	-- Skybox
 	elseif savedTable.skybox then
 		dup.recreatedTable.skybox = savedTable.skybox
-		notModelDelay = 0.40
 	end
 
-	-- Call our duplicator
-	timer.Simple(notModelDelay, function()
-		if not dup.recreatedTable.initialized then
-			dup.recreatedTable.initialized = true
-			Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), ent, dup.recreatedTable, "noMrLoadFile")
-		end
+	-- Start duplicator
+	timer.Create("MRStartGModSaveLoading", 0.2, 1, function()
+		-- Remove the older duplicator entity
+		dup.recreatedTable.ent:Remove()
+		dup.recreatedTable.ent = nil
+
+		-- Clean table
+		MR.DataList:CleanAll(dup.recreatedTable)
+
+		-- Start
+		Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, table.Copy(dup.recreatedTable), "noMrLoadFile")
+
+		-- Prepare recreatedTable for a future GMod save 
+		dup.recreatedTable = { models = {} }
 	end)
 end
 
@@ -131,34 +89,11 @@ end
 -- Note: we must have a valid savedTable
 -- Note: we MUST define a loadname, otherwise we won't be able to force a stop on the loading
 function Duplicator:Start(ply, ent, savedTable, loadName, dontClean, forcePosition)
-	-- Finish upgrading the format (if it's necessary)
-	if not dup.recreatedTable.initialized then
-		savedTable = MR.SV.Load:Upgrade(savedTable, dup.recreatedTable.initialized, true, loadName)
-	end
-
-	-- Is broadcasted? The only case it's not is when a player is loading his first spawn materials
+	-- Is broadcasted? The only case it's not is when a player is loading the current materials
 	local isBroadcasted = loadName ~= "currentMaterials"
 
-	-- Deal with GMod saves
-	if dup.recreatedTable.initialized then
-		-- FORCE to cease ongoing duplications
-		Duplicator:ForceStop(true)
-		Duplicator:Finish(ply, isBroadcasted, true)
-
-		-- Copy and clean our GMod duplicator reconstructed table
-		savedTable = table.Copy(dup.recreatedTable)
-
-		timer.Simple(0.6, function()
-			table.Empty(dup.recreatedTable)
-			dup.recreatedTable.models = {}
-		end)
-		dup.recreatedTable.initialized = false
-
-		-- There is no use for it here, but set the version to finish the conversion
-		if not savedTable.savingFormat then
-			savedTable.savingFormat = MR.Save:GetCurrentVersion()
-		end
-	end
+	-- Upgrade the save version (if it's necessary)
+	savedTable = MR.SV.Load:Upgrade(savedTable, loadName)
 
 	-- Get the total modifications to do
 	local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
@@ -168,7 +103,7 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean, forcePositi
 	local modelsTotal = savedTable.models and istable(savedTable.models) and MR.DataList:Count(savedTable.models) or 0
 	local total = decalsTotal + mapTotal + displacementsTotal + modelsTotal + skyboxTotal
 
-	-- For some reason there are no modifications to do, so finish it
+	-- No changes = finish
 	if total == 0 then
 		Duplicator:Finish(ply, isBroadcasted)
 
@@ -315,7 +250,7 @@ end
 function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section, isBroadcasted, forcePosition)
 	-- Set anti loading stuck
 	Duplicator:SetAntiStuck(ply, isBroadcasted)
-	
+
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
@@ -419,8 +354,8 @@ function Duplicator:RemoveMaterials(ply, differencesTable)
 end
 
 -- Force to stop the duplicator
-function Duplicator:ForceStop(isGModLoadStarting)
-	if (MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or isGModLoadStarting) and not MR.Duplicator:IsStopping() then
+function Duplicator:ForceStop()
+	if  MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) and not MR.Duplicator:IsStopping() then
 		MR.Duplicator:SetStopping(true)
 
 		timer.Simple(0.05, function()
@@ -467,10 +402,10 @@ function Duplicator:FixDyssynchrony(ply, differences)
 end
 
 -- Finish the duplication process
-function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding, forceFinish)
+function Duplicator:Finish(ply, isBroadcasted, forceFinish)
 	if forceFinish or MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply)  then
 		-- Register that the map is modified
-		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
+		if not MR.Base:GetInitialized() then
 			MR.Base:SetInitialized()
 		end
 
@@ -494,10 +429,6 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding, forceFinish
 				end
 			end)
 
-			-- Reset model delay adjuster
-			dup.models.delay = 0
-			dup.models.startTime = 0
-
 			-- Get load name
 			local loadName = MR.Duplicator:IsRunning(ply)
 
@@ -511,13 +442,13 @@ function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding, forceFinish
 			hook.Run("MRFinishLoading", loadName, isBroadcasted, not istable(ply) and ply or nil)
 
 			-- Print alert
-			if not MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding or ply == MR.SV.Ply:GetFakeHostPly() then
+			if not MR.Ply:GetFirstSpawn(ply) or ply == MR.SV.Ply:GetFakeHostPly() then
 				print("[Map Retexturizer] Loading finished.")
 			end
 		end
 
 		-- Disable the first spawn state
-		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) and not isGModLoadOverriding then
+		if ply ~= MR.SV.Ply:GetFakeHostPly() and MR.Ply:GetFirstSpawn(ply) then
 			MR.Ply:SetFirstSpawn(ply, false)
 		end
 

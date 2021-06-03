@@ -383,9 +383,10 @@ end
 
 -- Format upgrading
 -- Note: savedTable will come in parts from RecreateTable if we are receiving a GMod save, otherwise it'll be full
-function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
-	if not savedTable then return; end
+function Load:Upgrade(savedTable, loadName)
+	if not savedTable then return end
 
+	local isDupStarting = loadName and true
 	local startFormat = savedTable.savingFormat or "1.0"
 	local currentFormat = startFormat
 
@@ -396,7 +397,6 @@ function Load:Upgrade(savedTable, isGModSave, isDupStarting, loadName)
 
 	-- Backup the old save file and create a new one with the convertion
 	if isDupStarting and
-		not isGModSave and
 		startFormat ~= currentFormat then
 
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"

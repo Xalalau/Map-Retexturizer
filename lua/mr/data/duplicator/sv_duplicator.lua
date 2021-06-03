@@ -313,6 +313,9 @@ end
 
 -- Load materials from saves
 function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, section, isBroadcasted, forcePosition)
+	-- Set anti loading stuck
+	Duplicator:SetAntiStuck(ply, isBroadcasted)
+	
 	-- If the field is nil or the duplicator is being forced to stop, finish
 	if not savedTable[position] or not savedTable[position].oldMaterial or MR.Duplicator:IsStopping() then
 		-- Next material
@@ -375,6 +378,19 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 	-- Next material
 	timer.Simple(GetConVar("internal_mr_delay"):GetFloat(), function()
 		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
+	end)
+end
+
+-- Add extra check to avoid duplicator getting stuck after an error
+function Duplicator:SetAntiStuck(ply, isBroadcasted)
+	timer.Create("MRAntiDupStuck", 1, 0, function()
+		if MR.Duplicator:IsRunning(ply) then
+			if ply == MR.SV.Ply:GetFakeHostPly() then
+				Duplicator:ForceStop()
+			end
+
+			Duplicator:Finish(ply, isBroadcasted, true)
+		end
 	end)
 end
 
@@ -451,8 +467,8 @@ function Duplicator:FixDyssynchrony(ply, differences)
 end
 
 -- Finish the duplication process
-function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding)
-	if MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply)  then
+function Duplicator:Finish(ply, isBroadcasted, isGModLoadOverriding, forceFinish)
+	if forceFinish or MR.Duplicator:IsStopping() or MR.Duplicator:GetCurrent(ply) + MR.Duplicator:GetErrorsCurrent(ply) >= MR.Duplicator:GetTotal(ply)  then
 		-- Register that the map is modified
 		if not MR.Base:GetInitialized() and not isGModLoadOverriding then
 			MR.Base:SetInitialized()

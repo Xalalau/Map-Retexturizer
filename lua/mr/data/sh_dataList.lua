@@ -118,13 +118,26 @@ function DataList:CleanIDs(list)
 	end
 end
 
--- Remove all the disabled and materialIDs from elements from all lists
+-- Remove materialIDs and entities from decal lists
+function DataList:CleanDecalList(list)
+	DataList:CleanIDs(list)
+
+	for k,data in ipairs(list) do
+		data.ent = nil
+	end
+end
+
+-- Remove all the disabled elements from all lists
+-- Remove all the materialIDs from all lists
+-- Remove entities from decals
 function DataList:CleanAll(modificationTab)
 	for listName,list in pairs(modificationTab) do
 		if listName ~= "savingFormat" and #list > 0 then
 			DataList:CleanDisabled(list)
 
-			if listName == "decals" or listName == "models" then
+			if listName == "decals" then
+				DataList:CleanDecalList(list)
+			elseif listName == "models" then
 				DataList:CleanIDs(list)
 			end
 		end

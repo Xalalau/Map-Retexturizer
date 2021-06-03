@@ -262,7 +262,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 		-- Next material
 		if not MR.Duplicator:IsStopping() and position <= finalPosition then
 			timer.Simple(0, function() -- Break recursion stack
-				Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
+				Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted, forcePosition)
 			end)
 		-- There are no more entries
 		else
@@ -318,7 +318,7 @@ function Duplicator:LoadMaterials(ply, savedTable, position, finalPosition, sect
 
 	-- Next material
 	timer.Simple(GetConVar("internal_mr_delay"):GetFloat(), function()
-		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted)
+		Duplicator:LoadMaterials(ply, savedTable, position + 1, finalPosition, section, isBroadcasted, forcePosition)
 	end)
 end
 

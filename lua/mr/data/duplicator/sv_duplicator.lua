@@ -23,12 +23,13 @@ local dup = {
 -- Networking
 util.AddNetworkString("Duplicator:SetRunning")
 util.AddNetworkString("Duplicator:InitProcessedList")
+util.AddNetworkString("Duplicator:GetAntiDyssyncChunks")
 util.AddNetworkString("CL.Duplicator:SetProgress")
 util.AddNetworkString("CL.Duplicator:CheckForErrors")
 util.AddNetworkString("CL.Duplicator:FinishErrorProgress")
 util.AddNetworkString("CL.Duplicator:ForceStop")
 util.AddNetworkString("CL.Duplicator:FindDyssynchrony")
-util.AddNetworkString("Duplicator:GetAntiDyssyncChunks")
+util.AddNetworkString("CL.Duplicator:ResetDyssyncCounter")
 
 function Duplicator:SetCurrentTable(ply, savedTable)
 	dup.currentTable[tostring(ply)] = savedTable

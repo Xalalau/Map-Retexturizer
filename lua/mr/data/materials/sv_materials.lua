@@ -197,6 +197,10 @@ function Materials:RemoveAll(ply, selectedTypes)
 			arg2 = (callback == "Decals" or callback == "Skybox") and true
 			MR.SV[callback]:RemoveAll(ply, arg2)
 		end
+
+		-- Reenable anti dyssync system if it's disabled 
+		net.Start("CL.Duplicator:ResetDyssyncCounter")
+		net.Broadcast()
 	end
 
 	return true

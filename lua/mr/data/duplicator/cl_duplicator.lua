@@ -35,6 +35,10 @@ net.Receive("CL.Duplicator:FindDyssynchrony", function()
 	Duplicator:FindDyssynchrony(net.ReadString(), net.ReadBool())
 end)
 
+net.Receive("CL.Duplicator:ResetDyssyncCounter", function()
+	Duplicator:ResetDyssyncCounter()
+end)
+
 -- Progress bar hook
 hook.Add("HUDPaint", "MRDupProgress", function()
 	if LocalPlayer() then

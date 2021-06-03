@@ -153,36 +153,49 @@ function Materials:SetAll(ply)
 end
 
 -- Clean up everything
-function Materials:RemoveAll(ply, callbackTab)
+function Materials:RemoveAll(ply, selectedTypes)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 
-	if not callbackTab then
+	-- Common full cleanup
+	if not selectedTypes then
 		MR.SV.Models:RemoveAll(ply)
 		MR.SV.Map:RemoveAll(ply)
 		MR.SV.Decals:RemoveAll(ply, true)
 		MR.SV.Displacements:RemoveAll(ply)
 		MR.SV.Skybox:RemoveAll(ply, true)
+	-- Clean selected material types
 	else
-		-- Convert string to table
-		callbackTab = string.Explode("+", callbackTab)
+		--[[
+			Convert selectedTypes string to table, e.g.
 
-		for k,v in ipairs(callbackTab) do
+			"section1+section2+"
+
+			turns into
+
+			{
+				["section1"] = true,
+				["section2"] = true
+			}
+
+		]]
+
+		selectedTypes = string.Explode("+", selectedTypes)
+
+		for k,v in ipairs(selectedTypes) do
 			if v ~= "" then
-				callbackTab[v] = true
+				selectedTypes[v] = true
 			end
 
-			callbackTab[k] = nil
+			selectedTypes[k] = nil
 		end
 
 		-- Cleanup
-		if table.Count(callbackTab) > 0 then
-			for callback,_ in pairs(callbackTab) do
-				arg2 = (callback == "Decals" or callback == "Skybox") and true
-				MR.SV[callback]:RemoveAll(ply, arg2)
-			end
+		for callback,_ in pairs(selectedTypes) do
+			arg2 = (callback == "Decals" or callback == "Skybox") and true
+			MR.SV[callback]:RemoveAll(ply, arg2)
 		end
 	end
 

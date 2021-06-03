@@ -213,12 +213,12 @@ end
 	-- Skybox
 	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 		MR.SV.Skybox:Set(ply, newData, true)
-	-- model
-	elseif IsValid(tr.Entity) then
-		MR.Models:Set(ply, newData, true)
 	-- map/displacement
 	elseif tr.Entity:IsWorld() then
 		MR.Map:Set(ply, newData, true)
+	-- model	
+	elseif IsValid(tr.Entity) then
+		MR.Models:Set(ply, newData, true)
 	end
 
 	return true
@@ -322,12 +322,12 @@ function TOOL:Reload(tr)
 			-- Skybox
 			elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
 				MR.SV.Skybox:Remove(ply, true)
-			-- model
-			elseif IsValid(tr.Entity) then
-				MR.Models:Remove(ply, tr.Entity, true)
 			-- map/displacement
 			elseif tr.Entity:IsWorld() then
 				MR.Map:Remove(ply, MR.Materials:GetOriginal(tr), true)
+			-- model
+			elseif IsValid(tr.Entity) then
+				MR.Models:Remove(ply, tr.Entity, true)
 			end
 		end
 

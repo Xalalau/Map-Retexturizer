@@ -34,3 +34,7 @@ function Decals:Remove(ply, oldMaterial, isBroadcasted)
 
 	MR.SV.Duplicator:Start(ply, nil, newTable, "noMrLoadFile", true)
 end
+
+function Decals:RemoveAll(ply, isBroadcasted)
+	MR.Decals:RemoveAll(ply, isBroadcasted)
+end

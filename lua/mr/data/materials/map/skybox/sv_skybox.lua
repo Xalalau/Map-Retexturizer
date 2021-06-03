@@ -95,6 +95,11 @@ function Skybox:Set(ply, data, isBroadcasted, forcePosition)
 	return
 end
 
+-- Alias to Skybox:Remove()
+function Skybox:RemoveAll(ply, isBroadcasted)
+	Skybox:Remove(ply, isBroadcasted)
+end
+
 -- Remove the skybox
 function Skybox:Remove(ply, isBroadcasted)
 	-- Admin only

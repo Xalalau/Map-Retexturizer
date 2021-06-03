@@ -21,7 +21,7 @@ util.AddNetworkString("SV.Materials:RemoveAll")
 util.AddNetworkString("SV.Materials:SetAll")
 
 net.Receive("SV.Materials:RemoveAll", function(_, ply)
-	 Materials:RemoveAll(ply)
+	 Materials:RemoveAll(ply, net.ReadString())
 end)
 
 net.Receive("SV.Materials:SetAll", function(_,ply)
@@ -153,18 +153,38 @@ function Materials:SetAll(ply)
 end
 
 -- Clean up everything
-function Materials:RemoveAll(ply)
+function Materials:RemoveAll(ply, callbackTab)
 	-- Admin only
 	if not MR.Ply:IsAdmin(ply) then
 		return false
 	end
 
-	-- Cleanup
-	MR.SV.Models:RemoveAll(ply)
-	MR.SV.Map:RemoveAll(ply)
-	MR.Decals:RemoveAll(ply, true)
-	MR.SV.Displacements:RemoveAll(ply)
-	MR.SV.Skybox:Remove(ply, true)
+	if not callbackTab then
+		MR.SV.Models:RemoveAll(ply)
+		MR.SV.Map:RemoveAll(ply)
+		MR.SV.Decals:RemoveAll(ply, true)
+		MR.SV.Displacements:RemoveAll(ply)
+		MR.SV.Skybox:RemoveAll(ply, true)
+	else
+		-- Convert string to table
+		callbackTab = string.Explode("+", callbackTab)
+
+		for k,v in ipairs(callbackTab) do
+			if v ~= "" then
+				callbackTab[v] = true
+			end
+
+			callbackTab[k] = nil
+		end
+
+		-- Cleanup
+		if table.Count(callbackTab) > 0 then
+			for callback,_ in pairs(callbackTab) do
+				arg2 = (callback == "Decals" or callback == "Skybox") and true
+				MR.SV[callback]:RemoveAll(ply, arg2)
+			end
+		end
+	end
 
 	return true
 end

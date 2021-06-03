@@ -60,35 +60,35 @@ function Panels:SetCleanup(parent, frameType, info)
 	local options = {}
 
 	local cleanBox1 = vgui.Create("DCheckBoxLabel", panel)
-		options[1] = { cleanBox1, "SV.Map:RemoveAll" }
+		options[1] = { cleanBox1, "Map" }
 		cleanBox1:SetPos(cleanBox1Info.x, cleanBox1Info.y)
 		cleanBox1:SetText("Map")
 		cleanBox1:SetTextColor(Color(0, 0, 0, 255))
 		cleanBox1:SetValue(true)
 
 	local cleanBox2 = vgui.Create("DCheckBoxLabel", panel)
-		options[2] = { cleanBox2, "SV.Models:RemoveAll" }
+		options[2] = { cleanBox2, "Models" }
 		cleanBox2:SetPos(cleanBox2Info.x, cleanBox2Info.y)
 		cleanBox2:SetText("Models")
 		cleanBox2:SetTextColor(Color(0, 0, 0, 255))
 		cleanBox2:SetValue(true)
 
 	local cleanBox3 = vgui.Create("DCheckBoxLabel", panel)
-		options[3] = { cleanBox3, "Decals:RemoveAll" }
+		options[3] = { cleanBox3, "Decals" }
 		cleanBox3:SetPos(cleanBox3Info.x, cleanBox3Info.y)
 		cleanBox3:SetText("Decals")
 		cleanBox3:SetTextColor(Color(0, 0, 0, 255))
 		cleanBox3:SetValue(true)
 
 	local cleanBox4 = vgui.Create("DCheckBoxLabel", panel)
-		options[4] = { cleanBox4, "SV.Displacements:RemoveAll" }
+		options[4] = { cleanBox4, "Displacements" }
 		cleanBox4:SetPos(cleanBox4Info.x, cleanBox4Info.y)
 		cleanBox4:SetText("Displacements")
 		cleanBox4:SetTextColor(Color(0, 0, 0, 255))
 		cleanBox4:SetValue(true)
 
 	local cleanBox5 = vgui.Create("DCheckBoxLabel", panel)
-		options[5] = { cleanBox5, "SV.Skybox:Remove" }
+		options[5] = { cleanBox5, "Skybox" }
 		cleanBox5:SetPos(cleanBox5Info.x, cleanBox5Info.y)
 		cleanBox5:SetText("Skybox")
 		cleanBox5:SetTextColor(Color(0, 0, 0, 255))
@@ -103,15 +103,16 @@ function Panels:SetCleanup(parent, frameType, info)
 		cleanupButton:SetText("Cleanup")
 		cleanupButton:SetIcon("icon16/bin.png")
 		cleanupButton.DoClick = function()
+			local remove = ""
 			for k,v in pairs(options) do
 				if v[1]:GetChecked() then
-					net.Start(v[2])
-					if v[2] == "SV.Skybox:Remove" or v[2] == "Decals:RemoveAll" then
-						net.WriteBool(true)
-					end
-					net.SendToServer()
+					remove = remove .. v[2] .. "+"
 				end
 			end
+
+			net.Start("SV.Materials:RemoveAll")
+				net.WriteString(remove)
+			net.SendToServer()
 		end
 
 	--------------------------

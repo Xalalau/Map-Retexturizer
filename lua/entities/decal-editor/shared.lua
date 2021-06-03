@@ -21,7 +21,7 @@ function ENT:Initialize()
 	else
 		-- HACK: DISABLE STENCIL IN CONTEXT MENU
 		if GAMEMODE.IsSandboxDerived then
-            local entStr = tostring(ent)
+            local entStr = tostring(self)
 
             hook.Add("OnContextMenuOpen", "MR_DE_OpenCT" .. entStr, function()
                 if not self:IsValid() then

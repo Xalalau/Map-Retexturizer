@@ -1,9 +1,22 @@
 include("shared.lua")
 
+-- HACK: DISABLE STENCIL WHILE CONTEXT MENU IS OPEN
+local blockStencil = false 
+
+if GAMEMODE.IsSandboxDerived then
+	hook.Add("OnContextMenuOpen", "MR_DE_OpenCT", function()
+		blockStencil = true
+	end)
+
+	hook.Add("OnContextMenuClose", "MR_DE_CloseCT", function()
+		blockStencil = false
+	end)
+end
+
 -- https://github.com/Lexicality/stencil-tutorial/blob/master/lua/stencil_tutorial/06_cutting_holes_in_props.lua
 function ENT:Draw()
 	local scale = self:GetNWFloat("scale")
-	if self.inFocus and scale and not self.BlockStencil then			
+	if self.inFocus and scale and not blockStencil then			
 		-- Reset everything to known good
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilTestMask( 0xFF )

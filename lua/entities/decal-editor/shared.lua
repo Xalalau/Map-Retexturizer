@@ -18,26 +18,5 @@ function ENT:Initialize()
         self:SetColor(Color(255, 0, 0, 255))
         self:DrawShadow(false)
         self.inFocus = false
-	else
-		-- HACK: DISABLE STENCIL IN CONTEXT MENU
-		if GAMEMODE.IsSandboxDerived then
-            local entStr = tostring(self)
-
-            hook.Add("OnContextMenuOpen", "MR_DE_OpenCT" .. entStr, function()
-                if not self:IsValid() then
-                    hook.Remove("OnContextMenuOpen",  "MR_DE_OpenCT" .. entStr)
-                else
-				    self.BlockStencil = true
-                end
-			end)
-
-			hook.Add("OnContextMenuClose", "MR_DE_CloseCT" .. entStr, function()
-                if not self:IsValid() then
-                    hook.Remove("OnContextMenuOpen",  "MR_DE_CloseCT" .. entStr)
-                else
-				    self.BlockStencil = false
-                end
-			end)
-		end
-	end
+    end
 end

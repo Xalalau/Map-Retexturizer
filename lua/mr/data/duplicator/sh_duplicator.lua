@@ -236,7 +236,7 @@ duplicator.RegisterEntityModifier("MapRetexturizer_version", RecreateTable)
 
 -- Send the anti dyssynchrony table (compressed string chunks)
 function Duplicator:SendAntiDyssyncChunks(sendTab, scope, lib, callback, args)
-	if sendTab and istable(sendTab) and MR.DataList:GetTotalModificantions(sendTab.current or sendTab) > 0 then
+	if sendTab and istable(sendTab) and MR.DataList:GetTotalModificantions(sendTab.applied or sendTab) > 0 then
 		local curTable = util.Compress(util.TableToJSON(sendTab))
 		local chunks = {}
 		local totalSize = string.len(curTable)

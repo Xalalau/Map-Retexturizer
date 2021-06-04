@@ -337,7 +337,7 @@ end
 function Duplicator:RemoveMaterials(ply, differencesTable)
 	if not MR.Ply:IsValid(ply) then return end
 
-	for sectionName,section in pairs(differencesTable.current) do
+	for sectionName,section in pairs(differencesTable.applied) do
 		if sectionName == "savingFormat" then continue end
 
 		for index,data in pairs(section) do

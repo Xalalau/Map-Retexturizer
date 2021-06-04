@@ -209,8 +209,23 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 
 	for sectionName,section in pairs(currentModifications) do
 		if istable(section) then
+			-- Get Data above the max. initialized in the server
+			if #modificationTab[sectionName] > #section then
+				local i = #section + 1
+
+				while (i <= #modificationTab[sectionName]) do
+					if not differences.applied[sectionName] then differences.applied[sectionName] = {} end
+					if not differences.current[sectionName] then differences.current[sectionName] = {} end
+
+					differences.applied[sectionName][i] = modificationTab[sectionName][i]
+					differences.current[sectionName][i] = nil
+
+					i = i + 1
+				end
+			end
+
+			-- Compare initialized server Data
 			for index,currentData in pairs(section) do
-				
 				local appliedData = modificationTab[sectionName] and modificationTab[sectionName][index]
 				
 				local isOnlyCurrentDataActive = not DataList:IsActive(currentData) and DataList:IsActive(appliedData)
@@ -236,7 +251,6 @@ function DataList:GetDifferences(modificationTab, isCurrent)
 
 					differences.applied[sectionName][index] = appliedData
 					differences.current[sectionName][index] = currentData
-
 				end
 			end
 		end

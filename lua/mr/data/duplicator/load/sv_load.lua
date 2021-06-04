@@ -390,6 +390,11 @@ function Load:Upgrade(savedTable, loadName)
 	local startFormat = savedTable.savingFormat or "1.0"
 	local currentFormat = startFormat
 
+	-- It's updated
+	if currentFormat == MR.Save:GetCurrentVersion() then
+		return savedTable
+	end
+
 	-- Upgrade
 	currentFormat = Load:Upgrade1to2(savedTable, isDupStarting, currentFormat)
 	currentFormat = Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)

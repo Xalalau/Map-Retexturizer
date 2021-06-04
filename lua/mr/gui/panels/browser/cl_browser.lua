@@ -301,11 +301,11 @@ function Browser:Create_PopulateLists(TreeList, Scroll, browserPreviewMaterial)
 	local node = TreeList:AddNode("Materials!")
 		node:SetExpanded(true)
 
-	Browser:ParseDir(node, "materials/", { ".vmt" }, browserPreviewMaterial, Scroll)
+	Browser:ReadDir(node, "materials/", { ".vmt" }, browserPreviewMaterial, Scroll)
 end
 
 -- Load the contents of a directory
-function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
+function Browser:ReadDir(node, dir, ext, browserPreviewMaterial, Scroll)
 	local files, dirs = file.Find(dir.."*", "GAME")
 
 	-- Folders
@@ -315,10 +315,10 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 
 			n:SetExpanded(true)
 			n.DoClick = function()
-				Browser:ParseDir_CreateResetIconsPanel(Scroll, false, n, dir, fdir, ext, browserPreviewMaterial)
+				Browser:ReadDir_CreateResetIconsPanel(Scroll, false, n, dir, fdir, ext, browserPreviewMaterial)
 
 				n.DoClick = function()
-					Browser:ParseDir_CreateResetIconsPanel(Scroll, true, n, dir, fdir, ext, browserPreviewMaterial)
+					Browser:ReadDir_CreateResetIconsPanel(Scroll, true, n, dir, fdir, ext, browserPreviewMaterial)
 				end
 			end
 		end
@@ -400,14 +400,14 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 							timer.Simple(0.03, function()
 								MR.CL.Materials:SetPreview()
 							end)
-							Browser:ParseDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorMiddle())
-							Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, 14, "Tool gun")
+							Browser:ReadDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorMiddle())
+							Browser:ReadDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, 14, "Tool gun")
 						-- Copy material path to clipboard (MOUSE_MIDDLE)
 						elseif input.IsMouseDown(109) then
 							pressed = 109
 							SetClipboardText(arq)
-							Browser:ParseDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorRight())
-							Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, 7, "Path copied")
+							Browser:ReadDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorRight())
+							Browser:ReadDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, 7, "Path copied")
 						end
 					end
 
@@ -415,7 +415,7 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 					icon.OnReleased = function()
 						-- Remove right or middle click momentary effects
 						if pressed == 108 or pressed == 109 then
-							Browser:ParseDir_RemoveEffect(icon, iconBackground, info, selected)
+							Browser:ReadDir_RemoveEffect(icon, iconBackground, info, selected)
 						end
 
 						pressed = nil
@@ -426,12 +426,12 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 						if Browser:GetSelectedMaterialSelf():GetText() == arq then
 							if not selected then
 								Browser:SetSelectedMaterial(arq, browserPreviewMaterial)
-								Browser:ParseDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorLeft())
+								Browser:ReadDir_SetEffect(icon, iconBackground, info, Browser:GetIconListColorLeft())
 								selected = true
 							end
 						elseif selected then
 							selected = false
-							Browser:ParseDir_RemoveEffect(icon, iconBackground, info, selected)
+							Browser:ReadDir_RemoveEffect(icon, iconBackground, info, selected)
 						end
 					end
 
@@ -461,14 +461,14 @@ function Browser:ParseDir(node, dir, ext, browserPreviewMaterial, Scroll)
 end
 
 -- Set pressed effect
-function Browser:ParseDir_SetEffect(icon, iconBackground, info, color)
+function Browser:ReadDir_SetEffect(icon, iconBackground, info, color)
 	iconBackground:SetBackgroundColor(color)						
 	icon:SetSize(info.width - 8, info.height - 8)
 	icon:SetPos(info.x + 4, info.y + 4)
 end
 
 -- Unset pressed effect
-function Browser:ParseDir_RemoveEffect(icon, iconBackground, info, selected)
+function Browser:ReadDir_RemoveEffect(icon, iconBackground, info, selected)
 	iconBackground:SetBackgroundColor(selected and Browser:GetIconListColorLeft() or Browser:GetIconListColorNone())
 
 	if not selected then
@@ -478,7 +478,7 @@ function Browser:ParseDir_RemoveEffect(icon, iconBackground, info, selected)
 end
 
 -- Print a temporary overlay message
-function Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, marginLeft, message)
+function Browser:ReadDir_PrintOverlayMessage(iconBackground, maxSize, pressed, arq, marginLeft, message)
 	local iconOverlay = (vgui.Create("DPanel", iconBackground))
 		iconOverlay:SetSize(maxSize, maxSize)
 		iconOverlay:SetBackgroundColor(Color(255, 255, 255, 0))
@@ -510,7 +510,7 @@ function Browser:ParseDir_PrintOverlayMessage(iconBackground, maxSize, pressed, 
 end
 
 -- Recreate the icons view menu
-function Browser:ParseDir_CreateResetIconsPanel(Scroll, setOnly, n, dir, fdir, ext, browserPreviewMaterial)
+function Browser:ReadDir_CreateResetIconsPanel(Scroll, setOnly, n, dir, fdir, ext, browserPreviewMaterial)
 	-- Clear the list
 	Scroll.IconsList:Clear()
 
@@ -536,7 +536,7 @@ function Browser:ParseDir_CreateResetIconsPanel(Scroll, setOnly, n, dir, fdir, e
 		Scroll.IconsList.warning:SetPos(5, 5)
 	-- Fill the list(s)
 	else
-		Browser:ParseDir(n, dir..fdir.."/", ext, browserPreviewMaterial, Scroll)
+		Browser:ReadDir(n, dir..fdir.."/", ext, browserPreviewMaterial, Scroll)
 	end
 
 	-- Restart the scroll after some time

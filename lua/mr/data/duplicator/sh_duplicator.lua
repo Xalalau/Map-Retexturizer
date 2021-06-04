@@ -61,11 +61,14 @@ function Duplicator:Init()
 	dup.processed.list[999] = table.Copy(dup.processed.default)
 
 	-- Check every minute for dyssynchrony
+	--[[
+	-- TODO: Improve anti dyssync
 	if SERVER then
 		timer.Create("MR_AntiDyssynchrony", 60, 0, function()
 			MR.SV.Duplicator:FindDyssynchrony()
 		end)
 	end
+	]]
 end
 
 function Duplicator:InitProcessedList(ply, forceIndex)

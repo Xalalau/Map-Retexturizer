@@ -247,11 +247,14 @@ function Duplicator:FindDyssynchrony(ply, serverModifications, a, b, c, d)
 			end)
 
 			-- Print an alert
+			--[[
+			-- TODO: Improve anti dyssync - too many alerts! It's going to be silent for a while.
 			ply:PrintMessage(HUD_PRINTTALK, "\n[Map Retexturizer] Sync problems detected! Look at the console for more information.")
 			print("[Map Retexturizer] WARNING! Failed to fix material discrepancies between the server and the client")
 			print("To correct the problem, show the developer of the tool the following table:\n")
 			PrintTable(differences)
 			print("\nThis may be a false detection but it's something to be evaluated. The auto dyssync correction system will be turned off until the map materials are cleared or the difference is gone.\n")
+			]]
 
 			return
 		end

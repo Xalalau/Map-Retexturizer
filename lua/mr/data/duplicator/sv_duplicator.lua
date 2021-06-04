@@ -81,9 +81,6 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 		dup.recreatedTable.ent:Remove()
 		dup.recreatedTable.ent = nil
 
-		-- Clean table
-		MR.DataList:CleanAll(dup.recreatedTable)
-
 		-- Start
 		Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, table.Copy(dup.recreatedTable), "noMrLoadFile")
 
@@ -390,6 +387,10 @@ function Duplicator:FindDyssynchrony()
 end
 
 function Duplicator:FixDyssynchrony(ply, differences)
+	-- Do nothing if we are loading or unloading
+	if MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) then return end
+	if MR.Materials:IsRunningProgressiveCleanup() then return end
+
 	-- Remove the different materials from the player
 	Duplicator:RemoveMaterials(ply, differences)
 

@@ -40,7 +40,7 @@ function Data:IsEqual(Data1, Data2)
 		isEqual = false
 	else
 		for k,v in pairs(Data1) do
-			if k ~= "backup" and not IsEntity(v) then -- Ignore "backup" field and fields with entities
+			if k ~= "backup" and k ~= "ent" then
 				if v and not Data2[k] or not v and Data2[k] then -- Disabled fields
 					isEqual = false
 					break

@@ -400,10 +400,11 @@ function Load:Upgrade(savedTable, loadName)
 	currentFormat = Load:Upgrade2to3(savedTable, isDupStarting, currentFormat)
 	currentFormat = Load:Upgrade3to4(savedTable, isDupStarting, currentFormat)
 
-	-- Backup the old save file and create a new one with the convertion
-	if isDupStarting and
-		startFormat ~= currentFormat then
+	-- Clean table
+	MR.DataList:CleanAll(savedTable)
 
+	-- Backup a old save file and create a new one with the convertion
+	if isDupStarting then
 		local pathCurrent = MR.Base:GetSaveFolder()..loadName..".txt"
 		local pathBackup = MR.Base:GetConvertedFolder().."/"..loadName.."_format_"..startFormat..".txt"
 

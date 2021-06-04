@@ -6,7 +6,7 @@ local Base = {}
 MR.Base = Base
 
 local base = {
-	version = "Version 19.1",
+	version = "GitHub Version 19.1+",
 	materials = {
 		folder = "mr/"
 	},

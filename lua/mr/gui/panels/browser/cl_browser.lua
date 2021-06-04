@@ -298,10 +298,17 @@ end
 
 -- Populate the tree and icon lists
 function Browser:Create_PopulateLists(TreeList, Scroll, browserPreviewMaterial)
+	local dir = "materials"
+	local ext = { ".vmt" }
+
 	local node = TreeList:AddNode("Materials!")
 		node:SetExpanded(true)
 
-	Browser:ReadDir(node, "materials/", { ".vmt" }, browserPreviewMaterial, Scroll)
+		node.DoClick = function()
+			Browser:ReadDir_CreateResetIconsPanel(Scroll, true, node, dir, "", ext, browserPreviewMaterial)
+		end
+
+	Browser:ReadDir(node, dir .. "/", ext, browserPreviewMaterial, Scroll)
 end
 
 -- Load the contents of a directory

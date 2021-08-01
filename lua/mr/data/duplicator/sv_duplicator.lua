@@ -31,6 +31,11 @@ util.AddNetworkString("CL.Duplicator:ForceStop")
 util.AddNetworkString("CL.Duplicator:FindDyssynchrony")
 util.AddNetworkString("CL.Duplicator:ResetDyssyncCounter")
 
+-- Hook to prevent player clearing the dup ent
+hook.Add("PostCleanupMap", "MR_RecreateDupEnt", function()
+	Duplicator:SetEnt()
+end)
+
 function Duplicator:SetCurrentTable(ply, savedTable)
 	dup.currentTable[tostring(ply)] = savedTable
 end
@@ -209,12 +214,23 @@ end
 
 -- Set the duplicator entity
 function Duplicator:SetEnt(ent)
+	local function StoreEntityModifier(ent)
+		timer.Simple(1, function()
+			duplicator.StoreEntityModifier(ent, MR.SV.Displacements:GetDupName(), { displacements = MR.Displacements:GetList() })
+			duplicator.StoreEntityModifier(ent, MR.SV.Skybox:GetDupName(), { skybox = { MR.Skybox:GetList()[1] } })
+			duplicator.StoreEntityModifier(ent, MR.SV.Map:GetDupName(), { map = MR.Map:GetList() })
+			duplicator.StoreEntityModifier(ent, MR.SV.Decals:GetDupName(), { decals = MR.Decals:GetList() })
+			duplicator.StoreEntityModifier(ent, "MapRetexturizer_version", { savingFormat = MR.Save:GetCurrentVersion() })
+		end)
+	end
+
 	-- Hide/Disable our entity after a duplicator
 	if IsValid(ent) and ent:IsSolid() then
 		dup.entity.object = ent
 		dup.entity.object:SetNoDraw(true)				
 		dup.entity.object:SetSolid(0)
 		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
+		StoreEntityModifier(ent)
 	-- Create a new entity if we don't have one yet
 	elseif not IsValid(dup.entity.object) then
 		dup.entity.object = ents.Create("prop_physics")
@@ -225,6 +241,7 @@ function Duplicator:SetEnt(ent)
 		dup.entity.object:SetSolid(0)
 		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
 		dup.entity.object:SetName("MRDup")
+		StoreEntityModifier(dup.entity.object)
 	end
 end
 

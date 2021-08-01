@@ -17,6 +17,7 @@ Map Retexturizer commands
 mr_admin        1/0     =  Turn on/off the admin protections;
 mr_materials            =  List all the map materials;
 mr_cleanup              =  Clean all the modifications;
+mr_browser              =  Open the Material Browser;
 
 mr_list                 =  List the saved game names;
 mr_load        "name"   =  Load the saved game called "name";

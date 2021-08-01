@@ -35,3 +35,9 @@ function Concommands:PrintDisplacementsHelp()
 	print(msg)
 	RunConsoleCommand("mat_crosshair")
 end
+
+-- ---------------------------------------------------------
+-- mr_browser
+concommand.Add("mr_browser", function ()
+	MR.Browser:Create()
+end)

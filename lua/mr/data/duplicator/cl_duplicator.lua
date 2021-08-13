@@ -130,7 +130,11 @@ function Duplicator:FinishErrorProgress(isBroadcasted)
 	-- If there are errors
 	if table.Count(MR.Duplicator:GetErrorsList(ply)) > 0 then
 		-- Print the failed materials table
-		LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the console for the errors.")
+	
+		if GetConVar("mr_notifications"):GetBool() then
+			LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Check the console for the errors.")
+		end
+
 		print("")
 		print("-------------------------------------------------------------")
 		print("[MAP RETEXTURIZER] - Failed to load these materials:")

@@ -67,7 +67,13 @@ function TOOL_BasicChecks(ply, tr)
 	-- Don't use in the middle of a(n) (un)loading
 	if SERVER and MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
 		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Wait until the current process finishes.")
+			local message = "[Map Retexturizer] Wait until the current process finishes."
+
+			if GetConVar("mr_notifications"):GetBool() then
+				ply:PrintMessage(HUD_PRINTTALK, message)
+			else
+				print(message)
+			end
 		end
 
 		return false
@@ -81,12 +87,21 @@ function TOOL_BasicChecks(ply, tr)
 	-- Don't try to change a **displacement** directly
 	if tr.Entity:IsWorld() and MR.Materials:GetCurrent(tr) == "**displacement**" then
 		if SERVER then
+			local message
+
 			if GetConVar("sv_cheats"):GetString() == "0" then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Change displacements using the tool menu.")
+				message = "[Map Retexturizer] Change displacements using the tool menu."
 			else
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Read the console output to change displacements.")
+				message = "[Map Retexturizer] Read the console output to change displacements."
+
 				net.Start("CL.Concommands:PrintDisplacementsHelp")
 				net.Send(ply)
+			end
+
+			if GetConVar("mr_notifications"):GetBool() then
+				ply:PrintMessage(HUD_PRINTTALK, message)
+			else
+				print(message)
 			end
 		end
 
@@ -102,7 +117,13 @@ function TOOL_BasicChecks(ply, tr)
 	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
 			if not MR.Ply:GetDecalMode(ply) then
-				ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Change the skybox using the tool menu.")
+				local message = "[Map Retexturizer] Change the skybox using the tool menu."
+
+				if GetConVar("mr_notifications"):GetBool() then
+					ply:PrintMessage(HUD_PRINTTALK, message)
+				else
+					print(message)
+				end
 			end
 		end
 
@@ -153,7 +174,13 @@ end
 	   not MR.Materials:Validate(newData.newMaterial) and not MR.Materials:IsSkybox(newData.newMaterial) then
 
 		if SERVER then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Bad material.")
+			local message = "[Map Retexturizer] Bad material."
+
+			if GetConVar("mr_notifications"):GetBool() then
+				ply:PrintMessage(HUD_PRINTTALK, message)
+			else
+				print(message)
+			end
 		end
 
 		return false

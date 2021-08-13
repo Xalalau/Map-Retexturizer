@@ -27,7 +27,10 @@ end
 -- Printing success messages
 function Concommands:PrintSuccess(message)
 	print(message)
-	PrintMessage(HUD_PRINTTALK, message)
+
+	if GetConVar("mr_notifications"):GetBool() then
+		PrintMessage(HUD_PRINTTALK, message)
+	end
 end
 
 -- Printing fail messages

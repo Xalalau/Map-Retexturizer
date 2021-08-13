@@ -30,6 +30,7 @@ mr_delay                =  The delay between each materiall application on a loa
 mr_dup_cleanup  1/0     =  Enable/Disable cleanup before starting a load;
 mr_progress_bar 1/0     =  Enable/Disable the progress bar;
 mr_instant_cleanup 1/0  =  Clear the map as fast as possible (may cause a temporary freeze);
+mr_notifications 1/0    =  Enable/Disable tool chat notifications
 
 mr_add_disp "material"  =  Add displacement to the menu;
 mr_rem_disp "material"  =  Remove displacement from the menu.

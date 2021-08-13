@@ -78,7 +78,13 @@ function Skybox:Set(ply, data, isBroadcasted, forcePosition)
 	if data.detail then
 		data.detail = nil
 		if MR.Ply:IsValid(ply) then
-			ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Applying materials with details on the skybox is unsupported. Setting value to \"None\"...")
+			local message = "[Map Retexturizer] Applying materials with details on the skybox is unsupported. Setting value to \"None\"..."
+
+			if GetConVar("mr_notifications"):GetBool() then
+				ply:PrintMessage(HUD_PRINTTALK, message)
+			else
+				print(message)
+			end
 		end
 	end
 

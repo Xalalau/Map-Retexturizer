@@ -31,6 +31,8 @@ do
 	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags2)
 	CreateConVar("internal_mr_progress_bar", "1", sh_flags2)
 	CreateConVar("internal_mr_instant_cleanup", "0", sh_flags2)
+
+	CreateConVar("mr_notifications", "1", sh_flags2)
 end
 
 do

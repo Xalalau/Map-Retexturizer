@@ -573,7 +573,13 @@ function Materials:SetFirstSteps(ply, isBroadcasted, check, data, matType)
 		-- Check if the modifications table is full
 		if check.list and check.limit and MR.DataList:IsFull(check.list, check.limit) then
 			if SERVER then
-				PrintMessage(HUD_PRINTTALK, "[Map Retexturizer]["..matType.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space.")
+				local message = "[Map Retexturizer]["..matType.."] ALERT!!! Material limit reached ("..check.limit..")! Notify the developer for more space."
+
+				if GetConVar("mr_notifications"):GetBool() then
+					PrintMessage(HUD_PRINTTALK, message)
+				else
+					print(message)
+				end
 			end
 
 			return false
@@ -601,7 +607,14 @@ function Materials:SetFinalSteps()
 				timer.Create("MRAutoSave", 60, 1, function()
 					if not (MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup()) then
 						MR.SV.Save:Set(MR.SV.Ply:GetFakeHostPly(), MR.Base:GetAutoSaveName())
-						PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Auto saving...")
+
+						local message = "[Map Retexturizer] Auto saving..."
+
+						if GetConVar("mr_notifications"):GetBool() then
+							PrintMessage(HUD_PRINTTALK, message)
+						else
+							print(message)
+						end
 					end
 				end)
 			end

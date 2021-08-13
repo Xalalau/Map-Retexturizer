@@ -75,7 +75,13 @@ function Materials:SetDetailFixList()
 		end
 	end
 
-	LocalPlayer():PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] List of map material details built and saved.")
+	local message = "[Map Retexturizer] List of map material details built and saved."
+
+	if GetConVar("mr_notifications"):GetBool() then
+		LocalPlayer():PrintMessage(HUD_PRINTTALK, message)
+	else
+		print(message)
+	end
 
 	-- Send the detail chunks to the server
 	for _,currentChunk in pairs(list.materials) do

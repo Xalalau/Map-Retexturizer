@@ -194,7 +194,14 @@ function Ply:IsAdmin(ply)
 			if SERVER then
 				if not MR.Ply:GetFirstSpawn(ply) and not timer.Exists("MRNotAdminPrint") then
 					timer.Create("MRNotAdminPrint", 2, 1, function() end)
-					ply:PrintMessage(HUD_PRINTTALK, "[Map Retexturizer] Sorry, this tool is configured for administrators only!")
+
+					local message = "[Map Retexturizer] Sorry, this tool is configured for administrators only!"
+
+					if GetConVar("mr_notifications"):GetBool() then
+						ply:PrintMessage(HUD_PRINTTALK, message)
+					else
+						print(message)
+					end
 				end
 			end
 

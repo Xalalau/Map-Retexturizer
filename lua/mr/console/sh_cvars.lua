@@ -19,16 +19,18 @@ local cvars = {
 
 do
 	local sh_flags = { FCVAR_REPLICATED }
+	local sh_flags2 = { FCVAR_REPLICATED, FCVAR_ARCHIVE }
 
 	CreateConVar("internal_mr_admin", "1", sh_flags)
-	CreateConVar("internal_mr_autosave", "1", sh_flags)
 	CreateConVar("internal_mr_autoload", "", sh_flags)
 	CreateConVar("internal_mr_skybox", "", sh_flags)
-	CreateConVar("internal_mr_delay", "0.035", sh_flags)
 	CreateConVar("internal_mr_duplicator_cleanup", "1", sh_flags)
-	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags)
-	CreateConVar("internal_mr_progress_bar", "1", sh_flags)
-	CreateConVar("internal_mr_instant_cleanup", "0", sh_flags)
+
+	CreateConVar("internal_mr_delay", "0.035", sh_flags2)
+	CreateConVar("internal_mr_autosave", "1", sh_flags2)
+	CreateConVar("internal_mr_skybox_toolgun", "1", sh_flags2)
+	CreateConVar("internal_mr_progress_bar", "1", sh_flags2)
+	CreateConVar("internal_mr_instant_cleanup", "0", sh_flags2)
 end
 
 do

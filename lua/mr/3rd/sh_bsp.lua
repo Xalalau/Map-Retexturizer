@@ -29,10 +29,10 @@ local function toUShort(b)
 	return i[1] +i[2] *256
 end
 local function toInt(b)
-	local i = {string.byte(b,1,SIZEOF_INT)}
-	i = i[1] +i[2] *256 +i[3] *65536 +i[4] *16777216
-	if(i > 2147483647) then return i -4294967296 end
-	return i
+    	local d1, d2, d3, d4 = string.byte(b, 1, 4)
+	local value = bit.bor(d1, bit.lshift(d2, 8), bit.lshift(d3, 16), bit.lshift(d4, 24))
+	value = value > 2147483647 and value - 4294967296 or value
+	return value
 end
 local function toUInt(b)
 	local i = {string.byte(b,1,SIZEOF_UINT)}

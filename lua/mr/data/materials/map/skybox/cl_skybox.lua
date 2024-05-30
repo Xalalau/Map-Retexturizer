@@ -2,7 +2,19 @@
 --- MATERIALS (SKYBOX)
 --------------------------------
 
-local Skybox = {}
+local Skybox = {
+	distance = 200,
+	suffixes = MR.Skybox:GetSuffixes(),
+	lastNewMaterial = nil,
+    ft = nil,
+    bk = nil,
+    lf = nil,
+    rt = nil,
+    up = nil,
+    dn = nil
+}
+Skybox.width = Skybox.distance * 2.01
+Skybox.height = Skybox.distance * 2.01
 MR.CL.Skybox = Skybox
 
 -- Skybox rendering hook
@@ -14,29 +26,36 @@ end)
 
 -- Render 6 side skybox materials on every map or simple materials on the skybox on maps with env_skypainted entity
 function Skybox:Render()
+	local newMaterial = MR.Skybox:GetFilename2()
+
 	if newMaterial == "" or not MR.Materials:Validate(MR.Skybox:GetCurrent()) then return end
 
-	local distance = 200
-	local width = distance * 2.01
-	local height = distance * 2.01
-	local newMaterial = MR.Skybox:GetFilename2()
-	local suffixes = MR.Skybox:GetSuffixes()
+	if lastNewMaterial ~= newMaterial then
+		self.ft = Material(newMaterial .. self.suffixes[1])
+		self.bk = Material(newMaterial .. self.suffixes[2])
+		self.lf = Material(newMaterial .. self.suffixes[3])
+		self.rt = Material(newMaterial .. self.suffixes[4])
+		self.up = Material(newMaterial .. self.suffixes[5])
+		self.dn = Material(newMaterial .. self.suffixes[6])
+
+		self.lastNewMaterial = newMaterial
+	end
 
 	render.OverrideDepthEnable(true, false)
 
 	cam.Start3D(Vector(0, 0, 0), EyeAngles())
-		render.SetMaterial(Material(newMaterial..suffixes[1])) -- ft
-		render.DrawQuadEasy(Vector(0,-distance,0), Vector(0,1,0), width, height, Color(255,255,255,255), 180)
-		render.SetMaterial(Material(newMaterial..suffixes[2])) -- bk
-		render.DrawQuadEasy(Vector(0,distance,0), Vector(0,-1,0), width, height, Color(255,255,255,255), 180)
-		render.SetMaterial(Material(newMaterial..suffixes[3])) -- lf
-		render.DrawQuadEasy(Vector(-distance,0,0), Vector(1,0,0), width, height, Color(255,255,255,255), 180)
-		render.SetMaterial(Material(newMaterial..suffixes[4])) -- rt
-		render.DrawQuadEasy(Vector(distance,0,0), Vector(-1,0,0), width, height, Color(255,255,255,255), 180)
-		render.SetMaterial(Material(newMaterial..suffixes[5])) -- up
-		render.DrawQuadEasy(Vector(0,0,distance), Vector(0,0,-1), width, height, Color(255,255,255,255), 0)
-		render.SetMaterial(Material(newMaterial..suffixes[6])) -- dn
-		render.DrawQuadEasy(Vector(0,0,-distance), Vector(0,0,1), width, height, Color(255,255,255,255), 0)
+		render.SetMaterial(self.ft)
+		render.DrawQuadEasy(Vector(0,-self.distance,0), Vector(0,1,0), self.width, self.height, Color(255,255,255,255), 180)
+		render.SetMaterial(self.bk)
+		render.DrawQuadEasy(Vector(0,self.distance,0), Vector(0,-1,0), self.width, self.height, Color(255,255,255,255), 180)
+		render.SetMaterial(self.lf)
+		render.DrawQuadEasy(Vector(-self.distance,0,0), Vector(1,0,0), self.width, self.height, Color(255,255,255,255), 180)
+		render.SetMaterial(self.rt)
+		render.DrawQuadEasy(Vector(self.distance,0,0), Vector(-1,0,0), self.width, self.height, Color(255,255,255,255), 180)
+		render.SetMaterial(self.up)
+		render.DrawQuadEasy(Vector(0,0,self.distance), Vector(0,0,-1), self.width, self.height, Color(255,255,255,255), 0)
+		render.SetMaterial(self.dn)
+		render.DrawQuadEasy(Vector(0,0,-self.distance), Vector(0,0,1), self.width, self.height, Color(255,255,255,255), 0)
 	cam.End3D()
 
 	render.OverrideDepthEnable(false, false)

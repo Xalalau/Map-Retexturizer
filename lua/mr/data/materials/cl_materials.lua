@@ -125,7 +125,7 @@ end
 
 -- Create a material if it doesn't exist
 -- NOTE: change the created material using the returned variable, don't try to get it using Material(name or path)!!! 
-function SEv.Material:Create(name, matType, path)
+function Materials:Create(name, matType, path)
     local material = Material(name)
 
     if not material or material:IsError() then
@@ -171,7 +171,7 @@ function Materials:SetPreview(newData)
 end
 
 -- Great to fix menu images flickering etc
-function SEv.Material:FixVertexLitMaterial(materialName)
+function Materials:FixVertexLitMaterial(materialName)
     local material = Material(materialName)
 
     if not material then return material end
@@ -201,6 +201,30 @@ function SEv.Material:FixVertexLitMaterial(materialName)
 
     return material
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -- Apply the changes of a Data table
 function Materials:Apply(data)

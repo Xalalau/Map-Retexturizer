@@ -125,11 +125,13 @@ end
 
 -- Create a material if it doesn't exist
 -- NOTE: change the created material using the returned variable, don't try to get it using Material(name or path)!!! 
-function Materials:Create(name, matType, path)
-	if not Material(name) or Material(name):IsError() then
+function SEv.Material:Create(name, matType, path)
+    local material = Material(name)
+
+    if not material or material:IsError() then
 		return CreateMaterial(name, matType or "LightmappedGeneric", { ["$basetexture"] = name or path })
 	else
-		return Material(name)
+		return material
 	end
 end
 

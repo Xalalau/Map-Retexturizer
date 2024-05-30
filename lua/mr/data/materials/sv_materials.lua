@@ -194,7 +194,7 @@ function Materials:RemoveAll(ply, selectedTypes)
 
 		-- Cleanup
 		for callback,_ in pairs(selectedTypes) do
-			arg2 = (callback == "Decals" or callback == "Skybox") and true
+			arg2 = (callback == "Decals" or callback == "Skybox")
 			MR.SV[callback]:RemoveAll(ply, arg2)
 		end
 

@@ -50,7 +50,7 @@ end
 --- TOOL
 --------------------------------
 
-function TOOL_BasicChecks(ply, tr)
+function TOOL:BasicChecks(ply, tr)
 	-- Flood control
 	-- This prevents the tool from doing multiple activations in a short time
 	if timer.Exists("MRWaitForNextInteration"..tostring(ply)) then
@@ -113,6 +113,11 @@ function TOOL_BasicChecks(ply, tr)
 		return false
 	end
 
+	-- Don't interact with models on decal mode
+	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() and not MR.Materials:IsDecal(nil, tr) then
+		return false
+	end 
+
 	--Check if we can interact with the skybox
 	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
 		if SERVER then
@@ -140,14 +145,9 @@ end
 	local isDecalMode = MR.Ply:GetDecalMode(ply)
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, tr) then
+	if not self:BasicChecks(ply, tr) then
 		return false
 	end
-
-	-- Don't apply on models on decal mode
-	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() and not MR.Materials:IsDecal(nil, tr) then
-		return false
-	end 
 
 	-- Get data tables with the future and current materials
 	local oldData, index = MR.Materials:GetData(tr)
@@ -257,7 +257,7 @@ function TOOL:RightClick(tr)
 	local isDecal = false
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, tr) then
+	if not self:BasicChecks(ply, tr) then
 		return false
 	end
 
@@ -334,7 +334,7 @@ function TOOL:Reload(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 
 	-- Basic checks
-	if not TOOL_BasicChecks(ply, tr) then
+	if not self:BasicChecks(ply, tr) then
 		return false
 	end
 

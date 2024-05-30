@@ -6,7 +6,7 @@ local Base = {}
 MR.Base = Base
 
 local base = {
-	version = "Version 19.4",
+	version = "Version 20",
 	materials = {
 		folder = "mr/"
 	},

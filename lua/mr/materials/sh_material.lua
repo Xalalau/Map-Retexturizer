@@ -2,15 +2,13 @@
 --- Materials (GENERAL)
 --------------------------------
 
-MR.Materials = MR.Materials or {
-	-- Material type enum
-	type = {
-		brush = 0,
-		decal = 1,
-		displacement = 2,
-		skybox = 3,
-		model = 4
-	}
+MR.Materials = MR.Materials or {}
+MR.Materials.type = MR.Materials.type or { -- Material type enum
+	brush = 0,
+	decal = 1,
+	displacement = 2,
+	skybox = 3,
+	model = 4
 }
 
 local Materials = MR.Materials

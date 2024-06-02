@@ -345,14 +345,25 @@ function Materials:ForceApplyAll(modificationTab)
 	if next(modificationTab.skybox) then
 		materialList = MR.Skybox:GetList()
 		materialData = modificationTab.skybox[1]
-		i = MR.DataList:GetFreeIndex(materialList)
-		MR.DataList:InsertElement(materialList, materialData, i)
+
+		if MR.Materials:IsFullSkybox(materialData.newMaterial) then
+			materialData.newMaterial = MR.Skybox:RemoveSuffix(data.newMaterial)
+
+			MR.Materials:SetValid(materialData.newMaterial, true)
+		end
+
 		local y
 		for y = 1,6 do
 			materialData.newMaterial = MR.Materials:IsSkybox(materialData.newMaterial) and (MR.Skybox:RemoveSuffix(materialData.newMaterial) .. MR.Skybox:GetSuffixes()[y]) or materialData.newMaterial
 			materialData.oldMaterial = MR.Skybox:GetFilename2() .. MR.Skybox:GetSuffixes()[y]
+			materialData.backup = MR.Data:CreateFromMaterial(materialData.oldMaterial, nil, nil, nil, true)
 
-			Materials:Apply(materialData)
+			local materialDataCopy = table.Copy(materialData)
+
+			i = MR.DataList:GetFreeIndex(materialList)
+			MR.DataList:InsertElement(materialList, materialDataCopy, i)
+
+			Materials:Apply(materialDataCopy)
 		end
 	end
 	if next(modificationTab.decals) then	

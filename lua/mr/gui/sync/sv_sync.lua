@@ -33,7 +33,7 @@ function Sync:Replicate(ply, command, value, field1, field2)
 	end
 
 	-- Run the command
-	RunConsoleCommand(command, value)
+	RunConsoleCommand(command, value == "" and " " or value)
 
 	-- Change field values on server
 	if field1 and field2 then

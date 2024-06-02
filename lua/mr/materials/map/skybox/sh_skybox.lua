@@ -63,19 +63,17 @@ net.Receive("Skybox:Init", function()
 end)
 
 function Skybox:Init()
-	timer.Simple(2, function()
-		-- Get the sky name
-		Skybox:SetName("skybox/"..GetConVar("sv_skyname"):GetString()) --Doing this quickly above has returned me the default sky name instead of the current one
-		-- Check if it's a painted one
-		skybox.painted = skybox.name == "skybox/painted"
+	-- Get the sky name
+	Skybox:SetName("skybox/"..GetConVar("sv_skyname"):GetString()) --Doing this quickly above has returned me the default sky name instead of the current one
+	-- Check if it's a painted one
+	skybox.painted = skybox.name == "skybox/painted"
 
-		-- Initialize the painted skybox
-		if CLIENT then
-			for i=1,6,1 do
-				Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
-			end
+	-- Initialize the painted skybox
+	if CLIENT then
+		for i=1,6,1 do
+			Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
 		end
-	end)
+	end
 end
 
 -- Check if the map has an env_skypainted entity or if a material is the painted material

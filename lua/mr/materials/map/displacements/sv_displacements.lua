@@ -94,17 +94,17 @@ function Displacements:Init()
 			end
 
 			-- Register the material once and initialize it in the tool
-			if material and not displacements.Materials[material] then
-				displacements.Materials[material] = material:sub(1, #material - 1)
+			if material and not displacements.materials[material] then
+				displacements.materials[material] = material:sub(1, #material - 1)
 
-				MR.Displacements:SetDetected(displacements.Materials[material]) -- Important: remove the last char
+				MR.Displacements:SetDetected(displacements.materials[material]) -- Important: remove the last char
 			end
 		end
 
 		-- Save the list
 		print("[Map Retexturizer] Displacements list saved.")
 
-		file.Write(dispFile, util.TableToJSON(displacements.Materials, true))
+		file.Write(dispFile, util.TableToJSON(displacements.materials, true))
 	end
 end
 

@@ -47,13 +47,13 @@ function Detail:SetFixList()
 		local material = string.lower(texDataTranslated[texData[texInfo[k].texdata + 1].nameStringTableID + 1]) -- More increments to adjust C tables to Lua
 
 		-- Create the chunk
-		if not list.Materials[chunk] then
-			list.Materials[chunk] = {}
+		if not list.materials[chunk] then
+			list.materials[chunk] = {}
 		end
 
 		-- Register the material detail in the chunk
-		if not list.Materials[chunk][material] then
-			list.Materials[chunk][material] = MR.Detail:Get(material)
+		if not list.materials[chunk][material] then
+			list.materials[chunk][material] = MR.Detail:Get(material)
 
 			if current == chunk * chunkSize then
 				chunk = chunk + 1
@@ -71,7 +71,7 @@ function Detail:SetFixList()
 	end
 
 	-- Send the detail chunks to the server
-	for _,currentChunk in pairs(list.Materials) do
+	for _,currentChunk in pairs(list.materials) do
 		timer.Simple(delay, function()
 			net.Start("SV.Detail:SetFixList")
 				net.WriteTable(currentChunk)

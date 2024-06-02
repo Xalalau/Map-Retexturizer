@@ -56,18 +56,23 @@ function TOOL:BasicChecks(ply, tr)
 	if timer.Exists("MRWaitForNextInteration"..tostring(ply)) then
 		return false
 	else
-		timer.Create("MRWaitForNextInteration"..tostring(ply), 0.01, 1, function() end)
+		timer.Create("MRWaitForNextInteration"..tostring(ply), 0.03, 1, function() end)
 	end
 
-	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
+	-- Is the player allowed?
+	if not MR.Ply:IsAllowed(ply) then
 		return false
 	end
 
-	-- Don't use in the middle of a(n) (un)loading
-	if SERVER and MR.Duplicator:IsRunning(MR.SV.Ply:GetFakeHostPly()) or MR.Duplicator:IsRunning(ply) or MR.Duplicator:IsStopping() or MR.Materials:IsRunningProgressiveCleanup() then
+	-- Don't change the players
+	if tr.Entity:IsPlayer() then
+		return false
+	end
+
+	-- Return if the tool is busy
+	if not MR.Materials:AreManageable(ply) then
 		if SERVER then
-			local message = "[Map Retexturizer] Wait until the current process finishes."
+			local message = "[Map Retexturizer] The tool is busy applying or removing materials..."
 
 			if GetConVar("mr_notifications"):GetBool() then
 				ply:PrintMessage(HUD_PRINTTALK, message)
@@ -76,11 +81,6 @@ function TOOL:BasicChecks(ply, tr)
 			end
 		end
 
-		return false
-	end
-
-	-- Don't change the players
-	if tr.Entity:IsPlayer() then
 		return false
 	end
 
@@ -108,15 +108,17 @@ function TOOL:BasicChecks(ply, tr)
 		return false
 	end
 
-	-- Don't interact with the skybox while in the decal mode
-	if MR.Ply:GetDecalMode(ply) and MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-		return false
-	end
+	if MR.Ply:GetDecalMode(ply) then
+		-- Don't interact with the skybox while in the decal mode
+		if MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+			return false
+		end
 
-	-- Don't interact with models on decal mode
-	if isDecalMode and ent and ent:IsValid() and not ent:IsWorld() and not MR.Materials:IsDecal(nil, tr) then
-		return false
-	end 
+		-- Don't interact with models on decal mode
+		if ent and IsValid(ent) and not ent:IsWorld() and not MR.Materials:IsDecal(tr) then
+			return false
+		end 
+	end
 
 	--Check if we can interact with the skybox
 	if MR.Materials:IsSkybox(MR.Materials:GetCurrent(tr)) and GetConVar("internal_mr_skybox_toolgun"):GetInt() == 0 then
@@ -149,12 +151,14 @@ end
 		return false
 	end
 
+	local isSkybox = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr))
+
 	-- Get data tables with the future and current materials
 	local oldData, index = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
 	local isOldDataDecal
 
-	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
+	if oldData and MR.Materials:IsDecal(tr) then
 		isOldDataDecal = true
 	end
 
@@ -188,7 +192,7 @@ end
 
 	-- Get the correct detail for the oldData in the server
 	if SERVER and not foundOldData then
-		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		local detailFix = MR.SV.Detail:GetFix(oldData.oldMaterial)
 
 		if detailFix then
 			oldData.detail = detailFix
@@ -208,19 +212,30 @@ end
 	oldData.oldMaterial = MR.Skybox:ValidatePath(oldData.oldMaterial)
 	oldData.newMaterial = MR.Skybox:ValidatePath(oldData.newMaterial)
 
+	-- HACK: disable the detail field, it's completely buggy
+	local skyboxDetailHackApplied = false
+	if isSkybox and newData.detail then
+		newData.detail = "None"
+		skyboxDetailHackApplied = true
+	end
+
 	-- Do not apply the material if it's not necessary
 	if MR.Data:IsEqual(oldData, newData) then
 		return false
 	end
 
-	if CLIENT then
-		return true
+	if skyboxDetailHackApplied and MR.Ply:IsValid(ply) then
+		local message = "[Map Retexturizer] Applying materials with details on the skybox is unsupported. Setting value to \"None\"..."
+
+		if GetConVar("mr_notifications"):GetBool() then
+			ply:PrintMessage(HUD_PRINTTALK, message)
+		else
+			print(message)
+		end
 	end
 
-	-- Adjustment for decals
-	if isOldDataDecal then
-		newData.backup = index
-		MR.DataList:CleanIDs({ newData })
+	if CLIENT then
+		return true
 	end
 
 	-- Remove unused fields
@@ -228,25 +243,35 @@ end
 
 	-- Set the material
 
-	-- Decal
-	if isDecalMode or isOldDataDecal then
-		MR.Decals:Set(ply, newData, true)
+	timer.Simple(0.04, function() -- Wait a little so the client can check the toolgun trace
+		-- Decal
+		if isDecalMode or isOldDataDecal then
+			MR.SV.Decals:Create(ply, newData)
 
-		-- HACK: redo the decal preview if there is scale variation
-		if newData.scaleX or newData.scaleY then
-			net.Start("CL.Materials:SetPreview")
-			net.Send(ply)
+			-- HACK: redo the decal preview if there is scale variation
+			if newData.scaleX or newData.scaleY then
+				net.Start("CL.Materials:SetPreview")
+				net.Send(ply)
+			end
+		-- Skybox
+		elseif isSkybox then
+			MR.SV.Skybox:Apply(ply, newData)
+		-- map/displacement
+		elseif tr.Entity:IsWorld() then
+			MR.SV.Brushes:Apply(ply, newData)
+		-- model	
+		elseif IsValid(tr.Entity) then
+			MR.Models:Apply(ply, newData)
 		end
-	-- Skybox
-	elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-		MR.SV.Skybox:Set(ply, newData, true)
-	-- map/displacement
-	elseif tr.Entity:IsWorld() then
-		MR.Map:Set(ply, newData, true)
-	-- model	
-	elseif IsValid(tr.Entity) then
-		MR.Models:Set(ply, newData, true)
-	end
+
+		if not MR.Base:GetInitialized() then
+			-- Register that the map is modified
+			MR.Base:SetInitialized()
+
+			-- Register the current save version on the duplicator
+			duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), "MapRetexturizer_version", { savingFormat = MR.Save:GetCurrentVersion() } )
+		end
+	end)
 
 	return true
 end
@@ -265,12 +290,12 @@ function TOOL:RightClick(tr)
 	local oldData = MR.Materials:GetData(tr)
 	local foundOldData = oldData and true
 
-	if oldData and MR.Materials:IsDecal(oldData.oldMaterial) then
+	if oldData and MR.Materials:IsDecal(tr) then
 		isDecal = true
 		oldData.position = nil
 		oldData.normal = nil
 	end
-	
+
 	local newData = MR.Data:Create(ply, { tr = tr }, isDecal and {}, true)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
@@ -289,7 +314,7 @@ function TOOL:RightClick(tr)
 
 	-- Get the correct detail for the oldData in the server
 	if SERVER and not foundOldData then
-		local detailFix = MR.SV.Materials:GetDetailFix(oldData.oldMaterial)
+		local detailFix = MR.SV.Detail:GetFix(oldData.oldMaterial)
 
 		if detailFix then
 			oldData.detail = detailFix
@@ -307,23 +332,12 @@ function TOOL:RightClick(tr)
 		return false
 	end
 
+	-- Set the preview
 	if SERVER then
-		-- Copy the material
-		MR.Materials:SetNew(ply, (IsValid(tr.Entity) and tr.Entity.mr or oldData.backup) and oldData.newMaterial or "")
-		MR.Materials:SetOld(ply, MR.Materials:GetOriginal(tr))
+		local newMaterial = (IsValid(tr.Entity) and tr.Entity.mr) and oldData.newMaterial or ""
+		local oldMaterial = MR.Materials:GetOriginal(tr)
 
-		-- Set the cvars to the copied values
-		MR.SV.CVars:SetPropertiesToData(ply, oldData)
-
-		timer.Simple(0.2, function()
-			-- Set the preview
-			net.Start("CL.Materials:SetPreview")
-			net.Send(ply)
-	
-			-- Update the materials panel
-			net.Start("CL.Panels:RefreshProperties")
-			net.Send(ply)
-		end)
+		MR.Materials:SetPreview(ply, newMaterial, oldMaterial, oldData)
 	end
 
 	return true
@@ -343,19 +357,21 @@ function TOOL:Reload(tr)
 
 	if data then
 		if SERVER then
-			-- Decal
-			if tr.Entity and IsValid(tr.Entity) and tr.Entity:GetClass() == "decal-editor" then
-				MR.SV.Decals:Remove(ply, data.oldMaterial, true)
-			-- Skybox
-			elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
-				MR.SV.Skybox:Remove(ply, true)
-			-- map/displacement
-			elseif tr.Entity:IsWorld() then
-				MR.Map:Remove(ply, MR.Materials:GetOriginal(tr), true)
-			-- model
-			elseif IsValid(tr.Entity) then
-				MR.Models:Remove(ply, tr.Entity, true)
-			end
+			timer.Simple(0.04, function() -- Wait a little so the client can check the toolgun trace
+				-- Decal
+				if tr.Entity and IsValid(tr.Entity) and tr.Entity:GetClass() == "decal-editor" then
+					MR.SV.Decals:Remove(ply, tr.Entity)
+				-- Skybox
+				elseif MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr)) then
+					MR.SV.Skybox:Restore(ply)
+				-- brush
+				elseif tr.Entity:IsWorld() then
+					MR.SV.Brushes:Restore(ply, MR.Materials:GetOriginal(tr))
+				-- model
+				elseif IsValid(tr.Entity) then
+					MR.Models:Restore(ply, tr.Entity)
+				end
+			end)
 		end
 
 		return true

@@ -62,18 +62,25 @@ function Panels:SetDisplacements(parent, frameType, info)
 		y = path2LabelInfo.y
 	}
 
-	local displacementsButtonInfo = {
-		width = width - MR.CL.Panels:GetGeneralBorders() * 2,
+	local displacementCopyInfo = {
+		width = (width - MR.CL.Panels:GetGeneralBorders() * 2)/2 - MR.CL.Panels:GetGeneralBorders() / 2,
 		height = MR.CL.Panels:GetTextHeight(),
 		x = MR.CL.Panels:GetGeneralBorders(),
 		y = path2TextInfo.y + path2TextInfo.height + MR.CL.Panels:GetGeneralBorders()
 	}
-	
+
+	local displacementsApplyInfo = {
+		width = displacementCopyInfo.width,
+		height = MR.CL.Panels:GetTextHeight(),
+		x = displacementCopyInfo.x + displacementCopyInfo.width + MR.CL.Panels:GetGeneralBorders(),
+		y = displacementCopyInfo.y
+	}
+
 	local displacementsHintInfo = {
 		width = panel:GetWide() - MR.CL.Panels:GetGeneralBorders() * 2,
 		height = MR.CL.Panels:GetTextHeight(),
 		x = path2LabelInfo.x + MR.CL.Panels:GetTextMarginLeft(),
-		y = displacementsButtonInfo.y + displacementsButtonInfo.height/2 + MR.CL.Panels:GetGeneralBorders() * 2
+		y = displacementsApplyInfo.y + displacementsApplyInfo.height/2 + MR.CL.Panels:GetGeneralBorders() * 2
 	}
 
 	--------------------------
@@ -138,7 +145,7 @@ function Panels:SetDisplacements(parent, frameType, info)
 		path1Text:SetPos(path1TextInfo.x, path1TextInfo.y)
 		path1Text:SetEnabled(false)
 		path1Text.OnEnter = function(self)
-			MR.CL.Displacements:Set()
+			MR.CL.Displacements:Change()
 		end
 
 	--------------------------
@@ -157,19 +164,31 @@ function Panels:SetDisplacements(parent, frameType, info)
 		path2Text:SetPos(path2TextInfo.x, path2TextInfo.y)
 		path2Text:SetEnabled(false)
 		path2Text.OnEnter = function(self)
-			MR.CL.Displacements:Set()
+			MR.CL.Displacements:Change()
 		end
 
 	--------------------------
-	-- Displacements properties
+	-- Displacements Copy
 	--------------------------
 	local displacementsButton = vgui.Create("DButton", panel)
-		displacementsButton:SetSize(displacementsButtonInfo.width, displacementsButtonInfo.height)
-		displacementsButton:SetPos(displacementsButtonInfo.x, displacementsButtonInfo.y)
-		displacementsButton:SetText("Apply current material properties")
+		displacementsButton:SetSize(displacementCopyInfo.width, displacementCopyInfo.height)
+		displacementsButton:SetPos(displacementCopyInfo.x, displacementCopyInfo.y)
+		displacementsButton:SetText("Copy")
 		displacementsButton:SetIcon("icon16/page_copy.png")
 		displacementsButton.DoClick = function()
-			MR.CL.Displacements:Set(true)
+			MR.CL.Displacements:Copy()
+		end
+
+	--------------------------
+	-- Displacements Apply
+	--------------------------
+	local displacementsButton = vgui.Create("DButton", panel)
+		displacementsButton:SetSize(displacementsApplyInfo.width, displacementsApplyInfo.height)
+		displacementsButton:SetPos(displacementsApplyInfo.x, displacementsApplyInfo.y)
+		displacementsButton:SetText("Apply")
+		displacementsButton:SetIcon("icon16/page_paste.png")
+		displacementsButton.DoClick = function()
+			MR.CL.Displacements:Change()
 		end
 
 	--------------------------
@@ -184,7 +203,7 @@ function Panels:SetDisplacements(parent, frameType, info)
 	-- Margin bottom
 	local extraBorder = vgui.Create("DPanel", panel)
 		extraBorder:SetSize(MR.CL.Panels:GetGeneralBorders(), MR.CL.Panels:GetGeneralBorders())
-		extraBorder:SetPos(0, displacementsButtonInfo.y + displacementsButtonInfo.height)
+		extraBorder:SetPos(0, displacementsApplyInfo.y + displacementsApplyInfo.height)
 		extraBorder:SetBackgroundColor(Color(0, 0, 0, 0))
 
 	return MR.CL.Panels:FinishContainer(frame, panel, frameType)

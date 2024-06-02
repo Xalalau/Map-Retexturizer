@@ -60,9 +60,9 @@ function Panels:SetCleanup(parent, frameType, info)
 	local options = {}
 
 	local cleanBox1 = vgui.Create("DCheckBoxLabel", panel)
-		options[1] = { cleanBox1, "Map" }
+		options[1] = { cleanBox1, "Brushes" }
 		cleanBox1:SetPos(cleanBox1Info.x, cleanBox1Info.y)
-		cleanBox1:SetText("Map")
+		cleanBox1:SetText("Brushes")
 		cleanBox1:SetTextColor(Color(0, 0, 0, 255))
 		cleanBox1:SetValue(true)
 
@@ -110,7 +110,7 @@ function Panels:SetCleanup(parent, frameType, info)
 				end
 			end
 
-			net.Start("SV.Materials:RemoveAll")
+			net.Start("SV.Materials:RestoreLists")
 				net.WriteString(remove)
 			net.SendToServer()
 		end
@@ -132,7 +132,7 @@ function Panels:SetCleanup(parent, frameType, info)
 
 				return
 			-- Admin only: reset the option if it's not being synced
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+			elseif not MR.Ply:IsAllowed(LocalPlayer()) then
 				MR.Sync:Get("cleanup", "instant"):SetChecked(GetConVar("internal_mr_instant_cleanup"):GetBool())
 			end
 

@@ -212,7 +212,7 @@ function Panels:SetProperties(parent, frameType, info)
 
 			local details = propertiesPanel:CreateRow("Others", "Detail")
 				details:Setup("Combo", { text = GetConVar("internal_mr_detail"):GetString() })
-				for k,v in SortedPairs(MR.Materials:GetDetailList()) do
+				for k,v in SortedPairs(MR.Detail:GetList()) do
 					details:AddChoice(k, { k, v })
 				end
 				MR.CL.Panels:SetMRFocus(details.Inner:GetChildren()[1].Panel)

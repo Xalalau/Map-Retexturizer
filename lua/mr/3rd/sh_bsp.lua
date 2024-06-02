@@ -29,7 +29,7 @@ local function toUShort(b)
 	return i[1] +i[2] *256
 end
 local function toInt(b)
-    	local d1, d2, d3, d4 = string.byte(b, 1, 4)
+	local d1, d2, d3, d4 = string.byte(b, 1, 4)
 	local value = bit.bor(d1, bit.lshift(d2, 8), bit.lshift(d3, 16), bit.lshift(d4, 24))
 	return value
 end

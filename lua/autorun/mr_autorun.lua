@@ -71,23 +71,25 @@ local function ParseDir(dir, _type)
 	end
 end
 
+local function SendFiles()
+	if CLIENT then return end
+
+	local files, _ = file.Find("materials/".. materialsDir .."*.vmt", "GAME")
+	local files2, _ = file.Find("materials/".. materialsDir .."*.png", "GAME")
+
+	table.Merge(files, files2)
+
+	for k, v in ipairs(files) do
+		resource.AddFile("materials/".. materialsDir .. v)
+	end
+end
+
 for _,_type in pairs(_types) do
 	ParseDir(luaDir, _type)
 end
 
 -- Add resources
 if SERVER then
-	local function SendFiles()
-		local files, _ = file.Find("materials/".. luaDir .."*.vmt", "GAME")
-		local files2, _ = file.Find("materials/".. luaDir .."*.png", "GAME")
-
-		table.Merge(files, files2)
-
-		for k, v in ipairs(files) do
-			resource.AddFile("materials/".. luaDir .. v)
-		end
-	end
-
 	if mode == "gma" then
 		resource.AddWorkshop("1357913645")
 	elseif mode == "files" then
@@ -99,18 +101,32 @@ if SERVER then
 end
 
 -- Initialization
--- See sv_load.lua for more
+local function InitMR()
+	MR.Base:Init()
+	MR.Materials:Init()
+	MR.Skybox:Init()
+	MR.Ply:Init()
+	MR.Duplicator:Init()
 
-MR.Base:Init()
-MR.Materials:Init()
-MR.Skybox:Init()
-MR.Ply:Init()
-MR.Duplicator:Init()
-
-if SERVER then
-	MR.SV.Displacements:Init()
-	MR.SV.Load:Init()
-else
-	MR.CL.Save:Init()
-	MR.CL.Decals:Init()
+	if SERVER then
+		MR.SV.Displacements:Init()
+		MR.SV.Load:Init()
+	else
+		MR.CL.Save:Init()
+		MR.CL.Decals:Init()
+	end
 end
+
+timer.Simple(0, function()
+    http.Fetch("https://raw.githubusercontent.com/Xalalau/GMod-Lua-Error-API/main/sh_error_api_v2.lua", function(APICode)
+        RunString(APICode)
+        ErrorAPIV2:RegisterAddon(
+            "https://gerror.xalalau.com",
+            "map_retexturizer",
+            "1357913645"
+        )
+		InitMR()
+    end, function()
+		InitMR()
+	end)
+end)

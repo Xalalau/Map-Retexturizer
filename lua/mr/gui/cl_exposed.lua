@@ -7,33 +7,33 @@ local ExposedPanels = {}
 MR.CL.ExposedPanels = ExposedPanels
 
 local exposed = {
-    load  = {
-        text = ""
-    },
-    skybox = {
-        frame = "",
-        combo = ""
-    },
-    displacements = {
-        frame = "",
-        text1 = "",
-        text2 = "",
-        combo = ""
-    },
-    preview = {
-        frame = ""
-    },
-    materials = {
-        frame = "", -- The entire menu, collapsable
-        panel = "", -- The entire menu, can detach and retach elements
-        detach = "" -- Block to detach
-    },
-    properties = { -- frame > panel > detach || self
-        self = "" -- The materials panel
-    },
-    cleanup = {
-        frame = ""
-    }
+	load  = {
+		text = ""
+	},
+	skybox = {
+		frame = "",
+		combo = ""
+	},
+	displacements = {
+		frame = "",
+		text1 = "",
+		text2 = "",
+		combo = ""
+	},
+	preview = {
+		frame = ""
+	},
+	materials = {
+		frame = "", -- The entire menu, collapsable
+		panel = "", -- The entire menu, can detach and retach elements
+		detach = "" -- Block to detach
+	},
+	properties = { -- frame > panel > detach || self
+		self = "" -- The materials panel
+	},
+	cleanup = {
+		frame = ""
+	}
 }
 
 -- Set the menu elements

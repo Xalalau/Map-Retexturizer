@@ -193,7 +193,7 @@ function Panels:SetLoad(parent, frameType, info)
 				net.WriteString("")
 			net.SendToServer()
 
-			if MR.Ply:IsAdmin(LocalPlayer()) then
+			if MR.Ply:IsAllowed(LocalPlayer()) then
 				autoLoadReset:Hide()
 			end
 		end
@@ -223,7 +223,7 @@ function Panels:SetLoad(parent, frameType, info)
 				net.WriteString(loadName)
 			net.SendToServer()
 
-			if MR.Ply:IsAdmin(LocalPlayer()) then
+			if MR.Ply:IsAllowed(LocalPlayer()) then
 				if loadName ~= "" then
 					autoLoadReset:Show()
 					autoLoadReset:MoveToFront()
@@ -268,7 +268,7 @@ function Panels:SetLoad(parent, frameType, info)
 
 				return
 			-- Admin only: reset the option if it's not being synced
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+			elseif not MR.Ply:IsAllowed(LocalPlayer()) then
 				progressBox:SetChecked(GetConVar("internal_mr_progress_bar"):GetBool())
 			end
 
@@ -297,7 +297,7 @@ function Panels:SetLoad(parent, frameType, info)
 
 				return
 			-- Admin only: reset the option if it's not being synced
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+			elseif not MR.Ply:IsAllowed(LocalPlayer()) then
 				loadCleanupBox:SetChecked(GetConVar("internal_mr_duplicator_cleanup"):GetBool())
 			end
 
@@ -367,7 +367,7 @@ function Panels:SetLoad(parent, frameType, info)
 
 				return
 			-- Admin only: reset the option if it's not being synced
-			elseif not MR.Ply:IsAdmin(LocalPlayer()) then
+			elseif not MR.Ply:IsAllowed(LocalPlayer()) then
 				speedCombobox:ChooseOptionID(GetConVar("internal_mr_delay"):GetInt())
 			end
 

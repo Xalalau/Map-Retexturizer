@@ -28,7 +28,7 @@ end)
 -- field2 = second field name from GUI element
 function Sync:Replicate(ply, command, value, field1, field2)
 	-- Admin only
-	if not MR.Ply:IsAdmin(ply) then
+	if not MR.Ply:IsAllowed(ply) then
 		return false
 	end
 

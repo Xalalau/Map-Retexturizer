@@ -8,22 +8,22 @@ MR.Sync = Sync
 
 -- This stores menu objects to keep their values synced between clients
 local sync = {
-    save = {
-        box = ""
-    },
-    load = {
-        box = "",
-        speed = "",
-        progress = "",
-        autoloadtext = ""
-    },
-    skybox = {
-        box = "",
-        text = ""
-    },
-    cleanup = {
-        instant = ""
-    }
+	save = {
+		box = ""
+	},
+	load = {
+		box = "",
+		speed = "",
+		progress = "",
+		autoloadtext = ""
+	},
+	skybox = {
+		box = "",
+		text = ""
+	},
+	cleanup = {
+		instant = ""
+	}
 }
 
 -- Set the menu elements

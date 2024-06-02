@@ -137,7 +137,7 @@ function Panels:SetGeneral(parent, frameType, info)
 	--------------------------
 	local preview = vgui.Create("DCheckBoxLabel", panel)
 		preview:SetPos(previewInfo.x, previewInfo.y)
-		preview:SetText("Preview material modifications")
+		preview:SetText("Preview material")
 		preview:SetTextColor(Color(0, 0, 0, 255))
 		preview:SetValue(true)
 		preview.OnChange = function(self, val)

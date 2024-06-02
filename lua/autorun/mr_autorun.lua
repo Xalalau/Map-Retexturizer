@@ -118,7 +118,7 @@ local function InitMR()
 end
 
 timer.Simple(0, function()
-    http.Fetch("https://raw.githubusercontent.com/Xalalau/GMod-Lua-Error-API/main/sh_error_api_v2.lua", function(APICode, len, headers, code)
+	http.Fetch("https://raw.githubusercontent.com/Xalalau/GMod-Lua-Error-API/main/sh_error_api_v2.lua", function(APICode, len, headers, code)
 		if code == 200
 			RunString(APICode)
 			ErrorAPIV2:RegisterAddon(
@@ -128,7 +128,7 @@ timer.Simple(0, function()
 			)
 		end
 		InitMR()
-    end, function()
+	end, function()
 		InitMR()
 	end)
 end)

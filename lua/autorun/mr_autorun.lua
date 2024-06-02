@@ -118,13 +118,15 @@ local function InitMR()
 end
 
 timer.Simple(0, function()
-    http.Fetch("https://raw.githubusercontent.com/Xalalau/GMod-Lua-Error-API/main/sh_error_api_v2.lua", function(APICode)
-        RunString(APICode)
-        ErrorAPIV2:RegisterAddon(
-            "https://gerror.xalalau.com",
-            "map_retexturizer",
-            "1357913645"
-        )
+    http.Fetch("https://raw.githubusercontent.com/Xalalau/GMod-Lua-Error-API/main/sh_error_api_v2.lua", function(APICode, len, headers, code)
+		if code == 200
+			RunString(APICode)
+			ErrorAPIV2:RegisterAddon(
+				"https://gerror.xalalau.com",
+				"map_retexturizer",
+				"1357913645"
+			)
+		end
 		InitMR()
     end, function()
 		InitMR()

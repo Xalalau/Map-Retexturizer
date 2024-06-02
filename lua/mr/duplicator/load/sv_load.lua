@@ -180,6 +180,11 @@ function Load:FirstSpawn(ply)
 			end
 		end
 		MR.Net:SendString(util.TableToJSON(loadTable), "NET_ForceApplyAllMaterials", ply)
+		timer.Simple(2, function()
+			if IsValid(ply) then
+				MR.Ply:SetFirstSpawn(ply, false)
+			end
+		end)
 	--Run an autoload
 	elseif GetConVar("internal_mr_autoload"):GetString() ~= "" then
 		-- Set the spawn as done since The fakeHostPly will take care of this load

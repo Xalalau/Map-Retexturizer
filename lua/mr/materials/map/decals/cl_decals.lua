@@ -93,15 +93,10 @@ function Decals:RedrawAll()
 	-- Remove decals
 	MR.CL.Decals:RemoveAll()
 
-	-- Check list
-	if MR.DataList:Count(materialList) == 0 then
-		return 
-	end
-	
-	-- Redraw decals
-	timer.Simple(0.1, function() -- Wait a bit so we can render decals again
+	-- Redraw all decals
+	timer.Simple(0.2, function() -- The redraw fails if I do it too fast after the cleanup
 		for k, materialData in pairs(materialList) do
-			if MR.DataList:IsActive(materialData) and IsValid(materialData.ent) then
+			if MR.DataList:IsActive(materialData) then
 				MR.CL.Decals:Draw(MR.CL.Decals:CreateCustomMaterial(materialData), materialData)
 			end
 		end
@@ -208,17 +203,8 @@ function Decals:Create(ply, data, isNewData)
 		element.scaleY = data.scaleY
 		data = element
 
-		-- Remove decals
-		RunConsoleCommand("r_cleardecals")
-
 		-- Redraw all decals
-		timer.Simple(0.2, function() -- The redraw fails if I do it too fast after the cleanup
-			for k, materialData in pairs(materialList) do
-				if MR.DataList:IsActive(materialData) then
-					MR.CL.Decals:Draw(MR.CL.Decals:CreateCustomMaterial(materialData), materialData)
-				end
-			end
-		end)
+		Decals:RedrawAll()
 	else
 		-- Create custom material
 		local customMaterial = MR.CL.Decals:CreateCustomMaterial(data)

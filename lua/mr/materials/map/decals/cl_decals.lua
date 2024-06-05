@@ -34,7 +34,7 @@ end)
 -- Init
 function Decals:Init()
 	-- Refresh decals from time to time
-	timer.Create("MRRefreshDecals", 60, 0, function()
+	timer.Create("MRRefreshDecals", 600, 0, function()
 		Decals:RedrawAll()
 	end)
 end

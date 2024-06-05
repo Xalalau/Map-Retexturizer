@@ -122,8 +122,12 @@ function Duplicator:SetRunning(ply, loadName)
 	dup.running[index] = loadName ~= "" and loadName
 end
 
+function Duplicator:GetStates(ply)
+	return dup.processed.list[Duplicator:GetControlIndex(ply)]
+end
+
 function Duplicator:GetTotal(ply)
-	return dup.processed.list[Duplicator:GetControlIndex(ply)].total
+	return Duplicator:GetStates(ply) and Duplicator:GetStates(ply).total or 0
 end
 
 function Duplicator:SetTotal(ply, value)
@@ -134,7 +138,7 @@ function Duplicator:SetTotal(ply, value)
 end
 
 function Duplicator:GetCurrent(ply)
-	return dup.processed.list[Duplicator:GetControlIndex(ply)].current
+	return Duplicator:GetStates(ply) and Duplicator:GetStates(ply).current
 end
 
 function Duplicator:SetCurrent(ply, value)
@@ -152,11 +156,11 @@ function Duplicator:IncrementCurrent(ply)
 end
 
 function Duplicator:GetErrorsCurrent(ply)
-	return #dup.processed.list[Duplicator:GetControlIndex(ply)].errors
+	return Duplicator:GetStates(ply) and #Duplicator:GetStates(ply).errors or 0
 end
 
 function Duplicator:GetErrorsList(ply)
-	return dup.processed.list[Duplicator:GetControlIndex(ply)].errors
+	return Duplicator:GetStates(ply) and Duplicator:GetStates(ply).errors
 end
 
 function Duplicator:InsertErrorsList(ply, value)

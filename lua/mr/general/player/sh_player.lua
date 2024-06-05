@@ -51,21 +51,11 @@ end)
 
 -- Validate the player
 function Ply:IsValid(ply)
-	if ply then
-		if SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
-			return true
-		end
-
-		if IsValid(ply) and ply:IsPlayer() then
-			if SERVER and not ply:IsConnected() then
-				return false
-			end
-
-			return true
-		end
+	if SERVER and ply == MR.SV.Ply:GetFakeHostPly() then
+		return true
+	else
+		return IsValid(ply) and ply:IsPlayer() or false
 	end
-
-	return false
 end
 
 -- Check player privilegies
@@ -157,6 +147,10 @@ function Ply:InitStatesList(ply, forceIndex)
 	end
 end
 
+function Ply:GetStates(ply)
+	return MRPlayer.list[Ply:GetControlIndex(ply)]
+end
+
 -- Return "1" for server, "EntIndex() + 1" for valid players and "999" for invalid players
 -- 999 points to a table with default values.
 function Ply:GetControlIndex(ply)
@@ -164,7 +158,7 @@ function Ply:GetControlIndex(ply)
 end
 
 function Ply:GetFirstSpawn(ply)
-	return MRPlayer.list[Ply:GetControlIndex(ply)].firstSpawn
+	return Ply:GetStates(ply) and Ply:GetStates(ply).firstSpawn
 end
 
 function Ply:SetFirstSpawn(ply, value)
@@ -184,7 +178,7 @@ function Ply:SetFirstSpawn(ply, value)
 end
 
 function Ply:GetPreviewMode(ply)
-	return MRPlayer.list[Ply:GetControlIndex(ply)].previewMode
+	return Ply:GetStates(ply) and Ply:GetStates(ply).previewMode
 end
 
 function Ply:SetPreviewMode(ply, value)
@@ -195,7 +189,7 @@ function Ply:SetPreviewMode(ply, value)
 end
 
 function Ply:GetDecalMode(ply)
-	return MRPlayer.list[Ply:GetControlIndex(ply)].decalMode
+	return Ply:GetStates(ply) and Ply:GetStates(ply).decalMode
 end
 
 function Ply:SetDecalMode(ply, value)
@@ -206,7 +200,7 @@ function Ply:SetDecalMode(ply, value)
 end
 
 function Ply:GetUsingTheTool(ply)
-	return MRPlayer.list[Ply:GetControlIndex(ply)].usingTheTool
+	return Ply:GetStates(ply) and Ply:GetStates(ply).usingTheTool
 end
 
 function Ply:SetUsingTheTool(ply, value)

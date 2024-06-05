@@ -218,7 +218,7 @@ function Decals:Create(ply, data, isNewData)
 		data.ent = ents.GetByIndex(data.entIndex)
 	end
 
-	if data.ent:GetNWFloat("scale") ~= 1 then
+	if IsValid(data.ent) and data.ent:GetNWFloat("scale") ~= 1 then
 		MR.Models:ResizePhysics(data.ent, data.ent:GetNWFloat("scale"))
 	end
 end

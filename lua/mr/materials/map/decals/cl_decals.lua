@@ -110,7 +110,7 @@ hook.Add("PostDrawOpaqueRenderables", "MRDecalPreview", function()
 	if ply and MR.Ply:GetUsingTheTool(ply) then
 		local tr = ply:GetEyeTrace()
 
-		if tr.Entity and tr.Entity:GetClass() == "decal-editor" then
+		if tr.Entity and IsValid(tr.Entity) and tr.Entity:GetClass() == "decal-editor" then
 			if not Decals:GetLastDecalEditor() then
 				Decals:SetLastDecalEditor(tr.Entity)
 			end

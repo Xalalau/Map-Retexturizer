@@ -101,7 +101,9 @@ if SERVER then
 
 	hook.Add("PlayerLeaveVehicle", "MRCheckToolVehicle", function(ply)
 		timer.Simple(0.3, function()
-			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+			if IsValid(ply) then
+				Ply:ValidateTool(ply, ply:GetActiveWeapon())
+			end
 		end)
 	end)
 end
@@ -120,7 +122,9 @@ if CLIENT then
 		-- To workaround it wait a bit longer and revalidate (0.7s was the minimium for me)
 		-- To make use of this, set a timer with at leat 0.1s of delay. I'll recommend 0.2s for safety.
 		timer.Simple(0.07, function()
-			Ply:ValidateTool(ply, ply:GetActiveWeapon())
+			if IsValid(ply) then
+				Ply:ValidateTool(ply, ply:GetActiveWeapon())
+			end
 		end)
 	end)
 end

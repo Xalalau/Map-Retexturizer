@@ -145,13 +145,14 @@ end
 	local ply = self:GetOwner() or LocalPlayer()
 	local ent = tr.Entity
 	local isDecalMode = MR.Ply:GetDecalMode(ply)
+	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
-	if not self:BasicChecks(ply, tr) then
+	if not self:BasicChecks(ply, tr) or not originalMaterial then
 		return false
 	end
 
-	local isSkybox = MR.Materials:IsSkybox(MR.Materials:GetOriginal(tr))
+	local isSkybox = MR.Materials:IsSkybox(originalMaterial)
 
 	-- Get data tables with the future and current materials
 	local oldData, index = MR.Materials:GetData(tr)
@@ -166,7 +167,7 @@ end
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
-		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
+		oldData = MR.Data:CreateFromMaterial(originalMaterial, nil, nil, nil, true)
 		oldData.newMaterial = oldData.oldMaterial 
 	-- Else fill up the empty fields
 	else
@@ -282,9 +283,10 @@ end
 function TOOL:RightClick(tr)
 	local ply = self:GetOwner() or LocalPlayer()
 	local isDecal = false
+	local originalMaterial = MR.Materials:GetOriginal(tr)
 
 	-- Basic checks
-	if not self:BasicChecks(ply, tr) then
+	if not self:BasicChecks(ply, tr) or not originalMaterial then
 		return false
 	end
 
@@ -302,10 +304,10 @@ function TOOL:RightClick(tr)
 
 	-- If there isn't a saved data, create one from the material and adjust the material name
 	if not oldData then
-		oldData = MR.Data:CreateFromMaterial(MR.Materials:GetOriginal(tr), nil, nil, nil, true)
+		oldData = MR.Data:CreateFromMaterial(originalMaterial, nil, nil, nil, true)
 
 		if not oldData then -- HACK: If for some reason an original material from the map is non-existent on the client, create a generic Data so that the operation is successful anyway.
-			oldData = MR.Data:Create(ply, { oldMaterial = MR.Materials:GetOriginal(tr) }, nil, true)
+			oldData = MR.Data:Create(ply, { oldMaterial = originalMaterial }, nil, true)
 		end
 
 		oldData.newMaterial = oldData.oldMaterial 
@@ -337,7 +339,7 @@ function TOOL:RightClick(tr)
 	-- Set the preview
 	if SERVER then
 		local newMaterial = (IsValid(tr.Entity) and tr.Entity.mr) and oldData.newMaterial or ""
-		local oldMaterial = MR.Materials:GetOriginal(tr)
+		local oldMaterial = originalMaterial
 
 		MR.Materials:SetPreview(ply, newMaterial, oldMaterial, oldData)
 	end

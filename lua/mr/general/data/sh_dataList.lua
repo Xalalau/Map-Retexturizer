@@ -106,7 +106,7 @@ function DataList:RemoveDisabled(list)
 	end
 end
 
--- Remove all the disabled elements
+-- Remove all the backups
 function DataList:RemoveBackups(list)
 	if not list then return end
 
@@ -117,13 +117,26 @@ function DataList:RemoveBackups(list)
 	end
 end
 
--- Remove all the disabled elements and backups from all lists
+-- Remove all temp data
+function DataList:RemoveTemp(list)
+	if not list then return end
+
+	for i=1, #list, 1 do
+		if list[i] then
+			list[i].ent = nil
+			list[i].entIndex = nil
+		end
+	end
+end
+
+-- Remove all the disabled elements, backups and temp fields from all lists
 -- modificationTab is defined in the top of this file
 function DataList:CleanAll(modificationTab)
 	for listName,list in pairs(modificationTab) do
 		if listName ~= "savingFormat" and #list > 0 then
 			DataList:RemoveDisabled(list)
 			DataList:RemoveBackups(list)
+			DataList:RemoveTemp(list)
 		end
 	end
 

@@ -28,7 +28,11 @@ net.Receive("CL.Decals:Remove", function(_, ply)
 end)
 
 net.Receive("CL.Decals:Create", function()
-	Decals:Create(LocalPlayer(), net.ReadTable(), net.ReadBool())
+	local data = net.ReadTable()
+	local isNewData = net.ReadBool()
+	timer.Simple(0.2, function() -- Wait a bit so the client can initialize the entity
+		Decals:Create(LocalPlayer(), data, isNewData)
+	end)
 end)
 
 -- Init

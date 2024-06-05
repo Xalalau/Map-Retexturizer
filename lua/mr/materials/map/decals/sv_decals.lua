@@ -88,13 +88,11 @@ function Decals:Create(ply, data)
 	-- Beware! 'element' will be deleted after this line if it exists
 	MR.SV.Materials:AddToList(ply, data, materialList, materialType, data.entIndex, "entIndex", dupName, dupDataName, true)
 
-	timer.Simple(0.2, function() -- Wait a bit so the client can initialize the entity
-		-- Send to all players
-		net.Start("CL.Decals:Create")
-			net.WriteTable(data)
-			net.WriteBool(isNewData)
-		net.Broadcast()
-	end)
+	-- Send to all players
+	net.Start("CL.Decals:Create")
+		net.WriteTable(data)
+		net.WriteBool(isNewData)
+	net.Broadcast()
 end
 
 -- Remove a decal

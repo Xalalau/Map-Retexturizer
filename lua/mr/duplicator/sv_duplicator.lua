@@ -100,6 +100,9 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 	-- Upgrade the save version (if it's necessary)
 	savedTable = MR.SV.Load:Upgrade(savedTable, loadName)
 
+	-- Try to clean the list, just in case
+	MR.DataList:CleanAll(savedTable)
+
 	-- Get the total modifications to do
 	local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0
 	local brushesTotal = savedTable.brushes and istable(savedTable.brushes) and MR.DataList:Count(savedTable.brushes) or 0

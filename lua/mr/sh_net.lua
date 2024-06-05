@@ -44,6 +44,7 @@ function Net:SendData(chunksID, data, callbackName, toPly, isCompressedString)
 
         timer.Simple(i * 0.1, function()
             if Net.sendTab[chunksID] ~= chunksSubID then return end
+            if toPly and not IsValid(toPly) then return end
 
             local isLastChunk = i == totalChunks
 

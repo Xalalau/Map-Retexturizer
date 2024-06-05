@@ -61,7 +61,7 @@ end
 -- Check player privilegies
 function Ply:IsAllowed(ply)
 	-- Validate ply
-	if not Ply:IsValid(ply, true) then
+	if not Ply:IsValid(ply) then
 		return false
 	end
 
@@ -246,7 +246,9 @@ function Ply:ValidateTool(ply, weapon)
 		-- the player (re)spawns and to ensure success I'll revalidate
 		if SERVER and weapon and IsValid(weapon) and weapon:GetClass() == "gmod_tool" and not weapon:GetMode() then
 			timer.Simple(0.05, function()
-				Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
+				if Ply:IsValid(ply) then
+					Ply:ValidateTool(ply, ply:GetWeapon("gmod_tool"))
+				end
 			end)
 
 			return 

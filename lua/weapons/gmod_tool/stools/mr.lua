@@ -244,6 +244,8 @@ end
 	-- Set the material
 
 	timer.Simple(0.04, function() -- Wait a little so the client can check the toolgun trace
+		if not IsValid(ply) then return end
+
 		-- Decal
 		if isDecalMode or isOldDataDecal then
 			MR.SV.Decals:Create(ply, newData)
@@ -358,6 +360,8 @@ function TOOL:Reload(tr)
 	if data then
 		if SERVER then
 			timer.Simple(0.04, function() -- Wait a little so the client can check the toolgun trace
+				if not IsValid(ply) then return end
+
 				-- Decal
 				if tr.Entity and IsValid(tr.Entity) and tr.Entity:GetClass() == "decal-editor" then
 					MR.SV.Decals:Remove(ply, tr.Entity)

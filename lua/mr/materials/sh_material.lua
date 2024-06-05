@@ -296,6 +296,8 @@ function Materials:SetPreview(ply, newMaterial, oldMaterial, propertiesData)
 	MR.Data:ToCvars(ply, propertiesData)
 
 	timer.Simple(0.2, function()
+		if not IsValid(ply) then return end
+
 		-- Set the preview
 		if SERVER then
 			net.Start("CL.Materials:SetPreview")

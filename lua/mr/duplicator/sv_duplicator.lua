@@ -78,10 +78,12 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	end
 
 	-- Start duplicator
-	timer.Create("MRStartGModSaveLoading", 0.2, 1, function()
+	timer.Create("MRStartGModMaterialLoading", 0.2, 1, function()
 		-- Remove the older duplicator entity
-		dup.recreatedTable.ent:Remove()
-		dup.recreatedTable.ent = nil
+		if dup.recreatedTable.ent and IsValid(dup.recreatedTable.ent) then
+			dup.recreatedTable.ent:Remove()
+			dup.recreatedTable.ent = nil
+		end
 
 		-- Start
 		Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, table.Copy(dup.recreatedTable), "noMrLoadFile")
@@ -159,6 +161,8 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 	-- Start a loading
 	-- Note: it has to start after the Duplicator:ForceStop() timer
 	timer.Simple(0.5, function()
+		if not MR.Ply:IsValid(ply) then return end
+
 		-- Set the total modifications to do
 		MR.Duplicator:SetTotal(ply, total)
 		Duplicator:SetProgress(ply, nil, MR.Duplicator:GetTotal(ply))
@@ -207,6 +211,8 @@ end
 function Duplicator:SetEnt(ent)
 	local function StoreEntityModifier(ent)
 		timer.Simple(1, function()
+			if not IsValid(ent) then return end
+
 			duplicator.StoreEntityModifier(ent, MR.SV.Displacements:GetDupName(), { displacements = table.Copy(MR.Displacements:GetList()) })
 			duplicator.StoreEntityModifier(ent, MR.SV.Skybox:GetDupName(), { skybox = { table.Copy(MR.Skybox:GetList())[1] } })
 			duplicator.StoreEntityModifier(ent, MR.SV.Brushes:GetDupName(), { brushes = table.Copy(MR.Brushes:GetList()) })

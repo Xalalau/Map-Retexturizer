@@ -11,9 +11,9 @@ local displacements = {
 }
 
 -- Networking
-net.Receive("CL.Displacements:InitDetected", function()
-	Displacements:InitDetected(net.ReadTable())
-end)
+function NET_CLDisplacementsInitDetected(list)
+	Displacements:InitDetected(util.JSONToTable(list))
+end
 
 net.Receive("CL.Displacements:InsertDetected", function()
 	Displacements:InsertDetected(net.ReadString())

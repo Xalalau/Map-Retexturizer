@@ -11,11 +11,11 @@ local load = {
 }
 
 -- Networking
-net.Receive("Load:SetList", function()
-	if SERVER then return; end
+function NET_LoadSetList(list)
+	if SERVER then return end
 
-	 Load:SetList(net.ReadTable())
-end)
+	Load:SetList(util.JSONToTable(list))
+end
 
 -- Get the laod list
 function Load:GetList()

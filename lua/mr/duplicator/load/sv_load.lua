@@ -7,7 +7,6 @@ local Load = MR.SV.Load
 
 
 -- Networking
-util.AddNetworkString("Load:SetList")
 util.AddNetworkString("CL.Load:Delete")
 util.AddNetworkString("SV.Load:SetAuto")
 util.AddNetworkString("SV.Load:Delete")
@@ -129,14 +128,10 @@ function Load:PlayerJoined(ply)
 	MR.Ply:InitStatesList(ply)
 
 	-- Set the player load list
-	net.Start("Load:SetList")
-		net.WriteTable(MR.Load:GetList())
-	net.Send(ply)
+	MR.Net:SendString(util.TableToJSON(MR.Load:GetList()), "NET_LoadSetList", ply)
 
 	-- Set the player load list
-	net.Start("CL.Displacements:InitDetected")
-		net.WriteTable(MR.Displacements:GetDetected())
-	net.Send(ply)
+	MR.Net:SendString(util.TableToJSON(MR.Displacements:GetDetected()), "NET_CLDisplacementsInitDetected", ply)
 end
 
 -- Load tool modifications AFTER the player is fully ready

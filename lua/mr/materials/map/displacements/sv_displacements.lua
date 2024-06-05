@@ -17,7 +17,6 @@ local displacements = {
 util.AddNetworkString("SV.Displacements:Apply")
 util.AddNetworkString("SV.Displacements:Restore")
 util.AddNetworkString("SV.Displacements:RestoreAll")
-util.AddNetworkString("CL.Displacements:InitDetected")
 util.AddNetworkString("CL.Displacements:InsertDetected")
 util.AddNetworkString("CL.Displacements:RestoreDetected")
 

@@ -50,6 +50,8 @@ end
 
 -- Apply model material
 function Models:Apply(ply, data)
+	if not IsValid(data.ent) then return end
+
 	-- "Hack": turn it into a removal if newMaterial is nothing
 	if data.newMaterial == "" then
 		Models:Restore(ply, data.ent)

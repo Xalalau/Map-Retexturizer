@@ -111,6 +111,7 @@ local function InitMR()
 	if SERVER then
 		MR.SV.Displacements:Init()
 		MR.SV.Load:Init()
+		MR.SV.Duplicator:SetEnt()
 	else
 		MR.CL.Save:Init()
 		MR.CL.Decals:Init()

@@ -59,7 +59,7 @@ function Materials:AddToList(ply, data, materialList, materialType, fieldContent
 	MR.DataList:InsertElement(materialList, data, i)
 
 	-- Set the duplicator
-	local dataTable = { [dupDataName] = { table.Copy(materialList) } }
+	local dataTable = { [dupDataName] = table.Copy(materialList) }
 	duplicator.StoreEntityModifier(MR.SV.Duplicator:GetEnt(), dupName, dataTable)
 
 	-- Start auto save

@@ -168,8 +168,6 @@ hook.Add("PostCleanupMap", "RestoreMRDecals", function()
 				net.Broadcast()
 
 				materialData.ent = newEntIndex
-
-				MR.Decals:FinishEntInit(materialData)
 			end
 		end
 	end)

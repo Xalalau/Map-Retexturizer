@@ -190,11 +190,11 @@ local function RecreateTable(ply, ent, savedTable)
 	if SERVER then
 		-- Get the save version
 		if savedTable.savingFormat then
-			recreateTableSaveFormat = savedTable.savingFormat
+			dup.recreateTableSaveFormat = savedTable.savingFormat
 			
 			-- Auto disable it
 			timer.Simple(0.2, function()
-				recreateTableSaveFormat = nil
+				dup.recreateTableSaveFormat = nil
 			end)
 		end
 
@@ -204,7 +204,7 @@ local function RecreateTable(ply, ent, savedTable)
 		-- Start with the saving format, then send the rest
 		timer.Simple(savedTable.savingFormat and 0 or 0.01, function()
 			-- Index the format version
-			savedTable.savingFormat = recreateTableSaveFormat
+			savedTable.savingFormat = dup.recreateTableSaveFormat
 
 			MR.SV.Duplicator:RecreateTable(ply, ent, savedTable)
 		end)
@@ -213,6 +213,7 @@ end
 duplicator.RegisterEntityModifier("MapRetexturizer_Models", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Decals", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Brushes", RecreateTable)
+duplicator.RegisterEntityModifier("MapRetexturizer_Maps", RecreateTable) -- Backwards compatibility!! All the older saves use this table (Before v2.0.0)
 duplicator.RegisterEntityModifier("MapRetexturizer_Displacements", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_Skybox", RecreateTable)
 duplicator.RegisterEntityModifier("MapRetexturizer_version", RecreateTable)

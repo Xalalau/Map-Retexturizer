@@ -60,6 +60,9 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	-- Brush materials
 	if savedTable.brushes then
 		dup.recreatedTable.brushes = savedTable.brushes
+	-- Also brush materials, but for backwards compatibility! All the older saves use this table (Before v2.0.0)
+	elseif savedTable.maps then
+		dup.recreatedTable.brushes = savedTable.maps
 	-- Displacements
 	elseif savedTable.displacements then
 		for k,v in pairs(savedTable.displacements) do -- Remove nil entries if they exist (old hack?)
@@ -78,19 +81,23 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	end
 
 	-- Start duplicator
-	timer.Create("MRStartGModMaterialLoading", 0.2, 1, function()
-		-- Remove the older duplicator entity
-		if dup.recreatedTable.ent and IsValid(dup.recreatedTable.ent) then
-			dup.recreatedTable.ent:Remove()
+	local dupRecreatWaitName = "MRStartGModMaterialLoading"
+	if not timer.Exists(dupRecreatWaitName) then
+		timer.Create(dupRecreatWaitName, 0.2, 1, function()
+			-- Remove the older duplicator entity
+			if dup.recreatedTable.ent and IsValid(dup.recreatedTable.ent) then
+				dup.recreatedTable.ent:Remove()
+			end
+
 			dup.recreatedTable.ent = nil
-		end
 
-		-- Start
-		Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, table.Copy(dup.recreatedTable), "noMrLoadFile")
+			-- Start
+			Duplicator:Start(MR.SV.Ply:GetFakeHostPly(), nil, table.Copy(dup.recreatedTable), "noMrLoadFile")
 
-		-- Prepare recreatedTable for a future GMod save 
-		dup.recreatedTable = { models = {} }
-	end)
+			-- Prepare recreatedTable for a future GMod save 
+			dup.recreatedTable = { models = {} }
+		end)
+	end
 end
 
 -- Duplicator start
@@ -224,25 +231,24 @@ function Duplicator:SetEnt(ent)
 		end)
 	end
 
-	-- Hide/Disable our entity after a duplicator
+	-- Get our entity after running duplicator
 	if IsValid(ent) and ent:IsSolid() then
 		dup.entity.object = ent
-		dup.entity.object:SetNoDraw(true)				
-		dup.entity.object:SetSolid(0)
-		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
 		StoreEntityModifier(ent)
 	-- Create a new entity if we don't have one yet
 	elseif not IsValid(dup.entity.object) then
 		dup.entity.object = ents.Create("prop_physics")
 		dup.entity.object:SetModel(dup.entity.model)
 		dup.entity.object:SetPos(Vector(0, 0, 0))
-		dup.entity.object:SetNoDraw(true)				
 		dup.entity.object:Spawn()
-		dup.entity.object:SetSolid(0)
-		dup.entity.object:PhysicsInitStatic(SOLID_NONE)
 		dup.entity.object:SetName("MRDup")
 		StoreEntityModifier(dup.entity.object)
 	end
+
+	-- Hide/Disable our entity
+	dup.entity.object:SetNoDraw(true)
+	dup.entity.object:SetSolid(0)
+	dup.entity.object:PhysicsInitStatic(SOLID_NONE)
 end
 
 -- Get the duplicator entity

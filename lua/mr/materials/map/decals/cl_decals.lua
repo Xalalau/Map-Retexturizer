@@ -56,8 +56,6 @@ function Decals:RefreshAfterCleanup(oldID, newID)
 		element.entIndex = newID
 		element.ent = ents.GetByIndex(newID)
 
-		MR.Decals:FinishEntInit(element)
-
 		local customMaterial = MR.CL.Decals:CreateCustomMaterial(element)
 
 		MR.CL.Decals:Draw(customMaterial, element)

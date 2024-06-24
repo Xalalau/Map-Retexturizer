@@ -172,6 +172,12 @@ function Load:Upgrade4to5(savedTable, isDupStarting, currentFormat)
 			MR.DataList:RemoveBackups(savedTable.skybox)
 		end
 
+		if savedTable.decals then
+			for k, decal in ipairs(savedTable.decals) do
+				decal.oldMaterial = decal.newMaterial
+			end
+		end
+
 		-- Set the new format number before fully loading the table in the duplicator
 		if isDupStarting then
 			savedTable.savingFormat = "5.0"

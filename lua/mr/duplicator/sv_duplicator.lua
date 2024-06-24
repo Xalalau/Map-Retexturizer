@@ -61,8 +61,8 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	if savedTable.brushes then
 		dup.recreatedTable.brushes = savedTable.brushes
 	-- Also brush materials, but for backwards compatibility! All the older saves use this table (Before v2.0.0)
-	elseif savedTable.maps then
-		dup.recreatedTable.brushes = savedTable.maps
+	elseif savedTable.map then
+		dup.recreatedTable.map = savedTable.map
 	-- Displacements
 	elseif savedTable.displacements then
 		for k,v in pairs(savedTable.displacements) do -- Remove nil entries if they exist (old hack?)

@@ -51,6 +51,7 @@ function Duplicator:RecreateTable(ply, ent, savedTable)
 	-- Models
 	if ent:GetModel() ~= dup.entity.model then
 		savedTable.ent = ent
+		savedTable.savingFormat = nil
 		table.insert(dup.recreatedTable.models, savedTable)
 	-- Duplicator entity
 	elseif not dup.recreatedTable.ent then

@@ -187,7 +187,9 @@ function Load:Upgrade(savedTable, loadName)
 	Load:Upgrade4to5(savedTable)
 
 	-- Clean table
-	MR.DataList:CleanAll(savedTable)
+	--   Note: we want to keep the ent field, so don't call DataList:RemoveTemp or DataList:CleanAll!
+	MR.DataList:RemoveDisabled(savedTable)
+	MR.DataList:RemoveBackups(savedTable)
 
 	-- If we are updating a file...
 	if loadName and loadName ~= "noMrLoadFile" then

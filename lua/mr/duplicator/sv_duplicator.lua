@@ -109,7 +109,9 @@ function Duplicator:Start(ply, ent, savedTable, loadName, dontClean)
 	savedTable = MR.SV.Load:Upgrade(savedTable, loadName)
 
 	-- Try to clean the list, just in case
-	MR.DataList:CleanAll(savedTable)
+	--   Note: we want to keep the ent field, so don't call DataList:RemoveTemp or DataList:CleanAll!
+	MR.DataList:RemoveDisabled(savedTable)
+	MR.DataList:RemoveBackups(savedTable)
 
 	-- Get the total modifications to do
 	local decalsTotal = savedTable.decals and istable(savedTable.decals) and table.Count(savedTable.decals) or 0

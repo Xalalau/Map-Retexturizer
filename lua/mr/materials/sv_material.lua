@@ -7,6 +7,7 @@ local Materials = MR.SV.Materials
 
 -- Networking
 util.AddNetworkString("Materials:SetValid")
+util.AddNetworkString("Materials:RemoveUndo")
 util.AddNetworkString("Materials:SetProgressiveCleanupTime")
 util.AddNetworkString("CL.Materials:SetPreview")
 util.AddNetworkString("CL.Materials:Apply")
@@ -188,6 +189,11 @@ function Materials:RemoveFromList(ply, fieldContent, fieldName, materialList, ma
 
 	local backup = element.backup
 
+	-- Update undo
+	local undoName = MR.Materials:GetUndoName(element.ent, element.oldMaterial)
+
+	MR.Materials:RemoveUndo(ply, undoName)
+
 	-- Run the removal on client(s)
 	net.Start("CL.Materials:RemoveFromList")
 		net.WriteInt(materialType, 4)
@@ -351,22 +357,26 @@ function Materials:SetUndo(ply, data, materialType)
 	end
 
 	if create then
-		undo.Create("Material")
+		local undoName = MR.Materials:GetUndoName(data.ent, data.oldMaterial)
+
+		MR.Materials:RemoveUndo(ply, undoName)
+
+		undo.Create(undoName)
 			undo.SetPlayer(ply)
-			undo.AddFunction(function(tab, oldMaterial)
+			undo.AddFunction(function(tab, ply, materialType, data)
 				-- Get the material list
 				if materialType == MR.Materials.type.brush then
-					MR.SV.Brushes:Restore(ply, oldMaterial)
+					MR.SV.Brushes:Restore(ply, data.oldMaterial)
 				elseif materialType == MR.Materials.type.skybox then
 					MR.SV.Skybox:Restore(ply)
 				elseif materialType == MR.Materials.type.displacement then
-					MR.SV.Displacements:Restore(ply, oldMaterial)
+					MR.SV.Displacements:Restore(ply, data.oldMaterial)
 				elseif materialType == MR.Materials.type.model then
 					MR.Models:Restore(ply, data.ent)
 				elseif materialType == MR.Materials.type.decal then
 					MR.SV.Decals:Remove(ply, data.ent)
 				end
-			end, data.oldMaterial)
+			end, ply, materialType, data)
 			undo.SetCustomUndoText("Undone Material")
 		undo.Finish()
 	end

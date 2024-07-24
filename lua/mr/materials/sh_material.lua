@@ -18,6 +18,11 @@ local material = {
 	missing = MR.Base:GetMaterialsFolder().."missing"
 }
 
+net.Receive("Materials:RemoveUndo", function()
+	if SERVER then return end
+	Materials:RemoveUndo(LocalPlayer(), net.ReadString())
+end)
+
 function Materials:Init()
 	-- Detail init
 	MR.Detail:Init()
@@ -338,3 +343,27 @@ function Materials:GetCurrentModifications()
 	return currentModificationTab
 end
 
+-- Get an unique ID name for undos
+function Materials:GetUndoName(ent, oldMaterial)
+	return "mapret_" .. (ent and IsValid(ent) and tostring(ent) or oldMaterial)
+end
+
+-- Remove material from the undo list
+function Materials:RemoveUndo(ply, undoName)
+	local undoTab = undo.GetTable()[tostring(ply:EntIndex())]
+
+	if not undoTab then return end
+
+	for k, undoItem in ipairs(undoTab) do
+		if undoItem['Name'] == undoName then
+			table.remove(undoTab, k)
+			break
+		end
+	end
+
+	if SERVER then
+		net.Start("Materials:RemoveUndo")
+		net.WriteString(undoName)
+		net.Send(ply)
+	end
+end

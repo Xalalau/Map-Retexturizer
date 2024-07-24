@@ -355,7 +355,7 @@ function Materials:ForceApplyAll(modificationTab)
 		local y
 		for y = 1,6 do
 			materialData.newMaterial = MR.Materials:IsSkybox(materialData.newMaterial) and (MR.Skybox:RemoveSuffix(materialData.newMaterial) .. MR.Skybox:GetSuffixes()[y]) or materialData.newMaterial
-			materialData.oldMaterial = MR.Skybox:GetFilename2() .. MR.Skybox:GetSuffixes()[y]
+			materialData.oldMaterial = MR.Skybox:GetFilename() .. MR.Skybox:GetSuffixes()[y]
 			materialData.backup = MR.Data:CreateFromMaterial(materialData.oldMaterial, nil, nil, nil, true)
 
 			local materialDataCopy = table.Copy(materialData)

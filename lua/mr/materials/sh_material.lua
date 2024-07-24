@@ -69,15 +69,15 @@ end
 -- Is it the skybox material?
 function Materials:IsSkybox(material)
 	if material and (
-		  string.lower(material) == MR.Skybox:GetGenericName() or
-		  MR.Skybox:IsPainted() and (
-			 material == MR.Skybox:GetFilename2() or 
-			 MR.Skybox:RemoveSuffix(material) == MR.Skybox:GetFilename2()
-		  ) or
-		  Materials:IsFullSkybox(material) or
-		  Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
-	  ) then
-
+		string.lower(material) == MR.Skybox:GetGenericName() or
+		MR.Skybox:IsPainted() and (
+			material == MR.Skybox:GetFilename() or 
+			MR.Skybox:RemoveSuffix(material) == MR.Skybox:GetFilename()
+		) or
+		Materials:IsFullSkybox(material) or
+		Materials:IsFullSkybox(MR.Skybox:RemoveSuffix(material))
+	)
+	then
 		return true
 	end
 

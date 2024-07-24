@@ -2,20 +2,26 @@
 --- MATERIALS (SKYBOX)
 --------------------------------
 
-local Skybox = {
-	distance = 200,
-	suffixes = MR.Skybox:GetSuffixes(),
-	lastNewMaterial = nil,
-	ft = nil,
-	bk = nil,
-	lf = nil,
-	rt = nil,
-	up = nil,
-	dn = nil
-}
-Skybox.width = Skybox.distance * 2.01
-Skybox.height = Skybox.distance * 2.01
-MR.CL.Skybox = Skybox
+local Skybox
+do
+	local baseMaterial = MR.Skybox:GetFilename()
+	local suffixes = MR.Skybox:GetSuffixes()
+	local distance = 200
+
+	Skybox = {
+		distance = distance,
+		width = distance * 2.01,
+		height = distance * 2.01,
+		ft = Material(baseMaterial .. suffixes[1]),
+		bk = Material(baseMaterial .. suffixes[2]),
+		lf = Material(baseMaterial .. suffixes[3]),
+		rt = Material(baseMaterial .. suffixes[4]),
+		up = Material(baseMaterial .. suffixes[5]),
+		dn = Material(baseMaterial .. suffixes[6])
+	}
+
+	MR.CL.Skybox = Skybox
+end
 
 -- Skybox rendering hook
 hook.Add("PostDraw2DSkyBox", "Skybox:Render", function()
@@ -26,20 +32,7 @@ end)
 
 -- Render 6 side skybox materials on every map or simple materials on the skybox on maps with env_skypainted entity
 function Skybox:Render()
-	local newMaterial = MR.Skybox:GetFilename2()
-
-	if newMaterial == "" or not MR.Materials:Validate(MR.Skybox:GetCurrent()) then return end
-
-	if lastNewMaterial ~= newMaterial then
-		self.ft = Material(newMaterial .. self.suffixes[1])
-		self.bk = Material(newMaterial .. self.suffixes[2])
-		self.lf = Material(newMaterial .. self.suffixes[3])
-		self.rt = Material(newMaterial .. self.suffixes[4])
-		self.up = Material(newMaterial .. self.suffixes[5])
-		self.dn = Material(newMaterial .. self.suffixes[6])
-
-		self.lastNewMaterial = newMaterial
-	end
+	if not MR.Materials:Validate(MR.Skybox:GetCurrent()) then return end
 
 	render.OverrideDepthEnable(true, false)
 

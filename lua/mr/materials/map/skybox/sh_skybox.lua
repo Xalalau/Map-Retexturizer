@@ -10,12 +10,10 @@ local skybox = {
 	name = "",
 	-- Generic skybox name
 	genericName = "tools/toolsskybox",
-	-- Skybox material backup files
-	filename = MR.Base:GetMaterialsFolder().."sky_backup",
-	-- Skybox material application on maps with env_skypainted
-	filename2 = MR.Base:GetMaterialsFolder().."skypainted",
-	-- True if the map has a env_skypainted entity
-	painted = nil,
+	-- Our custom skybox
+	filename = MR.Base:GetMaterialsFolder().."sky",
+	-- After init true if the map has a env_skypainted entity else false
+	isPainted = nil,
 	-- Data list with the sky modifications
 	list = {},
 	-- 6 side skybox suffixes
@@ -66,29 +64,21 @@ function Skybox:Init()
 	-- Get the sky name
 	Skybox:SetName("skybox/"..GetConVar("sv_skyname"):GetString()) --Doing this quickly above has returned me the default sky name instead of the current one
 	-- Check if it's a painted one
-	skybox.painted = skybox.name == "skybox/painted"
+	skybox.isPainted = skybox.name == "skybox/painted"
 
 	-- Initialize the painted skybox
 	if CLIENT then
 		for i=1,6,1 do
-			Material(Skybox:GetFilename2() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
+			Material(Skybox:GetFilename() .. Skybox:GetSuffixes()[i]):SetTexture("$basetexture", Material(Skybox:GetGenericName()):GetTexture("$basetexture"))
 		end
 	end
 end
 
 -- Check if the map has an env_skypainted entity or if a material is the painted material
 function Skybox:IsPainted(material)
-	if material then
-		if	material == "skybox/painted" or
-			Skybox:RemoveSuffix(material) == "skybox/painted" then
-
-			return true
-		else
-			return false
-		end
-	end
-
-	return skybox.painted
+	return material == "skybox/painted" or
+		   Skybox:RemoveSuffix(material) == "skybox/painted" or
+		   skybox.isPainted
 end
 
 -- Get map modifications
@@ -132,14 +122,9 @@ function Skybox:GetGenericName()
 	return skybox.genericName
 end
 
--- Get backup filename
+-- Get filename used to render the skybox on maps with env_skypainted
 function Skybox:GetFilename()
 	return skybox.filename
-end
-
--- Get filename used to render the skybox on maps with env_skypainted
-function Skybox:GetFilename2()
-	return skybox.filename2
 end
 
 -- Get the current material full path
@@ -171,12 +156,10 @@ function Skybox:GetOriginal(tr)
 
 		-- Instead of tools/toolsskybox, return...
 		if MR.Materials:IsSkybox(originalMaterial) then
-			-- our custom env_skypainted material 
-			return Skybox:GetFilename2()
+			-- our custom env_skypainted material
+			return Skybox:GetFilename()
 		end
 	end
-
-	return nil
 end
 
 -- Remove a sky material suffix

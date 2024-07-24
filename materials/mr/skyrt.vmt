@@ -1,0 +1,6 @@
+"UnlitGeneric" 
+{ 
+	"$basetexture" "mr/skyrt" 
+	"$nofog" 1 
+	"$ignorez" 1 
+} 

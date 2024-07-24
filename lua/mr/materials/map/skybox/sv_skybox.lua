@@ -46,14 +46,14 @@ function Skybox:Apply(ply, data)
 	-- it's our custom env_skypainted material or
 	-- it's empty
 	if data.newMaterial == MR.Skybox:GetName() or
-	   MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
-	   data.newMaterial == MR.Skybox:GetGenericName() or
-	   MR.Skybox:IsPainted() and (
-		  data.newMaterial == MR.Skybox:GetFilename2() or
-		  MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetFilename2()
-	   ) or
-	   data.newMaterial == "" then
-
+		MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetName() or
+		data.newMaterial == MR.Skybox:GetGenericName() or
+		MR.Skybox:IsPainted() and (
+			data.newMaterial == MR.Skybox:GetFilename() or
+			MR.Skybox:RemoveSuffix(data.newMaterial) == MR.Skybox:GetFilename()
+		) or
+		data.newMaterial == ""
+	then
 		Skybox:Restore(ply)
 
 		return
@@ -79,7 +79,7 @@ function Skybox:Apply(ply, data)
 	local i
 	for i = 1,6 do
 		data.newMaterial = MR.Materials:IsSkybox(data.newMaterial) and (MR.Skybox:RemoveSuffix(data.newMaterial) .. MR.Skybox:GetSuffixes()[i]) or data.newMaterial
-		data.oldMaterial = MR.Skybox:GetFilename2() .. MR.Skybox:GetSuffixes()[i]
+		data.oldMaterial = MR.Skybox:GetFilename() .. MR.Skybox:GetSuffixes()[i]
 
 		-- Get materials list
 		local materialList = MR.Skybox:GetList()

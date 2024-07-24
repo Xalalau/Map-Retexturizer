@@ -273,6 +273,11 @@ end
 
 -- Clean up everything
 function Materials:RestoreLists(ply, selectedTypes)
+	-- Return if the tool is busy
+	if not MR.Materials:AreManageable(ply) then
+		return false
+	end
+
 	-- Admin only
 	if not MR.Ply:IsAllowed(ply) then
 		return false

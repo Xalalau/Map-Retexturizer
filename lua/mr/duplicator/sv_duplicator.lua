@@ -341,7 +341,7 @@ end
 
 -- Add extra check to avoid duplicator getting stuck after an error
 function Duplicator:SetAntiStuck(ply)
-	timer.Create("MRAntiDupStuck", 1, 0, function()
+	timer.Create("MRAntiDupStuck", 1, 1, function()
 		if MR.Duplicator:IsRunning(ply) then
 			if ply == MR.SV.Ply:GetFakeHostPly() then
 				Duplicator:ForceStop()

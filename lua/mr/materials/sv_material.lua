@@ -192,7 +192,13 @@ function Materials:RemoveFromList(ply, fieldContent, fieldName, materialList, ma
 	-- Update undo
 	local undoName = MR.Materials:GetUndoName(element.ent, element.oldMaterial)
 
-	MR.Materials:RemoveUndo(ply, undoName)
+	if IsValid(ply) then
+		MR.Materials:RemoveUndo(ply, undoName)
+	else
+		for k, realPly in ipairs(player.GetHumans()) do
+			MR.Materials:RemoveUndo(realPly, undoName)
+		end
+	end
 
 	-- Run the removal on client(s)
 	net.Start("CL.Materials:RemoveFromList")
@@ -359,7 +365,13 @@ function Materials:SetUndo(ply, data, materialType)
 	if create then
 		local undoName = MR.Materials:GetUndoName(data.ent, data.oldMaterial)
 
-		MR.Materials:RemoveUndo(ply, undoName)
+		if IsValid(ply) then
+			MR.Materials:RemoveUndo(ply, undoName)
+		else
+			for k, realPly in ipairs(player.GetHumans()) do
+				MR.Materials:RemoveUndo(realPly, undoName)
+			end
+		end
 
 		undo.Create(undoName)
 			undo.SetPlayer(ply)

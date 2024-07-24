@@ -6,7 +6,7 @@ local Base = {}
 MR.Base = Base
 
 local base = {
-	version = "v2.0.2",
+	version = "v2.0.3",
 	-- Our lovely main data folder
 	dataFolder = "mapret/",
 	-- Folder for our custom materials

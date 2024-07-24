@@ -309,7 +309,7 @@ function Materials:ForceClean(materialType, removeOnly)
 				print("[Map Retexturizer] Warning! Removing unsynced data for " .. v.oldMaterial)
 
 				if not removeOnly then
-					Materials:Restore(materialType, v.backup)
+					Materials:Restore(v.backup)
 				end
 
 				MR.DataList:DisableElement(v)

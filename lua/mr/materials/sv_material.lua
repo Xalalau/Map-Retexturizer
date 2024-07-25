@@ -82,14 +82,19 @@ end
 
 -- Set a new material
 function Materials:Apply(ply, data, materialList, materialType, fieldContent, fieldName, dupName, dupDataName)
-	-- Add material
+	-- Try to remove the material from the list
+	local removed, backup = Materials:RemoveFromList(ply, data.oldMaterial, "oldMaterial", materialList, materialType, dupName, dupDataName)
+
+	-- Add material to the list
 	local added = Materials:AddToList(ply, data, materialList, materialType, fieldContent, fieldName, dupName, dupDataName)
 
 	-- Apply the material
 	if added then
-		net.Start("CL.Materials:Apply")
-			net.WriteTable(data)
-		net.Broadcast()
+		timer.Simple(removed and 0.2 or 0, function()
+			net.Start("CL.Materials:Apply")
+				net.WriteTable(data)
+			net.Broadcast()
+		end)
 
 		return true
 	else

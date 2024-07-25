@@ -350,7 +350,7 @@ end
 
 -- Remove material from the undo list
 function Materials:RemoveUndo(ply, undoName)
-	local undoTab = undo.GetTable()[tostring(ply:EntIndex())]
+	local undoTab = undo.GetTable()[tostring(ply:UniqueID())]
 
 	if not undoTab then return end
 

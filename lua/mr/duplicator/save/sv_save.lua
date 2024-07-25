@@ -40,11 +40,11 @@ function Save:Set(ply, saveName, blockAlert)
 	save.models = nil
 
 	-- Don't save if the table is empty
-	if MR.DataList:GetTotalModificantions(save) == 0 then
-		print("[Map Retexturizer] Save: no map changes found.")
+	-- if MR.DataList:GetTotalModificantions(save) == 0 then
+	-- 	print("[Map Retexturizer] Save: no map changes found.")
 
-		return false
-	end
+	-- 	return false
+	-- end
 
 	-- Save it in a file
 	file.Write(saveFile, util.TableToJSON(save, true))

@@ -78,7 +78,7 @@ end
 function Skybox:IsPainted(material)
 	return material == "skybox/painted" or
 		   Skybox:RemoveSuffix(material) == "skybox/painted" or
-		   skybox.isPainted
+		   not material and skybox.isPainted
 end
 
 -- Get map modifications
